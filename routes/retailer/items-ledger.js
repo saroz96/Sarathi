@@ -259,7 +259,7 @@ router.get('/items-ledger/:id', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 } else if (entry.qtyOut) {
                     balance -= entry.qtyOut;
                 }
-                entry.balance = balance;
+                entry.balance = balance || 0.00;
             });
 
             res.render('retailer/itemsLedger/items-ledger', {

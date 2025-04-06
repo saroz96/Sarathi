@@ -94,7 +94,7 @@
                                     <div class="col">
                                         <label for="isVatExempt">VAT</label>
                                         <select name="isVatExempt" id="isVatExempt" class="form-control"
-                                            onchange="toggleVatInputs()" onfocus="openVatModal()">
+                                            onchange="toggleVatInputs()" autocomplete="off">
                                             <% if (vatEnabled) {%>
                                                 <option value="all"
                                                     <%=purchaseReturn.isVatExempt===false&&purchaseReturn.isVatAll==='true'
@@ -236,7 +236,7 @@
                                         <td class="item-amount">
                                             <%= (item.quantity * item.puPrice).toFixed(2) %>
                                         </td>
-                                        <td class="">
+                                        <td class="hidden">
                                             <input type="text" name="items[<%=index%>][uniqueUuId]"
                                                 value="<%=item.uniqueUuId%>">
 

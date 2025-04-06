@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-// require('dotenv').config(); // Make sure to load environment variables
+require('dotenv').config(); // Make sure to load environment variables
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const flash = require('connect-flash');
@@ -34,6 +34,7 @@ const creditNoteRoutes = require('./routes/retailer/creditNote');
 const fiscalYearRoutes = require('./routes/retailer/fiscalYear');
 const ageingReportRoutes = require('./routes/retailer/ageingReport');
 const stockStatusRoutes = require('./routes/retailer/stockStatus');
+const profitAnalysisRoutes = require('./routes/retailer/profitAnalysis');
 
 //Admin Panel
 const systemAdminDashboardRoutes = require('./routes/systemAdmin/adminDashboard');
@@ -132,6 +133,7 @@ app.use('/', creditNoteRoutes);
 app.use('/', fiscalYearRoutes);
 app.use('/', ageingReportRoutes);
 app.use('/retailer', stockStatusRoutes);
+app.use('/retailer', profitAnalysisRoutes)
 
 //Admin Panel
 app.use('/', systemAdminDashboardRoutes);

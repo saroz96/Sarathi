@@ -589,7 +589,7 @@ function toggleVatInputs() {
         // vatPercentageRow.style.display = 'none';
         // vatAmountRow.style.display = 'none';
         // Move focus to the next available input field
-        moveToNextVisibleInput(document.getElementById('isVatExempt'));
+        // moveToNextVisibleInput(document.getElementById('isVatExempt'));
     } else {
         taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
         // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
@@ -652,7 +652,6 @@ document.getElementById('billForm').addEventListener('submit', function (event) 
 
 window.addEventListener('DOMContentLoaded', () => {
     toggleVatInputs();
-    toggleCreditPartyOptions();
 });
 
 document.addEventListener('DOMContentLoaded', function () {

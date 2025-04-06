@@ -620,16 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-
-
-function toggleCreditPartyOptions() {
-    const paymentMode = document.getElementById('paymentMode').value;
-    const creditPartyOptions = document.querySelectorAll('.credit-party');
-    creditPartyOptions.forEach(option => {
-        option.style.display = paymentMode === 'credit' ? 'block' : 'none';
-    });
-}
-
 function toggleVatInputs() {
     const isVatExempt = document.getElementById('isVatExempt').value === 'true';
 
@@ -642,14 +632,14 @@ function toggleVatInputs() {
         taxableAmountRow.style.display = 'none';
         // vatPercentageRow.style.display = 'none';
         // Move focus to the next available input field
-        moveToNextVisibleInput(document.getElementById('isVatExempt'));
+        // moveToNextVisibleInput(document.getElementById('isVatExempt'));
     } else {
         taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
         // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
     }
-
     // Recalculate total when toggling VAT
     calculateTotal();
+
 }
 
 
@@ -773,8 +763,7 @@ function convertToRupeesAndPaisa(amount) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    // toggleVatInputs();
-    toggleCreditPartyOptions();
+    toggleVatInputs();
 });
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1026,15 +1015,6 @@ function focusOnLastRow(fieldClass) {
     }
 }
 
-// Function to move focus to the next input field
-// function moveToNextInput(event) {
-//     if (event.key === 'Enter') {
-//         event.preventDefault(); // Prevent form submission
-//         const form = event.target.form;
-//         const index = Array.prototype.indexOf.call(form, event.target);
-//         form.elements[index + 1].focus();
-//     }
-// }
 
 function moveToNextInput(event) {
     if (event.key === 'Enter') {

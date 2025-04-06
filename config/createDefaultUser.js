@@ -23,6 +23,7 @@ const createDefaultUser = async () => {
         const defaultUser = new User({
             name: 'System Owner',
             email: 'admin@example.com',
+            isEmailVerified: true,
             password: hashedPassword,
             isAdmin: true,
             role: 'ADMINISTRATOR'

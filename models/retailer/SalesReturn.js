@@ -38,7 +38,8 @@ const SalesReturnSchema = new Schema({
             type: String,
             required: true,
             enum: ['vatable', 'vatExempt']
-        }
+        },
+        uniqueUuId: { type: String },
     }],
     subTotal: Number,
     nonVatSalesReturn: Number,
@@ -58,6 +59,29 @@ const SalesReturnSchema = new Schema({
     transactionDate: { type: Date, default: Date.now() }
 
 });
+
+
+SalesReturnSchema.statics.isEditable = async function (billId) {
+    const SalesReturnBill = await this.findById(billId).populate('items.item');
+
+    if (!SalesReturnBill) {
+        throw new Error('Purchase bill not found')
+    }
+
+    for (const salesReturnItem of SalesReturnBill.items) {
+        const item = purchaseItem.item;
+
+        // Calculate available stock
+        const totalStock = item.stock;
+        const usedStock = salesReturnItem.quantity; // Quantity being edited or removed
+
+        // Check if the stock is insufficient
+        if (totalStock < usedStock) {
+            return false;
+        }
+    }
+    return true;
+};
 
 // //This means each company can have accounts with the same name, but account names must be unique within a company.
 SalesReturnSchema.index({ billNumber: 1, company: 1, fiscalYear: 1 }, { unique: true });

@@ -27,7 +27,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['Admin', 'Sales', 'Purchase', 'Supervisor', 'ADMINISTRATOR'],
         default: 'Sales' // Default role
-    }
+    },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
 }, { timestamps: true }); // Add timestamps for createdAt and updatedAt
 
 // Hash the password before saving the user

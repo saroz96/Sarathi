@@ -10,7 +10,6 @@ const Account = require("../../models/retailer/Account");
 const Item = require("../../models/retailer/Item");
 const PurchaseBill = require("../../models/retailer/PurchaseBill");
 const Company = require("../../models/retailer/Company");
-// const PurchaseBillCounter = require('../../models/retailer/purchaseBillCounter');
 const NepaliDate = require('nepali-date');
 const Settings = require('../../models/retailer/Settings');
 const Transaction = require('../../models/retailer/Transaction');

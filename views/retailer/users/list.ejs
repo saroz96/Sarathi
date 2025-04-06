@@ -204,7 +204,14 @@
                       </div>
                     </div>
                   </td>
-                  <td><%= user.email %></td>
+                  <td>
+                    <%= user.email %>
+                    <% if (user.isEmailVerified) { %>
+                      <span class="badge bg-success">Verified</span>
+                    <% } else { %>
+                      <span class="badge bg-warning text-dark">Not Verified</span>
+                    <% } %>
+                  </td>
                   <td>
                     <% if (user.isOwner) { %>
                       <span class="badge badge-owner">Owner</span>

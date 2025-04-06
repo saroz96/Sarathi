@@ -567,22 +567,6 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                 return res.status(400).json({ error: 'Invalid payment mode.' });
             }
 
-            // Define date format regex pattern (e.g., YYYY-MM-DD)
-            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-            // Validate the date formats for English and Nepali dates
-            if (
-                (transactionDateRoman && !dateRegex.test(transactionDateRoman)) ||
-                (transactionDateNepali && !dateRegex.test(transactionDateNepali)) ||
-                (billDate && !dateRegex.test(billDate)) ||
-                (nepaliDate && !dateRegex.test(nepaliDate))
-            ) {
-                await session.abortTransaction();
-                session.endSession();
-                req.flash('error', 'Invalid date format. Please use YYYY-MM-DD.');
-                return res.redirect('/bills');
-            }
-
             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
             const isVatAll = isVatExempt === 'all';
             const discount = parseFloat(discountPercentage) || 0;

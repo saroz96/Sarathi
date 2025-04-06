@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { ensureAuthenticated, isLoggedIn } = require('../../middleware/auth');
 const Company = require('../../models/retailer/Company');
 const router = express.Router();
@@ -9,7 +10,9 @@ const NepaliDate = require('nepali-date'); // Adjust if using a different librar
 router.get('/admin-dashboard', isLoggedIn, ensureAuthenticated, async (req, res) => {
 
     res.render('systemAdmin/adminDashboard', {
-        user: req.user,
+        title: '',
+        body: '',
+        user: req.user // or whatever your user object is
     });
 });
 
@@ -18,7 +21,9 @@ router.get('/admin/clients', isLoggedIn, ensureAuthenticated, async (req, res) =
     try {
         const clients = await Company.find({});
         res.render('systemAdmin/clients', {
-            user: req.user,
+            title: '',
+            body: '',
+            user: req.user, // or whatever your user object is
             clients
         });
     } catch (err) {
@@ -43,6 +48,9 @@ router.get('/admin/clients/:id', isLoggedIn, ensureAuthenticated, async (req, re
         }
 
         res.render('systemAdmin/clientDetails', {
+            title: '',
+            body: '',
+            user: req.user, // or whatever your user object is
             client
         });
     } catch (err) {
@@ -65,8 +73,43 @@ router.get('/admin/clients/:id/renew', isLoggedIn, ensureAuthenticated, async (r
             return res.redirect('/admin/clients');
         }
 
+
+        const db = mongoose.connection.db;
+        if (!db) {
+            throw new Error('Database connection not established.');
+        }
+
+
+        // Calculate data size for the company
+        let totalSize = 0;
+        const relatedCollections = [
+            'sales', 'purchases', 'transactions', 'accounts',
+            'billcounters', 'categories', 'companies', 'companygroups',
+            'creditnotes', 'debitnotes', 'fiscalyears', 'items',
+            'journalvouchers', 'payments', 'receipts', 'settings',
+            'stockadjustments', 'units', 'users'
+        ];
+
+        for (const collectionName of relatedCollections) {
+            try {
+                const collection = db.collection(collectionName);
+                const stats = await db.command({ collStats: collectionName });
+                const companyDocsCount = await collection.countDocuments({ company: client._id });
+                const companySize = (stats.size * companyDocsCount) / (stats.count || 1);
+                totalSize += companySize || 0;
+            } catch (err) {
+                console.error(`Error processing collection ${collectionName}:`, err);
+            }
+        }
+
+        const companyDataSizes = {
+            [client._id]: Math.round(totalSize / 1024) // Convert to KB
+        };
+
+
         res.render('systemAdmin/renewClient', {
             user: req.user,
+            companyDataSizes,
             client,
             title: '',
             body: '',

@@ -311,12 +311,11 @@ function addItemToBill(item, dropdownMenu) {
 <td><input type="number" name="items[${itemIndex}][puPrice]" value="${selectedBatch.puPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
 <td class="item-amount">0.00</td>
 <td>
-<input type="text" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
-</td>
-<td>
      <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
         <span aria-hidden="true">&times;</span>
     </button>
+</td>
+<input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
 </td>
 <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
 `;
@@ -369,12 +368,11 @@ function addItemToBill(item, dropdownMenu) {
 <td><input type="number" name="items[${itemIndex}][puPrice]" value="${selectedBatch.puPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
 <td class="item-amount">0.00</td>
 <td>
-<input type="text" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
-</td>
-<td>
      <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
         <span aria-hidden="true">&times;</span>
     </button>
+</td>
+<input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
 </td>
 <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
 
@@ -437,7 +435,7 @@ function showBatchModal(item, callback) {
             <td>${entry.puPrice}</td>
             <td>${entry.marginPercentage}</td>
             <td>${entry.mrp}</td>
-            <td>${entry.uniqueUuId}</td>
+            <td class="hidden">${entry.uniqueUuId}</td>
         </tr>
     `;
             }
@@ -639,17 +637,20 @@ function toggleVatInputs() {
 
     // VAT-related fields
     const taxableAmountRow = document.getElementById('taxableAmountRow');
-    const vatPercentageRow = document.getElementById('vatPercentageRow');
+    // const vatPercentageRow = document.getElementById('vatPercentageRow');
 
     // Toggle display based on VAT exemption
     if (isVatExempt) {
         taxableAmountRow.style.display = 'none';
-        vatPercentageRow.style.display = 'none';
+        // vatPercentageRow.style.display = 'none';
+        // vatAmountRow.style.display = 'none';
         // Move focus to the next available input field
-        moveToNextVisibleInput(document.getElementById('isVatExempt'));
+        // moveToNextVisibleInput(document.getElementById('isVatExempt'));
     } else {
         taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
-        vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
+        // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
+        // vatAmountRow.style.display = 'table-row'; // Show VAT amount row
+
     }
 
     // Recalculate total when toggling VAT
@@ -772,8 +773,7 @@ function convertToRupeesAndPaisa(amount) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    // toggleVatInputs();
-    toggleCreditPartyOptions();
+    toggleVatInputs();
 });
 
 document.addEventListener('DOMContentLoaded', function () {

@@ -1,13 +1,31 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto'); // Add this line at the top with other requires
 const passport = require('passport');
 const User = require('../models/User');
 const { forwardAuthenticated, ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../middleware/auth');
 const Company = require('../models/retailer/Company');
 const FiscalYear = require('../models/retailer/FiscalYear');
 const ensureAdminOrSupervisor = require('../middleware/isAdminMiddleware');
+const { transporter, generateToken } = require('../config/email'); // Import from config
+const authController = require('../controllers/authControllers'); // Import auth controller
 
+router.get('/test-email', async (req, res) => {
+    try {
+        await transporter.sendMail({
+            to: process.env.EMAIL_USER,
+            from: process.env.EMAIL_USER,
+            subject: 'Test Email',
+            text: 'This is a test email from your application'
+        });
+        res.send('Email sent successfully');
+    } catch (err) {
+        console.error('Email test failed:', err);
+        res.status(500).send('Email test failed: ' + err.message);
+    }
+});
 
 //register Page
 router.get('/register', forwardAuthenticated, (req, res) => res.render('register'));
@@ -16,58 +34,58 @@ router.get('/register', forwardAuthenticated, (req, res) => res.render('register
 // router.post('/register', forwardAuthenticated, async (req, res) => {
 //     const { name, email, password, password2 } = req.body;
 
-//     // Check if all fields are filled
-//     if (!name || !email || !password || !password2) {
-//         req.flash('error', 'Please enter all fields');
-//         return res.redirect('/register'); // Redirect back to registration form
-//     }
-
-//     // Check if passwords match
-//     if (password !== password2) {
-//         req.flash('error', 'Passwords do not match');
-//         return res.redirect('/register'); // Redirect back to registration form
-//     }
-
-//     // Check if password is long enough
-//     if (password.length < 5) {
-//         req.flash('error', 'Password must be at least 5 characters');
-//         return res.redirect('/register'); // Redirect back to registration form
-//     }
+//     // Validation checks remain the same...
 
 //     try {
-//         // Check if user already exists
-//         const existingUser = await User.findOne({ email }); // Ensure you are checking by email
+//         const existingUser = await User.findOne({ email });
 //         if (existingUser) {
 //             req.flash('error', 'Email already exists');
-//             return res.redirect('/register'); // Redirect back to registration form
+//             return res.redirect('/register');
 //         }
 
-//         // Proceed with registration
-//         const hashedPassword = await bcrypt.hash(password, 10);
-
+//         // Create user with plain password - the pre-save hook will hash it
 //         const newUser = new User({
 //             name,
 //             email,
-//             password: hashedPassword,
+//             password, // <-- No manual hashing here
 //             isAdmin: true,
-//             role: 'Admin'  // Assign the "Admin" role
+//             role: 'Admin'
 //         });
 
 //         await newUser.save();
-//         console.log(newUser);
 //         req.flash('success', 'You are now registered and can log in');
 //         res.redirect('/login');
 //     } catch (err) {
 //         console.error(err);
 //         req.flash('error', 'An error occurred during registration');
-//         res.redirect('/register'); // Redirect back to registration form on error
+//         res.redirect('/register');
 //     }
 // });
+
 
 router.post('/register', forwardAuthenticated, async (req, res) => {
     const { name, email, password, password2 } = req.body;
 
     // Validation checks remain the same...
+    let errors = [];
+    if (!name || !email || !password || !password2) {
+        errors.push({ msg: 'Please fill in all fields' });
+    }
+    if (password !== password2) {
+        errors.push({ msg: 'Passwords do not match' });
+    }
+    if (password.length < 6) {
+        errors.push({ msg: 'Password should be at least 6 characters' });
+    }
+    if (errors.length > 0) {
+        return res.render('register', {
+            errors,
+            name,
+            email,
+            password,
+            password2
+        });
+    }
 
     try {
         const existingUser = await User.findOne({ email });
@@ -82,16 +100,113 @@ router.post('/register', forwardAuthenticated, async (req, res) => {
             email,
             password, // <-- No manual hashing here
             isAdmin: true,
-            role: 'Admin'
+            role: 'Admin',
+            isEmailVerified: false // Add email verification status
         });
 
         await newUser.save();
-        req.flash('success', 'You are now registered and can log in');
+
+        // Use the controller method to send verification email
+        await authController.sendVerificationEmail(newUser, req);
+
+        req.flash(
+            'success',
+            'Registration successful! Please check your email to verify your account before logging in.'
+        );
         res.redirect('/login');
+
     } catch (err) {
         console.error(err);
         req.flash('error', 'An error occurred during registration');
         res.redirect('/register');
+    }
+});
+
+// Email verification route (using controller)
+router.get('/auth/verify-email/:token', authController.verifyEmail);
+
+router.get('/auth/verify-email', async(req, res)=> {
+    res.render('auth/resend-email-verification',{
+        email: req.query.email || '',
+        messages: req.flash() 
+    })
+})
+
+// Resend verification email route (using controller)
+router.post('/auth/resend-verification', authController.resendVerificationEmail);
+
+
+// // Email verification route
+// router.get('/verify-email/:token', async (req, res) => {
+//     try {
+//         const user = await User.findOne({
+//             emailVerificationToken: req.params.token,
+//             emailVerificationExpires: { $gt: Date.now() }
+//         });
+
+//         if (!user) {
+//             req.flash('error', 'Verification token is invalid or has expired');
+//             return res.redirect('/login');
+//         }
+
+//         user.isEmailVerified = true;
+//         user.emailVerificationToken = undefined;
+//         user.emailVerificationExpires = undefined;
+//         await user.save();
+
+//         req.flash('success', 'Email successfully verified. You can now log in.');
+//         res.redirect('/login');
+//     } catch (err) {
+//         console.error(err);
+//         req.flash('error', 'Error verifying email');
+//         res.redirect('/login');
+//     }
+// });
+
+// Resend verification email route
+router.post('/resend-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            req.flash('error', 'No account found with that email');
+            return res.redirect('/login');
+        }
+
+        if (user.isEmailVerified) {
+            req.flash('info', 'Email is already verified');
+            return res.redirect('/login');
+        }
+
+        // Generate new token
+        const token = crypto.randomBytes(20).toString('hex');
+        user.emailVerificationToken = token;
+        user.emailVerificationExpires = Date.now() + 24 * 3600000; // 24 hours
+        await user.save();
+
+        const verificationUrl = `${req.protocol}://${req.get('host')}/auth/verify-email/${token}`;
+
+        const mailOptions = {
+            to: user.email,
+            from: process.env.EMAIL_FROM || 'noreply@example.com',
+            subject: 'Account Verification',
+            html: `
+                <h2>Please verify your email address</h2>
+                <p>Here's your new verification link:</p>
+                <a href="${verificationUrl}">Verify Email</a>
+                <p>This link will expire in 24 hours.</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        req.flash('success', 'Verification email resent. Please check your inbox.');
+        res.redirect('/login');
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Error resending verification email');
+        res.redirect('/login');
     }
 });
 
@@ -144,94 +259,6 @@ router.get('/admin/create-user/new', isLoggedIn, ensureAdminOrSupervisor, async 
     })
 
 })
-
-// // Route to create a new user by the company admin
-// router.post('/admin/create-user/new', ensureAdminOrSupervisor, async (req, res) => {
-//     const { name, email, password, password2, role } = req.body;
-
-//     try {
-//         const companyId = req.session.currentCompany;
-//         const currentFiscalYear = req.session.currentFiscalYear.id
-//         const userId = req.user._id;
-//         let errors = [];
-
-
-//         if (!name || !email || !password || !password2) {
-//             errors.push({ msg: 'Please enter all fields' });
-//         }
-
-//         if (password !== password2) {
-//             errors.push({ msg: 'Passwords do not match' });
-//         }
-
-//         if (password.length < 5) {
-//             errors.push({ msg: 'Password must be at least 5 characters' });
-//         }
-
-
-//         if (!companyId) {
-//             req.flash('error', 'No company associated with your session');
-//             return res.redirect('/admin/create-user/new');
-//         }
-
-//         // Check if the role is valid
-//         if (!['Admin', 'Sales', 'Purchase', 'Supervisor'].includes(role)) {
-//             req.flash('error', 'Invalid role');
-//             return res.redirect('/admin/create-user/new');
-//         }
-
-//         // Find the company to associate the user with
-//         const company = await Company.findById(companyId);
-
-//         if (!company) {
-//             req.flash('error', 'Company not found');
-//             return res.redirect('/admin/create-user/new');
-//         }
-
-//         // Check if a user with the same email already exists
-//         const existingUser = await User.findOne({ email });
-
-//         if (existingUser) {
-//             req.flash('error', 'User with this email already exists');
-//             return res.redirect('/admin/create-user/new');
-//         }
-
-//         if (errors.length > 0) {
-//             errors.push({ msg: 'Errors' });
-//             res.render('retailer/users/user', {
-//                 errors,
-//                 name,
-//                 email,
-//                 password,
-//                 password2,
-//                 role
-//             });
-//         } else {
-
-//             // Create a new user
-//             const newUser = new User({
-//                 name,
-//                 email,
-//                 password: await bcrypt.hash(password, 10),  // Hash the password
-//                 role,
-//                 company: companyId,
-//                 user: userId,
-//                 fiscalYear: currentFiscalYear
-//             });
-
-//             // Save the new user
-//             await newUser.save();
-//             console.log(newUser);
-
-//             req.flash('success', `User ${name} created successfully with role ${role}`);
-//             res.redirect('/admin/create-user/new');
-//         }
-//     } catch (err) {
-//         console.error(err);
-//         req.flash('error', 'An error occurred while creating the user');
-//         res.redirect('/admin/create-user/new');
-//     }
-// });
 
 router.post('/admin/create-user/new', ensureAdminOrSupervisor, async (req, res) => {
     const { name, email, password, password2, role } = req.body;
@@ -817,7 +844,31 @@ router.get('/login', forwardAuthenticated, (req, res) => res.render('login'));
 //     })(req, res, next);
 // });
 
-// Login route
+// // Login route
+// router.post('/login', forwardAuthenticated, (req, res, next) => {
+//     passport.authenticate('local', (err, user, info) => {
+//         if (err) {
+//             return next(err);
+//         }
+//         if (!user) {
+//             req.flash('error', info.message || 'Login failed');
+//             return res.redirect('/login');
+//         }
+//         req.logIn(user, (err) => {
+//             if (err) {
+//                 return next(err);
+//             }
+
+//             // Redirect based on user role
+//             if (user.role === 'ADMINISTRATOR') {
+//                 return res.redirect('/admin-dashboard');
+//             } else {
+//                 return res.redirect('/login');
+//             }
+//         });
+//     })(req, res, next);
+// });
+
 router.post('/login', forwardAuthenticated, (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
         if (err) {
@@ -827,10 +878,22 @@ router.post('/login', forwardAuthenticated, (req, res, next) => {
             req.flash('error', info.message || 'Login failed');
             return res.redirect('/login');
         }
+
+        // Check if email is verified
+        if (!user.isEmailVerified) {
+            req.flash('error', 'Please verify your email before logging in');
+            req.flash('email', user.email); // Store email for resend verification
+            return res.redirect('/login');
+        }
+
         req.logIn(user, (err) => {
             if (err) {
                 return next(err);
             }
+
+            // Set last login time (optional)
+            user.lastLogin = Date.now();
+            user.save(); // No need to await here
 
             // Redirect based on user role
             if (user.role === 'ADMINISTRATOR') {

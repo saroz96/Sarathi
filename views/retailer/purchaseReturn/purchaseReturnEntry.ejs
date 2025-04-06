@@ -6,6 +6,29 @@
     <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
         rel="stylesheet" type="text/css" />
 
+    <style>
+        #bill-details-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #items {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+    </style>
+
     <div class="container wow-form expanded-container">
         <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
             <div class="card-header">
@@ -23,27 +46,26 @@
                             <div class="col">
                                 <label for="transactionDateNepali">Transaction Date:</label>
                                 <input type="text" name="transactionDateNepali" id="transactionDateNepali"
-                                    class="form-control" value="<%= transactionDateNepali ||'' %>"
-                                    onfocus="selectValue(this)" required autofocus />
+                                    class="form-control" value="<%= transactionDateNepali ||'' %>" required autofocus />
                             </div>
                             <div class="col">
                                 <label for="nepaliDate">Invoice Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)">
+                                    value="<%= nepaliDate || '' %>">
                             </div>
                             <% } else { %>
                                 <div class="col">
                                     <label for="transactionDateRoman">Transaction Date:</label>
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
                                         class="form-control" value="<%= new Date().toISOString().split('T')[0]%>"
-                                        onfocus="selectValue(this)" onblur="validateDate(this)" autofocus required>
+                                        onblur="validateDate(this)" autofocus required>
                                     <span class="error-message" style="color: red; display: none;"></span>
                                 </div>
                                 <div class="col">
                                     <label for="billDate">Invoice Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
                                         value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onfocus="selectValue(this)" onblur="validateDate(this)" autofocus>
+                                        onblur="validateDate(this)" autofocus>
                                     <span class="error-message" style="color: red; display: none;"></span>
                                 </div>
 
@@ -58,16 +80,12 @@
 
                                     <div class="col">
                                         <label for="paymentMode">Payment Mode:</label>
-                                        <select class="form-control" id="paymentMode" name="paymentMode" autocomplete="off">
+                                        <select class="form-control" id="paymentMode" name="paymentMode"
+                                            autocomplete="off">
                                             <option value="credit">credit</option>
                                             <option value="cash">cash</option>
                                         </select>
                                     </div>
-                                    <!-- <div class="col">
-                                        <label for="paymentMode">Payment Mode:</label>
-                                        <input type="text" class="form-control" id="paymentMode" name="paymentMode"
-                                            placeholder="" autocomplete="off">
-                                    </div> -->
                                     <div class="col">
                                         <label for="partyBillNumber" class="form-label">Suppliers Inv. No:</label>
                                         <input type="text" class="form-control" id="partyBillNumber"
@@ -75,8 +93,8 @@
                                             required>
                                     </div>
                                     <div class="col">
-                                        <label for="isVatExempt">VAT</label>
-                                        <select name="isVatExempt" id="isVatExempt" class="form-control"
+                                        <label for="isVatExempt">VAT:</label>
+                                        <select class="form-control" name="isVatExempt" id="isVatExempt"
                                             onchange="toggleVatInputs()" autocomplete="off">
                                             <% if (vatEnabled) {%>
                                                 <option value="all">All</option>
@@ -100,22 +118,7 @@
                                 <option value="Purchase Return">Purchase Return</option>
                             </select>
                         </div>
-                        <!-- <div class="col-6">
-                            <label for="account">Party Name:</label>
-                            <select name="account" id="account" class="form-control" required>
-                                <option value="" disabled selected>Select a party name</option>
-                                <% if (accounts && accounts.length> 0) { %>
-                                    <% accounts.forEach(account=> { %>
-                                        <option value="<%= account._id %>" data-address="<%= account.address %>"
-                                            data-pan="<%= account.pan %>">
-                                            <%= account.name %>
-                                        </option>
-                                        <% }); %>
-                                            <% } else { %>
-                                                <option disabled>No accounts available</option>
-                                                <% } %>
-                            </select>
-                        </div> -->
+
                         <div class="col-6">
                             <!-- Account Selection Input -->
                             <label for="account">Party Name:</label>
@@ -199,22 +202,22 @@
                                     </td>
                                 </tr>
 
-                                <!-- Taxable Amount, VAT % and VAT Amount in the same row -->
-                                <tr id="taxableAmountRow">
-                                    <td><label for="taxableAmount">Taxable Amount:</label></td>
-                                    <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span></p>
-                                    </td>
-                                    <td><label for="vatPercentage">VAT (13%):</label></td>
-                                    <td>
-                                        <input type="number" name="vatPercentage" id="vatPercentage"
-                                            class="form-control" value="13.00" readonly onfocus="selectValue(this)">
-                                    </td>
-                                    <td><label for="vatAmount">VAT Amount:</label></td>
-                                    <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="vatAmount">0.00</span></p>
-                                    </td>
-                                </tr>
+                               <!-- Taxable Amount, VAT % and VAT Amount in the same row -->
+                               <tr id="taxableAmountRow">
+                                <td><label for="taxableAmount">Taxable Amount:</label></td>
+                                <td class="text-right">
+                                    <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span></p>
+                                </td>
+                                <td><label for="vatPercentage">VAT (13%):</label></td>
+                                <td>
+                                    <input type="number" name="vatPercentage" id="vatPercentage"
+                                        class="form-control" value="13.00" readonly onfocus="selectValue(this)">
+                                </td>
+                                <td><label for="vatAmount">VAT Amount:</label></td>
+                                <td class="text-right">
+                                    <p class="form-control-plaintext">Rs. <span id="vatAmount">0.00</span></p>
+                                </td>
+                            </tr>
 
                                 <!-- Round Off and Total Amount in the same row -->
                                 <tr>
@@ -251,17 +254,6 @@
             </div>
         </div>
     </div>
-
-    <style>
-        #accountModal .modal-body {
-            min-height: 400px;
-            /* Ensures modal stays the same size */
-            max-height: 500px;
-            /* Limits height */
-            overflow-y: auto;
-            /* Allows scrolling */
-        }
-    </style>
 
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
@@ -317,28 +309,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal for payment mode -->
-    <!-- <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Select Payment Mode</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" class="form-control mb-2" id="searchPayment" placeholder="Search Payment Mode"
-                        autocomplete="off">
-                    <ul class="list-group" id="paymentOptions">
-                        <li class="list-group-item active" data-value="credit">credit</li>
-                        <li class="list-group-item" data-value="cash">cash</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-
     <!-- Transaction Modal -->
     <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel"
         aria-hidden="true">
@@ -382,21 +352,9 @@
             </div>
         </div>
     </div>
-    <style>
-        #bill-details-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
 
-        #items {
-            table-layout: fixed;
-            width: 100%;
-        }
-    </style>
-
-    <script src="/javascript/purchaseReturn/purchaseReturnEntry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
@@ -411,26 +369,8 @@
 
     <script type="text/javascript">
 
-        // // Check if the payment modal is open
-        // let isVatModalOpen = false;
-
-        // // Monitor the opening and closing of the payment modal
-        // $('#vatModal').on('show.bs.modal', function () {
-        //     isVatModalOpen = true;
-        // });
-
-        // $('#vatModal').on('hide.bs.modal', function () {
-        //     isVatModalOpen = false;
-        // });
-
-
         //for account
         $(document).ready(function () {
-
-            // if (isVatModalOpen) {
-            //     // Prevent opening the VAT modal if payment modal is open
-            //     return;
-            // }
 
             let selectedIndex = 0;
             let allAccounts = [];
@@ -712,3 +652,5 @@
         });
 
     </script>
+
+    <script src="/javascript/purchaseReturn/purchaseReturnEntry.js"></script>

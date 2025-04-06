@@ -1520,8 +1520,9 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
         }
 
         try {
-            const existingBill = await PurchaseReturn.findOne({ _id: billId, company: companyId });
+            const existingBill = await PurchaseReturn.findOne({ _id: billId, company: companyId }).session(session);
             if (!existingBill) {
+                await session.abortTransaction();
                 req.flash('error', 'Purchase return not found!');
                 return res.redirect('/purchase-return/list');
             }
@@ -1529,9 +1530,10 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             // Step 1: Validate New Quantities BEFORE Reversing Old Stock
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                const product = await Item.findById(item.item);
+                const product = await Item.findById(item.item).session(session);
 
                 if (!product) {
+                    await session.abortTransaction();
                     req.flash('error', `Item with ID ${item.item} not found`);
                     return res.redirect(`/purchase-return/edit/${billId}`);
                 }
@@ -1542,6 +1544,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 );
 
                 if (!batchEntry) {
+                    await session.abortTransaction();
                     req.flash('error', `Batch with batchNumber ${item.batchNumber} and uniqueUuId ${item.uniqueUuId} not found for product: ${product.name}`);
                     return res.redirect(`/purchase-return/edit/${billId}`);
                 }
@@ -1561,13 +1564,14 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 
                 // If the new requested quantity is more than what would be available, do NOT allow reversal
                 if (potentialStockAfterReversal < item.quantity) {
+                    await session.abortTransaction();
                     req.flash('error', `Not enough stock for item: ${product.name}. Available: ${availableStock}, Required: ${item.quantity}`);
                     return res.redirect(`/purchase-return/edit/${billId}`);
                 }
             }
             // Step 2: Reverse stock for existing bill items (Only if all validations pass)
             for (const existingItem of existingBill.items) {
-                const product = await Item.findById(existingItem.item);
+                const product = await Item.findById(existingItem.item).session(session);
                 const batchEntry = product.stockEntries.find(
                     entry => entry.batchNumber === existingItem.batchNumber && entry.uniqueUuId === existingItem.uniqueUuId
                 );
@@ -1578,7 +1582,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                     console.warn(`Batch with batchNumber ${existingItem.batchNumber} and uniqueUuId ${existingItem.uniqueUuId} not found for product: ${product.name}`);
                 }
 
-                await product.save(); // Save updated stock
+                await product.save({session}); // Save updated stock
             }
 
             console.log('Stock successfully reversed for existing bill items.');
@@ -1593,7 +1597,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             });
 
             // Delete all associated transactions
-            await Transaction.deleteMany({ purchaseReturnBillId: billId });
+            await Transaction.deleteMany({ purchaseReturnBillId: billId }).session(session);
             console.log('Existing transactions deleted successfully');
 
             // Calculate amounts based on the updated POST route logic
@@ -1611,7 +1615,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             // Validate each item before processing
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                const product = await Item.findById(item.item);
+                const product = await Item.findById(item.item).session(session);
 
                 if (!product) {
                     req.flash('error', `Item with id ${item.item} not found`);
@@ -1718,14 +1722,14 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 }
 
                 // Save the product with the updated stock entries
-                await product.save();
+                await product.save({session});
             }
 
             // **Updated processing for billItems to allow multiple entries of the same item**
             const billItems = [];
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                const product = await Item.findById(item.item);
+                const product = await Item.findById(item.item).session(session);
 
                 if (!product) {
                     req.flash('error', `Item with id ${item.item} not found`);
@@ -1772,7 +1776,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 fiscalYear: currentFiscalYear,
             });
 
-            await transaction.save();
+            await transaction.save({session});
             console.log('Transaction created:', transaction);
 
 
@@ -1803,7 +1807,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await purchaseRtnTransaction.save();
+                    await purchaseRtnTransaction.save({session});
                     console.log('Purchase Return Transaction: ', purchaseRtnTransaction);
                 }
             }
@@ -1833,7 +1837,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await vatTransaction.save();
+                    await vatTransaction.save({session});
                     console.log('Vat Transaction: ', vatTransaction);
                 }
             }
@@ -1863,7 +1867,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await roundOffTransaction.save();
+                    await roundOffTransaction.save({session});
                     console.log('Round-off Transaction: ', roundOffTransaction);
                 }
             }
@@ -1892,7 +1896,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await roundOffTransaction.save();
+                    await roundOffTransaction.save({session});
                     console.log('Round-off Transaction: ', roundOffTransaction);
                 }
             }
@@ -1921,10 +1925,14 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear,
                     });
-                    await cashTransaction.save();
+                    await cashTransaction.save({session});
                     console.log('Cash transaction created:', cashTransaction);
                 }
             }
+
+            // If everything goes smoothly, commit the transaction
+            await session.commitTransaction();
+            session.endSession();
 
             if (req.query.print === 'true') {
                 // Redirect to the print route

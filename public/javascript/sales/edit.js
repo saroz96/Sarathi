@@ -758,7 +758,7 @@ function toggleVatInputs() {
         taxableAmountRow.style.display = 'none';
         // vatPercentageRow.style.display = 'none';
         // vatAmountRow.style.display = 'none';
-        moveToNextVisibleInput(document.getElementById('isVatExempt'));
+        // moveToNextVisibleInput(document.getElementById('isVatExempt'));
 
     } else {
         taxableAmountRow.style.display = 'table-row'; // Show taxable amount row

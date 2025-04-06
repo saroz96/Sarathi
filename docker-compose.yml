@@ -1,0 +1,27 @@
+
+
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - PORT=3000
+#       - MONGO_URL=mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system
+#     depends_on:
+#       - mongo
+#     volumes:
+#       - ./server:/app
+#     restart: always
+
+#   mongo:
+#     image: mongo:6
+#     container_name: mongo
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo-data:/data/db
+#     restart: always
+
+# volumes:
+#   mongo-data:

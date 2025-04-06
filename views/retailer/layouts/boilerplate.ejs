@@ -214,6 +214,74 @@
                 });
 
             </script>
+<!-- 
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle Escape key press
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Check if there's history to go back to
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    // If no history, you could redirect to a default page
+                    // window.location.href = '/';
+                }
+            }
+        });
+
+        // Rest of your existing DOMContentLoaded code...
+        // Prevent loader on reload
+        if (performance.navigation.type === 1) {
+            hideLoader();
+            return;
+        }
+
+        // Handle form submissions
+        const forms = document.querySelectorAll("form");
+        // ... rest of your existing code ...
+    });
+
+</script> -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle Escape key press
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Show feedback to user
+                const feedback = document.createElement('div');
+                feedback.textContent = 'Navigating back...';
+                feedback.style.position = 'fixed';
+                feedback.style.bottom = '20px';
+                feedback.style.right = '20px';
+                feedback.style.padding = '10px 20px';
+                feedback.style.backgroundColor = '#333';
+                feedback.style.color = '#fff';
+                feedback.style.borderRadius = '5px';
+                feedback.style.zIndex = '9999';
+                document.body.appendChild(feedback);
+                
+                // Remove feedback after 1.5 seconds
+                setTimeout(() => {
+                    document.body.removeChild(feedback);
+                }, 1500);
+                
+                // Check if there's history to go back to
+                if (window.history.length > 1) {
+                    setTimeout(() => {
+                        window.history.back();
+                    }, 300); // Small delay for user to see feedback
+                } else {
+                    feedback.textContent = 'No previous page';
+                    setTimeout(() => {
+                        document.body.removeChild(feedback);
+                    }, 1500);
+                }
+            }
+        });
+    });
+</script>
 
 </body>
 

@@ -674,7 +674,7 @@ function toggleVatInputs() {
         taxableAmountRow.style.display = 'none';
         // vatPercentageRow.style.display = 'none';
         // Move focus to the next available input field
-        moveToNextVisibleInput(document.getElementById('isVatExempt'));
+        // moveToNextVisibleInput(document.getElementById('isVatExempt'));
     } else {
         taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
         // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
