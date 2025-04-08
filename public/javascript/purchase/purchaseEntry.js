@@ -846,6 +846,7 @@ function handleExpDateKeydown(event) {
         priceInput.select();
     }
 }
+
 function handlePriceKeydown(event, itemIndex) {
     if (event.key === 'Enter') {
         const puPriceInput = document.getElementById(`puPrice-${itemIndex}`);

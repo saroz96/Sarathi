@@ -125,15 +125,29 @@ router.post('/register', forwardAuthenticated, async (req, res) => {
 // Email verification route (using controller)
 router.get('/auth/verify-email/:token', authController.verifyEmail);
 
-router.get('/auth/verify-email', async(req, res)=> {
-    res.render('auth/resend-email-verification',{
+router.get('/auth/verify-email', async (req, res) => {
+    res.render('auth/resend-email-verification', {
         email: req.query.email || '',
-        messages: req.flash() 
+        messages: req.flash()
     })
 })
 
 // Resend verification email route (using controller)
 router.post('/auth/resend-verification', authController.resendVerificationEmail);
+
+// Password reset routes
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password/:token', authController.resetPassword);
+
+// Render views
+router.get('/forgot-password', (req, res) => {
+    res.render('auth/forgot-password');
+});
+
+router.get('/reset-password/:token', (req, res) => {
+    res.render('auth/reset-password', { token: req.params.token });
+});
+
 
 
 // // Email verification route

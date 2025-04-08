@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
-
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 const StockAdjustment = require('../../models/retailer/StockAdjustment');
 const Item = require('../../models/retailer/Item');
 const NepaliDate = require('nepali-date');
 const Company = require('../../models/retailer/Company');
 // const BillCounter = require('../../models/retailer/stockAdjustmentBillCounter');
-
-const { ensureAuthenticated, ensureCompanySelected } = require('../../middleware/auth');
+const { v4: uuidv4 } = require('uuid');
+const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const BillCounter = require('../../models/retailer/billCounter');
 const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
@@ -17,7 +18,7 @@ const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
 const checkDemoPeriod = require('../../middleware/checkDemoPeriod');
 
 // Get all stock adjustments for the current company
-router.get('/stockAdjustments', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/stockAdjustments', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
@@ -99,7 +100,7 @@ router.get('/stockAdjustments', ensureAuthenticated, ensureCompanySelected, ensu
 });
 
 // Get form to create a new stock adjustment
-router.get('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/stockAdjustments/new', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         const companyId = req.session.currentCompany;
@@ -142,7 +143,7 @@ router.get('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected, 
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
-        const items = await Item.find({ company: companyId, fiscalYear: fiscalYear })
+        const items = await Item.find({ company: companyId, fiscalYear: fiscalYear }).populate('category').populate('unit').populate('mainUnit');
 
         // Get the next bill number
         // const billCounter = await BillCounter.findOne({ company: companyId });
@@ -174,7 +175,7 @@ router.get('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected, 
     }
 });
 
-router.get('/stockAdjustments/finds', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/stockAdjustments/finds', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const today = new Date();
@@ -229,7 +230,7 @@ router.get('/stockAdjustments/finds', ensureAuthenticated, ensureCompanySelected
 
 
 //Get stock adjustment form by bill number
-router.get('/stockAdjustments/edit/billNumber', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/stockAdjustments/edit/billNumber', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const { billNumber } = req.query;
         const companyId = req.session.currentCompany;
@@ -304,189 +305,379 @@ router.get('/stockAdjustments/edit/billNumber', ensureAuthenticated, ensureCompa
     }
 });
 
+// router.post('/stockAdjustments', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, checkDemoPeriod, async (req, res) => {
+//     if (req.tradeType === 'retailer') {
+//         const session = await mongoose.startSession();
+//         session.startTransaction();
+//         try {
+//             const {
+//                 items,
+//                 adjustmentType,
+//                 note,
+//                 nepaliDate,
+//                 billDate,
+//                 isVatExempt,
+//                 vatPercentage,
+//                 discountPercentage,
+//             } = req.body;
+
+//             const companyId = req.session.currentCompany;
+//             const userId = req.user._id;
+//             const currentFiscalYear = req.session.currentFiscalYear.id;
+
+//             const company = await Company.findById(companyId);
+//             if (!company) {
+//                 req.flash('error', 'Company not found');
+//                 return res.redirect('/stockAdjustments/new');
+//             }
+
+//             const dateFormat = company.dateFormat;
+//             const date = dateFormat === 'nepali' ? nepaliDate : new Date(billDate);
+
+//             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
+//             const isVatAll = isVatExempt === 'all';
+//             const discount = parseFloat(discountPercentage) || 0;
+
+//             let subTotal = 0;
+//             let totalTaxableAmount = 0;
+//             let totalNonTaxableAmount = 0;
+//             let hasVatableItems = false;
+//             let hasNonVatableItems = false;
+
+//             const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'StockAdjustment');
+//             const itemsArray = [];
+
+//             for (const itemData of items) {
+//                 const {
+//                     item,
+//                     unit,
+//                     batchNumber,
+//                     expiryDate,
+//                     marginPercentage,
+//                     mrp,
+//                     price,
+//                     quantity,
+//                     puPrice,
+//                     reason,
+//                     vatStatus,
+//                 } = itemData;
+
+//                 const product = await Item.findById(item);
+//                 if (!product) {
+//                     req.flash('error', 'Item not found');
+//                     return res.redirect('/stockAdjustments/new');
+//                 }
+
+//                 const itemTotal = parseFloat(puPrice) * parseFloat(quantity);
+//                 subTotal += itemTotal;
+
+//                 if (product.vatStatus === 'vatable') {
+//                     hasVatableItems = true;
+//                     totalTaxableAmount += itemTotal;
+//                 } else {
+//                     hasNonVatableItems = true;
+//                     totalNonTaxableAmount += itemTotal;
+//                 }
+
+//                 const itemToAdjust = await Item.findById(item);
+//                 const parsedQuantity = parseInt(quantity);
+//                 // Generate a unique ID for the stock entry
+//                 const uniqueId = uuidv4();
+//                 // Excess adjustment
+//                 if (adjustmentType === 'xcess') {
+//                     itemToAdjust.stock += parsedQuantity;
+//                     let batchEntry = itemToAdjust.stockEntries.find(
+//                         (entry) => entry.batchNumber === batchNumber
+//                     );
+//                     if (batchEntry) {
+//                         batchEntry.quantity += parsedQuantity;
+//                     } else {
+//                         itemToAdjust.stockEntries.push({
+//                             date,
+//                             batchNumber,
+//                             expiryDate,
+//                             quantity: parsedQuantity,
+//                             price,
+//                             puPrice,
+//                             mrp,
+//                             marginPercentage,
+//                             uniqueUuId: uniqueId
+//                         });
+//                     }
+//                 }
+
+//                 // Short adjustment
+//                 if (adjustmentType === 'short') {
+//                     let remainingQuantity = parsedQuantity;
+//                     for (const batch of itemToAdjust.stockEntries) {
+//                         if (batch.batchNumber === batchNumber && batch.uniqueUuId === itemData.uniqueUuId && remainingQuantity > 0) {
+//                             const deductAmount = Math.min(batch.quantity, remainingQuantity);
+//                             batch.quantity -= deductAmount;
+//                             remainingQuantity -= deductAmount;
+
+//                             if (batch.quantity < 0) {
+//                                 req.flash('error', 'Insufficient batch stock');
+//                                 return res.redirect('/stockAdjustments/new');
+//                             }
+//                         }
+//                     }
+//                     itemToAdjust.stock -= parsedQuantity;
+//                     if (itemToAdjust.stock < 0) {
+//                         req.flash('error', 'Insufficient total stock');
+//                         return res.redirect('/stockAdjustments/new');
+//                     }
+//                 }
+
+//                 await itemToAdjust.save();
+//                 itemsArray.push({
+//                     item,
+//                     unit,
+//                     quantity: parsedQuantity,
+//                     puPrice,
+//                     batchNumber,
+//                     expiryDate,
+//                     reason: Array.isArray(reason) ? reason : [reason],
+//                     vatStatus
+//                 });
+
+//                 console.log('Items Array Push:===>', itemsArray);
+//             }
+
+//             // Calculate discount
+//             const discountForTaxable = (totalTaxableAmount * discount) / 100;
+//             const discountForNonTaxable = (totalNonTaxableAmount * discount) / 100;
+//             const finalTaxableAmount = totalTaxableAmount - discountForTaxable;
+//             const finalNonTaxableAmount = totalNonTaxableAmount - discountForNonTaxable;
+
+//             // Calculate VAT
+//             const vatAmount =
+//                 !isVatExemptBool || isVatAll
+//                     ? (finalTaxableAmount * vatPercentage) / 100
+//                     : 0;
+
+//             const totalAmount = finalTaxableAmount + finalNonTaxableAmount + vatAmount;
+
+//             const newStockAdjustment = new StockAdjustment({
+//                 items: itemsArray,
+//                 billNumber,
+//                 note,
+//                 date,
+//                 isVatAll,
+//                 isVatExempt: isVatExemptBool,
+//                 adjustmentType,
+//                 vatPercentage: isVatExemptBool ? 0 : vatPercentage,
+//                 subTotal,
+//                 discountPercentage: discount,
+//                 discountAmount: discountForTaxable + discountForNonTaxable,
+//                 nonVatAdjustment: finalNonTaxableAmount,
+//                 taxableAmount: finalTaxableAmount,
+//                 vatAmount,
+//                 totalAmount,
+//                 isActive: true,
+//                 company: companyId,
+//                 user: userId,
+//                 fiscalYear: currentFiscalYear,
+//             });
+
+//             await newStockAdjustment.save();
+//             req.flash('success', 'Stock adjustment recorded successfully');
+//             res.redirect('/stockAdjustments/new');
+//         } catch (err) {
+//             console.error('Error recording stock adjustment:', err);
+//             req.flash('error', 'Error recording stock adjustment');
+//             res.redirect('/stockAdjustments/new');
+//         }
+//     }
+// });
 
 router.post('/stockAdjustments', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, checkDemoPeriod, async (req, res) => {
     if (req.tradeType === 'retailer') {
+        const session = await mongoose.startSession();
         try {
-            const {
-                items,
-                adjustmentType,
-                note,
-                nepaliDate,
-                billDate,
-                isVatExempt,
-                vatPercentage,
-                discountPercentage,
-            } = req.body;
-
-            const companyId = req.session.currentCompany;
-            const userId = req.user._id;
-            const currentFiscalYear = req.session.currentFiscalYear.id;
-
-            const company = await Company.findById(companyId);
-            if (!company) {
-                req.flash('error', 'Company not found');
-                return res.redirect('/stockAdjustments/new');
-            }
-
-            const dateFormat = company.dateFormat;
-            const date = dateFormat === 'nepali' ? nepaliDate : new Date(billDate);
-
-            const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
-            const isVatAll = isVatExempt === 'all';
-            const discount = parseFloat(discountPercentage) || 0;
-
-            let subTotal = 0;
-            let totalTaxableAmount = 0;
-            let totalNonTaxableAmount = 0;
-            let hasVatableItems = false;
-            let hasNonVatableItems = false;
-
-            const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'StockAdjustment');
-            const itemsArray = [];
-
-            for (const itemData of items) {
+            await session.withTransaction(async () => {
                 const {
-                    item,
-                    unit,
-                    batchNumber,
-                    expiryDate,
-                    marginPercentage,
-                    mrp,
-                    price,
-                    quantity,
-                    puPrice,
-                    reason,
-                    vatStatus,
-                } = itemData;
+                    items,
+                    adjustmentType,
+                    note,
+                    nepaliDate,
+                    billDate,
+                    isVatExempt,
+                    vatPercentage,
+                    discountPercentage,
+                } = req.body;
 
-                const product = await Item.findById(item);
-                if (!product) {
-                    req.flash('error', 'Item not found');
-                    return res.redirect('/stockAdjustments/new');
+                const companyId = req.session.currentCompany;
+                const userId = req.user._id;
+                const currentFiscalYear = req.session.currentFiscalYear.id;
+
+                const company = await Company.findById(companyId).session(session);
+                if (!company) {
+                    req.flash('error', 'Company not found');
+                    throw new Error('Company not found');
                 }
 
-                const itemTotal = parseFloat(puPrice) * parseFloat(quantity);
-                subTotal += itemTotal;
+                const dateFormat = company.dateFormat;
+                const date = dateFormat === 'nepali' ? nepaliDate : new Date(billDate);
 
-                if (product.vatStatus === 'vatable') {
-                    hasVatableItems = true;
-                    totalTaxableAmount += itemTotal;
-                } else {
-                    hasNonVatableItems = true;
-                    totalNonTaxableAmount += itemTotal;
-                }
+                const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
+                const isVatAll = isVatExempt === 'all';
+                const discount = parseFloat(discountPercentage) || 0;
 
-                const itemToAdjust = await Item.findById(item);
-                const parsedQuantity = parseInt(quantity);
+                let subTotal = 0;
+                let totalTaxableAmount = 0;
+                let totalNonTaxableAmount = 0;
+                let hasVatableItems = false;
+                let hasNonVatableItems = false;
 
-                // Excess adjustment
-                if (adjustmentType === 'xcess') {
-                    itemToAdjust.stock += parsedQuantity;
-                    let batchEntry = itemToAdjust.stockEntries.find(
-                        (entry) => entry.batchNumber === batchNumber
-                    );
-                    if (batchEntry) {
-                        batchEntry.quantity += parsedQuantity;
-                    } else {
-                        itemToAdjust.stockEntries.push({
-                            date,
-                            batchNumber,
-                            expiryDate,
-                            quantity: parsedQuantity,
-                            price,
-                            puPrice,
-                            mrp,
-                            marginPercentage,
-                        });
+                const itemsArray = [];
+
+                for (const itemData of items) {
+                    const {
+                        item,
+                        unit,
+                        batchNumber,
+                        expiryDate,
+                        marginPercentage,
+                        mrp,
+                        price,
+                        quantity,
+                        puPrice,
+                        reason,
+                        vatStatus,
+                    } = itemData;
+
+                    const product = await Item.findById(item).session(session);
+                    if (!product) {
+                        req.flash('error', 'Item not found');
+                        throw new Error('Item not found');
                     }
-                }
 
-                // Short adjustment
-                if (adjustmentType === 'short') {
-                    let remainingQuantity = parsedQuantity;
-                    for (const batch of itemToAdjust.stockEntries) {
-                        if (batch.batchNumber === batchNumber && remainingQuantity > 0) {
-                            const deductAmount = Math.min(batch.quantity, remainingQuantity);
-                            batch.quantity -= deductAmount;
-                            remainingQuantity -= deductAmount;
+                    const itemTotal = parseFloat(puPrice) * parseFloat(quantity);
+                    subTotal += itemTotal;
 
-                            if (batch.quantity < 0) {
-                                req.flash('error', 'Insufficient batch stock');
-                                return res.redirect('/stockAdjustments/new');
-                            }
+                    if (product.vatStatus === 'vatable') {
+                        hasVatableItems = true;
+                        totalTaxableAmount += itemTotal;
+                    } else {
+                        hasNonVatableItems = true;
+                        totalNonTaxableAmount += itemTotal;
+                    }
+
+                    const itemToAdjust = await Item.findById(item).session(session);
+                    const parsedQuantity = parseInt(quantity);
+                    // Generate a unique ID for the stock entry
+                    const uniqueId = uuidv4();
+                    // Excess adjustment
+                    if (adjustmentType === 'xcess') {
+                        itemToAdjust.stock += parsedQuantity;
+                        let batchEntry = itemToAdjust.stockEntries.find(
+                            (entry) => entry.batchNumber === batchNumber
+                        );
+                        if (batchEntry) {
+                            batchEntry.quantity += parsedQuantity;
+                        } else {
+                            itemToAdjust.stockEntries.push({
+                                date,
+                                batchNumber,
+                                expiryDate,
+                                quantity: parsedQuantity,
+                                price,
+                                puPrice,
+                                mrp,
+                                marginPercentage,
+                                uniqueUuId: uniqueId
+                            });
                         }
                     }
-                    itemToAdjust.stock -= parsedQuantity;
-                    if (itemToAdjust.stock < 0) {
-                        req.flash('error', 'Insufficient total stock');
-                        return res.redirect('/stockAdjustments/new');
+
+                    // Short adjustment
+                    if (adjustmentType === 'short') {
+                        let remainingQuantity = parsedQuantity;
+                        for (const batch of itemToAdjust.stockEntries) {
+                            if (batch.batchNumber === batchNumber && batch.uniqueUuId === itemData.uniqueUuId && remainingQuantity > 0) {
+                                const deductAmount = Math.min(batch.quantity, remainingQuantity);
+                                batch.quantity -= deductAmount;
+                                remainingQuantity -= deductAmount;
+
+                                if (batch.quantity < 0) {
+                                    req.flash('error', 'Insufficient batch stock');
+                                    throw new Error('Insufficient batch stock');
+                                }
+                            }
+                        }
+                        itemToAdjust.stock -= parsedQuantity;
+                        if (itemToAdjust.stock < 0) {
+                            req.flash('error', 'Insufficient total stock');
+                            throw new Error('Insufficient total stock');
+                        }
                     }
+
+                    await itemToAdjust.save({ session });
+                    itemsArray.push({
+                        item,
+                        unit,
+                        quantity: parsedQuantity,
+                        puPrice,
+                        batchNumber,
+                        expiryDate,
+                        reason: Array.isArray(reason) ? reason : [reason],
+                        vatStatus
+                    });
                 }
 
-                await itemToAdjust.save();
-                itemsArray.push({
-                    item,
-                    unit,
-                    quantity: parsedQuantity,
-                    puPrice,
-                    batchNumber,
-                    expiryDate,
-                    reason: Array.isArray(reason) ? reason : [reason],
-                    vatStatus
+                // Calculate discount
+                const discountForTaxable = (totalTaxableAmount * discount) / 100;
+                const discountForNonTaxable = (totalNonTaxableAmount * discount) / 100;
+                const finalTaxableAmount = totalTaxableAmount - discountForTaxable;
+                const finalNonTaxableAmount = totalNonTaxableAmount - discountForNonTaxable;
+
+                // Calculate VAT
+                const vatAmount =
+                    !isVatExemptBool || isVatAll
+                        ? (finalTaxableAmount * vatPercentage) / 100
+                        : 0;
+
+                const totalAmount = finalTaxableAmount + finalNonTaxableAmount + vatAmount;
+
+                const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'StockAdjustment');
+                const newStockAdjustment = new StockAdjustment({
+                    items: itemsArray,
+                    billNumber,
+                    note,
+                    date,
+                    isVatAll,
+                    isVatExempt: isVatExemptBool,
+                    adjustmentType,
+                    vatPercentage: isVatExemptBool ? 0 : vatPercentage,
+                    subTotal,
+                    discountPercentage: discount,
+                    discountAmount: discountForTaxable + discountForNonTaxable,
+                    nonVatAdjustment: finalNonTaxableAmount,
+                    taxableAmount: finalTaxableAmount,
+                    vatAmount,
+                    totalAmount,
+                    isActive: true,
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear,
                 });
 
-                console.log('Items Array Push:===>', itemsArray);
-            }
-
-            // Calculate discount
-            const discountForTaxable = (totalTaxableAmount * discount) / 100;
-            const discountForNonTaxable = (totalNonTaxableAmount * discount) / 100;
-            const finalTaxableAmount = totalTaxableAmount - discountForTaxable;
-            const finalNonTaxableAmount = totalNonTaxableAmount - discountForNonTaxable;
-
-            // Calculate VAT
-            const vatAmount =
-                !isVatExemptBool || isVatAll
-                    ? (finalTaxableAmount * vatPercentage) / 100
-                    : 0;
-
-            const totalAmount = finalTaxableAmount + finalNonTaxableAmount + vatAmount;
-
-            const newStockAdjustment = new StockAdjustment({
-                items: itemsArray,
-                billNumber,
-                note,
-                date,
-                isVatAll,
-                isVatExempt: isVatExemptBool,
-                adjustmentType,
-                vatPercentage: isVatExemptBool ? 0 : vatPercentage,
-                subTotal,
-                discountPercentage: discount,
-                discountAmount: discountForTaxable + discountForNonTaxable,
-                nonVatAdjustment: finalNonTaxableAmount,
-                taxableAmount: finalTaxableAmount,
-                vatAmount,
-                totalAmount,
-                isActive: true,
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear,
+                await newStockAdjustment.save({ session });
+                req.flash('success', 'Stock adjustment recorded successfully');
             });
 
-            await newStockAdjustment.save();
-            req.flash('success', 'Stock adjustment recorded successfully');
             res.redirect('/stockAdjustments/new');
         } catch (err) {
             console.error('Error recording stock adjustment:', err);
-            req.flash('error', 'Error recording stock adjustment');
+            req.flash('error', 'Error recording stock adjustment: ' + err.message);
             res.redirect('/stockAdjustments/new');
+        } finally {
+            session.endSession();
         }
     }
 });
 
-router.get('/stockAdjustments/edit/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/stockAdjustments/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         const stockAdjustmentId = req.params.id; // Get the stock adjustment ID from the URL params
@@ -759,6 +950,100 @@ router.put('/stockAdjustments/:id', ensureAuthenticated, ensureCompanySelected, 
         } catch (err) {
             console.error('Error updating stock adjustment:', err);
             req.flash('error', 'Error updating stock adjustment');
+            res.redirect('/stockAdjustments');
+        }
+    }
+});
+
+router.get('/stockAdjustments/:id/print', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+
+        const currentCompanyName = req.session.currentCompanyName;
+        const companyId = req.session.currentCompany;
+        console.log("Company ID from session:", companyId); // Debugging line
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+        const transactionDateNepali = new NepaliDate(today).format('YYYY-MM-DD');
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
+
+        // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
+
+
+
+        // Check if fiscal year is already in the session or available in the company
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            // Fetch the fiscal year from the database if available in the session
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        // If no fiscal year is found in session or currentCompany, throw an error
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+
+            // Set the fiscal year in the session for future requests
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+
+            // Assign fiscal year ID for use
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        try {
+            const currentCompany = await Company.findById(new ObjectId(companyId));
+            console.log("Current Company:", currentCompany); // Debugging line
+
+            if (!currentCompany) {
+                req.flash('error', 'Company not found');
+                return res.redirect('/bills');
+            }
+
+            const stockAdjustmentId = req.params.id;
+            const stockAdjustment = await StockAdjustment.findById(stockAdjustmentId)
+                .populate('items.item')
+                .populate('user');
+
+            if (!stockAdjustment) {
+                req.flash('error', 'Stock Adjustment not found');
+                return res.redirect('/stockAdjustments');
+            }
+
+            // Populate unit for each item in the bill
+            for (const item of stockAdjustment.items) {
+                await item.item.populate('unit');
+            }
+
+            res.render('retailer/stockAdjustments/print', {
+                company,
+                currentFiscalYear,
+                stockAdjustment,
+                currentCompanyName,
+                currentCompany,
+                nepaliDate,
+                transactionDateNepali,
+                englishDate: stockAdjustment.englishDate,
+                companyDateFormat,
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        } catch (error) {
+            console.error("Error fetching stock adjustment for printing:", error);
+            req.flash('error', 'Error fetching stock adjustment for printing');
             res.redirect('/stockAdjustments');
         }
     }

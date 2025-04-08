@@ -206,6 +206,18 @@
             padding: 0.3rem;
             height: auto;
         }
+
+        #bill-details-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #items {
+            table-layout: fixed;
+            width: 100%;
+        }
     </style>
 
     <div class="container wow-form expanded-container">
@@ -223,7 +235,8 @@
                             <div class="col">
                                 <label for="nepaliDate">Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" autofocus>
+                                    value="<%= nepaliDate || '' %>" onkeydown="handleNepaliDateKeydown(event)"
+                                    autofocus>
                             </div>
                             <% } else { %>
                                 <div class="col">
@@ -240,11 +253,12 @@
                                             <option value="short">Short</option>
                                         </select>
                                     </div>
+
                                     <div class="col">
                                         <label for="billNumber">Vch. No:</label>
                                         <input type="number" name="billNumber" id="billNumber" class="form-control"
                                             value="<%=nextBillNumber %>" oninput="this.value='<%=nextBillNumber%>'"
-                                            onfocus="selectValue(this)">
+                                            onfocus="selectValue(this)" onkeydown="handleVchNumberKeydown(event)">
                                     </div>
 
                                     <div class="col">
@@ -275,6 +289,31 @@
                         </div>
                     </div> -->
 
+                    <div id="bill-details-container">
+                        <table class="table table-bordered compact-table" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>S.No.</th>
+                                    <th>#</th>
+                                    <th>Description of Goods</th>
+                                    <th>HSN</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th>Batch</th>
+                                    <th>Expiry</th>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="items">
+                                <!-- Item rows will be dynamically added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <hr style="border: 1px solid gray;">
+
                     <div class="form-group row">
                         <div class="col">
                             <label for="itemSearch">Search Item</label>
@@ -284,76 +323,45 @@
                         </div>
                     </div>
 
-                    <table class="table table-bordered compact-table" id="itemsTable">
-                        <thead>
-                            <tr>
-                                <th>S.No.</th>
-                                <th>#</th>
-                                <th>Description of Goods</th>
-                                <th>HSN</th>
-                                <th>Qty</th>
-                                <th>Unit</th>
-                                <th>Batch</th>
-                                <th>Expiry</th>
-                                <th>Rate</th>
-                                <th>Amount</th>
-                                <th>Reason</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="items">
-                            <!-- Item rows will be dynamically added here -->
-                        </tbody>
-                    </table>
-
-                    <hr style="border: 1px solid gray;">
-                    <div class="form-group">
-                        <label for="note">Description:</label>
-                        <input type="text" class="form-control" id="note" name="note" placeholder="add note"
-                            onkeydown="handleAddNoteKeydown(event)">
-                    </div>
-
+                    <!-- Bill Details Table -->
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <th colspan="4" class="text-center bg-light">Bill Details</th>
+                                    <th colspan="6" class="text-center bg-light">Bill Details</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <!-- Sub Total, Discount % and Discount Amount in the same row -->
                                 <tr>
                                     <td><label for="subTotal">Sub Total:</label></td>
-                                    <td colspan="2" class="text-right">
+                                    <td class="text-right">
                                         <p class="form-control-plaintext">Rs. <span id="subTotal">0.00</span></p>
                                     </td>
-                                </tr>
-
-                                <tr>
                                     <td><label for="discountPercentage">Discount %:</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountPercentage"
                                             id="discountPercentage" class="form-control" value="0.00"
-                                            oninput="calculateTotal()">
+                                            oninput="calculateTotal()" onfocus="selectValue(this)"
+                                            onkeydown="handleDiscountPercentageKeydown(event)">
                                     </td>
                                     <td><label for="discountAmount">Discount (Rs.):</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountAmount" id="discountAmount"
-                                            value="0.00" class="form-control" oninput="calculateTotal()">
+                                            value="0.00" class="form-control" oninput="calculateTotal()"
+                                            onfocus="selectValue(this)" onkeydown="handleDiscountAmountKeydown(event)">
                                     </td>
                                 </tr>
-
+                                <!-- Taxable Amount, VAT % and VAT Amount in the same row -->
                                 <tr id="taxableAmountRow">
                                     <td><label for="taxableAmount">Taxable Amount:</label></td>
-                                    <td colspan="2" class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span>
-                                        </p>
+                                    <td class="text-right">
+                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span></p>
                                     </td>
-                                </tr>
-                                <tr id="vatPercentageRow">
                                     <td><label for="vatPercentage">VAT (13%):</label></td>
                                     <td>
                                         <input type="number" name="vatPercentage" id="vatPercentage"
-                                            class="form-control" value="13.00" readonly>
+                                            class="form-control" value="13.00" readonly onfocus="selectValue(this)">
                                     </td>
                                     <td><label for="vatAmount">VAT Amount:</label></td>
                                     <td class="text-right">
@@ -361,15 +369,15 @@
                                     </td>
                                 </tr>
 
-                                <tr class="hidden">
-                                    <td><label for="roundOffAmount">Round Off:</label></td>
-                                    <td colspan="2">
-                                        <input type="number" class="form-control" step="any" id="roundOffAmount"
-                                            name="roundOffAmount" value="0.00" oninput="calculateTotal()">
-                                    </td>
-                                </tr>
-
+                                <!-- Round Off and Total Amount in the same row -->
                                 <tr>
+                                    <td><label for="roundOffAmount">Round Off:</label></td>
+                                    <td>
+                                        <input type="number" class="form-control" step="any" id="roundOffAmount"
+                                            name="roundOffAmount" value="0.00" oninput="calculateTotal()"
+                                            onfocus="selectValue(this)" onkeydown="handleRoundOffAmountKeydown(event)">
+                                    </td>
+
                                     <td><label for="totalAmount">Total Amount:</label></td>
                                     <td>
                                         <p class="form-control-plaintext">Rs. <span id="totalAmount">0.00</span></p>
@@ -381,6 +389,11 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <div class="form-group">
+                            <label for="note">Description:</label>
+                            <input type="text" class="form-control" id="note" name="note" placeholder="add note"
+                                onkeydown="handleAddNoteKeydown(event)">
+                        </div>
                     </div>
 
                     <!-- Action Buttons -->
@@ -463,6 +476,9 @@
 
     <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
         type="text/javascript"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script>
         let itemIndex = 0;
         let currentFocus = 0;
@@ -903,6 +919,8 @@
             </button>
         </td>
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
+        <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
+
     `;
             tbody.appendChild(tr);
             itemIndex++;
@@ -953,6 +971,7 @@
                     <td>${entry.puPrice}</td>
                     <td>${entry.marginPercentage}</td>
                     <td>${entry.mrp}</td>
+                    <td class="hidden">${entry.uniqueUuId}</td>
 
                 </tr>
             `;
@@ -987,7 +1006,8 @@
                         const batchNumber = row.cells[0].textContent;
                         const expiryDate = row.cells[1].textContent;
                         const puPrice = row.cells[4].textContent;
-                        callback({ batchNumber, expiryDate, puPrice });
+                        const uniqueUuId=row.cells[7].textContent;
+                        callback({ batchNumber, expiryDate, puPrice, uniqueUuId });
                         $(modal).modal('hide');
                     }
                 });
@@ -1145,12 +1165,12 @@
             // Toggle display based on VAT exemption
             if (isVatExempt) {
                 taxableAmountRow.style.display = 'none';
-                vatPercentageRow.style.display = 'none';
+                // vatPercentageRow.style.display = 'none';
                 // vatAmountRow.style.display = 'none';
-                moveToNextVisibleInput(document.getElementById('isVatExempt'));
+                // moveToNextVisibleInput(document.getElementById('isVatExempt'));
             } else {
                 taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
-                vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
+                // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
                 // vatAmountRow.style.display = 'table-row'; // Show VAT amount row
             }
 
@@ -1193,13 +1213,10 @@
             }
 
             // Simulate form submission (replace this with actual form submission logic)
-            setTimeout(() => {
                 billForm.submit();
 
                 // Reset button text and enable it after submission
-                saveButton.innerText = 'Save Bill';
                 saveButton.disabled = false;
-            }, 2000); // Simulating a delay; adjust or remove as needed
         }
 
 
@@ -1300,6 +1317,7 @@
             }
         });
 
+
         // Function to focus on the quantity field of the last added item
         function focusOnLastQuantityField() {
             const tbody = document.getElementById('items');
@@ -1313,6 +1331,23 @@
                 if (lastQuantityField) {
                     lastQuantityField.focus();
                 }
+            }
+        }
+        function handleNepaliDateKeydown(event) {
+            if (event.key === 'Enter') {
+                const adjustmentType = document.getElementById('adjustmentType');
+                adjustmentType.focus();
+                adjustmentType.select();
+
+            }
+        }
+
+        function handleVchNumberKeydown(event) {
+            if (event.key === 'Enter') {
+                const isVatExempt = document.getElementById('isVatExempt');
+                isVatExempt.focus();
+                isVatExempt.select();
+
             }
         }
 
@@ -1332,8 +1367,8 @@
                 }
             } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
                 if (event.key === 'Enter') {
-                    const addNoteInput = document.getElementById('note')
-                    addNoteInput.focus();
+                    const discountPercentage = document.getElementById('discountPercentage')
+                    discountPercentage.focus();
                 }
             }
         }
@@ -1375,109 +1410,208 @@
             }
         }
 
+        // function handlePriceKeydown(event, itemIndex) {
+        //     if (event.key === 'Enter') {
+        //         const puPriceInput = document.getElementById(`puPrice-${itemIndex}`);
+        //         const adjustmentType = document.getElementById('adjustmentType').value;
+
+        //         if (puPriceInput.value) {
+        //             // Only show the modal if adjustment type is 'xcess'
+        //             if (adjustmentType === 'xcess') {
+        //                 // Set the PU Price in the modal
+        //                 document.getElementById('puPrice').value = puPriceInput.value;
+
+        //                 // Show the sales price modal
+        //                 $('#setSalesPriceModal').modal('show');
+
+        //                 // Handle modal shown event to focus on the margin percentage input
+        //                 $('#setSalesPriceModal').on('shown.bs.modal', function () {
+        //                     document.getElementById('marginPercentage').focus();
+        //                 });
+
+        //                 // Handle margin percentage input
+        //                 const marginPercentageInput = document.getElementById('marginPercentage');
+        //                 marginPercentageInput.oninput = function () {
+        //                     updateSalesPriceFromMargin(puPriceInput.value);
+        //                 };
+
+        //                 // Handle MRP input
+        //                 const mrpInput = document.getElementById('mrp');
+        //                 mrpInput.oninput = function () {
+        //                     updateSalesPriceFromMRP(mrpInput.value);
+        //                     updateMarginFromMRPAndSalesPrice(mrpInput.value, puPriceInput.value);
+        //                 };
+
+        //                 // Handle sales price input
+        //                 const salesPriceInput = document.getElementById('salesPrice');
+        //                 salesPriceInput.oninput = function () {
+        //                     updateMarginFromMRPAndSalesPrice(mrpInput.value, puPriceInput.value);
+        //                 };
+
+        //                 // Handle currency change
+        //                 const currencySelect = document.getElementById('currency');
+        //                 currencySelect.onchange = function () {
+        //                     updateSalesPriceFromMRP(mrpInput.value);
+        //                 };
+
+        //                 // Handle sales price save action
+        //                 const saveSalesPriceButton = document.getElementById('saveSalesPrice');
+        //                 saveSalesPriceButton.onclick = function () {
+        //                     const salesPrice = document.getElementById('salesPrice').value;
+        //                     const mrpValue = document.getElementById('mrp').value;
+        //                     const marginPercentage = document.getElementById('marginPercentage').value;
+
+        //                     if (salesPrice) {
+        //                         // Store sales price in a hidden input within the current row
+        //                         const tr = puPriceInput.closest('tr');
+        //                         const salesPriceInput = document.createElement('input');
+        //                         salesPriceInput.type = 'hidden';
+        //                         salesPriceInput.name = `items[${itemIndex}][price]`;
+        //                         salesPriceInput.value = salesPrice;
+        //                         tr.appendChild(salesPriceInput);
+
+        //                         // Store MRP in a hidden input within the current row
+        //                         const mrpInputHidden = document.createElement('input');
+        //                         mrpInputHidden.type = 'hidden';
+        //                         mrpInputHidden.name = `items[${itemIndex}][mrp]`;
+        //                         mrpInputHidden.value = mrpValue;
+        //                         tr.appendChild(mrpInputHidden);
+
+        //                         // Store marginPercentage in a hidden input within the current row
+        //                         const marginPercentageInputHidden = document.createElement('input');
+        //                         marginPercentageInputHidden.type = 'hidden';
+        //                         marginPercentageInputHidden.name = `items[${itemIndex}][marginPercentage]`;
+        //                         marginPercentageInputHidden.value = marginPercentage;
+        //                         tr.appendChild(marginPercentageInputHidden);
+
+        //                         // Close the modal
+        //                         $('#setSalesPriceModal').modal('hide');
+
+        //                         // Now focus on the reason input field based on the adjustment type
+        //                         const shortReasonInput = document.getElementById(`shortReason-${itemIndex}`);
+        //                         const xcessReasonInput = document.getElementById(`xcessReason-${itemIndex}`);
+
+        //                         if (adjustmentType === 'short' && shortReasonInput) {
+        //                             shortReasonInput.focus();
+        //                             shortReasonInput.select();
+        //                         } else if (adjustmentType === 'xcess' && xcessReasonInput) {
+        //                             xcessReasonInput.focus();
+        //                             // xcessReasonInput.select();
+        //                         }
+        //                     } else {
+        //                         alert('Please enter a valid sales price.');
+        //                     }
+        //                 };
+        //             } else {
+        //                 // If adjustment type is 'short', directly move to reason input
+        //                 const shortReasonInput = document.getElementById(`shortReason-${itemIndex}`);
+        //                 if (shortReasonInput) {
+        //                     shortReasonInput.focus();
+        //                     // shortReasonInput.select();
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
         function handlePriceKeydown(event, itemIndex) {
-            if (event.key === 'Enter') {
-                const puPriceInput = document.getElementById(`puPrice-${itemIndex}`);
-                const adjustmentType = document.getElementById('adjustmentType').value;
+    if (event.key === 'Enter') {
+        const puPriceInput = document.getElementById(`puPrice-${itemIndex}`);
+        const tr = puPriceInput.closest('tr');
+        const adjustmentType = document.getElementById('adjustmentType').value;
 
-                if (puPriceInput.value) {
-                    // Only show the modal if adjustment type is 'xcess'
-                    if (adjustmentType === 'xcess') {
-                        // Set the PU Price in the modal
-                        document.getElementById('puPrice').value = puPriceInput.value;
+        if (puPriceInput.value) {
+            // Remove any existing hidden inputs for this item first
+            ['price', 'mrp', 'marginPercentage', 'currency'].forEach(field => {
+                const existingInput = tr.querySelector(`input[name="items[${itemIndex}][${field}]"]`);
+                if (existingInput) {
+                    tr.removeChild(existingInput);
+                }
+            });
 
-                        // Show the sales price modal
-                        $('#setSalesPriceModal').modal('show');
+            // Only show the modal if adjustment type is 'xcess'
+            if (adjustmentType === 'xcess') {
+                // Set the PU Price in the modal
+                document.getElementById('puPrice').value = puPriceInput.value;
 
-                        // Handle modal shown event to focus on the margin percentage input
-                        $('#setSalesPriceModal').on('shown.bs.modal', function () {
-                            document.getElementById('marginPercentage').focus();
-                        });
+                // Show the sales price modal
+                $('#setSalesPriceModal').modal('show');
 
-                        // Handle margin percentage input
-                        const marginPercentageInput = document.getElementById('marginPercentage');
-                        marginPercentageInput.oninput = function () {
-                            updateSalesPriceFromMargin(puPriceInput.value);
+                // Handle modal shown event to focus on the margin percentage input
+                $('#setSalesPriceModal').on('shown.bs.modal', function () {
+                    document.getElementById('marginPercentage').focus();
+                });
+
+                // Handle margin percentage input
+                const marginPercentageInput = document.getElementById('marginPercentage');
+                marginPercentageInput.oninput = function () {
+                    updateSalesPriceFromMargin(puPriceInput.value);
+                };
+
+                // Handle MRP input
+                const mrpInput = document.getElementById('mrp');
+                mrpInput.oninput = function () {
+                    updateSalesPriceFromMRP(mrpInput.value);
+                    updateMarginFromMRPAndSalesPrice(mrpInput.value, puPriceInput.value);
+                };
+
+                // Handle sales price input
+                const salesPriceInput = document.getElementById('salesPrice');
+                salesPriceInput.oninput = function () {
+                    updateMarginFromMRPAndSalesPrice(mrpInput.value, puPriceInput.value);
+                };
+
+                // Handle currency change
+                const currencySelect = document.getElementById('currency');
+                currencySelect.onchange = function () {
+                    updateSalesPriceFromMRP(mrpInput.value);
+                };
+
+                // Handle sales price save action
+                const saveSalesPriceButton = document.getElementById('saveSalesPrice');
+                saveSalesPriceButton.onclick = function () {
+                    const salesPrice = document.getElementById('salesPrice').value;
+                    const mrpValue = document.getElementById('mrp').value;
+                    const marginPercentage = document.getElementById('marginPercentage').value;
+                    const currency = document.getElementById('currency').value;
+
+                    if (salesPrice) {
+                        // Create new hidden inputs with the latest values
+                        const createHiddenInput = (name, value) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = `items[${itemIndex}][${name}]`;
+                            input.value = value;
+                            tr.appendChild(input);
                         };
 
-                        // Handle MRP input
-                        const mrpInput = document.getElementById('mrp');
-                        mrpInput.oninput = function () {
-                            updateSalesPriceFromMRP(mrpInput.value);
-                            updateMarginFromMRPAndSalesPrice(mrpInput.value, puPriceInput.value);
-                        };
+                        createHiddenInput('price', salesPrice);
+                        createHiddenInput('mrp', mrpValue);
+                        createHiddenInput('marginPercentage', marginPercentage);
+                        createHiddenInput('currency', currency);
 
-                        // Handle sales price input
-                        const salesPriceInput = document.getElementById('salesPrice');
-                        salesPriceInput.oninput = function () {
-                            updateMarginFromMRPAndSalesPrice(mrpInput.value, puPriceInput.value);
-                        };
+                        // Close the modal
+                        $('#setSalesPriceModal').modal('hide');
 
-                        // Handle currency change
-                        const currencySelect = document.getElementById('currency');
-                        currencySelect.onchange = function () {
-                            updateSalesPriceFromMRP(mrpInput.value);
-                        };
-
-                        // Handle sales price save action
-                        const saveSalesPriceButton = document.getElementById('saveSalesPrice');
-                        saveSalesPriceButton.onclick = function () {
-                            const salesPrice = document.getElementById('salesPrice').value;
-                            const mrpValue = document.getElementById('mrp').value;
-                            const marginPercentage = document.getElementById('marginPercentage').value;
-
-                            if (salesPrice) {
-                                // Store sales price in a hidden input within the current row
-                                const tr = puPriceInput.closest('tr');
-                                const salesPriceInput = document.createElement('input');
-                                salesPriceInput.type = 'hidden';
-                                salesPriceInput.name = `items[${itemIndex}][price]`;
-                                salesPriceInput.value = salesPrice;
-                                tr.appendChild(salesPriceInput);
-
-                                // Store MRP in a hidden input within the current row
-                                const mrpInputHidden = document.createElement('input');
-                                mrpInputHidden.type = 'hidden';
-                                mrpInputHidden.name = `items[${itemIndex}][mrp]`;
-                                mrpInputHidden.value = mrpValue;
-                                tr.appendChild(mrpInputHidden);
-
-                                // Store marginPercentage in a hidden input within the current row
-                                const marginPercentageInputHidden = document.createElement('input');
-                                marginPercentageInputHidden.type = 'hidden';
-                                marginPercentageInputHidden.name = `items[${itemIndex}][marginPercentage]`;
-                                marginPercentageInputHidden.value = marginPercentage;
-                                tr.appendChild(marginPercentageInputHidden);
-
-                                // Close the modal
-                                $('#setSalesPriceModal').modal('hide');
-
-                                // Now focus on the reason input field based on the adjustment type
-                                const shortReasonInput = document.getElementById(`shortReason-${itemIndex}`);
-                                const xcessReasonInput = document.getElementById(`xcessReason-${itemIndex}`);
-
-                                if (adjustmentType === 'short' && shortReasonInput) {
-                                    shortReasonInput.focus();
-                                    shortReasonInput.select();
-                                } else if (adjustmentType === 'xcess' && xcessReasonInput) {
-                                    xcessReasonInput.focus();
-                                    xcessReasonInput.select();
-                                }
-                            } else {
-                                alert('Please enter a valid sales price.');
-                            }
-                        };
-                    } else {
-                        // If adjustment type is 'short', directly move to reason input
-                        const shortReasonInput = document.getElementById(`shortReason-${itemIndex}`);
-                        if (shortReasonInput) {
-                            shortReasonInput.focus();
-                            // shortReasonInput.select();
+                        // Now focus on the reason input field based on the adjustment type
+                        const xcessReasonInput = document.getElementById(`xcessReason-${itemIndex}`);
+                        if (xcessReasonInput) {
+                            xcessReasonInput.focus();
                         }
+                    } else {
+                        alert('Please enter a valid sales price.');
                     }
+                };
+            } else {
+                // If adjustment type is 'short', directly move to reason input
+                const shortReasonInput = document.getElementById(`shortReason-${itemIndex}`);
+                if (shortReasonInput) {
+                    shortReasonInput.focus();
                 }
             }
         }
+    }
+}
 
 
         // Function to update sales price based on margin percentage
@@ -1550,25 +1684,32 @@
             }
         }
 
-
-        function moveToNextInput(event) {
+        function handleDiscountPercentageKeydown(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission
+                const discountAmount = document.getElementById('discountAmount');
+                discountAmount.focus();
+                discountAmount.select();
 
-                // Move to the next visible input
-                moveToNextVisibleInput(event.target);
             }
         }
 
+        function handleDiscountAmountKeydown(event) {
+            if (event.key === 'Enter') {
+                const roundOffAmount = document.getElementById('roundOffAmount');
+                roundOffAmount.focus();
+                roundOffAmount.select();
 
-        // Get all the input elements within the form
-        const inputs = document.querySelectorAll('form input, form select form group');
+            }
+        }
 
-        // Attach the moveToNextInput function to the keydown event for each input field
-        inputs.forEach(input => {
-            input.addEventListener('keydown', moveToNextInput);
-        });
+        function handleRoundOffAmountKeydown(event) {
+            if (event.key === 'Enter') {
+                const noteInput = document.getElementById('note');
+                noteInput.focus();
+                noteInput.select();
 
+            }
+        }
 
         // Function to handle Enter key press for moving to the next input field for setSalesPrice model
         function moveToNextField(event, nextFieldId) {
@@ -1623,4 +1764,23 @@
                 document.getElementById('itemSearch').focus();
             }
         });
+
+
+        // function moveToNextInput(event) {
+        //     if (event.key === 'Enter') {
+        //         event.preventDefault(); // Prevent form submission
+
+        //         // Move to the next visible input
+        //         moveToNextVisibleInput(event.target);
+        //     }
+        // }
+
+
+        // // Get all the input elements within the form
+        // const inputs = document.querySelectorAll('form input, form select form group');
+
+        // // Attach the moveToNextInput function to the keydown event for each input field
+        // inputs.forEach(input => {
+        //     input.addEventListener('keydown', moveToNextInput);
+        // });
     </script>

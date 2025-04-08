@@ -1,6 +1,7 @@
 const crypto = require('crypto'); // Add this at the top
 const User = require('../models/User');
-const { transporter } = require('../config/email');
+const { transporter, generateToken } = require('../config/email');
+const { sendResetEmail } = require('../config/sendResetEmail');
 
 
 // Send verification email
@@ -139,5 +140,108 @@ exports.resendVerificationEmail = async (req, res) => {
         console.error('Error resending verification email:', err);
         req.flash('error', 'Error resending verification email');
         res.redirect('/login');
+    }
+};
+
+//request for reset a new password(case: user forget password)
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).render('forgot-password', {
+                message: {
+                    type: 'danger',
+                    text: 'No user found with that email address'
+                }
+            });
+        }
+
+        // Generate and save reset token
+        const resetToken = generateToken();
+        user.resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save({ validateBeforeSave: false });
+
+        // Create reset URL
+        const resetURL = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+
+        // Send email
+        await sendResetEmail(user.email, resetURL);
+
+        res.render('auth/forgot-password', {
+            message: {
+                type: 'success',
+                text: 'Password reset link sent to your email!'
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).render('forgot-password', {
+            message: {
+                type: 'danger',
+                text: 'Error processing your request. Please try again later.'
+            }
+        });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const hashedToken = crypto
+            .createHash('sha256')
+            .update(req.params.token)
+            .digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).render('reset-password', {
+                token: req.params.token,
+                message: {
+                    type: 'danger',
+                    text: 'Token is invalid or has expired'
+                }
+            });
+        }
+
+        if (req.body.password !== req.body.passwordConfirm) {
+            return res.render('reset-password', {
+                token: req.params.token,
+                message: {
+                    type: 'danger',
+                    text: 'Passwords do not match'
+                }
+            });
+        }
+
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.render('auth/reset-password', {
+            token: null,
+            message: {
+                type: 'success',
+                text: 'Password updated successfully! You can now log in with your new password.'
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).render('auth/reset-password', {
+            token: req.params.token,
+            message: {
+                type: 'danger',
+                text: 'Error resetting your password. Please try again.'
+            }
+        });
     }
 };
