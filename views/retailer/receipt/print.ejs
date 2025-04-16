@@ -24,7 +24,7 @@
                                         <%= currentCompany.country %>
                         </b>
                         <br>
-                        VAT NO.: <span id="pan-vat-container"></span>
+                        TPIN.: <span id="pan-vat-container"></span>
                     </h4>
                     <hr style="border: 0.5px solid;">
                 </div>
@@ -116,15 +116,20 @@
                 </div>
             </div>
             <br>
-            <div class="signature-section" style="text-decoration: overline;">
+            <div class="signature-section" style="display: flex; justify-content: space-between;margin-top:5px;">
                 <div class="signature">
-                    <p>Prepared By:</p>
+                    <p style="margin-bottom: 0;"><strong>
+                        <%= receipt.user ? receipt.user.name : 'N/A' %>
+                    </strong></p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Prepared By:</p>
                 </div>
                 <div class="signature">
-                    <p>Checked By:</p>
+                    <p style="margin-bottom: 0;">&nbsp;</p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Checked By:</p>
                 </div>
                 <div class="signature">
-                    <p>Approved By:</p>
+                    <p style="margin-bottom: 0;">&nbsp;</p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Approved By:</p>
                 </div>
             </div>
         </div>

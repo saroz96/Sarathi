@@ -634,7 +634,7 @@
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <a href="/items-list" class="nav-link">
+                  <a href="/items-ledger" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Item Ledger</p>
                   </a>
@@ -897,6 +897,12 @@
                   <a href="/purchaseReturn-vat-report" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Purchase Return Register</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/retailer/monthly-vat-report" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Monthly Vat Summary</p>
                   </a>
                 </li>
               </ul>
@@ -1371,31 +1377,45 @@
           </div>
         </div>
         <div class="modal-footer">
+          <div class="expiry-summary me-auto">
+            <small>
+              <span class="expiry-status expired me-2">Expired</span>
+              <span class="expiry-status danger me-2">Critical (≤30 days)</span>
+              <span class="expiry-status warning me-2">Warning (≤90 days)</span>
+            </small>
+          </div>
           <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Purchase Price Modal -->
-  <div class="modal fade" id="purchasePriceModal" tabindex="-1" aria-labelledby="purchasePriceModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-md">
-      <!-- <div class="modal-dialog modal-dialog-centered" role="document"> -->
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="purchasePriceModalLabel">Purchase Price</h5>
-          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Purchase Price Modal -->
+<div class="modal fade" id="purchasePriceModal" tabindex="-1" aria-labelledby="purchasePriceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">  <!-- Changed to modal-lg for better fit -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purchasePriceModalLabel">Purchase Price</h5>
+                <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="purchasePriceDisplay"></div>
+                <div class="expiry-legend mt-3">
+                    <small class="text-muted">
+                        <strong>Expiry Legend:</strong>
+                        <span class="expiry-badge-modal expired ms-2">EXPIRED</span>
+                        <span class="expiry-badge-modal danger ms-2">≤30d</span>
+                        <span class="expiry-badge-modal warning ms-2">≤90d</span>
+                        <span class="expiry-badge-modal safe ms-2">OK</span>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <p id="purchasePriceDisplay">Purchase Price: Rs.0</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
 
   <!-- Batch Update Modal -->
   <div class="modal fade" id="updateBatchModal" tabindex="-1" aria-labelledby="updateBatchModalLabel"
@@ -1430,83 +1450,40 @@
       </div>
     </div>
   </div>
-
-  <!-- Contact Modal
-  <div class="modal fade" id="contactsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+  <!-- Contact Modal -->
+  <div class="modal fade" id="contactsModal" tabindex="-1" aria-labelledby="contactsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 75%;">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Contact Information</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title" id="contactsModalLabel">Contact Details</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="table-responsive">
-            <table class="table table-striped" id="contactsTable">
-              <thead>
-                <tr>
-                  <th>Party Name</th>
-                  <th>Address</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Contact Person</th>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
-            </table>
+          <form class="mb-4">
+            <div class="form-group">
+              <input type="text" class="form-control" id="contactSearch"
+                placeholder="Search contacts by name, address, phone, email or contact person..." autocomplete="off"
+                onfocus="selectValue(this)">
+            </div>
+          </form>
+          <!-- Container for contacts -->
+          <div id="contactsContainer">
+            <!-- Header Row -->
+            <ul id="contactsHeader">
+              <li class="contact-cell">Name</li>
+              <li class="contact-cell">Address</li>
+              <li class="contact-cell">Phone</li>
+              <li class="contact-cell">Email</li>
+              <li class="contact-cell">Contact Person</li>
+            </ul>
+            <ul id="contactsList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+              <!-- Contact details will be dynamically inserted here -->
+            </ul>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div> -->
-
-  <!-- Contact Modal -->
-  <div class="modal fade" id="contactsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header bg-light sticky-top">
-          <h5 class="modal-title fw-bold">Contact Information</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-0">
-          <!-- Search Bar -->
-          <!-- Search Bar -->
-          <div class="sticky-top bg-white p-3 border-bottom">
-            <div class="input-group">
-              <span class="input-group-text">
-                <i class="fas fa-search"></i>
-              </span>
-              <input type="text" id="contactSearch" class="form-control" placeholder="Search contacts...">
-              <button class="btn btn-outline-secondary" type="button" id="clearSearch">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Result Count (add to modal footer) -->
           <div class="text-muted small me-auto" id="resultCount"></div>
-          <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
-            <table class="table table-striped table-hover mb-0" id="contactsTable">
-              <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
-                <tr>
-                  <th class="bg-primary text-white">Name</th>
-                  <th class="bg-primary text-white">Address</th>
-                  <th class="bg-primary text-white">Phone</th>
-                  <th class="bg-primary text-white">Email</th>
-                  <th class="bg-primary text-white">Contact Person</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Data will be loaded here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="modal-footer sticky-bottom bg-light">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -1864,26 +1841,78 @@ function openPurchasePriceModal(product) {
     selectedProduct = product; // Store product globally
     const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
     if (purchasePriceDisplay) {
-        let tableContent = '<table class="table table-bordered"><thead><tr><th>Cost Rate</th><th>Stock</th><th>Unit</th><th>Batch</th><th>Expiry Date</th><th>Sales Rate</th><th>Action</th></tr></thead><tbody>';
+        let tableContent = `
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Cost Rate</th>
+                        <th>Stock</th>
+                        <th>Unit</th>
+                        <th>Batch</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                        <th>Sales Rate</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
         // Filter out entries with quantity <= 0
         const validStockEntries = product.stockEntries.filter(entry => entry.quantity > 0);
+        const now = new Date();
 
         if (validStockEntries.length > 0) {
-            tableContent += validStockEntries.map((entry, index) => `
-                <tr>
-                    <td>Rs.${entry.puPrice.toFixed(2)}</td>
-                    <td>${entry.quantity}</td>
-                    <td>${product.unit ? product.unit.name : 'No unit'}</td>
-                    <td>${entry.batchNumber}</td>
-                    <td>${entry.expiryDate}</td>
-                    <td>Rs.${entry.price.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="openBatchUpdateModal(${index}, '${entry.batchNumber}', '${entry.expiryDate}', '${entry.price}')">
-                            Update
-                        </button>
-                    </td>
-                </tr>`).join('');
+            tableContent += validStockEntries.map((entry, index) => {
+                // Calculate expiry status for this batch
+                const expiryDate = new Date(entry.expiryDate);
+                const timeDiff = expiryDate.getTime() - now.getTime();
+                const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                
+                let status = 'safe';
+                let statusText = 'OK';
+                let statusClass = 'safe';
+                
+                if (daysUntilExpiry <= 0) {
+                    status = 'expired';
+                    statusText = 'EXPIRED';
+                    statusClass = 'expired';
+                } else if (daysUntilExpiry <= 30) {
+                    status = 'danger';
+                    statusText = `${daysUntilExpiry}d`;
+                    statusClass = 'danger';
+                } else if (daysUntilExpiry <= 90) {
+                    status = 'warning';
+                    statusText = `${daysUntilExpiry}d`;
+                    statusClass = 'warning';
+                }
+                
+                // Format the expiry date for display
+                const formattedExpiryDate = expiryDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                return `
+                    <tr class="${status}">
+                        <td>Rs.${entry.puPrice.toFixed(2)}</td>
+                        <td>${entry.quantity}</td>
+                        <td>${product.unit ? product.unit.name : 'No unit'}</td>
+                        <td>${entry.batchNumber}</td>
+                        <td>${formattedExpiryDate}</td>
+                        <td>
+                            <span class="expiry-badge-modal ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>Rs.${entry.price}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="openBatchUpdateModal(${index}, '${entry.batchNumber}', '${entry.expiryDate}', '${entry.price}')">
+                                Update
+                            </button>
+                        </td>
+                    </tr>`;
+            }).join('');
         } else {
             // If no stock entries exist or all have 0 quantity
             tableContent += `
@@ -1891,6 +1920,7 @@ function openPurchasePriceModal(product) {
                     <td>Rs.0.00</td>
                     <td>0</td>
                     <td>${product.unit ? product.unit.name : 'No unit'}</td>
+                    <td>-</td>
                     <td>-</td>
                     <td>-</td>
                     <td>Rs.0.00</td>
@@ -1907,6 +1937,17 @@ function openPurchasePriceModal(product) {
         // Show the modal
         new bootstrap.Modal(document.getElementById('purchasePriceModal')).show();
     }
+}
+
+// Helper function to format dates (add this to your utilities)
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 }
 
 
@@ -1964,7 +2005,6 @@ function openPurchasePriceModal(product) {
           }
         } catch (error) {
           console.error('Error updating batch:', error);
-          alert('Something went wrong! Try again.');
         }
       } else {
         alert('Invalid product data!');
@@ -2022,6 +2062,18 @@ function openPurchasePriceModal(product) {
           listItem.dataset.index = index;
           listItem.dataset.vatStatus = product.vatStatus;
 
+          // Calculate expiry status for the product
+          const expiryStatus = calculateProductExpiryStatus(product);
+
+          // Add expiry status class to the row
+          if (expiryStatus.status === 'expired') {
+            listItem.classList.add('expired');
+          } else if (expiryStatus.status === 'danger') {
+            listItem.classList.add('danger');
+          } else if (expiryStatus.status === 'warning') {
+            listItem.classList.add('warning');
+          }
+
           if (product.vatStatus === 'vatable') {
             listItem.classList.add('vatable');
           } else if (product.vatStatus === 'vatExempt') {
@@ -2032,6 +2084,29 @@ function openPurchasePriceModal(product) {
           const latestStockEntry = product.stockEntries[product.stockEntries.length - 1];
           const price = latestStockEntry ? latestStockEntry.price : 0;
           const margin = latestStockEntry ? latestStockEntry.marginPercentage : 'Null';
+
+          // // Create expiry status badge HTML
+          // let expiryBadge = '';
+          // if (expiryStatus.expiredItems > 0 || expiryStatus.dangerItems > 0 || expiryStatus.warningItems > 0) {
+          //   let statusText = '';
+          //   if (expiryStatus.expiredItems > 0) {
+          //     statusText = 'EXPIRED';
+          //   } else if (expiryStatus.dangerItems > 0) {
+          //     statusText = 'DANGER';
+          //   } else {
+          //     statusText = 'WARNING';
+          //   }
+
+          //   expiryBadge = `<span class="expiry-status ${expiryStatus.status}">
+          //       ${statusText}
+          //       <span class="expiry-badge">${expiryStatus.expiredItems > 0 ? expiryStatus.expiredItems + ' exp' :
+          //       expiryStatus.dangerItems > 0 ? expiryStatus.dangerItems + ' crit' :
+          //         expiryStatus.warningItems + ' warn'
+          //     }</span>
+          //   </span>`;
+          // }
+
+
 
           listItem.innerHTML = `
             <div class="product-cell">${product.uniqueNumber}</div>
@@ -2051,6 +2126,43 @@ function openPurchasePriceModal(product) {
         highlightItem(currentFocus);
       }
 
+      // Helper function to calculate expiry status for a product
+      function calculateProductExpiryStatus(product) {
+        const now = new Date();
+        let nearestExpiry = null;
+        let expiredItems = 0;
+        let warningItems = 0;
+        let dangerItems = 0;
+
+        product.stockEntries.forEach(entry => {
+          const expiryDate = new Date(entry.expiryDate);
+          if (expiryDate < now) {
+            expiredItems += entry.quantity;
+          } else {
+            if (!nearestExpiry || expiryDate < nearestExpiry) {
+              nearestExpiry = expiryDate;
+            }
+
+            const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
+            if (daysUntilExpiry <= 30) {
+              dangerItems += entry.quantity;
+            } else if (daysUntilExpiry <= 90) {
+              warningItems += entry.quantity;
+            }
+          }
+        });
+
+        return {
+          nearestExpiry,
+          expiredItems,
+          warningItems,
+          dangerItems,
+          status: expiredItems > 0 ? 'expired' :
+            dangerItems > 0 ? 'danger' :
+              warningItems > 0 ? 'warning' : 'safe'
+        };
+      }
+
       function highlightItem(index) {
         const items = document.querySelectorAll('#productDetailsList .list-group-item');
         items.forEach(item => {
@@ -2062,6 +2174,16 @@ function openPurchasePriceModal(product) {
           } else {
             item.style.backgroundColor = '';
           }
+
+          // Re-apply expiry status classes
+          if (item.classList.contains('expired')) {
+            item.style.backgroundColor = '#ffdddd';
+          } else if (item.classList.contains('danger')) {
+            item.style.backgroundColor = '#ffcccc';
+          } else if (item.classList.contains('warning')) {
+            item.style.backgroundColor = '#fff3cd';
+          }
+
           item.classList.remove('active');
           item.style.color = 'black';
         });
@@ -2135,105 +2257,131 @@ function openPurchasePriceModal(product) {
 
     //----for contacts--------------------------
     document.addEventListener('DOMContentLoaded', function () {
-      // Get elements
-      const contactsButton = document.getElementById('contactsButton');
-      const contactsModal = new bootstrap.Modal(document.getElementById('contactsModal'));
-      const contactsTableBody = document.querySelector('#contactsTable tbody');
-      const contactSearch = document.getElementById('contactSearch'); // Add this input field to your modal
-      const clearSearch = document.getElementById('clearSearch'); // Add clear button next to search
-      const resultCount = document.getElementById('resultCount'); // Add this element to show count
-
+      let contacts = [];
+      let currentFocus = 0;
       let allContacts = []; // Store all contacts for filtering
 
-      // Function to filter and display contacts
-      function filterContacts(searchTerm = '') {
-        if (!allContacts.length) return;
+      document.getElementById('contactsButton').addEventListener('click', function () {
+        document.getElementById('contactSearch').value = ''; // Clear the search field
+        fetch('/api/contacts')
+          .then(response => response.json())
+          .then(data => {
+            allContacts = data;
+            contacts = data;
+            displayContacts(contacts);
+            new bootstrap.Modal(document.getElementById('contactsModal')).show();
+          })
+          .catch(error => console.error('Error fetching contact details:', error));
+      });
 
-        const term = searchTerm.toLowerCase();
-        let filteredContacts = allContacts;
+      document.getElementById('contactSearch').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredContacts = allContacts.filter(contact =>
+          (contact.name && contact.name.toLowerCase().includes(searchQuery)) ||
+          (contact.address && contact.address.toLowerCase().includes(searchQuery)) ||
+          (contact.phone && contact.phone.toLowerCase().includes(searchQuery)) ||
+          (contact.email && contact.email.toLowerCase().includes(searchQuery)) ||
+          (contact.contactperson && contact.contactperson.toLowerCase().includes(searchQuery))
+        );
+        contacts = filteredContacts;
+        displayContacts(contacts);
+      });
 
-        if (term) {
-          filteredContacts = allContacts.filter(contact => {
-            return (
-              (contact.name && contact.name.toLowerCase().includes(term)) ||
-              (contact.address && contact.address.toLowerCase().includes(term)) ||
-              (contact.phone && contact.phone.toLowerCase().includes(term)) ||
-              (contact.email && contact.email.toLowerCase().includes(term)) ||
-              (contact.contactperson && contact.contactperson.toLowerCase().includes(term))
-            );
-          });
-        }
+      function displayContacts(contacts) {
+        const list = document.getElementById('contactsList');
+        list.innerHTML = '';
+        currentFocus = 0;
 
-        // Render filtered results
-        contactsTableBody.innerHTML = '';
-
-        if (filteredContacts.length === 0) {
-          contactsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No matching contacts found</td></tr>';
+        if (contacts.length === 0) {
+          list.innerHTML = '<li class="contact-row"><div class="contact-cell text-center py-4 text-muted">No matching contacts found</div></li>';
         } else {
-          filteredContacts.forEach(contact => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-          <td>${contact.name || 'N/A'}</td>
-          <td>${contact.address || 'N/A'}</td>
-          <td>${contact.phone || 'N/A'}</td>
-          <td>${contact.email || 'N/A'}</td>
-          <td>${contact.contactperson || 'N/A'}</td>
-        `;
-            contactsTableBody.appendChild(row);
+          contacts.forEach((contact, index) => {
+            const listItem = document.createElement('li');
+            listItem.className = 'contact-row list-group-item';
+            listItem.dataset.index = index;
+
+            listItem.innerHTML = `
+            <div class="contact-cell">${contact.name || 'N/A'}</div>
+            <div class="contact-cell">${contact.address || 'N/A'}</div>
+            <div class="contact-cell">${contact.phone || 'N/A'}</div>
+            <div class="contact-cell">${contact.email || 'N/A'}</div>
+            <div class="contact-cell">${contact.contactperson || 'N/A'}</div>
+          `;
+
+            listItem.addEventListener('click', () => selectContact(contact));
+            list.appendChild(listItem);
           });
         }
 
         // Update result count
-        resultCount.textContent = `${filteredContacts.length} contact${filteredContacts.length !== 1 ? 's' : ''} found`;
+        document.getElementById('resultCount').textContent = `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} found`;
+        highlightItem(currentFocus);
       }
 
-      // Function to fetch and display contacts
-      async function showContacts() {
-        try {
-          // Show loading state
-          contactsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Loading contacts...</td></tr>';
+      function selectContact(contact) {
+        // Handle contact selection here
+        console.log('Selected contact:', contact);
+        // You might want to fill some form fields with this contact's data
+        bootstrap.Modal.getInstance(document.getElementById('contactsModal')).hide();
+      }
 
-          // Fetch data from server
-          const response = await fetch('/api/contacts');
-          allContacts = await response.json();
+      function highlightItem(index) {
+        const items = document.querySelectorAll('#contactsList .list-group-item');
+        items.forEach(item => {
+          item.classList.remove('active');
+          item.style.color = 'black';
+          item.style.backgroundColor = '';
+        });
 
-          // Filter and render (initial load shows all)
-          filterContacts();
-
-          // Show modal and focus search
-          contactsModal.show();
-          contactSearch.focus();
-        } catch (error) {
-          console.error('Error loading contacts:', error);
-          contactsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load contacts</td></tr>';
-          contactsModal.show();
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].scrollIntoView({ block: 'center' });
         }
       }
 
-      // Button click handler
-      contactsButton.addEventListener('click', function (e) {
-        e.preventDefault();
-        showContacts();
+      document.addEventListener('keydown', function (event) {
+        const items = document.querySelectorAll('#contactsList .list-group-item');
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          currentFocus = (currentFocus + 1) % items.length;
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          currentFocus = (currentFocus - 1 + items.length) % items.length;
+        } else if (event.key === 'Enter' && items[currentFocus]) {
+          event.preventDefault();
+          items[currentFocus].click();
+        }
+        highlightItem(currentFocus);
       });
 
-      // F4 key handler
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'F4') {
-          e.preventDefault();
-          showContacts();
+      // Handle F4 key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'F4') {
+          event.preventDefault();
+          fetch('/api/contacts')
+            .then(response => response.json())
+            .then(data => {
+              allContacts = data;
+              contacts = data;
+              displayContacts(contacts);
+              $('#contactsModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching contact details:', error));
         }
       });
 
-      // Search input handler
-      contactSearch.addEventListener('input', function () {
-        filterContacts(this.value);
-      });
+      // Handle Escape key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          const contactsModalElement = document.getElementById('contactsModal');
+          const contactsModal = bootstrap.Modal.getInstance(contactsModalElement);
 
-      // Clear search handler
-      clearSearch.addEventListener('click', function () {
-        contactSearch.value = '';
-        filterContacts();
-        contactSearch.focus();
+          if (contactsModal && contactsModal._isShown) {
+            contactsModal.hide();
+          }
+        }
       });
     });
   </script>
@@ -2316,35 +2464,159 @@ function openPurchasePriceModal(product) {
       padding: 0;
     }
 
-    /* Add to your stylesheet if needed */
-    #contactsTable {
-      font-size: 0.9rem;
+    /* Add these to your existing CSS */
+    .expiry-status {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+      display: inline-block;
     }
 
-    #contactsTable th {
-      white-space: nowrap;
+    .expiry-status.safe {
+      background-color: #d4edda;
+      color: #155724;
     }
 
-    /* Smooth scrolling */
-    #contactsModal .modal-body {
-      scroll-behavior: smooth;
+    .expiry-status.warning {
+      background-color: #fff3cd;
+      color: #856404;
     }
 
-    /* Better table cell spacing */
-    #contactsTable td,
-    #contactsTable th {
-      padding: 0.75rem 1rem;
+    .expiry-status.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .expiry-status.expired {
+      background-color: #ee1a22;
+      color: white;
+    }
+
+    /* Row coloring based on expiry status */
+    .product-row.expired {
+      background-color: #ee1a22 !important;
+    }
+
+    .product-row.warning {
+      background-color: #FFFF00 !important;
+    }
+
+    .product-row.danger {
+      background-color: #ff7376 !important;
+    }
+
+    /* Small badge for expiry count */
+    .expiry-badge {
+      font-size: 0.7rem;
+      margin-left: 4px;
       vertical-align: middle;
     }
 
-    /* Zebra striping for better readability */
-    #contactsTable tbody tr:nth-child(even) {
-      background-color: rgba(0, 0, 0, 0.02);
+    /* Add these to your existing CSS */
+    .expiry-badge-modal {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+      display: inline-block;
     }
 
-    /* Hover effect enhancement */
-    #contactsTable tbody tr:hover {
-      background-color: rgba(0, 123, 255, 0.05);
+    .expiry-badge-modal.safe {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .expiry-badge-modal.warning {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .expiry-badge-modal.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .expiry-badge-modal.expired {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    /* Row coloring for purchase price modal */
+    .table-row-expired {
+      background-color: #ffdddd !important;
+    }
+
+    .table-row-warning {
+      background-color: #fff3cd !important;
+    }
+
+    .table-row-danger {
+      background-color: #ffcccc !important;
+    }
+
+    #contactsHeader {
+      display: flex;
+      background: #333;
+      color: white;
+      padding: 2px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .contact-row {
+      display: flex;
+      padding: 2px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      align-items: center;
+    }
+
+    .contact-cell {
+      flex: 1;
+      padding: 5px;
+      text-align: left;
+      min-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-row.active {
+      background-color: blue !important;
+      color: white;
+    }
+
+    .modal-dialog {
+      max-width: 75%;
+      margin: 1.75rem auto;
+    }
+
+    .modal-content {
+      font-size: 1.2rem;
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .modal-header {
+      font-size: 1.5rem;
+    }
+
+    .contact-cell {
+      font-size: 1.1rem;
+    }
+
+    #contactsContainer {
+      max-height: 400px;
+    }
+
+    #contactsList {
+      list-style-type: none;
+      padding: 0;
     }
   </style>
 </body>

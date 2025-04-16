@@ -1,5 +1,7 @@
 <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
-
+    <!-- Nepali Datepicker -->
+    <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
+        rel="stylesheet" type="text/css" />
     <style>
         /* Main container styling */
         .wider-container {
@@ -264,7 +266,8 @@
                                                 <% }) %>
                                                     <% } else { %>
                                                         <tr>
-                                                            <td colspan="9">No transactions found for the selected date range.</td>
+                                                            <td colspan="9">No transactions found for the selected date
+                                                                range.</td>
                                                         </tr>
                                                         <% } %>
                                     </tbody>
@@ -300,7 +303,27 @@
     </div>
 
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script
+        src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"></script>
+
     <script>
+
+        // Initialize Nepali date pickers
+        $('#fromDate').nepaliDatePicker({
+            ndpYear: true,
+            ndpMonth: true,
+            ndpYearCount: 10,
+            dateFormat: "YYYY-MM-DD",
+            language: "english"
+        });
+
+        $('#toDate').nepaliDatePicker({
+            ndpYear: true,
+            ndpMonth: true,
+            ndpYearCount: 10,
+            dateFormat: "YYYY-MM-DD",
+            language: "english"
+        });
         function refreshPage() {
             window.location.href = '/sales-vat-report';
         }
@@ -442,87 +465,87 @@
     </script>
 
     <script>
-    //     function printReport() {
-    //         // Create a new window for printing
-    //         const printWindow = window.open('', '_blank');
+        //     function printReport() {
+        //         // Create a new window for printing
+        //         const printWindow = window.open('', '_blank');
 
-    //         // Get the report content
-    //         const reportContent = document.querySelector('.report-container').innerHTML;
+        //         // Get the report content
+        //         const reportContent = document.querySelector('.report-container').innerHTML;
 
-    //         // Add the company name to the print window title
-    //         const companyName = '<%= currentCompanyName %>';
+        //         // Add the company name to the print window title
+        //         const companyName = '<%= currentCompanyName %>';
 
-    //         // Create the HTML for the print window
-    //         printWindow.document.write(`
-    //     <html>
-    //         <head>
-    //             <title>Sales VAT Report - ${companyName}</title>
-    //             <style>
-    //                 body {
-    //                     font-family: Arial, sans-serif;
-    //                     font-size: 12pt;
-    //                     margin: 0;
-    //                     padding: 0;
-    //                 }
-    //                 .container {
-    //                     width: 100%;
-    //                     margin: 0;
-    //                 }
-    //                 table {
-    //                     width: 100%;
-    //                     border-collapse: collapse;
-    //                     margin-top: 10px;
-    //                 }
-    //                 th, td {
-    //                     border: 1px solid #000;
-    //                     padding: 8px;
-    //                     text-align: left;
-    //                 }
-    //                 th {
-    //                     background-color: #f2f2f2;
-    //                 }
-    //                 .totals-row {
-    //                     font-weight: bold;
-    //                 }
-    //                 .report-header {
-    //                     text-align: center;
-    //                     margin-bottom: 15px;
-    //                 }
-    //                 .report-dates {
-    //                     display: flex;
-    //                     justify-content: space-between;
-    //                     margin-bottom: 10px;
-    //                 }
-    //                 .print-actions {
-    //                     margin-top: 20px;
-    //                     text-align: center;
-    //                 }
-    //                 .print-actions button {
-    //                     padding: 8px 16px;
-    //                     margin: 0 5px;
-    //                     cursor: pointer;
-    //                 }
-    //             </style>
-    //         </head>
-    //         <body>
-    //             ${reportContent}
-               
-    //             <script>
-    //                 // Automatically trigger print when window loads
-    //                 window.onload = function() {
-    //                     setTimeout(function() {
-    //                         window.print();
-    //                     }, 200);
-    //                 };
-    //             <\/script>
-    //         </body>
-    //     </html>
-    // `);
+        //         // Create the HTML for the print window
+        //         printWindow.document.write(`
+        //     <html>
+        //         <head>
+        //             <title>Sales VAT Report - ${companyName}</title>
+        //             <style>
+        //                 body {
+        //                     font-family: Arial, sans-serif;
+        //                     font-size: 12pt;
+        //                     margin: 0;
+        //                     padding: 0;
+        //                 }
+        //                 .container {
+        //                     width: 100%;
+        //                     margin: 0;
+        //                 }
+        //                 table {
+        //                     width: 100%;
+        //                     border-collapse: collapse;
+        //                     margin-top: 10px;
+        //                 }
+        //                 th, td {
+        //                     border: 1px solid #000;
+        //                     padding: 8px;
+        //                     text-align: left;
+        //                 }
+        //                 th {
+        //                     background-color: #f2f2f2;
+        //                 }
+        //                 .totals-row {
+        //                     font-weight: bold;
+        //                 }
+        //                 .report-header {
+        //                     text-align: center;
+        //                     margin-bottom: 15px;
+        //                 }
+        //                 .report-dates {
+        //                     display: flex;
+        //                     justify-content: space-between;
+        //                     margin-bottom: 10px;
+        //                 }
+        //                 .print-actions {
+        //                     margin-top: 20px;
+        //                     text-align: center;
+        //                 }
+        //                 .print-actions button {
+        //                     padding: 8px 16px;
+        //                     margin: 0 5px;
+        //                     cursor: pointer;
+        //                 }
+        //             </style>
+        //         </head>
+        //         <body>
+        //             ${reportContent}
 
-    //         printWindow.document.close();
-    //     }
+        //             <script>
+        //                 // Automatically trigger print when window loads
+        //                 window.onload = function() {
+        //                     setTimeout(function() {
+        //                         window.print();
+        //                     }, 200);
+        //                 };
+        //             <\/script>
+        //         </body>
+        //     </html>
+        // `);
 
-    function printReport() {
+        //         printWindow.document.close();
+        //     }
+
+        function printReport() {
             // Create a new window for printing
             const printWindow = window.open('', '_blank');
 

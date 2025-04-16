@@ -1,353 +1,518 @@
 <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
-        rel="stylesheet">
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: auto;
-            /* Let columns size automatically based on content */
-        }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-        th,
-        td {
-            padding: 8px;
-            text-align: left;
-            border: 1px solid black;
-            white-space: nowrap;
-        }
+<style>
+  /* Main Layout */
+  .expanded-container {
+    width: 95%;
+    max-width: 100%;
+    margin: 20px auto;
+  }
 
-        th {
-            background-color: #f2f2f2;
-        }
+  .expanded-card {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    padding: 20px;
+  }
 
-        @media print {
-            /* @page {
-                size: A4 landscape;
-                margin: 10mm;
-            } */
+  /* Table Styling */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
-            body {
-                font-size: 12px;
-                margin: 10mm;
-            }
+  .table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
 
-            #printHeader {
-                display: block;
-                /* Show header when printing */
-            }
+  .table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 12px;
+    white-space: nowrap;
+  }
 
-            /* Ensure no text wrapping when printing */
-            th,
-            td {
-                white-space: nowrap;
-            }
+  .table tbody tr {
+    transition: all 0.2s;
+  }
 
-            /* Hide unnecessary elements during printing */
-            #filterForm,
-            #searchInput,
-            #billsList td:last-child {
-                display: none;
-            }
+  .table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
 
-            /* Adjust the container width to fit landscape */
-            #mainContainer {
-                width: 100%;
-            }
-        }
+  .table td {
+    padding: 10px;
+    vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+    white-space: nowrap;
+  }
 
-        @media screen {
-            #printHeader {
-                display: none;
-                /* Hide header when on screen */
-            }
-        }
+  /* Action Buttons */
+  .action-buttons .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
 
-        body {
-            background-color: #f8f9fa;
-        }
+  /* Search and Filter */
+  .search-filter-container {
+    margin-bottom: 20px;
+  }
 
-        .voucher-table {
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+  /* Highlighting */
+  .selected-row {
+    background-color: #5897FB !important;
+    color: white !important;
+  }
 
-        .voucher-table thead {
-            background-color: #007bff;
-            color: #fff;
-        }
+  .selected-row td {
+    background-color: #5897FB !important;
+    color: white !important;
+  }
 
-        .voucher-table tbody tr:hover {
-            background-color: #f1f1f1;
-            cursor: pointer;
-        }
+  /* Print Styles */
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact;
+      color-adjust: exact;
+      font-size: 12px;
+      margin: 10mm;
+    }
 
-        .badge-debit {
-            background-color: #dc3545;
-        }
+    .no-print {
+      display: none !important;
+    }
 
-        .badge-credit {
-            background-color: #28a745;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-        .search-input {
-            margin-bottom: 20px;
-        }
+    th, td {
+      border: 1px solid #000 !important;
+      padding: 6px;
+      text-align: left;
+    }
 
-        .table-wrapper {
-            margin-top: 40px;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-        }
+    th {
+      background-color: #f2f2f2 !important;
+    }
 
-        /* Custom styles to resize the form */
-        .expanded-container {
-            max-width: 90%;
-            /* Expand the container to 90% of the viewport width */
-        }
+    .print-header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+  }
 
-        .expanded-card {
-            width: 100%;
-            /* Ensure the card takes full width of the container */
-        }
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .table td, .table th {
+      padding: 6px;
+      font-size: 0.8rem;
+    }
+    
+    .action-buttons .btn {
+      margin-right: 3px;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+    }
+  }
+</style>
 
-        @media (min-width: 768px) {
-            .expanded-container {
-                max-width: 90%;
-                /* Adjust width for medium and larger screens */
-            }
-        }
-    </style>
-
-    <div class="container wow-form expanded-container">
-        <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
-            <!-- Print Header -->
-            <div id="printHeader" class="d-none text-center">
-                <div class="header" style="text-align: center;">
-                    <h2 class="card-subtitle mb-2">
-                        <%= currentCompanyName %>
-                    </h2>
-                    <b>
-                        <h4>
-                            <%= currentCompany.address %>-<%=currentCompany.ward%>, <%=currentCompany.city%>,
-                                        <%=currentCompany.country%> <br>
-                                            Tel.: <%=currentCompany.phone%>, Email: <%=currentCompany.email%>
-                                                    <br>
-                                                    VAT NO.: <span id="pan-vat-container"></span>
-                        </h4>
-                    </b>
-                    <hr style="border: 0.5px solid;">
-                </div>
-            </div>
-
-            <div class="table-wrapper">
-                <h2 class="text-center mb-4">Payment Vouchers</h2>
-
-                <!-- Search Input -->
-                <div class="search-input">
-                    <input type="text" id="search" class="form-control"
-                        placeholder="Search by description or account name...">
-                </div>
-                <!-- Print Button -->
-                <a href="/payments" class="btn btn-primary mb-3"><i class="bi bi-receipt"></i></a>
-                <button id="printAllBills" class="btn btn-secondary mb-3"><i class="bi bi-printer"> All</i></button>
-                <button id="printFilteredBills" class="btn btn-secondary mb-3"><i class="bi bi-printer">
-                        Filtered</i></button>
-                <!-- Journal Voucher Table -->
-                <table class="table table-bordered voucher-table" id="billsList">
-                    <thead>
-                        <tr>
-                            <th>Vch. No.</th>
-                            <th>Date</th>
-                            <th>Account</th>
-                            <th>Debit</th>
-                            <th>Payment Account</th>
-                            <th>User</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="voucher-table-body">
-                        <% if (payments.length> 0) { %>
-                            <% payments.forEach(payment=> { %>
-                                <tr>
-                                    <td>
-                                        <%= payment.billNumber %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(payment.date).toLocaleDateString() %>
-                                    </td>
-                                    <td>
-                                        <% if (payment.isActive) { %>
-
-                                            <%= payment.account ? payment.account.name : 'N/A' %>
-                                                <% } else { %>
-                                                    <span class="text-danger">Canceled</span>
-                                                    <% } %>
-                                    </td>
-                                    <td class="debit-amount">
-                                        <% if (payment.isActive) { %>
-
-                                            <%= payment.debit.toFixed(2) %>
-                                                <% } else { %>
-                                                    <span class="text-danger">0.00</span>
-                                                    <% } %>
-                                    </td>
-                                    <td>
-                                        <% if (payment.isActive) { %>
-
-                                            <%= payment.paymentAccount ? payment.paymentAccount.name : 'N/A' %>
-                                                <% } else { %>
-                                                    <span class="text-danger">Canceled</span>
-                                                    <% } %>
-                                    </td>
-                                    <td>
-                                        <%= payment.user ? payment.user.name : 'N/A' %>
-                                    </td>
-                                    <td>
-                                        <a href="/payments/<%= payment._id %>/print"><button class="btn-sm btn-info"><i
-                                                    class="fas fa-eye"></i></button></a>
-                                        <a href="/payments/<%= payment._id %>"><button class="btn btn-sm btn-warning"><i
-                                                    class="fas fa-edit"></i></button></a>
-                                    </td>
-                                </tr>
-                                <% }) %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="8" class="text-center">No payments found</td>
-                                        </tr>
-                                        <% } %>
-                    </tbody>
-
-                    <tfoot>
-                        <tr>
-                            <td colspan="3"><strong>Total</strong></td>
-                            <td id="total-debit">0.00</td>
-                            <td colspan="3"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-
-
-            </div>
-        </div>
+<div class="container expanded-container">
+  <div class="card expanded-card">
+    <!-- Print Header (hidden on screen) -->
+    <div id="printHeader" class="d-none print-only">
+      <div class="print-header">
+        <h2><%= currentCompanyName %></h2>
+        <p>
+          <%= currentCompany.address %>-<%=currentCompany.ward%>, <%=currentCompany.city%>,
+          <%=currentCompany.country%><br>
+          Tel.: <%=currentCompany.phone%>, Email: <%=currentCompany.email%><br>
+          VAT NO.: <%=currentCompany.pan%>
+        </p>
+        <hr>
+      </div>
     </div>
 
-    <script>
-        // Initialize Bootstrap tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+    <h1 class="mb-4 text-center" style="text-decoration: underline;">Payment Vouchers</h1>
 
-        // Search functionality (basic filtering)
-        const searchInput = document.getElementById('search');
-        const tableBody = document.getElementById('voucher-table-body');
-        searchInput.addEventListener('keyup', function () {
-            const searchValue = searchInput.value.toLowerCase();
-            const rows = tableBody.getElementsByTagName('tr');
+    <!-- Search and Filter Section -->
+    <div class="row search-filter-container no-print">
+      <div class="col-md-8">
+        <div class="input-group">
+          <input type="text" class="form-control" id="searchInput" 
+                 placeholder="Search by voucher number, account name or user..." 
+                 aria-label="Search" autofocus autocomplete="off">
+          <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-center">
+          <label for="paymentAccountFilter" class="form-label me-2 mb-0">Payment Account:</label>
+          <select class="form-select" id="paymentAccountFilter" aria-label="Filter by Payment Account">
+            <option value="">All</option>
+            <!-- Options will be populated by JavaScript -->
+          </select>
+        </div>
+      </div>
+    </div>
 
-            Array.from(rows).forEach(function (row) {
-                // Search in relevant columns: Account Name (column 2), Debit (column 3), Credit (column 4), Payment Account (column 5)
-                const billNumber = row.cells[0].textContent.toLowerCase();
-                const account = row.cells[2].textContent.toLowerCase();
-                const debit = row.cells[3].textContent.toLowerCase();
-                const credit = row.cells[4].textContent.toLowerCase();
-                const paymentAccount = row.cells[5].textContent.toLowerCase();
-                const users = row.cells[6].textContent.toLowerCase();
+    <!-- Action Buttons -->
+    <div class="action-buttons no-print mb-3">
+      <a href="/payments" class="btn btn-primary">
+        <i class="fas fa-receipt"></i> New Voucher
+      </a>
+      <button id="printAllBills" class="btn btn-secondary">
+        <i class="fas fa-print"></i> Print All
+      </button>
+      <button id="printFilteredBills" class="btn btn-secondary">
+        <i class="fas fa-filter"></i> Print Filtered
+      </button>
+    </div>
 
-                if (
-                    billNumber.includes(searchValue) ||
-                    account.includes(searchValue) ||
-                    debit.includes(searchValue) ||
-                    credit.includes(searchValue) ||
-                    paymentAccount.includes(searchValue) ||
-                    users.includes(searchValue)
-                ) {
-                    row.style.display = '';  // Show row
-                } else {
-                    row.style.display = 'none';  // Hide row
-                }
-            });
+    <!-- Payments Table -->
+    <div class="table-responsive">
+      <table class="table table-striped" id="paymentsList">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Vch. No.</th>
+            <th>Account</th>
+            <th class="text-end">Debit</th>
+            <th>Payment Account</th>
+            <th>User</th>
+            <th class="no-print">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (payments.length > 0) { %>
+            <% payments.forEach(payment => { %>
+              <tr class="searchClass payment-row" data-payment-account="<%= payment.paymentAccount ? payment.paymentAccount.name : '' %>">
+                <td><%= new Date(payment.date).toLocaleDateString() %></td>
+                <td><%= payment.billNumber %></td>
+                <td>
+                  <% if (payment.isActive) { %>
+                    <%= payment.account ? payment.account.name : 'N/A' %>
+                  <% } else { %>
+                    <span class="text-danger">Canceled</span>
+                  <% } %>
+                </td>
+                <td class="text-end">
+                  <% if (payment.isActive) { %>
+                    <%= payment.debit.toFixed(2) %>
+                  <% } else { %>
+                    <span class="text-danger">0.00</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (payment.isActive) { %>
+                    <%= payment.paymentAccount ? payment.paymentAccount.name : 'N/A' %>
+                  <% } else { %>
+                    <span class="text-danger">Canceled</span>
+                  <% } %>
+                </td>
+                <td><%= payment.user ? payment.user.name : 'N/A' %></td>
+                <td class="no-print">
+                  <div class="d-flex">
+                    <a href="/payments/<%= payment._id %>/print" class="btn btn-sm btn-info me-1">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="/payments/<%= payment._id %>" class="btn btn-sm btn-warning me-1">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center">No payments found</td>
+            </tr>
+          <% } %>
+        </tbody>
+        <tfoot>
+          <tr id="totalsRow">
+            <td colspan="3"><strong>Total:</strong></td>
+            <td class="text-end"><strong id="totalDebit">0.00</strong></td>
+            <td colspan="2"></td>
+            <td class="no-print"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
 
-            // Recalculate the totals after filtering
-            calculateTotals();
-        });
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize variables
+    let paymentRows = document.querySelectorAll(".payment-row");
+    let currentPaymentIndex = 0;
+    
+    // Get unique payment accounts for filter dropdown
+    const paymentAccounts = new Set();
+    paymentRows.forEach(row => {
+      const account = row.getAttribute('data-payment-account');
+      if (account) paymentAccounts.add(account);
+    });
+    
+    const paymentAccountFilter = document.getElementById('paymentAccountFilter');
+    paymentAccounts.forEach(account => {
+      const option = document.createElement('option');
+      option.value = account;
+      option.textContent = account;
+      paymentAccountFilter.appendChild(option);
+    });
+    
+    // Filter payments based on search and payment account
+    function filterPayments() {
+      const searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+      const selectedPaymentAccount = document.getElementById("paymentAccountFilter").value.trim().toLowerCase();
+      
+      let visibleCount = 0;
+      
+      paymentRows.forEach((row) => {
+        const billNumber = row.cells[1].textContent.trim().toLowerCase();
+        const accountName = row.cells[2].textContent.trim().toLowerCase();
+        const paymentAccount = row.cells[4].textContent.trim().toLowerCase();
+        const users = row.cells[5].textContent.trim().toLowerCase();
 
-        // Function to calculate total debit based on visible rows
-        function calculateTotals() {
-            const debitCells = document.querySelectorAll('.debit-amount');
-            let totalDebit = 0;
+        const matchesSearch = accountName.includes(searchQuery) || 
+                            billNumber.includes(searchQuery) || 
+                            users.includes(searchQuery);
+        const matchesPaymentAccount = selectedPaymentAccount === "" || 
+                                   paymentAccount === selectedPaymentAccount;
 
-            // Sum only the visible debit values
-            debitCells.forEach(cell => {
-                if (cell.closest('tr').style.display !== 'none') {  // Only sum visible rows
-                    const debitValue = parseFloat(cell.textContent) || 0;
-                    totalDebit += debitValue;
-                }
-            });
-
-            // Update the totals in the table footer
-            document.getElementById('total-debit').textContent = totalDebit.toFixed(2);
+        if (matchesSearch && matchesPaymentAccount) {
+          row.style.display = "";
+          visibleCount++;
+        } else {
+          row.style.display = "none";
         }
+      });
 
-        // Call the calculateTotals function initially
-        calculateTotals();
+      updateTotals();
+      
+      // Reset current index when filtering
+      currentPaymentIndex = visibleCount > 0 ? 0 : -1;
+      updatePaymentRowHighlight();
+    }
 
-        // Print all bills
-        document.getElementById('printAllBills').addEventListener('click', function () {
-            printBills(document.querySelectorAll('#billsList tbody tr'));
-        });
+    // Update totals based on visible rows
+    function updateTotals() {
+      let totalDebit = 0;
 
-        // Print filtered bills
-        document.getElementById('printFilteredBills').addEventListener('click', function () {
-            printBills(document.querySelectorAll('#billsList tbody tr:not([style*="display: none"])'));
-        });
-
-        // Function to print the selected bills (with totals)
-        function printBills(billRows) {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write('<html><head><title>Print Payment Vouchers</title>');
-            printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; } th, td { padding: 8px; text-align: left; border: 1px solid black; white-space: nowrap; } th { background-color: #f2f2f2; }</style>');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(document.getElementById('printHeader').innerHTML); // Include the header
-            printWindow.document.write('<h1 style="text-align: center;">Payment Vouchers</h1>');
-            printWindow.document.write('<table><thead><tr><th>Bill no.</th><th>Date</th><th>Account</th><th>Debit</th><th>Payment Account</th><th>User</th></tr></thead><tbody>');
-
-            let totalDebit = 0;
-
-            billRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                printWindow.document.write('<tr>');
-
-                // Only write cells up to the last cell that corresponds to the printed table
-                for (let i = 0; i < cells.length - 1; i++) { // Exclude the last cell (Actions)
-                    printWindow.document.write('<td>' + cells[i].textContent + '</td>');
-                }
-
-                // Add up debit and credit for totals
-                totalDebit += parseFloat(cells[3].textContent) || 0;
-
-                printWindow.document.write('</tr>');
-            });
-
-            // Add the total row in the print view
-            printWindow.document.write('</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td>');
-            printWindow.document.write('<td>' + totalDebit.toFixed(2) + '</td><td colspan="3"></td></tr></tfoot></table>');
-
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
+      document.querySelectorAll('#paymentsList tbody tr.payment-row:not([style*="display: none"])').forEach(row => {
+        const debitCell = row.cells[3];
+        // Only sum active payments (not canceled)
+        if (!debitCell.querySelector('.text-danger')) {
+          totalDebit += parseFloat(debitCell.textContent) || 0;
         }
+      });
 
-        const panVatNo = '<%= currentCompany.pan %>';
-        const container = document.getElementById('pan-vat-container');
+      document.getElementById("totalDebit").textContent = totalDebit.toFixed(2);
+    }
 
-        for (let i = 0; i < panVatNo.length; i++) {
-            const digit = document.createElement('span');
-            digit.className = 'bordered-digit';
-            digit.textContent = panVatNo[i];
-            container.appendChild(digit);
+    // Update row highlighting
+    function updatePaymentRowHighlight() {
+      const visibleRows = getVisibleRows();
+      visibleRows.forEach(row => row.classList.remove("selected-row"));
+      
+      if (currentPaymentIndex >= 0 && currentPaymentIndex < visibleRows.length) {
+        visibleRows[currentPaymentIndex].classList.add("selected-row");
+        visibleRows[currentPaymentIndex].scrollIntoView({
+          behavior: "smooth",
+          block: "nearest"
+        });
+      }
+    }
+
+    // Get visible rows after filtering
+    function getVisibleRows() {
+      return Array.from(document.querySelectorAll(".payment-row")).filter(
+        row => row.style.display !== "none"
+      );
+    }
+
+    // Keyboard navigation
+    document.addEventListener("keydown", function(event) {
+      const visibleRows = getVisibleRows();
+      
+      if (event.key === "ArrowDown" && currentPaymentIndex < visibleRows.length - 1) {
+        currentPaymentIndex++;
+        updatePaymentRowHighlight();
+      } else if (event.key === "ArrowUp" && currentPaymentIndex > 0) {
+        currentPaymentIndex--;
+        updatePaymentRowHighlight();
+      } else if (event.key === "Enter" && currentPaymentIndex >= 0) {
+        const viewLink = visibleRows[currentPaymentIndex].querySelector("a.btn-info");
+        if (viewLink) viewLink.click();
+      }
+    });
+
+    // Row click handlers
+    paymentRows.forEach((row, index) => {
+      row.addEventListener("click", function() {
+        const visibleRows = getVisibleRows();
+        currentPaymentIndex = visibleRows.indexOf(row);
+        updatePaymentRowHighlight();
+      });
+
+      row.addEventListener("dblclick", function() {
+        const viewLink = row.querySelector("a.btn-info");
+        if (viewLink) viewLink.click();
+      });
+    });
+
+    // Event listeners
+    document.getElementById("searchInput").addEventListener("input", filterPayments);
+    document.getElementById("paymentAccountFilter").addEventListener("change", filterPayments);
+    
+    document.getElementById("clearSearch").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      filterPayments();
+    });
+
+    // Print functions
+    document.getElementById("printAllBills").addEventListener("click", printAllPayments);
+    document.getElementById("printFilteredBills").addEventListener("click", printFilteredPayments);
+
+    function printAllPayments() {
+      printPayments(document.querySelectorAll(".payment-row"));
+    }
+
+    function printFilteredPayments() {
+      printPayments(document.querySelectorAll('.payment-row:not([style*="display: none"])'));
+    }
+
+    function printPayments(rowsToPrint) {
+      if (rowsToPrint.length === 0) {
+        alert("No payments to print");
+        return;
+      }
+
+      const printWindow = window.open("", "_blank");
+      const printHeader = document.getElementById("printHeader").innerHTML;
+      
+      let tableContent = `
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            font-size: 10px; 
+            margin: 0;
+            padding: 10mm;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            page-break-inside: auto;
+          }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 4px; 
+            text-align: left; 
+            white-space: nowrap;
+          }
+          th { 
+            background-color: #f2f2f2 !important; 
+            -webkit-print-color-adjust: exact; 
+          }
+          .print-header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+          }
+          .nowrap {
+            white-space: nowrap;
+          }
+          .text-danger {
+            color: #dc3545 !important;
+          }
+        </style>
+        ${printHeader}
+        <h1 style="text-align:center;text-decoration:underline;">Payment Vouchers</h1>
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Date</th>
+              <th class="nowrap">Vch No.</th>
+              <th class="nowrap">Account</th>
+              <th class="nowrap">Debit</th>
+              <th class="nowrap">Payment Account</th>
+              <th class="nowrap">User</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      let totalDebit = 0;
+
+      rowsToPrint.forEach(row => {
+        const cells = row.cells;
+        const isCanceled = cells[3].querySelector('.text-danger') !== null;
+        
+        tableContent += `
+          <tr>
+            <td class="nowrap">${cells[0].textContent}</td>
+            <td class="nowrap">${cells[1].textContent}</td>
+            <td class="nowrap">${isCanceled ? '<span class="text-danger">Canceled</span>' : cells[2].textContent}</td>
+            <td class="nowrap">${cells[3].textContent}</td>
+            <td class="nowrap">${isCanceled ? '<span class="text-danger">Canceled</span>' : cells[4].textContent}</td>
+            <td class="nowrap">${cells[5].textContent}</td>
+          </tr>
+        `;
+
+        if (!isCanceled) {
+          totalDebit += parseFloat(cells[3].textContent) || 0;
         }
-    </script>
+      });
+
+      // Add totals row
+      tableContent += `
+          <tr style="font-weight:bold;">
+            <td colspan="3">Totals</td>
+            <td>${totalDebit.toFixed(2)}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tbody>
+      </table>
+      `;
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Payment Vouchers Report</title>
+          </head>
+          <body>
+            ${tableContent}
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                }, 200);
+              };
+            <\/script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    // Initial calculations
+    filterPayments();
+  });
+</script>

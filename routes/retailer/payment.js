@@ -20,7 +20,7 @@ const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
 const checkDemoPeriod = require('../../middleware/checkDemoPeriod');
 
 // GET - Show list of journal vouchers
-router.get('/payments-list', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
@@ -60,6 +60,7 @@ router.get('/payments-list', ensureAuthenticated, ensureCompanySelected, ensureT
         }
 
         const payments = await Payment.find({ fiscalYear: fiscalYear, company: companyId })
+            .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account', 'name') // Assuming 'name' field exists in Account schema
             .populate('user', 'name') // Assuming 'username' field exists in User schema
             .populate('paymentAccount', 'name') // Assuming 'name' field exists in Account schema for paymentAccount
@@ -206,7 +207,7 @@ router.get('/payments', isLoggedIn, ensureAuthenticated, ensureCompanySelected, 
 });
 
 
-router.get('/payments/finds', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments/finds', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const today = new Date();
@@ -408,7 +409,7 @@ router.post('/payments', ensureAuthenticated, ensureCompanySelected, ensureTrade
 });
 
 // Get payment form
-router.get('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const paymentId = req.params.id;
         const companyId = req.session.currentCompany;
@@ -526,7 +527,7 @@ router.get('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 });
 
 // Get payment form by billNumber
-router.get('/payments/edit/billNumber', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments/edit/billNumber', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const { billNumber } = req.query;
         const companyId = req.session.currentCompany;
@@ -649,17 +650,17 @@ router.get('/payments/edit/billNumber', ensureAuthenticated, ensureCompanySelect
 router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, checkDemoPeriod, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
-            const { billDate, nepaliDate, paymentAccount, account, debit, InstType, InstNo, description } = req.body;
+            const { billDate, nepaliDate, paymentAccount, accountId, debit, InstType, InstNo, description } = req.body;
             const { id } = req.params;
             const companyId = req.session.currentCompany;
             const currentFiscalYear = req.session.currentFiscalYear._id;
             const userId = req.user._id;
 
-            if (!account || !debit || !paymentAccount) {
+            if (!accountId || !debit || !paymentAccount) {
                 return res.status(400).json({ message: 'All fields are required' });
             }
 
-            if (!mongoose.Types.ObjectId.isValid(account) || !mongoose.Types.ObjectId.isValid(paymentAccount)) {
+            if (!mongoose.Types.ObjectId.isValid(accountId) || !mongoose.Types.ObjectId.isValid(paymentAccount)) {
                 return res.status(400).json({ message: 'Invalid account ID.' });
             }
 
@@ -676,7 +677,7 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
             // Delete outdated debit transaction
             await Transaction.deleteMany({
                 paymentAccountId: existingPayment._id,
-                account: existingPayment.account,
+                account: existingPayment.accountId,
                 type: 'Pymt',
                 drCrNoteAccountTypes: 'Debit'
             });
@@ -690,7 +691,7 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
             });
 
             // Fetch the new debited and credited accounts
-            const debitedAccount = await Account.findById(account);
+            const debitedAccount = await Account.findById(accountId);
             if (!debitedAccount) {
                 return res.status(404).json({ message: 'Debited account not found.' });
             }
@@ -706,7 +707,7 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
             // Update payment voucher details
             existingPayment.billNumber = billNumber;
             existingPayment.date = nepaliDate ? new Date(nepaliDate) : new Date(billDate);
-            existingPayment.account = account;
+            existingPayment.account = accountId;
             existingPayment.paymentAccount = paymentAccount;
             existingPayment.debit = debit;
             existingPayment.InstType = InstType;
@@ -716,14 +717,14 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
             // Fetch the last balance for the updated debit account
             let previousDebitBalance = 0;
-            const lastDebitTransaction = await Transaction.findOne({ account }).sort({ transactionDate: -1 });
+            const lastDebitTransaction = await Transaction.findOne({ accountId }).sort({ transactionDate: -1 });
             if (lastDebitTransaction) {
                 previousDebitBalance = lastDebitTransaction.balance;
             }
 
             // Create or update the debit transaction
             const debitTransaction = new Transaction({
-                account,
+                account: accountId,
                 type: 'Pymt',
                 paymentAccountId: existingPayment._id,
                 billNumber: billNumber,
@@ -741,7 +742,7 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
             });
 
             await debitTransaction.save();
-            await Account.findByIdAndUpdate(account, { $push: { transactions: debitTransaction._id } });
+            await Account.findByIdAndUpdate(accountId, { $push: { transactions: debitTransaction._id } });
 
             // Fetch the last balance for the updated credit account
             let previousCreditBalance = 0;
@@ -756,7 +757,7 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
                 type: 'Pymt',
                 paymentAccountId: existingPayment._id,
                 billNumber: billNumber,
-                accountType: account,
+                accountType: accountId,
                 debit: 0,
                 credit: debit,
                 paymentMode: 'Payment',
@@ -801,7 +802,7 @@ router.put('/payments/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
 
 // View individual payment voucher
-router.get('/payments/:id/print', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments/:id/print', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         try {
@@ -897,7 +898,7 @@ router.get('/payments/:id/print', ensureAuthenticated, ensureCompanySelected, en
 });
 
 // View individual payment voucher
-router.get('/payments/:id/direct-print', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments/:id/direct-print', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         try {
@@ -995,7 +996,7 @@ router.get('/payments/:id/direct-print', ensureAuthenticated, ensureCompanySelec
 
 
 // View individual payment voucher
-router.get('/payments/:id/direct-print-edit', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/payments/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         try {

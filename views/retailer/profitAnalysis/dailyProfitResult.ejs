@@ -85,12 +85,6 @@
       color: #dc3545 !important;
     }
 
-    /* Action Buttons */
-    .action-buttons .btn {
-      margin-right: 5px;
-      margin-bottom: 5px;
-    }
-
     /* Search and Filter */
     .search-filter-container {
       margin-bottom: 20px;
@@ -526,7 +520,6 @@
           <th class="text-end">S.P (%)</th>
           <th class="text-end">C.P (%)</th>
           <th>Transactions</th>
-          <th class="no-print">Actions</th>
         </tr>
       </thead>
       <tbody id="profitTableBody">
@@ -569,7 +562,6 @@
               <%= dailyProfit.reduce((sum, day) => sum + day.salesCount + day.purchaseCount + day.returnCount, 0) %>
             </span>
           </th>
-          <th class="no-print"></th>
         </tr>
       </tfoot>
     </table>
@@ -672,11 +664,6 @@ document.addEventListener('DOMContentLoaded', function() {
               <i class="fas fa-exchange-alt"></i>
               ${day.returnCount} returns
             </span>` : ''}
-        </td>
-        <td class="no-print">
-          <a href="/transactions?date=${day.date}" class="btn btn-sm btn-info" title="View Transactions">
-            <i class="fas fa-eye"></i>
-          </a>
         </td>
       `;
       

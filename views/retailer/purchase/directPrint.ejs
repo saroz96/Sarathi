@@ -1,139 +1,6 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
 <style id="printStyles">
-    @media print {
-        @page {
-            size: A4;
-            margin: 10mm;
-        }
-
-        /* Define your print styles */
-        .page-break {
-            page-break-before: always;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-        }
-
-        .container {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        .card {
-            border: none;
-            margin: 0;
-        }
-
-        .card-header,
-        .card-body {
-            padding: 0;
-            margin: 0;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 16px;
-            /* text-decoration: underline; */
-        }
-
-        .header h2 {
-            /* margin: 5px 0; */
-            font-size: 34px;
-        }
-
-        .details-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .details-container .left,
-        .details-container .right {
-            width: 48%;
-        }
-
-        .details-container .right {
-            text-align: right;
-        }
-
-        .card-title {
-            text-decoration: underline;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .table th,
-        .table td {
-            font-size: 12px;
-            padding: 8px;
-            text-align: center;
-        }
-
-        .table th {
-            background-color: #f2f2f2;
-            text-align: left;
-            /* font-size: 10px; */
-        }
-
-        .table td {
-            text-align: left;
-            /* font-size: 10pxs; */
-        }
-
-        .table .no-border {
-            border: none;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .footer {
-            margin-top: 20px;
-            font-size: 12px;
-            text-align: center;
-        }
-
-        .btn {
-            display: none;
-        }
-
-        .user-details {
-            text-decoration: overline;
-            text-align: center;
-            display: block;
-            margin-top: 10px;
-            white-space: nowrap;
-            /* Prevent text from wrapping */
-        }
-
-        #row-container {
-            display: flex;
-            justify-content: space-between;
-            padding-top: 50px;
-            border-top: 0.5px solid black;
-            text-align: center;
-        }
-
-        #row-container .col {
-            flex: 1;
-            text-align: center;
-        }
-
-    }
 
     .card-title {
         text-decoration: underline;
@@ -189,7 +56,6 @@
         display: flex;
         justify-content: space-between;
         padding-top: 50px;
-        border-top: 0.5px solid black;
         text-align: center;
     }
 
@@ -207,16 +73,6 @@
 </style>
 
 <div class="container">
-        <div class="container mt-3">
-            <div class="row">
-                <div class="col d-flex justify-content-end align-items-start">
-                    <a href="/purchase-bills-list" class="btn btn-secondary"><i class="bi bi-back"></i></a>
-                    <a href="/bills/<%= bill._id %>/pdf" class="btn btn-primary ml-2"><i class="bi bi-file-pdf"></i></a>
-                    <button class="btn btn-info ml-2" onclick="printBill()"><i class="bi bi-printer"></i></button>
-                </div>
-            </div>
-        </div>
-
         <div id="printableContent">
             <div class="card mt-4">
                 <div class="header">
@@ -242,7 +98,7 @@
                                                 </div>
                                                 </span>
                     </h4>
-                    <hr style="border: 0.5px solid;">
+                    <hr style="border: 0.5px solid gray;">
                 </div>
                 <div class="details-container">
                     <div class="left">
@@ -255,11 +111,6 @@
                             <strong>Pan no.:</strong>
                             <%= bill.account.pan ? bill.account.pan : 'Null' %>
                                 <br>
-                                <strong>Email:</strong>
-                                <%= bill.account.email ? bill.account.email : 'Null' %>&nbsp;
-                                    <strong>Tel.:</strong>
-                                    <%= bill.account.phone ? bill.account.phone : 'Null' %>&nbsp;
-                                        <br>
                                         <strong>Mode of Payment:</strong>
                                         <%= bill.paymentMode %>
 
@@ -291,7 +142,7 @@
                     </div>
                 </div>
 
-                <hr style="border: 0.5px solid;">
+                <hr style="border: 0.5px solid gray;">
 
                 <div class="container">
                     <table class="table items-table">
@@ -398,13 +249,13 @@
                                         </td>
                                     </tr>
                         </tbody>
-                        <hr style="border: 0.5px solid;">
+                        <hr style="border: 0.5px solid gray;">
                     </table>
                     <td class="text-left"><strong>In Words:</strong>
                         <span id="amountInWords"></span> Only.
                     </td>
                 </div>
-                <br><br><br>
+                <hr style="border: 0.5px solid gray;">
                 <div class="row container" id="row-container">
                     <div class="col">
                         <br>

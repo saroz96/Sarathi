@@ -45,6 +45,151 @@ router.get('/items/search/get', ensureAuthenticated, ensureCompanySelected, ensu
 });
 
 
+// router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+//     try {
+//         const companyId = req.session.currentCompany;
+//         // Check if fiscal year is already in the session or available in the company
+//         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+//         let currentFiscalYear = null;
+
+//         if (fiscalYear) {
+//             // Fetch the fiscal year from the database if available in the session
+//             currentFiscalYear = await FiscalYear.findById(fiscalYear);
+//         }
+
+//         // If no fiscal year is found in session or currentCompany, throw an error
+//         if (!currentFiscalYear && company.fiscalYear) {
+//             currentFiscalYear = company.fiscalYear;
+
+//             // Set the fiscal year in the session for future requests
+//             req.session.currentFiscalYear = {
+//                 id: currentFiscalYear._id.toString(),
+//                 startDate: currentFiscalYear.startDate,
+//                 endDate: currentFiscalYear.endDate,
+//                 name: currentFiscalYear.name,
+//                 dateFormat: currentFiscalYear.dateFormat,
+//                 isActive: currentFiscalYear.isActive
+//             };
+
+//             // Assign fiscal year ID for use
+//             fiscalYear = req.session.currentFiscalYear.id;
+//         }
+
+//         if (!fiscalYear) {
+//             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+//         }
+
+//         // Get all items for the company with pagination
+//         const items = await Item.find({ company: companyId, fiscalYear: currentFiscalYear })
+//             .populate('category', 'name')
+//             .populate('unit', 'name')
+//             .sort({ name: 1 })
+//             .limit(200); // Limit results for performance
+
+//         // Format items for client
+//         const formattedItems = items.map(item => ({
+//             _id: item._id,
+//             name: item.name,
+//             category: item.category?.name || 'N/A',
+//             stock: item.stock || 0,
+//             unit: item.unit?.name || 'N/A',
+//             price: item.sellingPrice || 0
+//         }));
+
+//         res.json(formattedItems);
+//     } catch (error) {
+//         console.error('Error fetching items:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Failed to load items',
+//             error: error.message
+//         });
+//     }
+// });
+
+router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    try {
+        const companyId = req.session.currentCompany;
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat vatEnabled').populate('fiscalYear');
+
+        // Check if fiscal year is already in the session or available in the company
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            // Fetch the fiscal year from the database if available in the session
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        // If no fiscal year is found in session or currentCompany, throw an error
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+
+            // Set the fiscal year in the session for future requests
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+
+            // Assign fiscal year ID for use
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        // Get all items for the company with pagination
+        const items = await Item.find({ company: companyId, fiscalYear: currentFiscalYear })
+            .populate('category', 'name')
+            .populate('unit', 'name')
+            .sort({ name: 1 })
+            .limit(200); // Limit results for performance
+
+        // Format items with calculated stock and price from stockEntries
+        const formattedItems = await Promise.all(items.map(async (item) => {
+            // Calculate total stock from stockEntries
+            const totalStock = item.stockEntries.reduce((sum, entry) => {
+                return sum + (entry.quantity || 0);
+            }, 0);
+
+            // Find the most recent stock entry for price
+            const latestStockEntry = item.stockEntries
+                .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+            // Get the price from the latest stock entry or fallback to item's price
+            const price = latestStockEntry?.price || item.price || 0;
+            const puPrice = latestStockEntry?.puPrice || item.puPrice || 0;
+
+            return {
+                _id: item._id,
+                name: item.name,
+                category: item.category?.name || 'N/A',
+                stock: totalStock || 0,
+                unit: item.unit?.name || 'N/A',
+                price: price || puPrice,
+                // puPrice: puPrice,
+                mainUnitPuPrice: latestStockEntry?.mainUnitPuPrice || item.mainUnitPuPrice || 0,
+                mrp: latestStockEntry?.mrp || item.mrp || 0
+            };
+        }));
+
+        res.json(formattedItems);
+    } catch (error) {
+        console.error('Error fetching items:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load items',
+            error: error.message
+        });
+    }
+});
+
+
 router.get('/items/search', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {

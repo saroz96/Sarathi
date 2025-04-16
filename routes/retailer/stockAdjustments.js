@@ -490,7 +490,7 @@ router.get('/stockAdjustments/edit/billNumber', isLoggedIn, ensureAuthenticated,
 //     }
 // });
 
-router.post('/stockAdjustments', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, checkDemoPeriod, async (req, res) => {
+router.post('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, checkDemoPeriod, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const session = await mongoose.startSession();
         try {

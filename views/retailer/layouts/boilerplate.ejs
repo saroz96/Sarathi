@@ -89,7 +89,7 @@
                     <!-- loader element in layout.ejs -->
                     <div id="global-loader" style="display: none;">
                         <div class="spinner"></div>
-                        <div id="loader-percentage">0%</div>
+                        <!-- <div id="loader-percentage">0%</div> -->
                     </div>
                     <%-body%>
             </main>
@@ -214,7 +214,7 @@
                 });
 
             </script>
-<!-- 
+            <!-- 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Handle Escape key press
@@ -244,44 +244,92 @@
 
 </script> -->
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Handle Escape key press
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                // Show feedback to user
-                const feedback = document.createElement('div');
-                feedback.textContent = 'Navigating back...';
-                feedback.style.position = 'fixed';
-                feedback.style.bottom = '20px';
-                feedback.style.right = '20px';
-                feedback.style.padding = '10px 20px';
-                feedback.style.backgroundColor = '#333';
-                feedback.style.color = '#fff';
-                feedback.style.borderRadius = '5px';
-                feedback.style.zIndex = '9999';
-                document.body.appendChild(feedback);
+            <script>
+                // document.addEventListener("DOMContentLoaded", function () {
+                //     // Handle Escape key press
+                //     document.addEventListener('keydown', function(event) {
+                //         if (event.key === 'Escape') {
+                //             // Show feedback to user
+                //             const feedback = document.createElement('div');
+                //             feedback.textContent = 'Navigating back...';
+                //             feedback.style.position = 'fixed';
+                //             feedback.style.bottom = '20px';
+                //             feedback.style.right = '20px';
+                //             feedback.style.padding = '10px 20px';
+                //             feedback.style.backgroundColor = '#333';
+                //             feedback.style.color = '#fff';
+                //             feedback.style.borderRadius = '5px';
+                //             feedback.style.zIndex = '9999';
+                //             document.body.appendChild(feedback);
+
+                //             // Remove feedback after 1.5 seconds
+                //             setTimeout(() => {
+                //                 document.body.removeChild(feedback);
+                //             }, 1500);
+
+                //             // Check if there's history to go back to
+                //             if (window.history.length > 1) {
+                //                 setTimeout(() => {
+                //                     window.history.back();
+                //                 }, 300); // Small delay for user to see feedback
+                //             } else {
+                //                 feedback.textContent = 'No previous page';
+                //                 setTimeout(() => {
+                //                     document.body.removeChild(feedback);
+                //                 }, 1500);
+                //             }
+                //         }
+                //     });
+                // });
                 
-                // Remove feedback after 1.5 seconds
-                setTimeout(() => {
-                    document.body.removeChild(feedback);
-                }, 1500);
-                
-                // Check if there's history to go back to
-                if (window.history.length > 1) {
-                    setTimeout(() => {
-                        window.history.back();
-                    }, 300); // Small delay for user to see feedback
-                } else {
-                    feedback.textContent = 'No previous page';
-                    setTimeout(() => {
-                        document.body.removeChild(feedback);
-                    }, 1500);
-                }
-            }
-        });
-    });
-</script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Handle Escape key press
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape') {
+                            // Check if any Bootstrap modal is currently open
+                            const openModals = document.querySelectorAll('.modal.show' || '.modal');
+
+                            if (openModals.length > 0) {
+                                // Close all open modals without confirmation
+                                openModals.forEach(modal => {
+                                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                                    if (modalInstance) {
+                                        modalInstance.hide();
+                                    }
+                                });
+                            } else {
+                                // Only show confirmation if no modals were open
+                                const shouldGoBack = confirm('Do you want to go back to the previous page?');
+
+                                if (shouldGoBack && window.history.length > 1) {
+                                    // Show feedback to user
+                                    const feedback = document.createElement('div');
+                                    feedback.textContent = 'Navigating back...';
+                                    feedback.style.position = 'fixed';
+                                    feedback.style.bottom = '20px';
+                                    feedback.style.right = '20px';
+                                    feedback.style.padding = '10px 20px';
+                                    feedback.style.backgroundColor = '#333';
+                                    feedback.style.color = '#fff';
+                                    feedback.style.borderRadius = '5px';
+                                    feedback.style.zIndex = '9999';
+                                    document.body.appendChild(feedback);
+
+                                    // Remove feedback after 1.5 seconds
+                                    setTimeout(() => {
+                                        document.body.removeChild(feedback);
+                                    }, 1500);
+
+                                    // Go back after small delay
+                                    setTimeout(() => {
+                                        window.history.back();
+                                    }, 300);
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
 
 </body>
 

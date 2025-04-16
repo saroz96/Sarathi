@@ -67,7 +67,11 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const bills = await SalesBill.find({ company: companyId, fiscalYear: fiscalYear }).populate('account').populate('items.item').populate('user');
+        const bills = await SalesBill.find({ company: companyId, fiscalYear: fiscalYear })
+        .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
+        .populate('account')
+        .populate('items.item')
+        .populate('user');
         res.render('retailer/sales-bills/allbills', {
             company,
             currentFiscalYear,
@@ -716,6 +720,10 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
             }
 
             async function reduceStock(product, quantity) {
+
+                // Update product stock
+                product.stock -= quantity;
+
                 let remainingQuantity = quantity;
                 const batchesUsed = []; // Array to track batches and quantities used
 
@@ -1838,6 +1846,9 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
             }
 
             async function reduceStock(product, quantity) {
+                // Update product stock
+                product.stock -= quantity;
+
                 let remainingQuantity = quantity;
                 const batchesUsed = []; // Array to track batches and quantities used
 
@@ -2931,6 +2942,8 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                     product.stockEntries.push(batchEntry);
                 }
 
+                // Update the total stock count
+                product.stock += existingItem.quantity;
                 await product.save({ session });
             }
 
@@ -3088,6 +3101,10 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
             }
 
             async function reduceStock(product, quantity) {
+
+                // Update product stock
+                product.stock -= quantity;
+
                 let remainingQuantity = quantity;
                 const batchesUsed = []; // Array to track batches and quantities used
 
@@ -3387,6 +3404,8 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                     product.stockEntries.push(batchEntry);
                 }
 
+                // Update the total stock count
+                product.stock += existingItem.quantity;
                 await product.save({ session });
             }
 
@@ -3539,6 +3558,10 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             }
 
             async function reduceStock(product, quantity) {
+
+                // Update product stock
+                product.stock -= quantity;
+
                 let remainingQuantity = quantity;
                 const batchesUsed = []; // Array to track batches and quantities used
 

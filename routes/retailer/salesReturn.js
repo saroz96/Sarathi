@@ -32,7 +32,6 @@ router.get('/sales-return/list', isLoggedIn, ensureAuthenticated, ensureCompanyS
 
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
-        const bills = await SalesReturn.find({ company: companyId }).populate('account').populate('items.item').populate('user');
         const currentCompany = await Company.findById(new ObjectId(companyId));
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
 
@@ -67,6 +66,12 @@ router.get('/sales-return/list', isLoggedIn, ensureAuthenticated, ensureCompanyS
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
+
+        const bills = await SalesReturn.find({ company: companyId })
+            .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
+            .populate('account')
+            .populate('items.item')
+            .populate('user');
 
         res.render('retailer/salesReturn/list', {
             company,
@@ -2467,16 +2472,34 @@ router.get('/salesReturn-vat-report', isLoggedIn, ensureAuthenticated, ensureCom
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+        if (!fromDate || !toDate) {
+            res.render('retailer/salesReturn/salesReturnVatReport', {
+                company,
+                currentFiscalYear,
+                salesReturnVatReport: '',
+                companyDateFormat,
+                nepaliDate,
+                currentCompany,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                currentCompanyName,
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
         // // Build the query to filter transactions within the date range
         let query = { company: companyId };
 
-        // if (fromDate && toDate) {
-        //     query.date = { $gte: fromDate, $lte: toDate };
-        // } else if (fromDate) {
-        //     query.date = { $gte: fromDate };
-        // } else if (toDate) {
-        //     query.date = { $lte: toDate };
-        // }
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
 
         const salesReturn = await SalesReturn.find(query)
             .populate('account')
@@ -2498,23 +2521,21 @@ router.get('/salesReturn-vat-report', isLoggedIn, ensureAuthenticated, ensureCom
             };
         }));
 
-        if (!fromDate || !toDate) {
-            res.render('retailer/salesReturn/salesReturnVatReport', {
-                company,
-                currentFiscalYear,
-                salesReturnVatReport,
-                companyDateFormat,
-                nepaliDate,
-                currentCompany,
-                fromDate: req.query.fromDate || '',
-                toDate: req.query.toDate || '',
-                currentCompanyName,
-                title: '',
-                body: '',
-                user: req.user,
-                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
-            });
-        }
+        res.render('retailer/salesReturn/salesReturnVatReport', {
+            company,
+            currentFiscalYear,
+            salesReturnVatReport,
+            companyDateFormat,
+            nepaliDate,
+            currentCompany,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
+            currentCompanyName,
+            title: '',
+            body: '',
+            user: req.user,
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+        });
     } else {
         res.status(403).send('Access denied');
     }

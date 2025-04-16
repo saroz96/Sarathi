@@ -628,32 +628,55 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
                     }
                 }
 
-                // Calculate weighted average purchase price
-                const purchases = await Transaction.find({
-                    item: item._id,
-                    company: companyId,
-                    type: 'Purc',
-                    fiscalYear: currentFiscalYear
-                });
+                // Calculate weighted average purchase price from stockEntries
+                let totalQuantityFromEntries = 0;
+                let totalPriceFromEntries = 0;
 
-                let totalQuantity = 0;
-                let totalPrice = 0;
-                for (let purchase of purchases) {
-                    totalQuantity += purchase.quantity;
-                    totalPrice += purchase.quantity * purchase.puPrice;
+                for (const entry of item.stockEntries) {
+                    if (entry.puPrice && entry.quantity) {
+                        totalQuantityFromEntries += entry.quantity;
+                        totalPriceFromEntries += entry.quantity * entry.puPrice;
+                    }
                 }
+                // Fallback to transactions if no stock entries with puPrice
+                let purchasePrice = 0;
+                if (totalQuantityFromEntries > 0) {
+                    purchasePrice = totalPriceFromEntries / totalQuantityFromEntries;
+                } else {
+                    // Fallback to transaction-based calculation
+                    const purchases = await Transaction.find({
+                        item: item._id,
+                        company: companyId,
+                        type: 'Purc',
+                        fiscalYear: currentFiscalYear
+                    });
 
-                const purchasePrice = totalQuantity > 0 ? (totalPrice / totalQuantity) : item.puPrice;
-                const openingStockBalance = purchasePrice * currentStock;
+                    let totalQuantity = 0;
+                    let totalPrice = 0;
+                    for (let purchase of purchases) {
+                        totalQuantity += purchase.quantity;
+                        totalPrice += purchase.quantity * purchase.puPrice;
+                    }
+                    const purchasePrice = totalQuantity > 0 ? (totalPrice / totalQuantity) : item.puPrice;
+                }
+                // Calculate opening stock from stockEntries (sum of all quantities)
+                const openingStockFromEntries = item.stockEntries.reduce((sum, entry) => sum + (entry.quantity || 0), 0);
+                // Use either the calculated current stock or the sum from stockEntries
+                const openingStock = openingStockFromEntries > 0 ? openingStockFromEntries : currentStock;
+
+                const openingStockBalance = purchasePrice * openingStock;
+
+                // const openingStockBalance = purchasePrice * currentStock;
 
                 sendEvent('log', {
                     message: `Item ${item.name} - ` +
-                        `Final Stock: ${currentStock}, ` +
+                        `Stock from Entries: ${openingStockFromEntries}, ` +
                         `Purchases: ${totalPurchases}, ` +
                         `Sales: ${totalSales}, ` +
                         `Purchase Returns: ${totalPurchaseReturns}, ` +
                         `Sales Returns: ${totalSalesReturns}, ` +
-                        `Adjustments: ${totalAdjustments}`
+                        `Adjustments: ${totalAdjustments},` +
+                        `Purchase Price: ${purchasePrice} (from ${totalQuantityFromEntries > 0 ? 'stock entries' : 'transactions'})`
                 });
 
                 // Create new item with calculated stock
@@ -665,13 +688,13 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
                     mainUnit: item.mainUnit,
                     price: item.price,
                     puPrice: purchasePrice,
-                    stock: currentStock,
+                    stock: openingStock,
                     vatStatus: item.vatStatus,
                     company: companyId,
                     fiscalYear: newFiscalYear._id,
                     openingStockByFiscalYear: [{
                         fiscalYear: newFiscalYear._id,
-                        openingStock: currentStock,
+                        openingStock: openingStock,
                         openingStockBalance: openingStockBalance,
                         purchasePrice: purchasePrice,
                         salesPrice: item.price,

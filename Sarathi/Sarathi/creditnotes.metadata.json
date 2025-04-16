@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"billNumber":{"$numberInt":"1"},"company":{"$numberInt":"1"},"fiscalYear":{"$numberInt":"1"}},"name":"billNumber_1_company_1_fiscalYear_1","background":true,"unique":true}],"uuid":"5d82dea5271045618d8d17b5014ec9cf","collectionName":"creditnotes","type":"collection"}

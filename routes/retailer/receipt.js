@@ -10,7 +10,7 @@ const CompanyGroup = require('../../models/retailer/CompanyGroup')
 const Transaction = require('../../models/retailer/Transaction')
 const NepaliDate = require('nepali-date');
 // const BillCounter = require('../../models/retailer/receiptBillCounter');
-const { ensureAuthenticated, ensureCompanySelected } = require('../../middleware/auth');
+const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const FiscalYear = require('../../models/retailer/FiscalYear');
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
@@ -20,7 +20,7 @@ const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
 const checkDemoPeriod = require('../../middleware/checkDemoPeriod');
 
 // GET - Show list of journal vouchers
-router.get('/receipts-list', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.get('/receipts-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
@@ -59,6 +59,7 @@ router.get('/receipts-list', ensureAuthenticated, ensureCompanySelected, ensureT
         }
 
         const receipts = await Receipt.find({ company: companyId, fiscalYear: fiscalYear })
+            .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account', 'name') // Assuming 'name' field exists in Account schema
             .populate('user', 'name') // Assuming 'username' field exists in User schema
             .populate('receiptAccount', 'name') // Assuming 'name' field exists in Account schema for paymentAccount
@@ -75,7 +76,7 @@ router.get('/receipts-list', ensureAuthenticated, ensureCompanySelected, ensureT
 });
 
 // Get payment form
-router.get('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.get('/receipts', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     const companyId = req.session.currentCompany;
     const today = new Date();
     const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format Nepali date if necessary
@@ -200,7 +201,7 @@ router.get('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTradeT
 });
 
 
-router.get('/receipts/finds', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/receipts/finds', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const today = new Date();
@@ -256,20 +257,20 @@ router.get('/receipts/finds', ensureAuthenticated, ensureCompanySelected, ensure
 })
 
 // Create a new payment
-router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, checkDemoPeriod, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
-            const { billDate, nepaliDate, receiptAccount, account, credit, InstType, bankAcc, InstNo, description } = req.body;
+            const { billDate, nepaliDate, receiptAccount, accountId, credit, InstType, bankAcc, InstNo, description } = req.body;
             const companyId = req.session.currentCompany;
             const currentFiscalYear = req.session.currentFiscalYear.id
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            if (!account || !credit || !receiptAccount) {
+            if (!accountId || !credit || !receiptAccount) {
                 return res.status(400).json({ message: 'All fields are required' });
             }
 
-            if (!mongoose.Types.ObjectId.isValid(account) || !mongoose.Types.ObjectId.isValid(receiptAccount)) {
+            if (!mongoose.Types.ObjectId.isValid(accountId) || !mongoose.Types.ObjectId.isValid(receiptAccount)) {
                 return res.status(400).json({ message: 'Invalid account ID.' });
             }
 
@@ -279,7 +280,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
             const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'Receipt')
 
-            const creditedAccount = await Account.findById(account);
+            const creditedAccount = await Account.findById(accountId);
             if (!creditedAccount) {
                 return res.status(404).json({ message: 'Credited account not found.' });
             }
@@ -288,15 +289,8 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
             if (!debitAccount) {
                 return res.status(404).json({ message: 'Receipt account not found.' });
             }
-
-            // let previousCreditBalance = 0;
-            // const lastCreditTransaction = await Transaction.findOne({ account }).sort({ transactionDate: -1 });
-            // if (lastCreditTransaction) {
-            //     previousCreditBalance = lastCreditTransaction.balance;
-            // }
-
             // Calculate balances
-            const lastCreditTransaction = await Transaction.findOne({ account }).sort({ date: -1 });
+            const lastCreditTransaction = await Transaction.findOne({ accountId }).sort({ date: -1 });
             const previousCreditBalance = lastCreditTransaction?.balance || 0;
 
             const lastDebitTransaction = await Transaction.findOne({ account: debitAccount._id }).sort({ date: -1 });
@@ -306,7 +300,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 // billNumber: billCounter.count,
                 billNumber: billNumber,
                 date: nepaliDate ? new Date(nepaliDate) : new Date(billDate),
-                account,
+                account: accountId,
                 InstType,
                 InstNo,
                 credit,
@@ -321,7 +315,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
             });
             console.log('Receipt Bill:', receipt);
             const creditTransaction = new Transaction({
-                account: account,
+                account: accountId,
                 type: 'Rcpt',
                 receiptAccountId: receipt._id,
                 billNumber: billNumber,
@@ -340,7 +334,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
             await creditTransaction.save();
             console.log('Credit Transaction:', creditTransaction);
-            await Account.findByIdAndUpdate(account, { $push: { transactions: creditTransaction._id } });
+            await Account.findByIdAndUpdate(accountId, { $push: { transactions: creditTransaction._id } });
 
             // let previousDebitBalance = 0;
             // const lastDebitTransaction = await Transaction.findOne({ account: debitAccount._id }).sort({ transactionDate: -1 });
@@ -354,7 +348,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 type: 'Rcpt',
                 receiptAccountId: receipt._id,
                 billNumber: billNumber,
-                accountType: account,
+                accountType: accountId,
                 drCrNoteAccountTypes: 'Debit',
                 credit: 0,
                 debit: credit,
@@ -372,7 +366,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
             // await Account.findByIdAndUpdate(receiptAccount, { $push: { transactions: debitTransaction._id } });
             // Update account transaction references
-            await Account.findByIdAndUpdate(account, { $push: { transactions: creditTransaction._id } });
+            await Account.findByIdAndUpdate(accountId, { $push: { transactions: creditTransaction._id } });
             await Account.findByIdAndUpdate(receiptAccount, { $push: { transactions: debitTransaction._id } });
 
             await receipt.save();
@@ -397,7 +391,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
 
 // Get payment form
-router.get('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/receipts/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const paymentId = req.params.id;
         const companyId = req.session.currentCompany;
@@ -516,7 +510,7 @@ router.get('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
 
 // Get receipt form by billNumber
-router.get('/receipts/edit/billNumber', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/receipts/edit/billNumber', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const { billNumber } = req.query;
         const companyId = req.session.currentCompany;
@@ -637,17 +631,17 @@ router.get('/receipts/edit/billNumber', ensureAuthenticated, ensureCompanySelect
 router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
-            const { billDate, nepaliDate, receiptAccount, account, credit, InstType, InstNo, description } = req.body;
+            const { billDate, nepaliDate, receiptAccount, accountId, credit, InstType, InstNo, description } = req.body;
             const { id } = req.params;
             const companyId = req.session.currentCompany;
             const currentFiscalYear = req.session.currentFiscalYear.id;
             const userId = req.user._id;
 
-            if (!account || !credit || !receiptAccount) {
+            if (!accountId || !credit || !receiptAccount) {
                 return res.status(400).json({ message: 'All fields are required' });
             }
 
-            if (!mongoose.Types.ObjectId.isValid(account) || !mongoose.Types.ObjectId.isValid(receiptAccount)) {
+            if (!mongoose.Types.ObjectId.isValid(accountId) || !mongoose.Types.ObjectId.isValid(receiptAccount)) {
                 return res.status(400).json({ message: 'Invalid account ID.' });
             }
 
@@ -677,7 +671,7 @@ router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
             // Calculate previous balances for credit and debit transactions
             let previousCreditBalance = 0;
-            const lastCreditTransaction = await Transaction.findOne({ account }).sort({ transactionDate: -1 });
+            const lastCreditTransaction = await Transaction.findOne({ accountId }).sort({ transactionDate: -1 });
             if (lastCreditTransaction) {
                 previousCreditBalance = lastCreditTransaction.balance;
             }
@@ -689,7 +683,7 @@ router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
             }
 
             // Update the receipt document
-            existingReceipt.account = account;
+            existingReceipt.account = accountId;
             existingReceipt.receiptAccount = receiptAccount;
             existingReceipt.credit = credit;
             existingReceipt.debit = 0;
@@ -702,7 +696,7 @@ router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
             // Create and save updated credit transaction
             const creditTransaction = new Transaction({
-                account,
+                account: accountId,
                 type: 'Rcpt',
                 receiptAccountId: existingReceipt._id,
                 billNumber: existingReceipt.billNumber,
@@ -718,7 +712,7 @@ router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
                 fiscalYear: currentFiscalYear,
             });
             await creditTransaction.save();
-            await Account.findByIdAndUpdate(account, { $push: { transactions: creditTransaction._id } });
+            await Account.findByIdAndUpdate(accountId, { $push: { transactions: creditTransaction._id } });
 
             // Create and save updated debit transaction
             const debitTransaction = new Transaction({
@@ -726,7 +720,7 @@ router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
                 type: 'Rcpt',
                 receiptAccountId: existingReceipt._id,
                 billNumber: existingReceipt.billNumber,
-                accountType: account,
+                accountType: accountId,
                 drCrNoteAccountTypes: 'Debit',
                 credit: 0,
                 debit: credit,
@@ -761,7 +755,7 @@ router.put('/receipts/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
 
 // View individual payment voucher
-router.get('/receipts/:id/print', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/receipts/:id/print', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         try {
@@ -856,7 +850,7 @@ router.get('/receipts/:id/print', ensureAuthenticated, ensureCompanySelected, en
 
 
 // View individual payment voucher
-router.get('/receipts/:id/direct-print', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/receipts/:id/direct-print', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         try {
@@ -951,7 +945,7 @@ router.get('/receipts/:id/direct-print', ensureAuthenticated, ensureCompanySelec
 
 
 // View individual payment voucher
-router.get('/receipts/:id/direct-print-edit', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/receipts/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         try {

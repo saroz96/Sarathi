@@ -2,7 +2,6 @@
     <!-- Nepali Datepicker -->
     <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
         rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <style>
         .wow-form {
@@ -68,26 +67,30 @@
                             <div class="col">
                                 <label for="nepaliDate">Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)" autofocus>
+                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)"
+                                    onkeydown="handleDateKeydown(event)" autofocus>
                             </div>
                             <% } else { %>
                                 <div class="col">
                                     <label for="billDate">Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
                                         value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onfocus="selectValue(this)" autofocus>
+                                        onfocus="selectValue(this)" onkeydown="handleDateKeydown(event)" autofocus>
                                 </div>
                                 <% } %>
                                     <div class="col">
                                         <label for="billNumber">Vch. No:</label>
                                         <input type="number" name="billNumber" id="billNumber" class="form-control"
                                             value="<%= nextBillNumber %>" required
-                                            oninput="this.value='<%=nextBillNumber%>'" onfocus="selectValue(this)">
+                                            oninput="this.value='<%=nextBillNumber%>'" onfocus="selectValue(this)"
+                                            onkeydown="handleBillNumberKeydown(event)">
                                     </div>
+
                                     <div class="col">
                                         <label for="accountType">A/c Type:</label>
                                         <input type="text" name="accountType" id="accountType" class="form-control"
-                                            value="Payment" oninput="this.value='Payment'">
+                                            value="Payment" oninput="this.value='Payment'"
+                                            onkeydown="handleAccountTypeKeydown(event)">
                                     </div>
                     </div>
 
@@ -112,87 +115,60 @@
                             </optgroup>
                         </select>
                     </div>
-
-                    <!-- <div class="form-group mb-3">
-                        <label for="paymentAccount">Payment Mode:</label>
-                        <input type="text" id="paymentAccount" name="paymentAccount" class="form-control" placeholder=""
-                            autocomplete="off" required>
-                        <input type="hidden" id="paymentAccountId" name="paymentAccountId">
-                    </div> -->
-
                     <!-- Dynamic Rows for Account and Amount -->
                     <div id="rowsContainer" class="mb-3">
-                        <div class="row payment-row">
-                            <!-- <div class="col-md-1">
-                                <label for="serialNumber">S.N.:</label>
-                                <input type="number" name="serialNumber" class="form-control serial-number">
-                            </div> -->
-
-                            <!-- <div class="col-7">
-                                <label for="account">Account:</label>
-                                <select name="account" id="account" class="form-control account-select" required>
-                                    <option value="" disabled selected>Select an account</option>
-                                    <% if (accounts && accounts.length> 0) { %>
-                                        <% accounts.forEach(account=> { %>
-                                            <option value="<%= account._id %>">
-                                                <%= account.name %>
-                                            </option>
-                                            <% }); %>
-                                                <% } else { %>
-                                                    <option disabled>No accounts available</option>
-                                                    <% } %>
-                                </select>
-                            </div> -->
-
-                            <div class="col-7">
-                                <!-- Account Selection Input -->
-                                <label for="account">Party Name:</label>
+                        <div class="row payment-row g-2 align-items-end">
+                            <!-- Added g-2 for gutter spacing and align-items-end -->
+                            <!-- Account Selection Input -->
+                            <div class="col-md-5 col-12"> <!-- Adjusted column sizes for better responsiveness -->
+                                <label for="account" class="form-label">Party Name:</label>
                                 <input type="text" id="account" name="account" class="form-control" placeholder=""
                                     autocomplete="off" required>
                                 <input type="hidden" id="accountId" name="accountId">
                             </div>
-                            <div class="col-md-2">
-                                <label for="debit">Amount:</label>
-                                <input type="number" name="debit" id="debit" class="form-control"
-                                    placeholder="Debit Amount" required>
-                            </div>
-                            <!-- Institution Type and Number (initially hidden) -->
-                            <div class="bank-details col-md-4 d-none">
-                                <div>
-                                    <label for="InstType">Inst. Type</label>
-                                    <select name="InstType" id="InstType" class="form-control">
-                                        <option value="N/A">N/A</option>
-                                        <option value="RTGS">RTGS</option>
-                                        <option value="Fonepay">Fonepay</option>
-                                        <option value="Cheque">Cheque</option>
-                                        <option value="Connect-Ips">Connect-Ips</option>
-                                        <option value="Esewa">Esewa</option>
-                                        <option value="Khalti">Khalti</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="InstNo">Inst. No.</label>
-                                    <input type="text" name="InstNo" id="InstNo" class="form-control" autocomplete="off">
-                                </div>
-                            </div>
-                            <!-- <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger remove-row" data-toggle="tooltip"
-                                    data-placement="top" title="Remove this row">
-                                    <i class="fas fa-minus-circle"></i>
-                                </button>
-                                <button type="button" id="addRow" class="btn btn-secondary ms-2" data-toggle="tooltip"
-                                    data-placement="top" title="Add another payment row">
-                                    <i class="fas fa-plus-circle"></i>
-                                </button>
-                            </div> -->
 
+                            <!-- Amount Input -->
+                            <div class="col-md-2 col-6"> <!-- Adjusted column sizes -->
+                                <label for="debit" class="form-label">Amount:</label>
+                                <input type="number" name="debit" id="debit" class="form-control"
+                                    placeholder="Debit Amount" onkeydown="handleDebitAmountKeydown(event)" required>
+                            </div>
+
+                            <!-- Institution Type and Number -->
+                            <div class="bank-details col-md-5 col-12 d-none">
+                                <!-- Adjusted column sizes and added responsive classes -->
+                                <div class="row g-2"> <!-- Nested row for the bank details -->
+                                    <!-- Institution Type -->
+                                    <div class="col-md-6 col-6"> <!-- Half width on medium screens, full on small -->
+                                        <label for="InstType" class="form-label">Inst. Type</label>
+                                        <select name="InstType" id="InstType" class="form-control"
+                                            onkeydown="handleInstTypeKeydown(event)">
+                                            <option value="N/A">N/A</option>
+                                            <option value="RTGS">RTGS</option>
+                                            <option value="Fonepay">Fonepay</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="Connect-Ips">Connect-Ips</option>
+                                            <option value="Esewa">Esewa</option>
+                                            <option value="Khalti">Khalti</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Institution Number -->
+                                    <div class="col-md-6 col-6"> <!-- Half width on medium screens, full on small -->
+                                        <label for="InstNo" class="form-label">Inst. No.</label>
+                                        <input type="text" name="InstNo" id="InstNo" class="form-control"
+                                            autocomplete="off" onkeydown="handleInstNoKeydown(event)">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between">
                         <div class="col">
                             <input type="text" class="form-control" name="description" id="description"
-                                placeholder="Description" autocomplete="off">
+                                placeholder="Description" onkeydown="handleDescriptionKeydown(event)"
+                                autocomplete="off">
                         </div>
                         <div style="float: right;">
                             <button type="button" class="btn btn-primary" id="saveBill" onclick="submitBillForm(false)">
@@ -492,47 +468,6 @@
             }
         });
 
-
-        document.addEventListener('DOMContentLoaded', function () {
-            // Function to update S.N. for all rows
-            function updateSerialNumbers() {
-                document.querySelectorAll('.serial-number').forEach((input, index) => {
-                    input.value = index + 1;
-                });
-            }
-
-            // Add new row functionality
-            document.getElementById('addRow').addEventListener('click', function () {
-                let firstRow = document.querySelector('.payment-row');
-                let newRow = firstRow.cloneNode(true);
-
-                // Clear the input values in the new row
-                newRow.querySelectorAll('input').forEach(input => input.value = '');
-                newRow.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
-
-                // Append the new row to the rows container
-                document.getElementById('rowsContainer').appendChild(newRow);
-
-                // Add event listener to the remove button in the new row
-                newRow.querySelector('.remove-row').addEventListener('click', function () {
-                    newRow.remove();
-                    updateSerialNumbers();  // Update S.N. after removing a row
-                });
-
-                // Update the serial numbers for all rows
-                updateSerialNumbers();
-            });
-
-            // Add event listener to the remove button in the first row
-            document.querySelector('.remove-row').addEventListener('click', function () {
-                this.closest('.payment-row').remove();
-                updateSerialNumbers();  // Update S.N. after removing a row
-            });
-
-            // Initial serial number update
-            updateSerialNumbers();
-        });
-
         function submitBillForm(print) {
             shouldPrint = print;
             const billForm = document.getElementById('paymentForm');
@@ -578,39 +513,6 @@
             }
         });
 
-        function moveToNextVisibleInput(currentElement) {
-            const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
-
-            // Find the current element's index in the form
-            const currentIndex = formElements.indexOf(currentElement);
-
-            // Iterate through the remaining elements to find the next visible one
-            for (let i = currentIndex + 1; i < formElements.length; i++) {
-                if (formElements[i].offsetParent !== null) { // Check if the element is visible
-                    formElements[i].focus();
-                    break;
-                }
-            }
-        }
-
-        function moveToNextInput(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission
-
-                // Move to the next visible input
-                moveToNextVisibleInput(event.target);
-            }
-        }
-
-        // Get all the input elements within the form
-        const inputs = document.querySelectorAll('form input, form select, form group select option');
-
-        // Attach the moveToNextInput function to the keydown event for each input field
-        inputs.forEach(input => {
-            input.addEventListener('keydown', moveToNextInput);
-        });
-
-
         function selectValue(input) {
             input.select(); // Select the value of the input field when it is focused
         }
@@ -625,4 +527,85 @@
                 document.getElementById('account').focus();
             }
         });
+    </script>
+
+    <script>
+        function handleDateKeydown(event) {
+            if (event.key === 'Enter') {
+                const billNumberInput = document.getElementById('billNumber');
+                billNumberInput.focus();
+                billNumberInput.select();
+
+            }
+        }
+
+        function handleBillNumberKeydown(event) {
+            if (event.key === 'Enter') {
+                const accountTypeInput = document.getElementById('accountType');
+                accountTypeInput.focus();
+                accountTypeInput.select();
+
+            }
+        }
+
+        function handleAccountTypeKeydown(event) {
+            if (event.key === 'Enter') {
+                const paymentAccountInput = document.getElementById('paymentAccount');
+                paymentAccountInput.focus();
+                paymentAccountInput.select();
+
+            }
+        }
+
+        function handleDebitAmountKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const bankDetails = document.querySelector('.bank-details');
+
+                // Check if bank details are visible
+                if (bankDetails && !bankDetails.classList.contains('d-none')) {
+                    document.getElementById('InstType').focus();
+                } else {
+                    document.getElementById('description').focus();
+                    document.getElementById('description').select();
+                }
+            }
+        }
+
+        function handleInstTypeKeydown(event) {
+            if (event.key === 'Enter') {
+                const InstNoInput = document.getElementById('InstNo');
+                InstNoInput.focus();
+                InstNoInput.select();
+
+            }
+        }
+
+        function handleInstNoKeydown(event) {
+            if (event.key === 'Enter') {
+                const descriptionInput = document.getElementById('description');
+                descriptionInput.focus();
+                descriptionInput.select();
+
+            }
+        }
+
+        function handleDescriptionKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const saveBillButton = document.getElementById('saveBill');
+                saveBillButton.focus();
+
+                // Add event listener for Enter key on the save button
+                saveBillButton.addEventListener('keydown', function saveButtonKeydown(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitBillForm(false); // Submit without printing
+
+                        // Remove the event listener after use to prevent multiple submissions
+                        saveBillButton.removeEventListener('keydown', saveButtonKeydown);
+                    }
+                });
+            }
+        }
     </script>

@@ -52,7 +52,40 @@ const stockEntrySchema = new mongoose.Schema({
         ref: 'FiscalYear'
     },
     uniqueUuId: { type: String },
-    purchaseBillId: { type: mongoose.Schema.Types.ObjectId, ref: 'PurchaseBill' } // Add this field
+    purchaseBillId: { type: mongoose.Schema.Types.ObjectId, ref: 'PurchaseBill' }, // Add this field
+    expiryStatus: {  // New field to track expiry status
+        type: String,
+        enum: ['safe', 'warning', 'danger', 'expired'],
+        default: 'safe'
+    },
+    daysUntilExpiry: {  // New field to store days until expiry
+        type: Number,
+        default: 730  // Default 2 years in days
+    }
+});
+
+
+// Add pre-save hook to calculate expiry status
+stockEntrySchema.pre('save', function (next) {
+    if (this.expiryDate) {
+        const today = new Date();
+        const expiryDate = new Date(this.expiryDate);
+        const timeDiff = expiryDate.getTime() - today.getTime();
+        const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+        this.daysUntilExpiry = daysUntilExpiry;
+
+        if (daysUntilExpiry <= 0) {
+            this.expiryStatus = 'expired';
+        } else if (daysUntilExpiry <= 30) {  // 30 days threshold for warning
+            this.expiryStatus = 'danger';
+        } else if (daysUntilExpiry <= 90) {  // 90 days threshold for warning
+            this.expiryStatus = 'warning';
+        } else {
+            this.expiryStatus = 'safe';
+        }
+    }
+    next();
 });
 
 
@@ -95,10 +128,6 @@ const itemSchema = new mongoose.Schema({
     stock: {
         type: Number,
         default: 0,
-        // set: function (value) {
-        //     // Calculate stock based on WSUnit and quantity
-        //     return this.WSUnit * value;
-        // }
     }, // Total stock
     openingStock: {
         type: Number,
@@ -197,5 +226,134 @@ itemSchema.pre('save', async function (next) {
     }
     next();
 });
+
+
+//Create a static method to check for expiring items:
+
+itemSchema.statics.getExpiringItems = async function(companyId, thresholdDays = 30) {
+    const today = new Date();
+    const thresholdDate = new Date();
+    thresholdDate.setDate(today.getDate() + thresholdDays);
+    
+    return this.aggregate([
+        {
+            $match: {
+                company: mongoose.Types.ObjectId(companyId)
+            }
+        },
+        {
+            $unwind: "$stockEntries"
+        },
+        {
+            $match: {
+                "stockEntries.expiryDate": {
+                    $lte: thresholdDate,
+                    $gte: today
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                name: { $first: "$name" },
+                batchNumbers: { $push: "$stockEntries.batchNumber" },
+                expiryDates: { $push: "$stockEntries.expiryDate" },
+                quantities: { $push: "$stockEntries.quantity" },
+                daysUntilExpiry: { $push: "$stockEntries.daysUntilExpiry" }
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                batches: {
+                    $zip: {
+                        inputs: ["$batchNumbers", "$expiryDates", "$quantities", "$daysUntilExpiry"]
+                    }
+                }
+            }
+        }
+    ]);
+};
+
+itemSchema.statics.getExpiredItems = async function(companyId) {
+    const today = new Date();
+    
+    return this.aggregate([
+        {
+            $match: {
+                company: mongoose.Types.ObjectId(companyId)
+            }
+        },
+        {
+            $unwind: "$stockEntries"
+        },
+        {
+            $match: {
+                "stockEntries.expiryDate": {
+                    $lt: today
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                name: { $first: "$name" },
+                batchNumbers: { $push: "$stockEntries.batchNumber" },
+                expiryDates: { $push: "$stockEntries.expiryDate" },
+                quantities: { $push: "$stockEntries.quantity" }
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                batches: {
+                    $zip: {
+                        inputs: ["$batchNumbers", "$expiryDates", "$quantities"]
+                    }
+                }
+            }
+        }
+    ]);
+};
+
+//Create a method to get expiry status for display:
+
+itemSchema.methods.getExpiryStatus = function() {
+    const now = new Date();
+    let nearestExpiry = null;
+    let expiredItems = 0;
+    let warningItems = 0;
+    let dangerItems = 0;
+    
+    this.stockEntries.forEach(entry => {
+        const expiryDate = new Date(entry.expiryDate);
+        if (expiryDate < now) {
+            expiredItems += entry.quantity;
+        } else {
+            if (!nearestExpiry || expiryDate < nearestExpiry) {
+                nearestExpiry = expiryDate;
+            }
+            
+            const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
+            if (daysUntilExpiry <= 30) {
+                dangerItems += entry.quantity;
+            } else if (daysUntilExpiry <= 90) {
+                warningItems += entry.quantity;
+            }
+        }
+    });
+    
+    return {
+        nearestExpiry,
+        expiredItems,
+        warningItems,
+        dangerItems,
+        status: expiredItems > 0 ? 'expired' : 
+               dangerItems > 0 ? 'danger' : 
+               warningItems > 0 ? 'warning' : 'safe'
+    };
+};
 
 module.exports = mongoose.model('Item', itemSchema);

@@ -1,0 +1,365 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+            /* Let columns size automatically based on content */
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid black;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+
+            body {
+                font-size: 12px;
+                margin: 10mm;
+            }
+
+            #printHeader {
+                display: block;
+                /* Show header when printing */
+            }
+
+            /* Ensure no text wrapping when printing */
+            th,
+            td {
+                white-space: nowrap;
+            }
+
+            /* Hide unnecessary elements during printing */
+            #filterForm,
+            #searchInput,
+            #billsList .searchClass td:last-child {
+                display: none;
+            }
+
+            /* Adjust the container width to fit landscape */
+            #mainContainer {
+                width: 100%;
+            }
+        }
+
+        @media screen {
+            #printHeader {
+                display: none;
+                /* Hide header when on screen */
+            }
+        }
+
+
+        /* Custom styles to resize the form */
+        .expanded-container {
+            max-width: 90%;
+            /* Expand the container to 90% of the viewport width */
+        }
+
+        .expanded-card {
+            width: 100%;
+            /* Ensure the card takes full width of the container */
+        }
+
+        @media (min-width: 768px) {
+            .expanded-container {
+                max-width: 90%;
+                /* Adjust width for medium and larger screens */
+            }
+        }
+    </style>
+
+    <div class="container wow-form expanded-container">
+        <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+
+            <% if (Object.keys(itemsLedger).length> 0) { %>
+                <% Object.keys(itemsLedger).forEach(itemId=> { %>
+                    <% const item=itemsLedger[itemId].item; %>
+                        <% const entries=itemsLedger[itemId].entries; %>
+                            <% const hasOpeningStock=item.stock && item.stock !==0; %>
+                                <% const hasEntries=entries && entries.length> 0; %>
+
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h2 class="card-title text-center">
+                                                <%= item.name %>
+                                            </h2>
+                                        </div>
+                                        <div class="container-fluid">
+                                            <div class="row">
+                                                <div class="col-md-9">
+                                                    <form>
+                                                        <div class="form-group">
+                                                            <label for="searchInput">Search Party:</label>
+                                                            <input type="text" class="form-control" id="searchInput"
+                                                                placeholder="Search by party name..." autofocus>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <form id="filterForm">
+                                                        <div class="form-group">
+                                                            <label for="adjustmentTypeFilter">Filter by Type:</label>
+                                                            <select class="form-control" id="adjustmentTypeFilter">
+                                                                <option value="">All</option>
+                                                                <option value="xcess">Xcess</option>
+                                                                <option value="short">Short</option>
+                                                                <option value="Sale">Sales</option>
+                                                                <option value="SlRt">Sales Return</option>
+                                                                <option value="Purc">Purchase</option>
+                                                                <option value="PrRt">Purchase Return</option>
+                                                            </select>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <a href="/items" class="btn btn-primary mb-3"><i
+                                                                class="bi bi-receipt"></i></a>
+                                                        <button id="printAllBills" class="btn btn-secondary mb-3"><i
+                                                                class="bi bi-printer"> All</i></button>
+                                                        <button id="printFilteredBills"
+                                                            class="btn btn-secondary mb-3"><i class="bi bi-printer">
+                                                                Filtered</i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <% if (hasOpeningStock || hasEntries) { %>
+                                                <table class="table table-bordered table-striped" id="adjustmentList">
+                                                    <thead class="thead-dark">
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th>Party Name</th>
+                                                            <th>Type</th>
+                                                            <th>Vouch/Bill</th>
+                                                            <th>Qty. In</th>
+                                                            <th>Qty. Out</th>
+                                                            <th>Free</th>
+                                                            <th>Unit</th>
+                                                            <th>Rate (Rs.)</th>
+                                                            <th>Balance</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% if (openingStock) { %>
+                                                            <tr>
+                                                                <td colspan="8"><strong>Opening Balance</strong>
+                                                                </td>
+                                                                <td>
+                                                                    <%= openingStock.toFixed(2) %>
+                                                                </td>
+                                                            </tr>
+                                                            <% } %>
+
+                                                                <% if (hasEntries) { %>
+                                                                    <% entries.forEach(entry=> { %>
+                                                                        <tr class="searchClass"
+                                                                            data-adjustment-type="<%= entry.type %>">
+                                                                            <td>
+                                                                                <% if (companyDateFormat==='nepali' ) {
+                                                                                    %>
+                                                                                    <%= new
+                                                                                        Date(entry.date).toLocaleDateString()
+                                                                                        %>
+                                                                                        <% } else { %>
+                                                                                            <%= new
+                                                                                                Date(entry.date).toLocaleDateString()
+                                                                                                %>
+                                                                                                <% } %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.partyName %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.type %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.billNumber %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.qtyIn %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.qtyOut %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.bonus ||0 %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.unit %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.price %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= entry.balance.toFixed(2) %>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <% }) %>
+                                                                            <% } %>
+                                                    </tbody>
+                                                </table>
+                                                <% } else { %>
+                                                    <h1 class="text-center">No transactions available.</h1>
+                                                    <% } %>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <h1 class="text-center">No transactions available.</h1>
+                                            <% } %>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('searchInput').addEventListener('input', filterAdjustment);
+    document.getElementById('adjustmentTypeFilter').addEventListener('change', filterAdjustment);
+
+    // Keyboard navigation variables
+    let selectedRowIndex = 0; // Start with first row selected
+    const table = document.getElementById('adjustmentList');
+    let rows = [];
+
+    function filterAdjustment() {
+        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+        const selectedAdjustmentType = document.getElementById('adjustmentTypeFilter').value.trim().toLowerCase();
+        rows = table.querySelectorAll('tbody tr.searchClass');
+
+        rows.forEach((row, index) => {
+            const itemName = row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase();
+            const adjustmentType = row.querySelector('td:nth-child(3)').textContent.trim().toLowerCase();
+
+            const matchesSearch = itemName.includes(searchQuery);
+            const matchesAdjustmentType = selectedAdjustmentType === '' || adjustmentType === selectedAdjustmentType;
+
+            if (matchesSearch && matchesAdjustmentType) {
+                row.style.display = '';
+                row.classList.remove('selected-row');
+                if (index === 0) {
+                    row.classList.add('selected-row'); // Highlight first visible row
+                }
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('selected-row');
+            }
+        });
+        
+        // Reset selection to first visible row after filtering
+        selectedRowIndex = 0;
+        const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+            .filter(row => row.style.display !== 'none');
+        if (visibleRows.length > 0) {
+            visibleRows[0].classList.add('selected-row');
+        }
+    }
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        // Get visible rows (filtered rows)
+        const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+            .filter(row => row.style.display !== 'none');
+        
+        if (visibleRows.length === 0) return;
+
+        // Remove previous selection
+        if (selectedRowIndex >= 0 && selectedRowIndex < visibleRows.length) {
+            visibleRows[selectedRowIndex].classList.remove('selected-row');
+        }
+
+        switch(e.key) {
+            case 'ArrowUp':
+                e.preventDefault();
+                if (selectedRowIndex > 0) {
+                    selectedRowIndex--;
+                } else {
+                    selectedRowIndex = visibleRows.length - 1;
+                }
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                if (selectedRowIndex < visibleRows.length - 1) {
+                    selectedRowIndex++;
+                } else {
+                    selectedRowIndex = 0;
+                }
+                break;
+            case 'Home':
+                e.preventDefault();
+                selectedRowIndex = 0;
+                break;
+            case 'End':
+                e.preventDefault();
+                selectedRowIndex = visibleRows.length - 1;
+                break;
+            default:
+                return; // Exit if not a navigation key
+        }
+
+        // Add selection to new row
+        visibleRows[selectedRowIndex].classList.add('selected-row');
+        
+        // Scroll to the selected row
+        visibleRows[selectedRowIndex].scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+        });
+    });
+
+    // Add click handler to select rows
+    table.addEventListener('click', function(e) {
+        const clickedRow = e.target.closest('tr.searchClass');
+        if (!clickedRow) return;
+        
+        // Remove previous selection
+        const selected = table.querySelector('.selected-row');
+        if (selected) selected.classList.remove('selected-row');
+        
+        // Add new selection
+        clickedRow.classList.add('selected-row');
+        
+        // Update selected index
+        const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+            .filter(row => row.style.display !== 'none');
+        selectedRowIndex = visibleRows.indexOf(clickedRow);
+    });
+
+    // Initialize with first row selected
+    document.addEventListener('DOMContentLoaded', function() {
+        filterAdjustment(); // This will highlight the first row
+    });
+</script>
+
+<style>
+    /* Add this to your existing styles */
+    .selected-row {
+        background-color: #add8e6 !important; /* Light blue color */
+        outline: 2px solid #007bff;
+    }
+
+    #adjustmentList tbody tr.searchClass {
+        cursor: pointer;
+    }
+
+    #adjustmentList tbody tr.searchClass:hover {
+        background-color: #f1f1f1;
+    }
+</style>

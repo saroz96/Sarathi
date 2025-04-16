@@ -69,7 +69,11 @@ router.get('/purchase-return/list', isLoggedIn, ensureAuthenticated, ensureCompa
         }
 
 
-        const bills = await PurchaseReturn.find({ company: companyId }).populate('account').populate('items.item').populate('user');
+        const bills = await PurchaseReturn.find({ company: companyId })
+            .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
+            .populate('account')
+            .populate('items.item')
+            .populate('user');
         res.render('retailer/purchaseReturn/allPurchaseReturn', {
             company,
             currentFiscalYear,
@@ -1582,7 +1586,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                     console.warn(`Batch with batchNumber ${existingItem.batchNumber} and uniqueUuId ${existingItem.uniqueUuId} not found for product: ${product.name}`);
                 }
 
-                await product.save({session}); // Save updated stock
+                await product.save({ session }); // Save updated stock
             }
 
             console.log('Stock successfully reversed for existing bill items.');
@@ -1722,7 +1726,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 }
 
                 // Save the product with the updated stock entries
-                await product.save({session});
+                await product.save({ session });
             }
 
             // **Updated processing for billItems to allow multiple entries of the same item**
@@ -1776,7 +1780,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 fiscalYear: currentFiscalYear,
             });
 
-            await transaction.save({session});
+            await transaction.save({ session });
             console.log('Transaction created:', transaction);
 
 
@@ -1807,7 +1811,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await purchaseRtnTransaction.save({session});
+                    await purchaseRtnTransaction.save({ session });
                     console.log('Purchase Return Transaction: ', purchaseRtnTransaction);
                 }
             }
@@ -1837,7 +1841,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await vatTransaction.save({session});
+                    await vatTransaction.save({ session });
                     console.log('Vat Transaction: ', vatTransaction);
                 }
             }
@@ -1867,7 +1871,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await roundOffTransaction.save({session});
+                    await roundOffTransaction.save({ session });
                     console.log('Round-off Transaction: ', roundOffTransaction);
                 }
             }
@@ -1896,7 +1900,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await roundOffTransaction.save({session});
+                    await roundOffTransaction.save({ session });
                     console.log('Round-off Transaction: ', roundOffTransaction);
                 }
             }
@@ -1925,7 +1929,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         user: userId,
                         fiscalYear: currentFiscalYear,
                     });
-                    await cashTransaction.save({session});
+                    await cashTransaction.save({ session });
                     console.log('Cash transaction created:', cashTransaction);
                 }
             }
@@ -2418,6 +2422,24 @@ router.get('/purchaseReturn-vat-report', isLoggedIn, ensureAuthenticated, ensure
 
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        if (!fromDate || !toDate) {
+            res.render('retailer/purchaseReturn/purchaseReturnVatReport', {
+                company,
+                currentFiscalYear,
+                purchaseReturnVatReport: '',
+                companyDateFormat,
+                nepaliDate,
+                currentCompany,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                currentCompanyName,
+                user: req.user,
+                title: '',
+                body: '',
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
         }
 
         // Build the query to filter transactions within the date range

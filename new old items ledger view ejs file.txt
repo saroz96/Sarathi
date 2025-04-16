@@ -1,0 +1,520 @@
+<%- include('../layouts/boilerplate', { title: 'Stock Ledger' , body: '' }) %>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+<style>
+    :root {
+        --primary-color: #3498db;
+        --secondary-color: #2c3e50;
+        --light-blue: #e6f2ff;
+        --table-header: #f8f9fa;
+        --table-border: #dee2e6;
+    }
+    
+    body {
+        background-color: #f5f7fa;
+    }
+    
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: none;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: var(--secondary-color);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+    
+    .card-title {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    #adjustmentList {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    #adjustmentList thead th {
+        position: sticky;
+        top: 0;
+        background-color: var(--table-header);
+        color: var(--secondary-color);
+        font-weight: 600;
+        padding: 12px 15px;
+        border-bottom: 2px solid var(--table-border);
+    }
+    
+    #adjustmentList tbody td {
+        padding: 10px 15px;
+        border-bottom: 1px solid var(--table-border);
+        vertical-align: middle;
+        transition: background-color 0.2s;
+    }
+    
+    #adjustmentList tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    #adjustmentList tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.05);
+    }
+    
+    .selected-row {
+        background-color: var(--light-blue) !important;
+        box-shadow: inset 0 0 0 2px var(--primary-color);
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box i {
+        position: absolute;
+        top: 50%;
+        right: 15px;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+    
+    .filter-section {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .action-btns .btn {
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .badge-type {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .badge-purc { background-color: #28a745; color: white; }
+    .badge-prrt { background-color: #dc3545; color: white; }
+    .badge-sale { background-color: #17a2b8; color: white; }
+    .badge-slrt { background-color: #ffc107; color: #212529; }
+    .badge-xcess { background-color: #6f42c1; color: white; }
+    .badge-short { background-color: #fd7e14; color: white; }
+    
+    .numeric-cell {
+        text-align: right;
+        font-family: 'Courier New', monospace;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-section .col-md-6 {
+            margin-bottom: 15px;
+        }
+        
+        .action-btns .btn {
+            width: 100%;
+            margin-right: 0;
+        }
+        
+        #adjustmentList {
+            font-size: 14px;
+        }
+        
+        #adjustmentList th,
+        #adjustmentList td {
+            padding: 8px 10px;
+        }
+    }
+
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+        
+        body {
+            font-size: 12px;
+            margin: 10mm;
+            background-color: white;
+        }
+        
+        .card, .table {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+        
+        .selected-row {
+            background-color: #e6f2ff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card">
+        <% if (Object.keys(itemsLedger).length > 0) { %>
+            <% Object.keys(itemsLedger).forEach(itemId => { %>
+                <% const item = itemsLedger[itemId].item; %>
+                <% const entries = itemsLedger[itemId].entries; %>
+                <% const hasOpeningStock = item.stock && item.stock !== 0; %>
+                <% const hasEntries = entries && entries.length > 0; %>
+
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-box-open mr-2"></i>
+                        <%= item.name %> Ledger
+                    </h2>
+                    <div class="badge badge-primary p-2">
+                        Current Stock: <%= item.stock.toFixed(2) %> <%= item.unit.name %>
+                    </div>
+                </div>
+
+                <div class="filter-section no-print">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group mb-0">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control" id="searchInput" 
+                                           placeholder="Search by party name, bill number, or type...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <select class="form-control" id="adjustmentTypeFilter">
+                                    <option value="">All Transactions</option>
+                                    <option value="Purc">Purchases</option>
+                                    <option value="PrRt">Purchase Returns</option>
+                                    <option value="Sale">Sales</option>
+                                    <option value="SlRt">Sales Returns</option>
+                                    <option value="xcess">Stock Excess</option>
+                                    <option value="short">Stock Shortage</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="action-btns mb-3 no-print">
+                        <a href="/items" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Items
+                        </a>
+                        <button id="printAllBills" class="btn btn-outline-secondary">
+                            <i class="fas fa-print mr-2"></i>Print All
+                        </button>
+                        <button id="printFilteredBills" class="btn btn-outline-secondary">
+                            <i class="fas fa-filter mr-2"></i>Print Filtered
+                        </button>
+                    </div>
+
+                    <% if (hasOpeningStock || hasEntries) { %>
+                        <div class="table-container">
+                            <table class="table" id="adjustmentList">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Party Name</th>
+                                        <th>Type</th>
+                                        <th>Voucher</th>
+                                        <th class="numeric-cell">In</th>
+                                        <th class="numeric-cell">Out</th>
+                                        <th class="numeric-cell">Free</th>
+                                        <th>Unit</th>
+                                        <th class="numeric-cell">Rate</th>
+                                        <th class="numeric-cell">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (openingStock) { %>
+                                        <tr class="bg-light">
+                                            <td colspan="4"><strong>Opening Balance</strong></td>
+                                            <td colspan="2"></td>
+                                            <td></td>
+                                            <td><%= item.unit.name %></td>
+                                            <td></td>
+                                            <td class="numeric-cell"><strong><%= openingStock.toFixed(2) %></strong></td>
+                                        </tr>
+                                    <% } %>
+
+                                    <% if (hasEntries) { %>
+                                        <% entries.forEach(entry => { %>
+                                            <tr class="searchClass" data-adjustment-type="<%= entry.type %>">
+                                                <td>
+                                                    <% if (companyDateFormat === 'nepali') { %>
+                                                        <%= new Date(entry.date).toLocaleDateString() %>
+                                                    <% } else { %>
+                                                        <%= new Date(entry.date).toLocaleDateString() %>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= entry.partyName %></td>
+                                                <td>
+                                                    <span class="badge-type badge-<%= entry.type.toLowerCase() %>">
+                                                        <%= entry.type %>
+                                                    </span>
+                                                </td>
+                                                <td><%= entry.billNumber %></td>
+                                                <td class="numeric-cell"><%= entry.qtyIn || '-' %></td>
+                                                <td class="numeric-cell"><%= entry.qtyOut || '-' %></td>
+                                                <td class="numeric-cell"><%= entry.bonus || '-' %></td>
+                                                <td><%= entry.unit %></td>
+                                                <td class="numeric-cell"><%= entry.price.toFixed(2) %></td>
+                                                <td class="numeric-cell"><strong><%= entry.balance.toFixed(2) %></strong></td>
+                                            </tr>
+                                        <% }) %>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle mr-2"></i>No transactions available for this item.
+                        </div>
+                    <% } %>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="card-body">
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>No ledger data available.
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize elements
+        const searchInput = document.getElementById('searchInput');
+        const adjustmentTypeFilter = document.getElementById('adjustmentTypeFilter');
+        const printAllBtn = document.getElementById('printAllBills');
+        const printFilteredBtn = document.getElementById('printFilteredBills');
+        const table = document.getElementById('adjustmentList');
+        
+        // Keyboard navigation variables
+        let selectedRowIndex = 0;
+        let rows = [];
+        
+        // Highlight first row on load
+        setTimeout(() => {
+            const firstVisibleRow = table.querySelector('tbody tr.searchClass');
+            if (firstVisibleRow) {
+                firstVisibleRow.classList.add('selected-row');
+            }
+        }, 100);
+        
+        // Filter function
+        function filterAdjustment() {
+            const searchQuery = searchInput.value.trim().toLowerCase();
+            const selectedAdjustmentType = adjustmentTypeFilter.value.trim().toLowerCase();
+            rows = table.querySelectorAll('tbody tr.searchClass');
+            
+            let hasVisibleRows = false;
+            
+            rows.forEach((row, index) => {
+                const partyName = row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase();
+                const billNumber = row.querySelector('td:nth-child(4)').textContent.trim().toLowerCase();
+                const adjustmentType = row.getAttribute('data-adjustment-type').toLowerCase();
+                
+                const matchesSearch = partyName.includes(searchQuery) || billNumber.includes(searchQuery);
+                const matchesAdjustmentType = selectedAdjustmentType === '' || 
+                                            adjustmentType === selectedAdjustmentType.toLowerCase();
+                
+                if (matchesSearch && matchesAdjustmentType) {
+                    row.style.display = '';
+                    row.classList.remove('selected-row');
+                    if (!hasVisibleRows) {
+                        row.classList.add('selected-row');
+                        selectedRowIndex = index;
+                        hasVisibleRows = true;
+                    }
+                } else {
+                    row.style.display = 'none';
+                    row.classList.remove('selected-row');
+                }
+            });
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+                .filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) return;
+            
+            // Remove previous selection
+            if (selectedRowIndex >= 0 && selectedRowIndex < visibleRows.length) {
+                visibleRows[selectedRowIndex].classList.remove('selected-row');
+            }
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedRowIndex = selectedRowIndex > 0 ? selectedRowIndex - 1 : visibleRows.length - 1;
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedRowIndex = selectedRowIndex < visibleRows.length - 1 ? selectedRowIndex + 1 : 0;
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    selectedRowIndex = 0;
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    selectedRowIndex = visibleRows.length - 1;
+                    break;
+                default:
+                    return;
+            }
+            
+            // Add new selection
+            visibleRows[selectedRowIndex].classList.add('selected-row');
+            visibleRows[selectedRowIndex].scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        });
+        
+        // Click handler for rows
+        table.addEventListener('click', function(e) {
+            const clickedRow = e.target.closest('tr.searchClass');
+            if (!clickedRow) return;
+            
+            // Remove previous selection
+            const selected = table.querySelector('.selected-row');
+            if (selected) selected.classList.remove('selected-row');
+            
+            // Add new selection
+            clickedRow.classList.add('selected-row');
+            
+            // Update selected index
+            const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+                .filter(row => row.style.display !== 'none');
+            selectedRowIndex = visibleRows.indexOf(clickedRow);
+        });
+        
+        // Print functions
+        function printStockAdjustments(rowsToPrint) {
+            const printWindow = window.open('', '_blank');
+            const companyName = '<%= currentCompanyName %>';
+            const itemName = Object.keys(itemsLedger).length > 0 ? 
+                itemsLedger[Object.keys(itemsLedger)[0]].item.name : 'Item Ledger';
+            
+            let html = `
+                <html>
+                    <head>
+                        <title>${itemName} Ledger Report</title>
+                        <style>
+                            @page { size: A4 landscape; margin: 10mm; }
+                            body { font-family: Arial, sans-serif; font-size: 12px; }
+                            .header { text-align: center; margin-bottom: 20px; }
+                            .report-title { font-size: 16px; font-weight: bold; margin: 10px 0; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                            th, td { padding: 6px; text-align: left; border: 1px solid #ddd; }
+                            th { background-color: #f2f2f2; font-weight: bold; }
+                            .numeric { text-align: right; }
+                            .total-row { font-weight: bold; background-color: #f9f9f9; }
+                            .badge { padding: 2px 5px; border-radius: 3px; font-size: 11px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <div class="company-name">${companyName}</div>
+                            <div class="report-title">${itemName} - Stock Ledger Report</div>
+                            <div>Generated on ${new Date().toLocaleDateString()}</div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Party Name</th>
+                                    <th>Type</th>
+                                    <th>Voucher</th>
+                                    <th class="numeric">In</th>
+                                    <th class="numeric">Out</th>
+                                    <th class="numeric">Free</th>
+                                    <th>Unit</th>
+                                    <th class="numeric">Rate</th>
+                                    <th class="numeric">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            rowsToPrint.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                html += '<tr>';
+                
+                for (let i = 0; i < cells.length; i++) {
+                    const cellContent = cells[i].innerHTML;
+                    const numericClass = i >= 4 && i <= 9 ? ' class="numeric"' : '';
+                    html += `<td${numericClass}>${cellContent}</td>`;
+                }
+                
+                html += '</tr>';
+            });
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+        
+        printAllBtn.addEventListener('click', () => {
+            const allRows = table.querySelectorAll('tbody tr.searchClass');
+            printStockAdjustments(Array.from(allRows));
+        });
+        
+        printFilteredBtn.addEventListener('click', () => {
+            const filteredRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+                .filter(row => row.style.display !== 'none');
+            printStockAdjustments(filteredRows);
+        });
+        
+        // Event listeners
+        searchInput.addEventListener('input', filterAdjustment);
+        adjustmentTypeFilter.addEventListener('change', filterAdjustment);
+        
+        // Focus search input on Ctrl+F
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+    });
+</script>

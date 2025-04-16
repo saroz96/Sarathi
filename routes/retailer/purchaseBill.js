@@ -63,7 +63,11 @@ router.get('/purchase-bills-list', isLoggedIn, ensureAuthenticated, ensureCompan
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const bills = await PurchaseBill.find({ company: companyId, fiscalYear: currentFiscalYear }).populate('account').populate('items.item').populate('user');
+        const bills = await PurchaseBill.find({ company: companyId, fiscalYear: currentFiscalYear })
+            .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
+            .populate('account')
+            .populate('items.item')
+            .populate('user');
         res.render('retailer/purchase/allbills', {
             company,
             currentFiscalYear,
@@ -1126,6 +1130,8 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     }
 
                     product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity, 0);
+                    // Update the total stock count
+                    product.stock += existingItem.quantity;
                     await product.save({ session });
                 }
             }
@@ -1278,6 +1284,10 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                 const convertedQuantity = quantityNumber * WSUnitNumber;
                 const convertedBonus = bonusNumber * WSUnitNumber;
                 const totalQuantity = convertedQuantity + convertedBonus
+
+                // Update product stock
+                product.stock += totalQuantity;
+
                 const stockEntry = {
                     date: nepaliDate ? nepaliDate : new Date(billDate),
                     WSUnit: WSUnitNumber,
