@@ -430,7 +430,7 @@ function addItemToBill(item, dropdownMenu) {
             <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" oninput="this.value='${selectedBatch.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
         </td>
         <td>
-            <input type="date" name="items[${itemIndex}][expiryDate]" value="${selectedBatch.expiryDate}" oninput="this.value='${selectedBatch.expiryDate}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+            <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(selectedBatch.expiryDate)}" oninput="this.value='${selectedBatch.expiryDate}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
         </td>
         <td><input type="number" name="items[${itemIndex}][price]" value="${selectedBatch.price}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
         <td class="item-amount">0.00</td>
@@ -456,6 +456,16 @@ function addItemToBill(item, dropdownMenu) {
             });
         }
     });
+}
+
+// First, add a helper function to format dates for input fields
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function showBatchModal(item, callback) {
@@ -493,8 +503,7 @@ function showBatchModal(item, callback) {
                 modalContent += `
                 <tr tabindex="0">
                     <td>${entry.batchNumber || 'N/A'}</td>
-                    <td>${entry.expiryDate || 'N/A'}</td>
-                    <td>${entry.quantity}</td>
+<td>${entry.expiryDate ? new Date(entry.expiryDate).toLocaleDateString('en-US') : 'N/A'}</td>                    <td>${entry.quantity}</td>
                     <td>${entry.price}</td>
                     <td>${entry.puPrice}</td>
                     <td>${entry.marginPercentage}</td>

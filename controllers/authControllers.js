@@ -73,29 +73,6 @@ exports.verifyEmail = async (req, res) => {
 };
 
 // Resend verification email
-// exports.resendVerificationEmail = async (req, res) => {
-//     try {
-//         const { email } = req.body;
-
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(404).json({ message: 'No account with that email found.' });
-//         }
-
-//         if (user.isEmailVerified) {
-//             return res.status(400).json({ message: 'Email is already verified.' });
-//         }
-
-//         await this.sendVerificationEmail(user, req);
-
-//         res.status(200).json({ message: 'Verification email resent.' });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ message: 'Error resending verification email.' });
-//     }
-// };
-
-// Resend verification email
 exports.resendVerificationEmail = async (req, res) => {
     try {
         const { email } = req.body;

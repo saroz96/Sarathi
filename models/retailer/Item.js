@@ -1,10 +1,16 @@
 const mongoose = require('mongoose');
 
 // Helper function to calculate default expiry date (2 years from now)
+// const getDefaultExpiryDate = () => {
+//     const currentDate = new Date();
+//     currentDate.setFullYear(currentDate.getFullYear() + 2);
+//     return currentDate.toISOString().split("T")[0]; // Returns in YYYY-MM-DD format
+// };
+
 const getDefaultExpiryDate = () => {
     const currentDate = new Date();
     currentDate.setFullYear(currentDate.getFullYear() + 2);
-    return currentDate.toISOString().split("T")[0]; // Returns in YYYY-MM-DD format
+    return currentDate; // Returns in YYYY-MM-DD format
 };
 
 const stockEntrySchema = new mongoose.Schema({
@@ -26,7 +32,7 @@ const stockEntrySchema = new mongoose.Schema({
         default: 'XXX',
     },
     expiryDate: {
-        type: String,
+        type: Date,
         default: getDefaultExpiryDate,
     },
     price: {
@@ -69,8 +75,8 @@ const stockEntrySchema = new mongoose.Schema({
 stockEntrySchema.pre('save', function (next) {
     if (this.expiryDate) {
         const today = new Date();
-        const expiryDate = new Date(this.expiryDate);
-        const timeDiff = expiryDate.getTime() - today.getTime();
+        // const expiryDate = new Date(this.expiryDate);
+        const timeDiff = this.expiryDate.getTime() - today.getTime();
         const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
         this.daysUntilExpiry = daysUntilExpiry;
