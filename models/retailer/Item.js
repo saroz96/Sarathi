@@ -236,11 +236,11 @@ itemSchema.pre('save', async function (next) {
 
 //Create a static method to check for expiring items:
 
-itemSchema.statics.getExpiringItems = async function(companyId, thresholdDays = 30) {
+itemSchema.statics.getExpiringItems = async function (companyId, thresholdDays = 30) {
     const today = new Date();
     const thresholdDate = new Date();
     thresholdDate.setDate(today.getDate() + thresholdDays);
-    
+
     return this.aggregate([
         {
             $match: {
@@ -282,9 +282,9 @@ itemSchema.statics.getExpiringItems = async function(companyId, thresholdDays = 
     ]);
 };
 
-itemSchema.statics.getExpiredItems = async function(companyId) {
+itemSchema.statics.getExpiredItems = async function (companyId) {
     const today = new Date();
-    
+
     return this.aggregate([
         {
             $match: {
@@ -326,13 +326,13 @@ itemSchema.statics.getExpiredItems = async function(companyId) {
 
 //Create a method to get expiry status for display:
 
-itemSchema.methods.getExpiryStatus = function() {
+itemSchema.methods.getExpiryStatus = function () {
     const now = new Date();
     let nearestExpiry = null;
     let expiredItems = 0;
     let warningItems = 0;
     let dangerItems = 0;
-    
+
     this.stockEntries.forEach(entry => {
         const expiryDate = new Date(entry.expiryDate);
         if (expiryDate < now) {
@@ -341,7 +341,7 @@ itemSchema.methods.getExpiryStatus = function() {
             if (!nearestExpiry || expiryDate < nearestExpiry) {
                 nearestExpiry = expiryDate;
             }
-            
+
             const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
             if (daysUntilExpiry <= 30) {
                 dangerItems += entry.quantity;
@@ -350,15 +350,15 @@ itemSchema.methods.getExpiryStatus = function() {
             }
         }
     });
-    
+
     return {
         nearestExpiry,
         expiredItems,
         warningItems,
         dangerItems,
-        status: expiredItems > 0 ? 'expired' : 
-               dangerItems > 0 ? 'danger' : 
-               warningItems > 0 ? 'warning' : 'safe'
+        status: expiredItems > 0 ? 'expired' :
+            dangerItems > 0 ? 'danger' :
+                warningItems > 0 ? 'warning' : 'safe'
     };
 };
 

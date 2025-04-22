@@ -291,8 +291,14 @@ function addItemToBill(item, dropdownMenu) {
     <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
     ${item.name}
 </td>
-<td class="">
+<td>
     <input type="number" name="items[${itemIndex}][WSUnit]" class="form-control item-WSUnit" id="WSUnit-${itemIndex}" value="${item.WSUnit || 1}" onfocus="selectValue(this)" onkeydown="handleWSUnitKeydown(event,${itemIndex})" required>
+</td>
+<td>
+    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="XXX" autocomplete="off" required>
+</td>
+<td>
+    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
 </td>
 <td>
     <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)" required>
@@ -305,13 +311,7 @@ function addItemToBill(item, dropdownMenu) {
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
 <td>
-    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="XXX" autocomplete="off" required>
-</td>
-<td>
-    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
-</td>
-<td>
-    <input type="number" name="items[${itemIndex}][puPrice]" value="${batchpuPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
+    <input type="number" name="items[${itemIndex}][puPrice]" value="${Math.round(batchpuPrice * 100) / 100}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
 </td>
 <td class="item-amount">0.00</td>
 <td>
@@ -338,8 +338,111 @@ function addItemToBill(item, dropdownMenu) {
     // Clear the input field
     inputField.value = '';
 
-    // Focus on the quantity input field of the newly added row
-    document.getElementById(`quantity-${itemIndex - 1}`).focus();
+    // // Focus on the quantity input field of the newly added row
+    // document.getElementById(`quantity-${itemIndex - 1}`).focus();
+
+    const currentIndex = itemIndex - 1;
+    const batchNumberInput = document.getElementById(`batchNumber-${currentIndex}`);
+    const expiryDateInput = document.getElementById(`expiryDate-${currentIndex}`);
+    const quantityInput = document.getElementById(`quantity-${currentIndex}`);
+
+    // Focus on batch number first
+    batchNumberInput.focus();
+
+    // Validation for batch number
+    batchNumberInput.addEventListener('blur', function () {
+        validateBatchNumber(this);
+    });
+
+    batchNumberInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab' || e.key === 'Enter') {
+            if (!validateBatchNumber(this)) {
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Validation for expiry date
+    expiryDateInput.addEventListener('blur', function () {
+        validateExpiryDate(this);
+    });
+
+    expiryDateInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab' || e.key === 'Enter') {
+            if (!validateExpiryDate(this)) {
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Validation functions
+    function validateBatchNumber(input) {
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            showValidationTooltip(input, 'batch number is required');
+            input.focus();
+            return false;
+        }
+        input.classList.remove('is-invalid');
+        hideValidationTooltip(input);
+        return true;
+    }
+
+    function validateExpiryDate(input) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selectedDate = new Date(input.value);
+
+        if (!input.value) {
+            input.classList.add('is-invalid');
+            showValidationTooltip(input, 'Please select an expiry date');
+            input.focus();
+            return false;
+        } else if (selectedDate < today) {
+            input.classList.add('is-invalid');
+            showValidationTooltip(input, 'Expiry date cannot be in the past');
+            input.focus();
+            return false;
+        }
+        input.classList.remove('is-invalid');
+        hideValidationTooltip(input);
+        return true;
+    }
+
+    function showValidationTooltip(input, message) {
+        // Remove any existing tooltip
+        hideValidationTooltip(input);
+
+        // Create and show tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'validation-tooltip';
+        tooltip.textContent = message;
+
+        const rect = input.getBoundingClientRect();
+        tooltip.style.position = 'absolute';
+        tooltip.style.left = `${rect.left}px`;
+        tooltip.style.top = `${rect.bottom}px`;
+        tooltip.style.zIndex = '1000';
+        tooltip.style.backgroundColor = '#ff4444';
+        tooltip.style.color = 'white';
+        tooltip.style.padding = '5px 10px';
+        tooltip.style.borderRadius = '4px';
+        tooltip.style.fontSize = '14px';
+
+        document.body.appendChild(tooltip);
+        input.dataset.tooltipId = 'tooltip-' + Date.now();
+        tooltip.id = input.dataset.tooltipId;
+    }
+
+    function hideValidationTooltip(input) {
+        if (input.dataset.tooltipId) {
+            const tooltip = document.getElementById(input.dataset.tooltipId);
+            if (tooltip) {
+                tooltip.remove();
+            }
+            delete input.dataset.tooltipId;
+        }
+    }
 }
 
 // Function to fetch last transactions for the selected item
@@ -808,9 +911,9 @@ function handleCloseButtonKeydown(event) {
 
 function handleWSUnitKeydown(event) {
     if (event.key === 'Enter') {
-        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
-        quantityInput.focus();
-        quantityInput.select();
+        const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
+        batchNumberInput.focus();
+        batchNumberInput.select();
 
     }
 }
@@ -825,9 +928,9 @@ function handleQuantityKeydown(event) {
 }
 function handleBonusKeydown(event) {
     if (event.key === 'Enter') {
-        const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
-        batchNumberInput.focus();
-        batchNumberInput.select();
+        const priceInput = document.getElementById(`puPrice-${itemIndex - 1}`);
+        priceInput.focus();
+        priceInput.select();
 
     }
 }
@@ -841,9 +944,9 @@ function handleBatchKeydown(event) {
 
 function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
-        const priceInput = document.getElementById(`puPrice-${itemIndex - 1}`);
-        priceInput.focus();
-        priceInput.select();
+        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
+        quantityInput.focus();
+        quantityInput.select();
     }
 }
 

@@ -287,18 +287,17 @@ function addItemToBill(item, dropdownMenu) {
             <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
             ${item.name}
         </td>
+        <td>
+            <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" oninput="this.value='${selectedBatch.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+        </td>
+        <td>
+            <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(selectedBatch.expiryDate)}" oninput="this.value='${formatDateForInput(selectedBatch.expiryDate)}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+        </td>
         <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
         <td>
             ${item.unit ? item.unit.name : ''}
             <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
         </td>
-        <!-- Hidden fields for batch and expiry -->
-             <td>
-                    <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" oninput="this.value='${selectedBatch.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
-                </td>
-                   <td>
-                    <input type="date" name="items[${itemIndex}][expiryDate]" value="${selectedBatch.expiryDate}" oninput="this.value='${selectedBatch.expiryDate}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
-                </td>
         <td><input type="number" name="items[${itemIndex}][price]" value="${selectedBatch.price}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
         <td class="item-amount">0.00</td>
         <td>
@@ -321,8 +320,15 @@ function addItemToBill(item, dropdownMenu) {
         dropdownMenu.classList.remove('show');
     });
 }
-//     });
-// }
+// First, add a helper function to format dates for input fields
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 function showBatchModal(item, callback) {
     const modal = document.getElementById('batchModal');
@@ -359,10 +365,10 @@ function showBatchModal(item, callback) {
                 modalContent += `
                 <tr tabindex="0">
                     <td>${entry.batchNumber || 'N/A'}</td>
-                    <td>${entry.expiryDate || 'N/A'}</td>
+                    <td>${formatDateForInput(entry.expiryDate || 'N/A')}</td>
                     <td>${entry.quantity}</td>
-                    <td>${entry.price}</td>
-                    <td>${entry.puPrice}</td>
+                    <td>${Math.round(entry.price * 100) / 100}</td>
+                    <td>${Math.round(entry.puPrice * 100) / 100}</td>
                     <td>${entry.marginPercentage}</td>
                     <td>${entry.mrp}</td>
                     <td class="hidden">${entry.uniqueUuId}</td>
@@ -762,17 +768,13 @@ function focusOnLastQuantityField() {
     const lastRow = tbody.querySelector('tr.item:last-child');
 
     if (lastRow) {
-        const lastQuantityField = lastRow.querySelector('.item-quantity');
+        const lastBatchNumberField = lastRow.querySelector('.item-batchNumber');
 
-        if (lastQuantityField) {
-            lastQuantityField.focus();
+        if (lastBatchNumberField) {
+            lastBatchNumberField.focus();
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
-});
 
 async function handleItemSearchKeydown(event) {
     const itemSearchInput = document.getElementById('itemSearch');
@@ -789,7 +791,7 @@ async function handleItemSearchKeydown(event) {
                 openModalAndFocusCloseButton();
 
             } else {
-                focusOnLastRow('item-quantity');
+                focusOnLastRow('item-batchNumber');
             }
         }
     } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
@@ -814,12 +816,12 @@ function handleCloseButtonKeydown(event) {
         // Close the modal (optional, depending on your implementation)
         $('#transactionModal').modal('hide');
 
-        // Focus on the quantity input field in the last row
+        // Focus on the batchNumber input field in the last row
         const lastRow = document.querySelector('#items tr.item:last-child');
         if (lastRow) {
-            const quantityInput = lastRow.querySelector('.item-quantity');
-            if (quantityInput) {
-                quantityInput.focus();
+            const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+            if (batchNumberInput) {
+                batchNumberInput.focus();
             }
         }
     }
@@ -829,10 +831,10 @@ function handleQuantityKeydown(event) {
     if (event.key === 'Enter') {
         const lastRow = document.querySelector('#items tr.item:last-child');
         if (lastRow) {
-            const batchNumberInput = lastRow.querySelector('.item-batchNumber');
-            if (batchNumberInput) {
-                batchNumberInput.focus();
-                batchNumberInput.select();
+            const priceInput = lastRow.querySelector('.item-price');
+            if (priceInput) {
+                priceInput.focus();
+                priceInput.select();
             }
         }
     }
@@ -855,10 +857,10 @@ function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
         const lastRow = document.querySelector('#items tr.item:last-child');
         if (lastRow) {
-            const puPriceInput = lastRow.querySelector('.item-price');
-            if (puPriceInput) {
-                puPriceInput.focus();
-                puPriceInput.select();
+            const quantityInput = lastRow.querySelector('.item-quantity');
+            if (quantityInput) {
+                quantityInput.focus();
+                quantityInput.select();
             }
         }
     }

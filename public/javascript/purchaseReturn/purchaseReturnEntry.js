@@ -297,16 +297,16 @@ function addItemToBill(item, dropdownMenu) {
     <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
     ${item.name}
 </td>
-<td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
-<td>
-    ${item.unit ? item.unit.name : ''}
-    <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-</td>
 <td>
     <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" oninput="this.value='${selectedBatch.batchNumber}'" onfocus="selectValue(this)">
 </td>
 <td>
-    <input type="date" name="items[${itemIndex}][expiryDate]" value="${selectedBatch.expiryDate}" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" oninput="this.value='${selectedBatch.expiryDate}'" onfocus="selectValue(this)">
+    <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(selectedBatch.expiryDate)}" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" oninput="this.value='${selectedBatch.expiryDate}'" onfocus="selectValue(this)">
+</td>
+<td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
+<td>
+    ${item.unit ? item.unit.name : ''}
+    <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
 <td><input type="number" name="items[${itemIndex}][puPrice]" value="${selectedBatch.puPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
 <td class="item-amount">0.00</td>
@@ -316,7 +316,7 @@ function addItemToBill(item, dropdownMenu) {
     </button>
 </td>
 <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
-<input type="text" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
+<input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
 
 `;
 
@@ -324,8 +324,8 @@ function addItemToBill(item, dropdownMenu) {
                         itemIndex++;
                         calculateTotal();
 
-                        // Focus on the newly added row's quantity input
-                        document.getElementById(`quantity-${itemIndex - 1}`).focus();
+                        // Focus on the newly added row's batchNumber input
+                        document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
 
                         // Hide the dropdown menu after selecting an item
                         dropdownMenu.classList.remove('show');
@@ -353,17 +353,16 @@ function addItemToBill(item, dropdownMenu) {
     <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
     ${item.name}
 </td>
-<td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
-<td>
-    ${item.unit ? item.unit.name : ''}
-    <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-</td>
-<!-- Hidden fields for batch and expiry -->
 <td>
     <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" oninput="this.value='${selectedBatch.batchNumber}'" onfocus="selectValue(this)">
 </td>
 <td>
-    <input type="date" name="items[${itemIndex}][expiryDate]" value="${selectedBatch.expiryDate}" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" oninput="this.value='${selectedBatch.expiryDate}'" onfocus="selectValue(this)">
+    <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(selectedBatch.expiryDate)}" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" oninput="this.value='${selectedBatch.expiryDate}'" onfocus="selectValue(this)">
+</td>
+<td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
+<td>
+    ${item.unit ? item.unit.name : ''}
+    <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
 <td><input type="number" name="items[${itemIndex}][puPrice]" value="${selectedBatch.puPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
 <td class="item-amount">0.00</td>
@@ -381,14 +380,24 @@ function addItemToBill(item, dropdownMenu) {
                 itemIndex++;
                 calculateTotal();
 
-                // Focus on the newly added row's quantity input
-                document.getElementById(`quantity-${itemIndex - 1}`).focus();
+                // Focus on the newly added row's batchNumber input
+                document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
 
                 // Hide the dropdown menu after selecting an item
                 dropdownMenu.classList.remove('show');
             });
         }
     });
+}
+
+// First, add a helper function to format dates for input fields
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 
@@ -427,10 +436,10 @@ function showBatchModal(item, callback) {
                 modalContent += `
         <tr tabindex="0">
             <td>${entry.batchNumber || 'N/A'}</td>
-            <td>${entry.expiryDate || 'N/A'}</td>
+            <td>${formatDateForInput(entry.expiryDate) || 'N/A'}</td>
             <td>${entry.quantity}</td>
-            <td>${entry.price}</td>
-            <td>${entry.puPrice}</td>
+            <td>${Math.round(entry.price * 100) / 100}</td>
+            <td>${Math.round(entry.puPrice * 100) / 100}</td>
             <td>${entry.marginPercentage}</td>
             <td>${entry.mrp}</td>
             <td class="hidden">${entry.uniqueUuId}</td>
@@ -906,7 +915,7 @@ function focusOnLastQuantityField() {
     const lastRow = tbody.querySelector('tr.item:last-child');
 
     if (lastRow) {
-        const lastQuantityField = lastRow.querySelector('.item-quantity');
+        const lastQuantityField = lastRow.querySelector('.item-batchNumber');
 
         if (lastQuantityField) {
             lastQuantityField.focus();
@@ -933,7 +942,7 @@ async function handleItemSearchKeydown(event) {
                 openModalAndFocusCloseButton();
 
             } else {
-                focusOnLastRow('item-quantity');
+                focusOnLastRow('item-batchNumber');
             }
         }
     } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
@@ -959,16 +968,17 @@ function handleCloseButtonKeydown(event) {
         $('#transactionModal').modal('hide');
 
         // Focus on the quantity input field
-        document.getElementById(`quantity-${itemIndex - 1}`).focus();
+        document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
         // focusOnLastRow('quantity');
     }
 }
 
 function handleQuantityKeydown(event) {
     if (event.key === 'Enter') {
-        const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
-        batchNumberInput.focus();
-        batchNumberInput.select();
+        // const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
+        const priceInput = document.getElementById(`puPrice-${itemIndex - 1}`);
+        priceInput.focus();
+        priceInput.select();
 
     }
 }
@@ -983,9 +993,9 @@ function handleBatchKeydown(event) {
 
 function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
-        const priceInput = document.getElementById(`puPrice-${itemIndex - 1}`);
-        priceInput.focus();
-        priceInput.select();
+        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`).focus();
+        quantityInput.focus();
+        quantityInput.select();
     }
 }
 

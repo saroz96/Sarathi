@@ -3560,7 +3560,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             async function reduceStock(product, quantity) {
 
                 // Update product stock
-                product.stock -= quantity;
+                // product.stock -= quantity;
 
                 let remainingQuantity = quantity;
                 const batchesUsed = []; // Array to track batches and quantities used

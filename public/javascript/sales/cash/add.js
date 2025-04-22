@@ -292,102 +292,6 @@ document.addEventListener('click', function (event) {
     }
 });
 
-
-// async function shouldDisplayTransactions() {
-//     try {
-//         const response = await fetch(`/settings/get-display-transactions`);
-//         const { displayTransactions } = await response.json();
-//         return displayTransactions;
-//     } catch (error) {
-//         console.error('Error fetching settings:', error);
-//         return false;
-//     }
-// }
-
-// async function fetchLastTransactions(itemId) {
-//     // const itemId = select.value;
-//     const accountId = document.getElementById('account').value;
-//     const purchaseSalesType = document.getElementById('purchaseSalesType').value; // Ensure this element exists and has a value
-//     const transactionList = document.getElementById('transactionList');
-
-//     if (!purchaseSalesType) {
-//         console.error('Account Type is undefined. Please ensure it is set.');
-//         return;
-//     }
-
-//     try {
-
-//         const response = await fetch(`/api/transactions/${itemId}/${accountId}/${purchaseSalesType}`);
-//         const transactions = await response.json();
-//         // const { transactions, companyDateFormat } = await response.json();
-
-//         // Check if transactions are empty
-//         if (transactions.length === 0) {
-//             transactionList.innerHTML = '<p>No transactions to display.</p>';
-//             // Do not show the modal if there are no transactions
-//             return;
-//         }
-
-//         // Create table header
-//         let tableHtml = `
-//             <table class="table table-sm">
-//                 <thead>
-//                     <tr>
-//                         <th>Trans. Id</th>
-//                         <th>Date</th>
-//                         <th>Bill No.</th>
-//                         <th>Type</th>
-//                         <th>A/c Type</th>
-//                         <th>Pay.Mode</th>
-//                         <th>Qty.</th>
-//                         <th>Unit</th>
-//                         <th>S.price</th>
-//                     </tr>
-//                 </thead>
-//                 <tbody>
-//         `;
-
-//         // Add table rows for each transaction
-//         tableHtml += transactions.map(transaction => {
-//             return `
-//                 <tr onclick="window.location.href='/bills/${transaction.billId._id}/print'" style="cursor: pointer;">
-//                     <td>${transaction._id}</td>
-//                     <td>${new Date(transaction.date).toLocaleDateString()}</td>
-//                     <td>${transaction.billNumber}</td>
-//                     <td>${transaction.type}</td>
-//                     <td>${transaction.purchaseSalesType}</td>
-//                     <td>${transaction.paymentMode}</td>
-//                     <td>${transaction.quantity}</td>
-//                     <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-//                     <td>Rs.${transaction.price}</td>
-//                 </tr>
-//             `;
-//         }).join('');
-
-//         // Close table
-//         tableHtml += `
-//                 </tbody>
-//             </table>
-//         `;
-
-//         // Set the innerHTML of the transaction list container
-//         transactionList.innerHTML = tableHtml;
-
-//         // Show the modal
-//         $('#transactionModal').modal('show');
-//     } catch (error) {
-//         console.error('Error fetching transactions:', error);
-//     }
-// }
-
-
-// async function handleFetchLastTransactions(itemId) {
-//     const displayTransactions = await shouldDisplayTransactions();
-//     if (displayTransactions) {
-//         await fetchLastTransactions(itemId);
-//     }
-// }
-
 function addItemToBill(item, dropdownMenu) {
     const tbody = document.getElementById('items');
     const inputField = document.getElementById('itemSearch');
@@ -432,18 +336,18 @@ function addItemToBill(item, dropdownMenu) {
             <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
             ${item.name}
         </td>
+          <td>
+            <input type="text" name="items[${itemIndex}][batchNumber]" value="${firstStockEntry.batchNumber || ''}" oninput="this.value='${firstStockEntry.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})">
+        </td>
+        <td>
+            <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(firstStockEntry.expiryDate || '')}" oninput="this.value='${formatDateForInput(firstStockEntry.expiryDate)}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})">
+        </td>
         <td>
             <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
         </td>
         <td>
             ${item.unit ? item.unit.name : ''}
             <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-        </td>
-        <td>
-            <input type="text" name="items[${itemIndex}][batchNumber]" value="${firstStockEntry.batchNumber || ''}" oninput="this.value='${firstStockEntry.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})">
-        </td>
-        <td>
-            <input type="date" name="items[${itemIndex}][expiryDate]" value="${firstStockEntry.expiryDate || ''}" oninput="this.value='${firstStockEntry.expiryDate}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})">
         </td>
         <td>
             <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
@@ -473,11 +377,21 @@ function addItemToBill(item, dropdownMenu) {
 
     // Move focus to the last quantity input after adding the item
     setTimeout(() => {
-        const lastQuantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
-        if (lastQuantityInput) {
-            lastQuantityInput.focus();
+        const lastBatchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
+        if (lastBatchNumberInput) {
+            lastBatchNumberInput.focus();
         }
     }, 100); // Adding a small delay to ensure that the row is added and focus can be set properly
+}
+
+// First, add a helper function to format dates for input fields
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 
@@ -733,9 +647,6 @@ document.addEventListener('DOMContentLoaded', function () {
     calculateTotal();
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
-});
 
 document.addEventListener('DOMContentLoaded', function () {
     const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
@@ -744,47 +655,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// async function handleItemSearchKeydown(event) {
-//     const itemSearchInput = document.getElementById('itemSearch');
-//     const itemsTable = document.getElementById('itemsTable');
-//     const itemsAvailable = itemsTable && itemsTable.querySelectorAll('.item').length > 0;
-
-//     if (event.key === 'Enter') {
-//         event.preventDefault(); // Prevent form submission or any default behavior
-
-//         if (itemSearchInput.value.length > 0) {
-//             // Focus on the last row's quantity input after adding the item
-//             focusOnLastRow('item-quantity');
-//         } else if (itemsAvailable) {
-//             // If no item is being searched, focus on the discount input or Save button
-//             const discountPercentageInput = document.getElementById('discountPercentage');
-//             if (discountPercentageInput) {
-//                 discountPercentageInput.focus();
-//                 discountPercentageInput.select();
-//             }
-//         }
-//     }
-// }
-
-// function focusOnLastRow(fieldClass) {
-//     // Ensure the rows are properly selected and focus on the last quantity input
-//     const rows = document.querySelectorAll('.item');
-//     if (rows.length > 0) {
-//         const lastRow = rows[rows.length - 1];
-//         const inputField = lastRow.querySelector(`.${fieldClass}`);
-//         if (inputField) {
-//             inputField.focus();
-//             inputField.select();
-//         }
-//     }
-// }
-
 function handleQuantityKeydown(event, itemIndex) {
     if (event.key === 'Enter') {
         event.preventDefault(); // Prevent form submission
-        const batchNumberInput = document.getElementById(`batchNumber-${itemIndex}`);
-        batchNumberInput.focus();  // Move to batch number input
-        batchNumberInput.select(); // Optionally select text
+        const priceInput = document.getElementById(`price-${itemIndex}`);
+        priceInput.focus();  // Move to batch number input
+        priceInput.select(); // Optionally select text
     }
 }
 
@@ -800,9 +676,9 @@ function handleBatchKeydown(event, itemIndex) {
 function handleExpDateKeydown(event, itemIndex) {
     if (event.key === 'Enter') {
         event.preventDefault(); // Prevent form submission
-        const priceInput = document.getElementById(`price-${itemIndex}`);
-        priceInput.focus();  // Move to price input
-        priceInput.select(); // Optionally select text
+        const quantityInput = document.getElementById(`quantity-${itemIndex}`);
+        quantityInput.focus();  // Move to price input
+        quantityInput.select(); // Optionally select text
     }
 }
 

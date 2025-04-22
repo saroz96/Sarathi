@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
 <style id="printStyles">
-    @media print {
+ @media print {
         @page {
             size: A4;
             margin: 10mm;
@@ -207,25 +207,12 @@
 </style>
 
 <div class="container">
-        <div class="container mt-3">
-            <div class="row">
-                <div class="col d-flex justify-content-end align-items-start">
-                    <a href="/purchase-bills-list" class="btn btn-secondary"><i class="bi bi-back"></i></a>
-                    <a href="/bills/<%= bill._id %>/pdf" class="btn btn-primary ml-2"><i class="bi bi-file-pdf"></i></a>
-                    <button class="btn btn-info ml-2" onclick="printBill()"><i class="bi bi-printer"></i></button>
-                </div>
-            </div>
-        </div>
-
         <div id="printableContent">
             <div class="card mt-4">
                 <div class="header">
                     <h1 class="card-title">
-                        <!-- <%= firstBill ? 'Tax-Invoice' : 'Invoice' %> -->
                         Purchase Invoice
                     </h1>
-                    <!-- <h2 class="card-subtitle mb-2"> -->
-                    <!-- </h2> -->
                     <h4>
                         <h2>
                             <%= currentCompanyName %>
@@ -236,13 +223,12 @@
                                             <br>
                                             <%=currentCompany.email%>
 
-                                                <!-- TPIN.: <span id="pan-vat-container" style="float: rig;"> -->
                                                 <div>
                                                     TPIN: <%=currentCompany.pan%>
                                                 </div>
                                                 </span>
                     </h4>
-                    <hr style="border: 0.5px solid;">
+                    <hr style="border: 0.5px solid gray;">
                 </div>
                 <div class="details-container">
                     <div class="left">
@@ -255,18 +241,12 @@
                             <strong>Pan no.:</strong>
                             <%= bill.account.pan ? bill.account.pan : 'Null' %>
                                 <br>
-                                <strong>Email:</strong>
-                                <%= bill.account.email ? bill.account.email : 'Null' %>&nbsp;
-                                    <strong>Tel.:</strong>
-                                    <%= bill.account.phone ? bill.account.phone : 'Null' %>&nbsp;
-                                        <br>
                                         <strong>Mode of Payment:</strong>
                                         <%= bill.paymentMode %>
 
                     </div>
 
                     <div class="right">
-                        <br>
                         <strong>Vch. No:</strong>
                         <%= bill.billNumber %>
                             <br>
@@ -291,7 +271,7 @@
                     </div>
                 </div>
 
-                <hr style="border: 0.5px solid;">
+                <hr style="border: 0.5px solid gray;">
 
                 <div class="container">
                     <table class="table items-table">
@@ -398,13 +378,13 @@
                                         </td>
                                     </tr>
                         </tbody>
-                        <hr style="border: 0.5px solid;">
+                        <hr style="border: 0.5px solid gray;">
                     </table>
                     <td class="text-left"><strong>In Words:</strong>
                         <span id="amountInWords"></span> Only.
                     </td>
                 </div>
-                <br><br><br>
+                <hr style="border: 0.5px solid gray;">
                 <div class="row container" id="row-container">
                     <div class="col">
                         <br>
@@ -434,7 +414,7 @@
         // Check if the user has canceled the print dialog
         setTimeout(function () {
             // Redirect if print dialog is canceled or print is done
-            window.location.href =  `/purchase-bills-list`; // Redirect to the purchase entry page
+            window.location.href = '/purchase-bills'; // Redirect to the purchase entry page
         }, 1000); // Adjust time as needed
     }
 
@@ -516,4 +496,21 @@
     });
 
 
+</script>
+
+<script>
+        function handlePrint() {
+        window.print();
+
+        // Check if the user has canceled the print dialog
+        setTimeout(function () {
+            // Redirect if print dialog is canceled or print is done
+            window.location.href = `/purchase-bills-list`; // Redirect to the purchase entry page
+        }, 1000); // Adjust time as needed
+    }
+
+    // Call handlePrint when the page loads
+    window.onload = function () {
+        handlePrint();
+    };
 </script>

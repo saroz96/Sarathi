@@ -317,11 +317,11 @@
                                     <th>#</th>
                                     <th>HSN</th>
                                     <th>Description of Goods</th>
-                                    <th>Qty</th>
-                                    <th>Unit</th>
                                     <th>Batch</th>
                                     <th>Expiry</th>
-                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th>Rate</th>
                                     <th>Amount</th>
                                     <th>Action</th>
                                 </tr>
@@ -1065,16 +1065,16 @@
             <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
             ${item.name}
         </td>
-        <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
-        <td>
-            ${item.unit ? item.unit.name : ''}
-            <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-        </td>
-        <td>
+           <td>
             <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" value="XXX" onfocus="selectValue(this)">
         </td>
          <td>
             <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" value="${getDefaultExpiryDate()}" onfocus="selectValue(this)" required>
+        </td>
+        <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
+        <td>
+            ${item.unit ? item.unit.name : ''}
+            <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
         </td>
         <td><input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
         <td class="item-amount">0.00</td>
@@ -1487,7 +1487,7 @@
                     if (displayTransactionsForSalesReturn) {
                         openModalAndFocusCloseButton();
                     } else {
-                        focusOnLastRow('item-quantity');
+                        focusOnLastRow('item-batchNumber');
                     }
                 }
             } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
@@ -1513,7 +1513,7 @@
                 $('#transactionModal').modal('hide');
 
                 // Focus on the quantity input field
-                document.getElementById(`quantity-${itemIndex - 1}`).focus();
+                document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
                 // focusOnLastRow('quantity');
             }
         }
@@ -1521,11 +1521,9 @@
         function handleQuantityKeydown(event) {
             if (event.key === 'Enter') {
                 // Focus on the price input field
-                // document.getElementById('price').focus();
-                // document.getElementById(`price-${itemIndex}`).focus();
-                const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
-                batchNumberInput.focus();
-                batchNumberInput.select();
+                const priceInput = document.getElementById(`price-${itemIndex - 1}`);
+                priceInput.focus();
+                priceInput.select();
 
             }
         }
@@ -1539,9 +1537,9 @@
 
         function handleExpDateKeydown(event) {
             if (event.key === 'Enter') {
-                const priceInput = document.getElementById(`price-${itemIndex - 1}`);
-                priceInput.focus();
-                priceInput.select();
+                const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
+                quantityInput.focus();
+                quantityInput.select();
             }
         }
 

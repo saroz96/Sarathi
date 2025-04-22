@@ -341,11 +341,11 @@
                                                 <th>#</th>
                                                 <th>HSN</th>
                                                 <th>Description of Goods</th>
-                                                <th>Qty</th>
-                                                <th>Unit</th>
                                                 <th>Batch</th>
                                                 <th>Expiry</th>
-                                                <th>Price</th>
+                                                <th>Qty</th>
+                                                <th>Unit</th>
+                                                <th>Rate</th>
                                                 <th>Amount</th>
                                                 <th>Action</th>
                                             </tr>
@@ -354,7 +354,8 @@
                                             <!-- Item rows will be dynamically added here -->
                                             <% if (items && items.length> 0) { %>
                                                 <% items.forEach((item, index)=> { %>
-                                                    <tr class="item <%= item.vatStatus ? 'vatable-item' : 'non-vatable-item' %>">
+                                                    <tr
+                                                        class="item <%= item.vatStatus ? 'vatable-item' : 'non-vatable-item' %>">
                                                         <td>
                                                             <%= index + 1 %>
                                                         </td>
@@ -371,38 +372,42 @@
                                                                 value="<%= item.item._id %>">
                                                             <%= item.item.name || 'N/A' %>
                                                         </td>
-                                                    
-                                                        <td>
-                                                            <input type="number" name="items[<%= index %>][quantity]"
-                                                                value="<%= item.quantity %>" class="form-control item-quantity"
-                                                                id="quantity-<%= index %>" step="any" oninput="updateItemTotal(this)"
-                                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
-                                                                onfocus="selectValue(this)">
-                                                        </td>
-                                                      
-                                                        <td>
-                                                            <%= item.unit.name %>
-                                                                <input type="hidden" name="items[<%= index %>][unit]"
-                                                                    value="<%= item.unit._id %>">
-                                                        </td>
                                                         <td>
                                                             <input type="text" name="items[<%= index %>][batchNumber]"
                                                                 value="<%= item.batchNumber || '' %>"
-                                                                class="form-control item-batchNumber" id="batchNumber-<%= index %>"
+                                                                class="form-control item-batchNumber"
+                                                                id="batchNumber-<%= index %>"
                                                                 onkeydown="handleBatchKeydown(event, <%= index %>)"
                                                                 onfocus="selectValue(this)" autocomplete="off">
                                                         </td>
                                                         <td>
                                                             <input type="date" name="items[<%= index %>][expiryDate]"
                                                                 value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
-                                                                class="form-control item-expiryDate" id="expiryDate-<%= index %>"
+                                                                class="form-control item-expiryDate"
+                                                                id="expiryDate-<%= index %>"
                                                                 onkeydown="handleExpDateKeydown(event, <%= index %>)"
                                                                 onfocus="selectValue(this)">
                                                         </td>
                                                         <td>
+                                                            <input type="number" name="items[<%= index %>][quantity]"
+                                                                value="<%= item.quantity %>"
+                                                                class="form-control item-quantity"
+                                                                id="quantity-<%= index %>" step="any"
+                                                                oninput="updateItemTotal(this)"
+                                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
+                                                                onfocus="selectValue(this)">
+                                                        </td>
+
+                                                        <td>
+                                                            <%= item.unit.name %>
+                                                                <input type="hidden" name="items[<%= index %>][unit]"
+                                                                    value="<%= item.unit._id %>">
+                                                        </td>
+                                                        <td>
                                                             <input type="number" name="items[<%= index %>][price]"
-                                                                value="<%= item.price || 0 %>" class="form-control item-price"
-                                                                id="price-<%= index %>" step="any" oninput="updateItemTotal(this)"
+                                                                value="<%= item.price || 0 %>"
+                                                                class="form-control item-price" id="price-<%= index %>"
+                                                                step="any" oninput="updateItemTotal(this)"
                                                                 onkeydown="handlePriceKeydown(event, <%= index %>)"
                                                                 onfocus="selectValue(this)">
                                                         </td>
@@ -410,22 +415,23 @@
                                                             <%= (item.quantity * item.price).toFixed(2) %>
                                                         </td>
                                                         <td>
-                                                            <button type="button" class="btn btn-danger" onclick="removeItem(this)">
+                                                            <button type="button" class="btn btn-danger"
+                                                                onclick="removeItem(this)">
                                                                 <span aria-hidden="true">&times;</span>
                                                             </button>
                                                         </td>
                                                         <input type="hidden" name="items[<%= index %>][vatStatus]"
                                                             value="<%= item.vatStatus %>">
-                
+
                                                         <td class="hidden">
                                                             <input type="text" name="items[<%=index%>][uniqueUuId]"
                                                                 value="<%=item.uniqueUuId%>">
-                
+
                                                         </td>
                                                     </tr>
                                                     <% }); %>
                                                         <% } %>
-                
+
                                         </tbody>
                                     </table>
                                 </div>
@@ -457,7 +463,7 @@
                                                             <%= salesReturnBill.subTotal.toFixed(2) %>
                                                         </span></p>
                                                 </td>
-            
+
                                                 <td><label for="discountPercentage">Discount %:</label></td>
                                                 <td>
                                                     <input type="number" step="any" name="discountPercentage"
@@ -467,12 +473,14 @@
                                                 </td>
                                                 <td><label for="discountAmount">Discount (Rs.):</label></td>
                                                 <td>
-                                                    <input type="number" step="any" name="discountAmount" id="discountAmount"
+                                                    <input type="number" step="any" name="discountAmount"
+                                                        id="discountAmount"
                                                         value="<%= salesReturnBill.discountAmount.toFixed(2) %>"
-                                                        class="form-control" oninput="calculateTotal()" onfocus="selectValue(this)">
+                                                        class="form-control" oninput="calculateTotal()"
+                                                        onfocus="selectValue(this)">
                                                 </td>
                                             </tr>
-            
+
                                             <!-- VAT Rows (Initially visible) -->
                                             <tr id="taxableAmountRow">
                                                 <td><label for="taxableAmount">Taxable Amount:</label></td>
@@ -498,8 +506,8 @@
                                             <tr>
                                                 <td><label for="roundOffAmount">Round Off:</label></td>
                                                 <td>
-                                                    <input type="number" class="form-control" step="any" id="roundOffAmount"
-                                                        name="roundOffAmount"
+                                                    <input type="number" class="form-control" step="any"
+                                                        id="roundOffAmount" name="roundOffAmount"
                                                         value="<%= salesReturnBill.roundOffAmount.toFixed(2) %>"
                                                         oninput="calculateTotal()" onfocus="selectValue(this)">
                                                 </td>
@@ -1114,31 +1122,31 @@
             }
         });
 
-    
-function addItemToBill(item, dropdownMenu) {
-    const tbody = document.getElementById('items');
-    const inputField = document.getElementById('itemSearch');
 
-    if (!inputField.value.trim()) {
-        return; // Do not add an item if the search field is blank
-    }
-    // Sort stock entries by date (FIFO: First In First Out)
-    const sortedStockEntries = item.stockEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+        function addItemToBill(item, dropdownMenu) {
+            const tbody = document.getElementById('items');
+            const inputField = document.getElementById('itemSearch');
 
-    // Get the last stock entry (LIFO: Last In First Out)
-    const lastStockEntry = sortedStockEntries[sortedStockEntries.length - 1] || {}; // Defaults to an empty object if no stock entry exists
+            if (!inputField.value.trim()) {
+                return; // Do not add an item if the search field is blank
+            }
+            // Sort stock entries by date (FIFO: First In First Out)
+            const sortedStockEntries = item.stockEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const tr = document.createElement('tr');
-    tr.classList.add('item', item.vatStatus ? 'vatable-item' : 'non-vatable-item');
+            // Get the last stock entry (LIFO: Last In First Out)
+            const lastStockEntry = sortedStockEntries[sortedStockEntries.length - 1] || {}; // Defaults to an empty object if no stock entry exists
 
-    // Calculate the serial number based on the number of rows already in the table
-    const serialNumber = tbody.rows.length + 1;
+            const tr = document.createElement('tr');
+            tr.classList.add('item', item.vatStatus ? 'vatable-item' : 'non-vatable-item');
 
-    // Use price from the first stock entry
-    const batchPrice = lastStockEntry.price || 0;
+            // Calculate the serial number based on the number of rows already in the table
+            const serialNumber = tbody.rows.length + 1;
 
-    // Use the current itemIndex value in the name attributes
-    tr.innerHTML = `
+            // Use price from the first stock entry
+            const batchPrice = lastStockEntry.price || 0;
+
+            // Use the current itemIndex value in the name attributes
+            tr.innerHTML = `
 <td>${serialNumber}</td>
 <td>${item.uniqueNumber}</td>
 <td>
@@ -1150,18 +1158,18 @@ function addItemToBill(item, dropdownMenu) {
     ${item.name}
 </td>
 <td>
+    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="XXX" autocomplete="off" required>
+</td>
+<td>
+    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
+</td>
+<td>
     <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)" required>
 </td>
 
 <td>
     ${item.unit ? item.unit.name : ''}
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-</td>
-<td>
-    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="XXX" autocomplete="off" required>
-</td>
-<td>
-    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
 </td>
 <td>
     <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
@@ -1175,25 +1183,25 @@ function addItemToBill(item, dropdownMenu) {
 <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
 `;
 
-    tbody.appendChild(tr);
-    // Increment itemIndex after adding the new item
-    itemIndex++;
-    calculateTotal();
+            tbody.appendChild(tr);
+            // Increment itemIndex after adding the new item
+            itemIndex++;
+            calculateTotal();
 
-    // Fetch and display last transactions for the added item
-    fetchLastTransactions(item._id);
-    fetchLastItemsData(item._id);
+            // Fetch and display last transactions for the added item
+            fetchLastTransactions(item._id);
+            fetchLastItemsData(item._id);
 
 
-    // Hide the dropdown menu after selecting an item
-    dropdownMenu.classList.remove('show');
+            // Hide the dropdown menu after selecting an item
+            dropdownMenu.classList.remove('show');
 
-    // Clear the input field
-    inputField.value = '';
+            // Clear the input field
+            inputField.value = '';
 
-    // Focus on the quantity input field of the newly added row
-    document.getElementById(`quantity-${itemIndex - 1}`).focus();
-}
+            // Focus on the quantity input field of the newly added row
+            document.getElementById(`quantity-${itemIndex - 1}`).focus();
+        }
 
         function removeItem(button) {
             const row = button.closest('tr');
@@ -1628,7 +1636,7 @@ function addItemToBill(item, dropdownMenu) {
                     if (displayTransactions) {
                         openModalAndFocusCloseButton();
                     } else {
-                        focusOnLastRow('item-quantity');
+                        focusOnLastRow('item-batchNumber');
                     }
                 }
             } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
@@ -1647,9 +1655,9 @@ function addItemToBill(item, dropdownMenu) {
                 // Focus on the quantity input field in the last row
                 const lastRow = document.querySelector('#items tr.item:last-child');
                 if (lastRow) {
-                    const quantityInput = lastRow.querySelector('.item-quantity');
-                    if (quantityInput) {
-                        quantityInput.focus();
+                    const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+                    if (batchNumberInput) {
+                        batchNumberInput.focus();
                     }
                 }
             }
@@ -1659,10 +1667,11 @@ function addItemToBill(item, dropdownMenu) {
             if (event.key === 'Enter') {
                 const lastRow = document.querySelector('#items tr.item:last-child');
                 if (lastRow) {
-                    const batchNumberInput = lastRow.querySelector('.item-batchNumber');
-                    if (batchNumberInput) {
-                        batchNumberInput.focus();
-                        batchNumberInput.select();
+                    // const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+                    const priceInput = lastRow.querySelector('.item-price');
+                    if (priceInput) {
+                        priceInput.focus();
+                        priceInput.select();
                     }
                 }
             }
@@ -1685,10 +1694,10 @@ function addItemToBill(item, dropdownMenu) {
             if (event.key === 'Enter') {
                 const lastRow = document.querySelector('#items tr.item:last-child');
                 if (lastRow) {
-                    const priceInput = lastRow.querySelector('.item-price');
-                    if (priceInput) {
-                        priceInput.focus();
-                        priceInput.select();
+                    const quantityInput = lastRow.querySelector('.item-quantity');
+                    if (quantityInput) {
+                        quantityInput.focus();
+                        quantityInput.select();
                     }
                 }
             }

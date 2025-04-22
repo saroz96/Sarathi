@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Sarathi | Dashboard</title>
+  <title>Sarathi | Dashboard v1</title>
   <!--begin::Primary Meta Tags-->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="title" content="AdminLTE v4 | Dashboard" />
@@ -100,7 +100,7 @@
 
   <div id="loader" style="display: none;">
     <div class="spinner"></div>
-    <p id="loader-percentage-text">Loading... <span id="loader-percentage">0%</span></p>
+    <!-- <p id="loader-percentage-text">Loading... <span id="loader-percentage">0%</span></p> -->
   </div>
 
   <!--begin::App Wrapper-->
@@ -119,6 +119,7 @@
           <li class="nav-item d-none d-md-block"><a href="#" class="nav-link">Home</a></li>
           <li class="nav-item d-none d-md-block"><a href="#" class="nav-link" id="contactsButton">Contact(F4)</a></li>
           <li class="nav-item d-none d-md-block"> <a href="#" class="nav-link" id="productsButton">Products(F9)</a>
+            <li class="nav-item d-none d-md-block"> <a href="#" class="nav-link" id="denominationButton">Denomination(F10)</a>
           </li>
         </ul>
         <!--end::Start Navbar Links-->
@@ -936,6 +937,12 @@
                   </a>
                 </li>
               </ul>
+            </li> 
+            <li class="nav-item">
+              <a href="/dashboard" class="nav-link">
+                <i class="bi bi-building"></i>
+                <p>My Company</p>
+              </a>
             </li>
           </ul>
           <!--end::Sidebar Menu-->
@@ -1341,6 +1348,30 @@
   </div>
   <!--end::App Wrapper-->
 
+      <!-- Denomination Modal -->
+      <div class="modal fade" id="denominationModal" tabindex="-1" role="dialog" aria-labelledby="denominationModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="denominationModalLabel">Cash Denomination</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- Content will be loaded dynamically -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="printDenominations()">
+              <i class="fas fa-print"></i> Print
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   <!-- Modal for Product Details -->
   <div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
     <!-- <div class="modal-dialog modal-xl"> -->
@@ -1390,32 +1421,33 @@
     </div>
   </div>
 
-<!-- Purchase Price Modal -->
-<div class="modal fade" id="purchasePriceModal" tabindex="-1" aria-labelledby="purchasePriceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">  <!-- Changed to modal-lg for better fit -->
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="purchasePriceModalLabel">Purchase Price</h5>
-                <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="purchasePriceDisplay"></div>
-                <div class="expiry-legend mt-3">
-                    <small class="text-muted">
-                        <strong>Expiry Legend:</strong>
-                        <span class="expiry-badge-modal expired ms-2">EXPIRED</span>
-                        <span class="expiry-badge-modal danger ms-2">≤30d</span>
-                        <span class="expiry-badge-modal warning ms-2">≤90d</span>
-                        <span class="expiry-badge-modal safe ms-2">OK</span>
-                    </small>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-            </div>
+  <!-- Purchase Price Modal -->
+  <div class="modal fade" id="purchasePriceModal" tabindex="-1" aria-labelledby="purchasePriceModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Changed to modal-lg for better fit -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="purchasePriceModalLabel">Purchase Price</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+        <div class="modal-body">
+          <div id="purchasePriceDisplay"></div>
+          <div class="expiry-legend mt-3">
+            <small class="text-muted">
+              <strong>Expiry Legend:</strong>
+              <span class="expiry-badge-modal expired ms-2">EXPIRED</span>
+              <span class="expiry-badge-modal danger ms-2">≤30d</span>
+              <span class="expiry-badge-modal warning ms-2">≤90d</span>
+              <span class="expiry-badge-modal safe ms-2">OK</span>
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
   <!-- Batch Update Modal -->
   <div class="modal fade" id="updateBatchModal" tabindex="-1" aria-labelledby="updateBatchModalLabel"
@@ -1439,7 +1471,7 @@
             </div>
             <div class="mb-3">
               <label for="salesPriceInput" class="form-label">Sales Price</label>
-              <input type="number" class="form-control" id="salesPriceInput">
+              <input type="number" class="form-control" id="salesPriceInput" step="any">
             </div>
           </form>
         </div>
@@ -1493,6 +1525,7 @@
   <!--end:: Modal for Product Details-->
   <!--begin::Script-->
   <!--begin::Third Party Plugin(OverlayScrollbars)-->
+
   <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
     integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
   <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
@@ -1506,6 +1539,152 @@
   <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
   <script src="/js/adminlte.js"></script>
   <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
+
+  <!-- <script>
+    // Denominations data - no backend needed
+    const denominations = [
+        { value: 2000, count: 0, amount: 0 },
+        { value: 1000, count: 0, amount: 0 },
+        { value: 500, count: 0, amount: 0 },
+        { value: 200, count: 0, amount: 0 },
+        { value: 100, count: 0, amount: 0 },
+        { value: 50, count: 0, amount: 0 },
+        { value: 20, count: 0, amount: 0 },
+        { value: 10, count: 0, amount: 0 },
+        { value: 5, count: 0, amount: 0 },
+        { value: 2, count: 0, amount: 0 },
+        { value: 1, count: 0, amount: 0 }
+    ];
+
+    // Main function to open modal
+    function openDenominationModal() {
+        // Generate fresh inputs each time
+        generateDenominationInputs();
+        $('#denominationModal').modal('show');
+    }
+
+    // Generate the calculator table
+    function generateDenominationInputs() {
+        let html = `
+        <div class="row">
+            <div class="col-md-8">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Denomination</th>
+                            <th>Count</th>
+                            <th>Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        // Create rows for each denomination
+        denominations.forEach(denom => {
+            html += `
+            <tr>
+                <td>₹${denom.value}</td>
+                <td>
+                    <input type="number" min="0" 
+                           id="denom-${denom.value}" 
+                           class="form-control denomination-input" 
+                           value="0"
+                           data-value="${denom.value}">
+                </td>
+                <td id="amount-${denom.value}">0.00</td>
+            </tr>`;
+        });
+
+        html += `
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-active">
+                            <th colspan="2">Total</th>
+                            <th id="denomination-total">0.00</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>`;
+
+        // Insert into modal
+        $('.modal-body').html(html);
+        
+        // Setup event listeners
+        setupEventListeners();
+    }
+
+    // Set up all event handlers
+    function setupEventListeners() {
+        // Live calculation on input change
+        $(document).on('input', '.denomination-input', function() {
+            const value = parseInt($(this).data('value'));
+            const count = parseInt($(this).val()) || 0;
+            const amount = value * count;
+            
+            // Update display
+            $(`#amount-${value}`).text(amount.toFixed(2));
+            
+            // Update data
+            const denom = denominations.find(d => d.value === value);
+            if (denom) {
+                denom.count = count;
+                denom.amount = amount;
+            }
+            
+            calculateTotal();
+        });
+
+        // Enter key navigation
+        $(document).on('keydown', '.denomination-input', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const next = $(this).closest('tr').next().find('.denomination-input');
+                if (next.length) {
+                    next.focus().select();
+                } else {
+                    $('#denominationModal .btn-primary').focus();
+                }
+            }
+        });
+    }
+
+    // Calculate the grand total
+    function calculateTotal() {
+        const total = denominations.reduce((sum, denom) => sum + denom.amount, 0);
+        $('#denomination-total').text(total.toFixed(2));
+    }
+
+    // Print function
+    function printDenominations() {
+        calculateTotal(); // Ensure total is current
+        console.log("Current denominations:", denominations);
+        
+        // Here you would implement your print logic
+        // For now we'll just show an alert with the data
+        let printContent = "CASH DENOMINATION REPORT\n\n";
+        denominations.forEach(denom => {
+            printContent += `₹${denom.value}: ${denom.count} × ₹${denom.amount.toFixed(2)}\n`;
+        });
+        printContent += `\nTOTAL: ₹${$('#denomination-total').text()}`;
+        
+        alert(printContent); // Replace with actual print code
+    }
+
+    // F10 key handler
+    $(document).keydown(function(e) {
+        if (e.key === 'F10') {
+            e.preventDefault();
+            openDenominationModal();
+        }
+    });
+
+    // Initialize when modal opens
+    $(document).ready(function() {
+        $('#denominationModal').on('shown.bs.modal', function() {
+            $('#denom-2000').focus().select();
+        });
+    });
+</script> -->
   <script>
     const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
     const Default = {
@@ -1837,21 +2016,21 @@
 
   <script>
 
-function openPurchasePriceModal(product) {
-    selectedProduct = product; // Store product globally
-    const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
-    if (purchasePriceDisplay) {
+    function openPurchasePriceModal(product) {
+      selectedProduct = product; // Store product globally
+      const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
+      if (purchasePriceDisplay) {
         let tableContent = `
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Cost Rate</th>
+                        <th>C.P</th>
                         <th>Stock</th>
                         <th>Unit</th>
                         <th>Batch</th>
                         <th>Expiry Date</th>
                         <th>Status</th>
-                        <th>Sales Rate</th>
+                        <th>S.P</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -1862,60 +2041,53 @@ function openPurchasePriceModal(product) {
         const now = new Date();
 
         if (validStockEntries.length > 0) {
-            tableContent += validStockEntries.map((entry, index) => {
-                // Calculate expiry status for this batch
-                const expiryDate = new Date(entry.expiryDate);
-                const timeDiff = expiryDate.getTime() - now.getTime();
-                const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                
-                let status = 'safe';
-                let statusText = 'OK';
-                let statusClass = 'safe';
-                
-                if (daysUntilExpiry <= 0) {
-                    status = 'expired';
-                    statusText = 'EXPIRED';
-                    statusClass = 'expired';
-                } else if (daysUntilExpiry <= 30) {
-                    status = 'danger';
-                    statusText = `${daysUntilExpiry}d`;
-                    statusClass = 'danger';
-                } else if (daysUntilExpiry <= 90) {
-                    status = 'warning';
-                    statusText = `${daysUntilExpiry}d`;
-                    statusClass = 'warning';
-                }
-                
-                // Format the expiry date for display
-                const formattedExpiryDate = expiryDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-                
-                return `
+          tableContent += validStockEntries.map((entry, index) => {
+            // Calculate expiry status for this batch
+            const expiryDate = new Date(entry.expiryDate);
+            const timeDiff = expiryDate.getTime() - now.getTime();
+            const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            let status = 'safe';
+            let statusText = 'OK';
+            let statusClass = 'safe';
+
+            if (daysUntilExpiry <= 0) {
+              status = 'expired';
+              statusText = 'EXPIRED';
+              statusClass = 'expired';
+            } else if (daysUntilExpiry <= 30) {
+              status = 'danger';
+              statusText = `${daysUntilExpiry}d`;
+              statusClass = 'danger';
+            } else if (daysUntilExpiry <= 90) {
+              status = 'warning';
+              statusText = `${daysUntilExpiry}d`;
+              statusClass = 'warning';
+            }
+
+            return `
                     <tr class="${status}">
                         <td>Rs.${entry.puPrice.toFixed(2)}</td>
                         <td>${entry.quantity}</td>
                         <td>${product.unit ? product.unit.name : 'No unit'}</td>
                         <td>${entry.batchNumber}</td>
-                        <td>${formattedExpiryDate}</td>
+                        <td>${formatDateForInput(entry.expiryDate)}</td>
                         <td>
                             <span class="expiry-badge-modal ${statusClass}">
                                 ${statusText}
                             </span>
                         </td>
-                        <td>Rs.${entry.price}</td>
+                        <td>Rs.${Math.round(entry.price * 100) / 100}</td>
                         <td>
                             <button class="btn btn-sm btn-primary" onclick="openBatchUpdateModal(${index}, '${entry.batchNumber}', '${entry.expiryDate}', '${entry.price}')">
                                 Update
                             </button>
                         </td>
                     </tr>`;
-            }).join('');
+          }).join('');
         } else {
-            // If no stock entries exist or all have 0 quantity
-            tableContent += `
+          // If no stock entries exist or all have 0 quantity
+          tableContent += `
                 <tr>
                     <td>Rs.0.00</td>
                     <td>0</td>
@@ -1936,26 +2108,24 @@ function openPurchasePriceModal(product) {
 
         // Show the modal
         new bootstrap.Modal(document.getElementById('purchasePriceModal')).show();
+      }
     }
-}
 
-// Helper function to format dates (add this to your utilities)
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-}
-
+    // First, add a helper function to format dates for input fields
+    function formatDateForInput(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
     function openBatchUpdateModal(index, batchNumber, expiryDate, price) {
       document.getElementById('batchIndex').value = index;
       document.getElementById('batchNumberInput').value = batchNumber;
-      document.getElementById('expiryDateInput').value = expiryDate;
-      document.getElementById('salesPriceInput').value = price;
+      document.getElementById('expiryDateInput').value = formatDateForInput(expiryDate);
+      document.getElementById('salesPriceInput').value = Math.round(price * 100) / 100;
 
       new bootstrap.Modal(document.getElementById('updateBatchModal')).show();
     }
@@ -2107,13 +2277,12 @@ function formatDate(dateString) {
           // }
 
 
-
           listItem.innerHTML = `
             <div class="product-cell">${product.uniqueNumber}</div>
             <div class="product-cell">${product.hscode}</div>
             <div class="product-cell product-name">${product.name}</div>
             <div class="product-cell">${product.category ? product.category.name : 'No Category'}</div>
-            <div class="product-cell">Rs.${price}</div>
+            <div class="product-cell">Rs.${Math.round(price * 100) / 100}</div>
             <div class="product-cell">${totalStock}</div>
             <div class="product-cell">${product.unit.name}</div>
             <div class="product-cell">${margin}</div>
@@ -2619,6 +2788,9 @@ function formatDate(dateString) {
       padding: 0;
     }
   </style>
+
+<script src="/javascript/denomination/cashDenom.js"></script>
+
 </body>
 <!--end::Body-->
 

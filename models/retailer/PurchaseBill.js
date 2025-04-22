@@ -54,6 +54,7 @@ const PurchaseBillSchema = new Schema({
         },     // Required in item schema
         puPrice: {
             type: Number,
+            required: true
         },
         mrp: {
             type: Number,
@@ -75,6 +76,7 @@ const PurchaseBillSchema = new Schema({
         },  // Required in item schema
         Altprice: {
             type: Number,
+            default: 0,
             set: function (value) {
                 // Calculate quantity based on WSUnit
                 const wsUnit = this.WSUnit || 1;

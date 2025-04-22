@@ -4,23 +4,6 @@ let isFirstLoad = true;
 
 $(document).ready(function () {
     // Initialize Select2 for searchable dropdown
-    // $('#account').select2({
-    //     placeholder: "Select a party name",
-    //     allowClear: true,
-    //     width: '100%', // Ensure it takes the full width of the container
-    // });
-
-    // Listen for the change event on the account dropdown
-    // $('#account').on('change', function () {
-    //     const selectedOption = $(this).find('option:selected');
-    //     const address = selectedOption.data('address');
-
-    //     // Set the address field with the selected account's address
-    //     $('#address').val(address || 'Address not available');
-    // });
-
-
-    // Initialize Select2 for searchable dropdown
     $('#companyGroup').select2({
         placeholder: "Select a account group",
         allowClear: true,
@@ -324,98 +307,6 @@ document.addEventListener('click', function (event) {
     }
 });
 
-
-
-//     async function filterItems(input) {
-//         const query = input.value.trim().toLowerCase();
-//         const vatStatus = document.getElementById('isVatExempt').value; // Get the VAT status from the select input
-//         const dropdownMenu = input.nextElementSibling;
-
-//         // To exclude already present items from search
-//         const existingItemIds = Array.from(document.querySelectorAll('input[name^="items["]'))
-//             .filter(input => input.name.includes('[item]'))
-//             .map(input => input.value);
-
-//         // To exclude already present items from search
-//         if (query.length === 0) {
-//             dropdownMenu.innerHTML = '';
-//             dropdownMenu.classList.remove('show'); // Hide the dropdown if input is blank
-//             return;
-//         }
-
-//         const items = await fetchItems(query, vatStatus, existingItemIds);
-//         console.log('Filtered items:', items);
-
-//         // Clear existing dropdown items
-//         dropdownMenu.innerHTML = '';
-
-//         if (items.length === 0) {
-//             // Display a "No items found" message
-//             const noItemsMessage = document.createElement('div');
-//             noItemsMessage.classList.add('dropdown-item');
-//             noItemsMessage.textContent = 'No items found';
-//             noItemsMessage.style.textAlign = 'center'; // Center-align the message
-//             noItemsMessage.style.color = 'white';
-//             noItemsMessage.style.backgroundColor = 'blue';
-//             dropdownMenu.appendChild(noItemsMessage);
-//             dropdownMenu.classList.add('show');
-//         } else {
-
-//             // Create and add table header
-//             const header = document.createElement('div');
-//             header.classList.add('dropdown-header');
-//             header.innerHTML = `
-//     <div><strong>Item Code</strong></div>
-//     <div><strong>H.S. Code</strong></div>
-//     <div><strong>Item Name</strong></div>
-//     <div><strong>Category</strong></div>
-//     <div><strong>Quantity</strong></div>
-//     <div><strong>Unit</strong></div>
-//     <div><strong>S.Price</strong></div>
-//     <div><strong>Pu.Price</strong></div>
-// `;
-//             dropdownMenu.appendChild(header);
-
-//             // Create and add dropdown items
-//             items.forEach(item => {
-//                 const dropdownItem = document.createElement('div');
-//                 dropdownItem.classList.add('dropdown-item');
-//                 dropdownItem.tabIndex = 0; // Make the item focusable
-
-//                 // Add class based on VAT status
-//                 if (item.vatStatus === 'vatable') {
-//                     dropdownItem.classList.add('vatable-item');
-//                 } else {
-//                     dropdownItem.classList.add('non-vatable-item');
-//                 }
-
-//                 // Calculate the total available stock from stockEntries
-//                 const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
-
-//                 dropdownItem.innerHTML = `
-//         <div>${item.uniqueNumber || 'N/A'}</div>
-//         <div>${item.hscode || 'N/A'}</div>
-//         <div>${item.name}</div>
-//         <div>${item.category ? item.category.name : 'No Category'}</div>
-//         <div>${totalStock}</div> <!-- Display total available stock -->
-//         <div>${item.unit ? item.unit.name : ''}</div>
-//         <div>Rs.${item.price.toFixed()}</div>
-//         <div>Rs.${item.puPrice.toFixed()}</div>
-//     `;
-
-//                 dropdownItem.addEventListener('click', () => addItemToBill(item, dropdownMenu));
-//                 dropdownMenu.appendChild(dropdownItem);
-//             });
-
-//             // Show or hide the dropdown menu based on the number of items
-//             if (items.length > 0) {
-//                 dropdownMenu.classList.add('show');
-//             } else {
-//                 dropdownMenu.classList.remove('show');
-//             }
-//         }
-//     }
-
 let selectedBatch = {}; // Store the selected batch information
 
 function addItemToBill(item, dropdownMenu) {
@@ -428,68 +319,6 @@ function addItemToBill(item, dropdownMenu) {
 
     // Clear the item search field immediately after showing the modal
     inputField.value = '';
-
-    // // First, check if we should display last transactions
-    // shouldDisplayTransactions().then((displayTransactions) => {
-    //     // If displayTransactions is true, fetch the last transactions
-    //     if (displayTransactions) {
-    //         handleFetchLastTransactions(item._id).then(() => {
-    //             // Show batch modal after the transaction modal is closed
-    //             $('#transactionModal').on('hidden.bs.modal', function () {
-    //                 // Trigger the batch modal with batch details
-    //                 showBatchModal(item, (batchInfo) => {
-    //                     // This callback will be triggered when the user selects a batch from the modal
-    //                     selectedBatch = batchInfo;
-
-    //                     const tr = document.createElement('tr');
-    //                     tr.classList.add('item', item.vatStatus ? 'vatable-item' : 'non-vatable-item');
-
-    //                     const serialNumber = tbody.rows.length + 1;  // Calculate the serial number based on the number of rows already in the table
-    //                     tr.innerHTML = `
-    //         <td>${serialNumber}</td>
-    //         <td>${item.uniqueNumber}</td>
-    //     <td>
-    //         <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
-    //         ${item.hscode}
-    //     </td>
-    //      <td class="col-3">
-    //         <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
-    //         ${item.name}
-    //     </td>
-    //     <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
-    //     <td>
-    //         ${item.unit ? item.unit.name : ''}
-    //         <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-    //     </td>
-    //          <td>
-    //                 <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
-    //             </td>
-    //             <td>
-    //         <input type="date" name="items[${itemIndex}][expiryDate]" value="${selectedBatch.expiryDate}" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
-    //     </td>
-    //     <td><input type="number" name="items[${itemIndex}][price]" value="${selectedBatch.price}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
-    //     <td class="item-amount">0.00</td>
-    //     <td>
-    //          <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
-    //             <span aria-hidden="true">&times;</span>
-    //         </button>
-    //     </td>
-    //     <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
-    // `;
-
-    //                     tbody.appendChild(tr);
-    //                     itemIndex++;
-    //                     calculateTotal();
-
-    //                     // Focus on the newly added row's quantity input
-    //                     document.getElementById(`quantity-${itemIndex - 1}`).focus();
-
-    //                     // Hide the dropdown menu after selecting an item
-    //                     dropdownMenu.classList.remove('show');
-    //                 });
-    //             });
-    //         });
-    //     } else {
     // Directly show the batch modal without fetching transactions
     showBatchModal(item, (batchInfo) => {
         // This callback will be triggered when the user selects a batch from the modal
@@ -510,17 +339,17 @@ function addItemToBill(item, dropdownMenu) {
             <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
             ${item.name}
         </td>
-        <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
-        <td>
-            ${item.unit ? item.unit.name : ''}
-            <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-        </td>
-        <!-- Hidden fields for batch and expiry -->
+            <!-- Hidden fields for batch and expiry -->
         <td>
             <input type="text" name="items[${itemIndex}][batchNumber]" value="${selectedBatch.batchNumber}" oninput="this.value='${selectedBatch.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
         </td>
         <td>
-            <input type="date" name="items[${itemIndex}][expiryDate]" value="${selectedBatch.expiryDate}" oninput="this.value='${selectedBatch.expiryDate}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+            <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(selectedBatch.expiryDate)}" oninput="this.value='${formatDateForInput(selectedBatch.expiryDate)}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+        </td>
+        <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
+        <td>
+            ${item.unit ? item.unit.name : ''}
+            <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
         </td>
         <td><input type="number" name="items[${itemIndex}][price]" value="${selectedBatch.price}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
         <td class="item-amount">0.00</td>
@@ -538,14 +367,22 @@ function addItemToBill(item, dropdownMenu) {
         calculateTotal();
 
         // Focus on the newly added row's quantity input
-        document.getElementById(`quantity-${itemIndex - 1}`).focus();
+        document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
 
         // Hide the dropdown menu after selecting an item
         dropdownMenu.classList.remove('show');
     });
 }
-//     });
-// }
+
+// First, add a helper function to format dates for input fields
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 function showBatchModal(item, callback) {
     const modal = document.getElementById('batchModal');
@@ -582,10 +419,10 @@ function showBatchModal(item, callback) {
                 modalContent += `
                 <tr tabindex="0">
                     <td>${entry.batchNumber || 'N/A'}</td>
-                    <td>${entry.expiryDate || 'N/A'}</td>
+                    <td>${formatDateForInput(entry.expiryDate || 'N/A')}</td>
                     <td>${entry.quantity}</td>
-                    <td>${entry.price}</td>
-                    <td>${entry.puPrice}</td>
+                    <td>${Math.round(entry.price * 100) / 100}</td>
+                    <td>${Math.round(entry.puPrice * 100) / 100}</td>
                     <td>${entry.marginPercentage}</td>
                     <td>${entry.mrp}</td>
                     <td class="hidden">${entry.uniqueUuId}</td>
@@ -889,111 +726,12 @@ document.addEventListener('DOMContentLoaded', function () {
         calculateTotal();
     });
 
-    // document.querySelectorAll('.price-input, .quantity-input, .item-select').forEach(element => {
-    //     element.addEventListener('input', calculateTotal);
-    // });
-
     document.getElementById('roundOffAmount').addEventListener('input', function () {
         calculateTotal();
     });
 
     calculateTotal();
 });
-
-// async function shouldDisplayTransactions() {
-//     try {
-//         const response = await fetch(`/settings/get-display-transactions`);
-//         const { displayTransactions } = await response.json();
-//         return displayTransactions;
-//     } catch (error) {
-//         console.error('Error fetching settings:', error);
-//         return false;
-//     }
-// }
-
-// async function fetchLastTransactions(itemId) {
-//     // const itemId = select.value;
-//     const accountId = document.getElementById('account').value;
-//     const purchaseSalesType = document.getElementById('purchaseSalesType').value; // Ensure this element exists and has a value
-//     const transactionList = document.getElementById('transactionList');
-
-//     if (!purchaseSalesType) {
-//         console.error('Account Type is undefined. Please ensure it is set.');
-//         return;
-//     }
-
-//     try {
-
-//         const response = await fetch(`/api/transactions/${itemId}/${accountId}/${purchaseSalesType}`);
-//         const transactions = await response.json();
-//         // const { transactions, companyDateFormat } = await response.json();
-
-//         // Check if transactions are empty
-//         if (transactions.length === 0) {
-//             transactionList.innerHTML = '<p>No transactions to display.</p>';
-//             // Do not show the modal if there are no transactions
-//             return;
-//         }
-
-//         // Create table header
-//         let tableHtml = `
-//             <table class="table table-sm">
-//                 <thead>
-//                     <tr>
-//                         <th>Trans. Id</th>
-//                         <th>Date</th>
-//                         <th>Bill No.</th>
-//                         <th>Type</th>
-//                         <th>A/c Type</th>
-//                         <th>Pay.Mode</th>
-//                         <th>Qty.</th>
-//                         <th>Unit</th>
-//                         <th>S.price</th>
-//                     </tr>
-//                 </thead>
-//                 <tbody>
-//         `;
-
-//         // Add table rows for each transaction
-//         tableHtml += transactions.map(transaction => {
-//             return `
-//                 <tr onclick="window.location.href='/bills/${transaction.billId._id}/print'" style="cursor: pointer;">
-//                     <td>${transaction._id}</td>
-//                     <td>${new Date(transaction.date).toLocaleDateString()}</td>
-//                     <td>${transaction.billNumber}</td>
-//                     <td>${transaction.type}</td>
-//                     <td>${transaction.purchaseSalesType}</td>
-//                     <td>${transaction.paymentMode}</td>
-//                     <td>${transaction.quantity}</td>
-//                     <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-//                     <td>Rs.${transaction.price}</td>
-//                 </tr>
-//             `;
-//         }).join('');
-
-//         // Close table
-//         tableHtml += `
-//                 </tbody>
-//             </table>
-//         `;
-
-//         // Set the innerHTML of the transaction list container
-//         transactionList.innerHTML = tableHtml;
-
-//         // Show the modal
-//         $('#transactionModal').modal('show');
-//     } catch (error) {
-//         console.error('Error fetching transactions:', error);
-//     }
-// }
-
-
-// async function handleFetchLastTransactions(itemId) {
-//     const displayTransactions = await shouldDisplayTransactions();
-//     if (displayTransactions) {
-//         await fetchLastTransactions(itemId);
-//     }
-// }
 
 
 // Assuming you have a batch modal with an ID 'batchModal' and an input field inside it
@@ -1004,30 +742,26 @@ batchModal.addEventListener('keydown', function (event) {
     if (event.key === 'Enter') {
         event.preventDefault(); // Prevent form submission or modal close
 
-        // Focus on the quantity field of the last added row after pressing "Enter"
+        // Focus on the batchNumber field of the last added row after pressing "Enter"
         focusOnLastQuantityField();
     }
 });
 
-// Function to focus on the quantity field of the last added item
+// Function to focus on the batchNumber field of the last added item
 function focusOnLastQuantityField() {
     const tbody = document.getElementById('items');
 
-    // Get the last row's quantity field
+    // Get the last row's batchNumber field
     const lastRow = tbody.querySelector('tr.item:last-child');
 
     if (lastRow) {
-        const lastQuantityField = lastRow.querySelector('.item-quantity');
+        const lastQuantityField = lastRow.querySelector('.item-batchNumber');
 
         if (lastQuantityField) {
             lastQuantityField.focus();
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
-});
 
 async function handleItemSearchKeydown(event) {
     const itemSearchInput = document.getElementById('itemSearch');
@@ -1044,7 +778,7 @@ async function handleItemSearchKeydown(event) {
                 openModalAndFocusCloseButton();
 
             } else {
-                focusOnLastRow('item-quantity');
+                focusOnLastRow('item-batchNumber');
             }
         }
     } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
@@ -1069,20 +803,17 @@ function handleCloseButtonKeydown(event) {
         // Close the modal (optional, depending on your implementation)
         $('#transactionModal').modal('hide');
 
-        // Focus on the quantity input field
-        document.getElementById(`quantity-${itemIndex - 1}`).focus();
-        // focusOnLastRow('quantity');
+        // Focus on the batchNumber input field
+        document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
     }
 }
 
 function handleQuantityKeydown(event) {
     if (event.key === 'Enter') {
-        // Focus on the price input field
-        // document.getElementById('price').focus();
-        // document.getElementById(`price-${itemIndex}`).focus();
-        const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
-        batchNumberInput.focus();
-        batchNumberInput.select();
+        // const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
+        const priceInput = document.getElementById(`price-${itemIndex - 1}`);
+        priceInput.focus();
+        priceInput.select();
 
     }
 }
@@ -1097,9 +828,9 @@ function handleBatchKeydown(event) {
 
 function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
-        const priceInput = document.getElementById(`price-${itemIndex - 1}`);
-        priceInput.focus();
-        priceInput.select();
+        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
+        quantityInput.focus();
+        quantityInput.select();
     }
 }
 

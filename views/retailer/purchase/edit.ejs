@@ -148,12 +148,12 @@
                                 <th>HSN</th>
                                 <th>Description of Goods</th>
                                 <th>WS Unit</th>
+                                <th>Batch</th>
+                                <th>Expiry</th>
                                 <th>Qty</th>
                                 <th>Bonus</th>
                                 <th>Unit</th>
-                                <th>Batch</th>
-                                <th>Expiry</th>
-                                <th>Price</th>
+                                <th>Rate</th>
                                 <th>Amount</th>
                                 <th>Action</th>
                             </tr>
@@ -185,6 +185,20 @@
                                                 id="WSUnit-<%=index%>" step="any" onfocus="selectValue(this)">
                                         </td>
                                         <td>
+                                            <input type="text" name="items[<%= index %>][batchNumber]"
+                                                value="<%= item.batchNumber || '' %>"
+                                                class="form-control item-batchNumber" id="batchNumber-<%= index %>"
+                                                onkeydown="handleBatchKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)" autocomplete="off">
+                                        </td>
+                                        <td>
+                                            <input type="date" name="items[<%= index %>][expiryDate]"
+                                                value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
+                                                class="form-control item-expiryDate" id="expiryDate-<%= index %>"
+                                                onkeydown="handleExpDateKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)">
+                                        </td>
+                                        <td>
                                             <input type="number" name="items[<%= index %>][quantity]"
                                                 value="<%= item.quantity %>" class="form-control item-quantity"
                                                 id="quantity-<%= index %>" step="any" oninput="updateItemTotal(this)"
@@ -202,20 +216,6 @@
                                             <%= item.unit.name %>
                                                 <input type="hidden" name="items[<%= index %>][unit]"
                                                     value="<%= item.unit._id %>">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="items[<%= index %>][batchNumber]"
-                                                value="<%= item.batchNumber || '' %>"
-                                                class="form-control item-batchNumber" id="batchNumber-<%= index %>"
-                                                onkeydown="handleBatchKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)" autocomplete="off">
-                                        </td>
-                                        <td>
-                                            <input type="date" name="items[<%= index %>][expiryDate]"
-                                                value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
-                                                class="form-control item-expiryDate" id="expiryDate-<%= index %>"
-                                                onkeydown="handleExpDateKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
                                         </td>
                                         <td>
                                             <input type="number" name="items[<%= index %>][puPrice]"

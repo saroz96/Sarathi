@@ -217,7 +217,7 @@ document.getElementById('itemSearch').addEventListener('input', function () {
 
                 const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
                 const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
-                const puPrice = latestStockEntry ? latestStockEntry.puPrice : 0;
+                const puPrice = latestStockEntry ? latestStockEntry.mainUnitPuPrice : 0;
                 dropdownItem.innerHTML = `
             <div>${item.uniqueNumber || 'N/A'}</div>
             <div>${item.hscode || 'N/A'}</div>
@@ -272,7 +272,7 @@ function addItemToBill(item, dropdownMenu) {
     const serialNumber = itemIndex + 1; // Calculate the serial number
 
     // Use price from the first stock entry
-    const batchpuPrice = lastStockEntry.puPrice || 0;
+    const batchpuPrice = lastStockEntry.mainUnitPuPrice || 0;
 
     // Create a new row for the item
     const tr = document.createElement('tr');
@@ -293,6 +293,12 @@ function addItemToBill(item, dropdownMenu) {
     <input type="number" name="items[${itemIndex}][WSUnit]" class="form-control item-WSUnit" id="WSUnit-${itemIndex}" value="${item.WSUnit || 1}" onfocus="selectValue(this)" onkeydown="handleWSUnitKeydown(event,${itemIndex})" required>
 </td>
 <td>
+    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" autocomplete="off" value="XXX">
+</td>
+<td>
+    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
+</td>
+<td>
     <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
 </td>
 <td>
@@ -303,13 +309,7 @@ function addItemToBill(item, dropdownMenu) {
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
 <td>
-    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" autocomplete="off" value="XXX">
-</td>
-<td>
-    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
-</td>
-<td>
-    <input type="number" name="items[${itemIndex}][puPrice]" value="${batchpuPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+    <input type="number" name="items[${itemIndex}][puPrice]" value="${Math.round(batchpuPrice * 100) / 100}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
 </td>
 <td class="item-amount">0.00</td>
 <td>
@@ -636,10 +636,10 @@ function submitBillForm(print) {
     }
 
     // Simulate form submission (replace this with actual form submission logic)
-        billForm.submit();
+    billForm.submit();
 
-        // Reset button text and enable it after submission
-        saveButton.disabled = false;
+    // Reset button text and enable it after submission
+    saveButton.disabled = false;
 }
 
 document.getElementById('billForm').addEventListener('submit', function (event) {
@@ -828,9 +828,9 @@ function handleWSUnitKeydown(event) {
     if (event.key === 'Enter') {
         const lastRow = document.querySelector('#items tr.item:last-child');
         if (lastRow) {
-            const quantityInput = lastRow.querySelector('.item-quantity');
-            quantityInput.focus();
-            quantityInput.select();
+            const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+            batchNumberInput.focus();
+            batchNumberInput.select();
 
         }
     }
@@ -853,10 +853,10 @@ function handleBonusKeydown(event) {
     if (event.key === 'Enter') {
         const lastRow = document.querySelector('#items tr.item:last-child');
         if (lastRow) {
-            const batchNumberInput = lastRow.querySelector('.item-batchNumber');
-            if (batchNumberInput) {
-                batchNumberInput.focus();
-                batchNumberInput.select();
+            const priceInput = lastRow.querySelector('.item-puPrice');
+            if (priceInput) {
+                priceInput.focus();
+                priceInput.select();
             }
         }
     }
@@ -879,10 +879,10 @@ function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
         const lastRow = document.querySelector('#items tr.item:last-child');
         if (lastRow) {
-            const priceInput = lastRow.querySelector('.item-puPrice');
-            if (priceInput) {
-                priceInput.focus();
-                priceInput.select();
+            const quantityInput = lastRow.querySelector('.item-quantity');
+            if (quantityInput) {
+                quantityInput.focus();
+                quantityInput.select();
             }
         }
     }

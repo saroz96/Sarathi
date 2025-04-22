@@ -490,6 +490,19 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     return res.redirect('/purchase-bills');
                 }
 
+                // Add validation for batch number and expiry date
+                if (!item.batchNumber || !item.batchNumber.trim()) {
+                    req.flash('error', `Batch number is required for item ${product.name}`);
+                    await session.abortTransaction();
+                    return res.redirect('/purchase-bills');
+                }
+
+                if (!item.expiryDate) {
+                    req.flash('error', `Expiry date is required for item ${product.name}`);
+                    await session.abortTransaction();
+                    return res.redirect('/purchase-bills');
+                }
+
                 const itemTotal = parseFloat(item.puPrice) * parseFloat(item.quantity, 10);
                 subTotal += itemTotal;
 
@@ -597,16 +610,18 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 const parsedPuPrice = puPrice !== undefined && puPrice !== "" ? parseFloat(puPrice) : 0;
                 const parsedMrp = mrp !== undefined && mrp !== "" ? parseFloat(mrp) : 0;
                 const WSUnitNumber = WSUnit !== undefined && WSUnit !== "" && WSUnit !== null ? Number(WSUnit) : 1;
-
+                const quantityWithOutBonus = Number(quantity);
+                const puPriceWithOutBonus = parsedPuPrice * quantityWithOutBonus;
+                const WsUnitWithNetQuantity = WSUnitNumber * quantityNumber;
                 const stockEntry = {
                     date: nepaliDate ? nepaliDate : new Date(billDate),
                     WSUnit: WSUnitNumber,
                     quantity: WSUnitNumber ? quantityNumber * WSUnitNumber : 0,
-                    bonus: bonusNumber,
+                    bonus: WSUnitNumber ? bonusNumber * WSUnitNumber : 0,
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     price: WSUnitNumber ? parsedPrice / WSUnitNumber : 0,
-                    puPrice: WSUnitNumber ? parsedPuPrice / WSUnitNumber : 0,
+                    puPrice: WSUnitNumber ? puPriceWithOutBonus / WsUnitWithNetQuantity : 0,
                     mainUnitPuPrice: parsedPuPrice,
                     mrp: WSUnitNumber ? parsedMrp / WSUnitNumber : 0,
                     marginPercentage: marginPercentage,
@@ -1111,31 +1126,35 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
             // Process stock updates only if stock is not used
             for (const existingItem of existingBill.items) {
                 const product = await Item.findById(existingItem.item).session(session);
-
                 if (!product) continue;
 
                 const stockEntryIndex = product.stockEntries.findIndex(entry =>
                     entry.batchNumber === existingItem.batchNumber &&
-                    new Date(entry.date).toDateString() === new Date(existingBill.date).toDateString() &&
-                    entry.purchaseBillId.toString() === existingBill._id.toString() && entry.uniqueUuId === existingItem.uniqueUuId // Match the purchase bill ID
+                    entry.purchaseBillId.toString() === existingBill._id.toString() &&
+                    entry.uniqueUuId === existingItem.uniqueUuId
                 );
 
                 if (stockEntryIndex !== -1) {
                     const stockEntry = product.stockEntries[stockEntryIndex];
                     const convertedQuantity = existingItem.quantity * (existingItem.WSUnit || 1);
-                    stockEntry.quantity -= convertedQuantity;
+                    const convertedBonus = (existingItem.bonus || 0) * (existingItem.WSUnit || 1);
 
-                    if (stockEntry.quantity <= 0) {
+                    // Remove both quantity and bonus from stock
+                    stockEntry.quantity -= convertedQuantity;
+                    stockEntry.bonus -= convertedBonus;
+
+                    // Remove the stock entry if both quantity and bonus are zero or negative
+                    if (stockEntry.quantity <= 0 && stockEntry.bonus <= 0) {
                         product.stockEntries.splice(stockEntryIndex, 1);
                     }
 
-                    product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity, 0);
-                    // Update the total stock count
-                    product.stock += existingItem.quantity;
+                    // Update total stock (quantity + bonus)
+                    product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity + entry.bonus, 0);
                     await product.save({ session });
                 }
             }
 
+            // Identify removed items
             const removedItems = existingBill.items.filter(existingItem => {
                 return !items.some(item =>
                     item.item.toString() === existingItem.item.toString() &&
@@ -1143,34 +1162,24 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                 );
             });
 
+            // Process removed items
             for (const removedItem of removedItems) {
                 const product = await Item.findById(removedItem.item).session(session);
-
                 if (!product) continue;
 
                 // Find the stock entry for the removed item
                 const stockEntryIndex = product.stockEntries.findIndex(entry =>
                     entry.batchNumber === removedItem.batchNumber &&
-                    new Date(entry.date).toDateString() === new Date(existingBill.date).toDateString() &&
                     entry.purchaseBillId.toString() === existingBill._id.toString() &&
-                    entry.uniqueUuId === existingItem.uniqueUuId
+                    entry.uniqueUuId === removedItem.uniqueUuId
                 );
 
                 if (stockEntryIndex !== -1) {
-                    const stockEntry = product.stockEntries[stockEntryIndex];
-                    const convertedQuantity = removedItem.quantity * (removedItem.WSUnit || 1);
+                    // Completely remove the stock entry for removed items
+                    product.stockEntries.splice(stockEntryIndex, 1);
 
-                    // Add the removed quantity back to the stock entry
-                    stockEntry.quantity += convertedQuantity;
-
-                    // If the stock entry quantity is zero or negative, remove it
-                    if (stockEntry.quantity <= 0) {
-                        product.stockEntries.splice(stockEntryIndex, 1);
-                    }
-
-                    // Update the total stock
-                    product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity, 0);
-
+                    // Update total stock
+                    product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity + entry.bonus, 0);
                     await product.save({ session });
                 }
             }
@@ -1285,6 +1294,26 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                 const convertedBonus = bonusNumber * WSUnitNumber;
                 const totalQuantity = convertedQuantity + convertedBonus
 
+                const puPriceWithOutBonus = parsedPuPrice * quantityNumber;
+
+                // Find existing stock entry if updating
+                let existingStockEntry = null;
+                let stockEntryIndex = -1;
+
+                if (isUpdate) {
+                    stockEntryIndex = product.stockEntries.findIndex(
+                        entry => entry.batchNumber === batchNumber &&
+                            entry.uniqueUuId === uniqueUuId &&
+                            entry.purchaseBillId.toString() === existingBill._id.toString()
+                    );
+
+                    if (stockEntryIndex !== -1) {
+                        existingStockEntry = product.stockEntries[stockEntryIndex];
+                        // Remove the old quantity from total stock before updating
+                        product.stock -= (existingStockEntry.quantity + existingStockEntry.bonus);
+                    }
+                }
+
                 // Update product stock
                 product.stock += totalQuantity;
 
@@ -1296,7 +1325,8 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     price: parsedPrice !== undefined ? parsedPrice / WSUnitNumber : undefined,
-                    puPrice: parsedPuPrice / WSUnitNumber,
+                    // puPrice: parsedPuPrice / WSUnitNumber,
+                    puPrice: WSUnitNumber ? puPriceWithOutBonus / totalQuantity : 0,
                     mainUnitPuPrice: parsedPuPrice,
                     mrp: parsedMrp !== undefined ? parsedMrp / WSUnitNumber : undefined,
                     marginPercentage: parsedMarginPercentage,
@@ -1307,42 +1337,30 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
 
                 console.log("Stock Entry:", stockEntry);
 
-                if (isUpdate) {
-                    // Find existing stock entry
-                    const stockEntryIndex = product.stockEntries.findIndex(
-                        (entry) => entry.batchNumber === batchNumber && entry.expiryDate === expiryDate
-                    );
-                    if (stockEntryIndex !== -1) {
-                        // Update existing stock entry
-                        const existingStockEntry = product.stockEntries[stockEntryIndex];
-                        const updatedUniqueUuId = uniqueUuId !== undefined ? uniqueUuId : existingStockEntry.uniqueUuId;
-
-                        product.stockEntries[stockEntryIndex] = {
-                            ...existingStockEntry,
-                            date: nepaliDate ? nepaliDate : new Date(billDate),
-                            batchNumber: batchNumber,
-                            expiryDate: expiryDate,
-                            quantity: totalQuantity,
-                            bonus: convertedBonus,
-                            price: parsedPrice !== undefined ? parsedPrice / WSUnitNumber : existingStockEntry.price,
-                            puPrice: parsedPuPrice / WSUnitNumber,
-                            mainUnitPuPrice: parsedPuPrice,
-                            mrp: parsedMrp !== undefined ? parsedMrp / WSUnitNumber : existingStockEntry.mrp,
-                            marginPercentage: parsedMarginPercentage !== undefined ? parsedMarginPercentage : existingStockEntry.marginPercentage,
-                            currency: currency !== undefined ? currency : existingStockEntry.currency,
-                            purchaseBillId: existingBill._id,
-                            uniqueUuId: updatedUniqueUuId,
-                        };
-                    } else {
-                        product.stockEntries.push(stockEntry);
-                    }
+                if (isUpdate && stockEntryIndex !== -1) {
+                    // Update existing stock entry
+                    const updatedUniqueUuId = uniqueUuId !== undefined ? uniqueUuId : existingStockEntry.uniqueUuId;
+                    product.stockEntries[stockEntryIndex] = {
+                        ...existingStockEntry,
+                        ...stockEntry, // Override with new values
+                        date: nepaliDate ? nepaliDate : new Date(billDate),
+                        batchNumber: batchNumber,
+                        expiryDate: expiryDate,
+                        quantity: totalQuantity,
+                        bonus: convertedBonus,
+                        price: parsedPrice !== undefined ? parsedPrice / WSUnitNumber : existingStockEntry.price,
+                        // puPrice: parsedPuPrice / WSUnitNumber,
+                        puPrice: WSUnitNumber ? puPriceWithOutBonus / totalQuantity : 0,
+                        mainUnitPuPrice: parsedPuPrice,
+                        mrp: parsedMrp !== undefined ? parsedMrp / WSUnitNumber : existingStockEntry.mrp,
+                        marginPercentage: parsedMarginPercentage !== undefined ? parsedMarginPercentage : existingStockEntry.marginPercentage,
+                        currency: currency !== undefined ? currency : existingStockEntry.currency,
+                        purchaseBillId: existingBill._id,
+                        uniqueUuId: updatedUniqueUuId,
+                    };
                 } else {
                     product.stockEntries.push(stockEntry);
                 }
-
-                // Update total stock (quantity + bonus)
-                product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity + entry.bonus, 0);
-                product.WSUnit = WSUnitNumber;
 
                 await product.save();
             }
@@ -1368,22 +1386,22 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     billItems[existingBillItemIndex] = {
                         ...existingBillItem, // Retain existing properties
                         date: nepaliDate ? nepaliDate : new Date(billDate),
-                        batchNumber: item.batchNumber, // Update to new batch number
+                        batchNumber: item.batchNumber,
                         expiryDate: item.expiryDate,
                         WSUnit: item.WSUnit,
                         quantity: Number(item.quantity),
-                        price: item.price !== undefined && item.price !== "" ? item.price : existingBillItem.price, // Retain existing price if not provided
+                        price: item.price !== undefined && item.price !== "" ? item.price : existingBillItem.price,
                         puPrice: item.puPrice,
                         Altquantity: Number(item.quantity),
-                        Altbonus: Number(item.bonus),
-                        Altprice: item.price !== undefined && item.price !== "" ? item.price : existingBillItem.Altprice, // Retain existing Altprice if not provided
+                        Altbonus: Number(item.bonus || 0), // Ensure bonus is properly set
+                        Altprice: item.price !== undefined && item.price !== "" ? item.price : existingBillItem.Altprice,
                         AltpuPrice: item.puPrice,
                         mainUnitPuPrice: item.puPrice,
-                        mrp: item.mrp !== undefined && item.mrp !== "" ? item.mrp : existingBillItem.mrp, // Retain existing MRP if not provided
-                        marginPercentage: item.marginPercentage !== undefined && item.marginPercentage !== "" ? item.marginPercentage : existingBillItem.marginPercentage, // Retain existing margin if not provided
+                        mrp: item.mrp !== undefined && item.mrp !== "" ? item.mrp : existingBillItem.mrp,
+                        marginPercentage: item.marginPercentage !== undefined && item.marginPercentage !== "" ? item.marginPercentage : existingBillItem.marginPercentage,
                         currency: item.currency !== undefined && item.currency !== "" ? item.currency : existingBillItem.currency,
                         uniqueUuId: item.uniqueUuId !== undefined && item.uniqueUuId !== "" ? item.uniqueUuId : existingBillItem.uniqueUuId,
-                        bonus: Number(item.bonus),
+                        bonus: Number(item.bonus || 0), // Ensure bonus is properly set
                         unit: item.unit,
                         vatStatus: product.vatStatus
                     };

@@ -77,12 +77,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- <div class="col">
-                                        <label for="paymentMode">Payment Mode:</label>
-                                        <input type="text" class="form-control" id="paymentMode" name="paymentMode"
-                                            placeholder="" autocomplete="off" value="<%=purchaseReturn.paymentMode%>">
-                                    </div> -->
-
                                     <div class="col">
                                         <label for="partyBillNumber" class="form-label">Suppliers Inv. No:</label>
                                         <input type="text" class="form-control" id="partyBillNumber"
@@ -118,25 +112,6 @@
                                 <option value="Purchase">Purchase</option>
                             </select>
                         </div>
-                        <!-- <div class="col-6">
-                            <label for="account">Party Name:</label>
-                            <select name="account" id="account" class="form-control" required>
-                                <option value="" disabled selected>Select a party name</option>
-                                <% if (accounts && accounts.length> 0) { %>
-                                    <% accounts.forEach(account=> { %>
-                                        <option value="<%= account._id %>"
-                                            <%=(account._id.equals(purchaseReturn.account._id) ||
-                                            account.name==='Cash in Hand' )? 'selected' : '' %> data-address="<%=
-                                                account.address %>"
-                                                data-pan="<%= account.pan %>">
-                                                    <%= account.name %>
-                                        </option>
-                                        <% }); %>
-                                            <% } else { %>
-                                                <option disabled>No companies available</option>
-                                                <% } %>
-                            </select>
-                        </div> -->
 
                         <div class="col-6">
                             <!-- Account Selection Input -->
@@ -170,10 +145,10 @@
                                 <th>#</th>
                                 <th>HSN</th>
                                 <th>Description of Goods</th>
+                                <th>Batch</th>
+                                <th>Expiry</th>
                                 <th>Qty</th>
                                 <th>Unit</th>
-                                <th>Batch</th>
-                                <th>Exp. Date</th>
                                 <th>Price</th>
                                 <th>Amount</th>
                                 <th>Action</th>
@@ -200,6 +175,22 @@
                                             <%= item.item.name || 'N/A' %>
                                         </td>
                                         <td>
+                                            <input type="text" name="items[<%= index %>][batchNumber]"
+                                                value="<%= item.batchNumber || '' %>"
+                                                class="form-control item-batchNumber" id="batchNumber-<%= index %>"
+                                                onkeydown="handleBatchKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)"
+                                                oninput="this.value='<%=item.batchNumber%>'">
+                                        </td>
+                                        <td>
+                                            <input type="date" name="items[<%= index %>][expiryDate]"
+                                                value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
+                                                class="form-control item-expiryDate" id="expiryDate-<%= index %>"
+                                                onkeydown="handleExpDateKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)"
+                                                oninput="this.value='<%=item.expiryDate? item.expiryDate.toISOString().split('T')[0] : ''%>'">
+                                        </td>
+                                        <td>
                                             <input type="number" name="items[<%= index %>][quantity]"
                                                 value="<%= item.quantity %>" class="form-control item-quantity"
                                                 id="quantity-<%= index %>" min="1" step="any"
@@ -211,20 +202,6 @@
                                             <%= item.unit.name %>
                                                 <input type="hidden" name="items[<%= index %>][unit]"
                                                     value="<%= item.unit._id %>">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="items[<%= index %>][batchNumber]"
-                                                value="<%= item.batchNumber || '' %>"
-                                                class="form-control item-batchNumber" id="batchNumber-<%= index %>"
-                                                onkeydown="handleBatchKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
-                                        </td>
-                                        <td>
-                                            <input type="date" name="items[<%= index %>][expiryDate]"
-                                                value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
-                                                class="form-control item-expiryDate" id="expiryDate-<%= index %>"
-                                                onkeydown="handleExpDateKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
                                         </td>
                                         <td>
                                             <input type="number" name="items[<%= index %>][puPrice]"

@@ -436,18 +436,18 @@ function addItemToBill(item, dropdownMenu) {
             <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
             ${item.name}
         </td>
+          <td>
+            <input type="text" name="items[${itemIndex}][batchNumber]" value="${firstStockEntry.batchNumber || ''}" oninput="this.value='${firstStockEntry.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})">
+        </td>
+        <td>
+            <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(firstStockEntry.expiryDate || '')}" oninput="this.value='${formatDateForInput(firstStockEntry.expiryDate)}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})">
+        </td>
         <td>
             <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
         </td>
         <td>
             ${item.unit ? item.unit.name : ''}
             <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-        </td>
-        <td>
-            <input type="text" name="items[${itemIndex}][batchNumber]" value="${firstStockEntry.batchNumber || ''}" oninput="this.value='${firstStockEntry.batchNumber}'" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" onkeydown="handleBatchKeydown(event, ${itemIndex})">
-        </td>
-        <td>
-            <input type="date" name="items[${itemIndex}][expiryDate]" value="${firstStockEntry.expiryDate || ''}" oninput="this.value='${firstStockEntry.expiryDate}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})">
         </td>
         <td>
             <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
@@ -483,6 +483,16 @@ function removeItem(button) {
     const row = button.closest('tr');
     row.remove();
     calculateTotal();
+}
+
+// First, add a helper function to format dates for input fields
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function updateItemTotal(input) {
@@ -738,10 +748,6 @@ document.addEventListener('DOMContentLoaded', function () {
     calculateTotal();
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
-});
-
 async function handleItemSearchKeydown(event) {
     const itemSearchInput = document.getElementById('itemSearch');
     const itemsTable = document.getElementById('itemsTable');
@@ -756,7 +762,7 @@ async function handleItemSearchKeydown(event) {
             if (displayTransactions) {
                 openModalAndFocusCloseButton();
             } else {
-                focusOnLastRow('item-quantity');
+                focusOnLastRow('item-batchNumber');
             }
         }
     } else if (itemSearchInput.value.length < 0 || itemsAvailable) {
@@ -790,16 +796,17 @@ function handleCloseButtonKeydown(event) {
         $('#transactionModal').modal('hide');
 
         // Focus on the quantity input field
-        document.getElementById(`quantity-${itemIndex - 1}`).focus();
+        document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
     }
 }
 
 function handleQuantityKeydown(event) {
     if (event.key === 'Enter') {
         event.preventDefault(); // Prevent form submission
-        const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
-        batchNumberInput.focus();
-        batchNumberInput.select();
+        // const batchNumberInput = document.getElementById(`batchNumber-${itemIndex - 1}`);
+        const priceInput = document.getElementById(`price-${itemIndex - 1}`);
+        priceInput.focus();
+        priceInput.select();
     }
 }
 
@@ -811,13 +818,12 @@ function handleBatchKeydown(event) {
         expDateInput.select();
     }
 }
-
 function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
         event.preventDefault(); // Prevent form submission
-        const priceInput = document.getElementById(`price-${itemIndex - 1}`);
-        priceInput.focus();
-        priceInput.select();
+        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
+        quantityInput.focus();
+        quantityInput.select();
     }
 }
 

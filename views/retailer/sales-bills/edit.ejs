@@ -130,7 +130,8 @@
                         <div class="col">
                             <!-- New field for the address -->
                             <label for="pan">Vat No:</label>
-                            <input type="text" id="pan" name="pan" class="form-control" value="<%=bill.account.pan%>" onfocus="selectValue(this)">
+                            <input type="text" id="pan" name="pan" class="form-control" value="<%=bill.account.pan%>"
+                                onfocus="selectValue(this)">
                         </div>
                     </div>
                     <hr style="border: 1px solid gray;">
@@ -142,11 +143,11 @@
                                 <th>#</th>
                                 <th>HSN</th>
                                 <th>Description of Goods</th>
-                                <th>Qty</th>
-                                <th>Unit</th>
                                 <th>Batch</th>
                                 <th>Expiry</th>
-                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
                                 <th>Amount</th>
                                 <th>Action</th>
                             </tr>
@@ -173,19 +174,6 @@
                                             <%= item.item.name || 'N/A' %>
                                         </td>
                                         <td>
-                                            <input type="number" name="items[<%= index %>][quantity]"
-                                                value="<%= item.quantity %>" class="form-control item-quantity"
-                                                id="quantity-<%= index %>" min="1" step="any"
-                                                oninput="updateItemTotal(this)"
-                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
-                                        </td>
-                                        <td>
-                                            <%= item.unit.name %>
-                                                <input type="hidden" name="items[<%= index %>][unit]"
-                                                    value="<%= item.unit._id %>">
-                                        </td>
-                                        <td>
                                             <input type="text" name="items[<%= index %>][batchNumber]"
                                                 value="<%= item.batchNumber || '' %>"
                                                 class="form-control item-batchNumber" id="batchNumber-<%= index %>"
@@ -200,6 +188,19 @@
                                                 onkeydown="handleExpDateKeydown(event, <%= index %>)"
                                                 onfocus="selectValue(this)"
                                                 oninput="this.value='<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>'">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[<%= index %>][quantity]"
+                                                value="<%= item.quantity %>" class="form-control item-quantity"
+                                                id="quantity-<%= index %>" min="1" step="any"
+                                                oninput="updateItemTotal(this)"
+                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)">
+                                        </td>
+                                        <td>
+                                            <%= item.unit.name %>
+                                                <input type="hidden" name="items[<%= index %>][unit]"
+                                                    value="<%= item.unit._id %>">
                                         </td>
                                         <td>
                                             <input type="number" name="items[<%= index %>][price]"
@@ -261,13 +262,13 @@
                                             </span></p>
                                     </td>
 
-                                <!-- Discount Row -->
+                                    <!-- Discount Row -->
                                     <td><label for="discountPercentage">Discount %:</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountPercentage"
                                             id="discountPercentage" class="form-control"
-                                            value="<%= bill.discountPercentage.toFixed(2) %>"
-                                            oninput="calculateTotal()" onfocus="selectValue(this)">
+                                            value="<%= bill.discountPercentage.toFixed(2) %>" oninput="calculateTotal()"
+                                            onfocus="selectValue(this)">
                                     </td>
                                     <td><label for="discountAmount">Discount (Rs.):</label></td>
                                     <td>
@@ -305,10 +306,11 @@
                                     <td><label for="roundOffAmount">Round Off:</label></td>
                                     <td>
                                         <input type="number" class="form-control" step="any" id="roundOffAmount"
-                                            name="roundOffAmount" value="<%= bill.roundOffAmount.toFixed(2) %>" oninput="calculateTotal()" onfocus="selectValue(this)">
+                                            name="roundOffAmount" value="<%= bill.roundOffAmount.toFixed(2) %>"
+                                            oninput="calculateTotal()" onfocus="selectValue(this)">
                                     </td>
 
-                                <!-- Total Amount & In Words Row -->
+                                    <!-- Total Amount & In Words Row -->
                                     <td><label for="totalAmount">Total Amount:</label></td>
                                     <td>
                                         <p class="form-control-plaintext">Rs. <span id="totalAmount">

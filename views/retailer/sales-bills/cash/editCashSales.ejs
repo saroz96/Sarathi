@@ -40,14 +40,6 @@
                             </div>
 
                             <% } else { %>
-                                <!-- English Date Fields -->
-                                <!-- <div class="col">
-                                    <label for="transactionDateRoman">Transaction Date:</label>
-                                    <input type="date" name="transactionDateRoman" id="transactionDateRoman"
-                                        class="form-control"
-                                        value="<%= bill.transactionDate ? bill.transactionDate.toISOString().split('T')[0]: '' %>"
-                                        autofocus required>
-                                </div> -->
                                 <div class="col">
                                     <label for="transactionDateRoman">Transaction Date:</label>
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
@@ -57,11 +49,6 @@
                                     <span class="error-message" style="color: red; display: none;"></span>
 
                                 </div>
-                                <!-- <div class="col">
-                                    <label for="billDate">Invoice Date:</label>
-                                    <input type="date" name="billDate" id="billDate" class="form-control" required
-                                        value="<%= bill.date ? bill.date.toISOString().split('T')[0] : '' %>">
-                                </div> -->
                                 <div class="col">
                                     <label for="billDate">Invoice Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
@@ -140,11 +127,11 @@
                                 <th>#</th>
                                 <th>HSN</th>
                                 <th>Description of Goods</th>
-                                <th>Qty</th>
-                                <th>Unit</th>
                                 <th>Batch</th>
                                 <th>Expiry</th>
-                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
                                 <th>Amount</th>
                                 <th>Action</th>
                             </tr>
@@ -171,19 +158,6 @@
                                             <%= item.item.name || 'N/A' %>
                                         </td>
                                         <td>
-                                            <input type="number" name="items[<%= index %>][quantity]"
-                                                value="<%= item.quantity %>" class="form-control item-quantity"
-                                                id="quantity-<%= index %>" min="1" step="any"
-                                                oninput="updateItemTotal(this)"
-                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
-                                        </td>
-                                        <td>
-                                            <%= item.unit.name %>
-                                                <input type="hidden" name="items[<%= index %>][unit]"
-                                                    value="<%= item.unit._id %>">
-                                        </td>
-                                        <td>
                                             <input type="text" name="items[<%= index %>][batchNumber]"
                                                 value="<%= item.batchNumber || '' %>"
                                                 class="form-control item-batchNumber" id="batchNumber-<%= index %>"
@@ -198,6 +172,19 @@
                                                 onkeydown="handleExpDateKeydown(event, <%= index %>)"
                                                 onfocus="selectValue(this)"
                                                 oninput="this.value='<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>'">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[<%= index %>][quantity]"
+                                                value="<%= item.quantity %>" class="form-control item-quantity"
+                                                id="quantity-<%= index %>" min="1" step="any"
+                                                oninput="updateItemTotal(this)"
+                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)">
+                                        </td>
+                                        <td>
+                                            <%= item.unit.name %>
+                                                <input type="hidden" name="items[<%= index %>][unit]"
+                                                    value="<%= item.unit._id %>">
                                         </td>
                                         <td>
                                             <input type="number" name="items[<%= index %>][price]"
@@ -259,7 +246,7 @@
                                             </span></p>
                                     </td>
 
-                                <!-- Discount Row -->
+                                    <!-- Discount Row -->
                                     <td><label for="discountPercentage">Discount %:</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountPercentage"
@@ -302,10 +289,11 @@
                                     <td><label for="roundOffAmount">Round Off:</label></td>
                                     <td>
                                         <input type="number" class="form-control" step="any" id="roundOffAmount"
-                                            name="roundOffAmount" value="<%= bill.roundOffAmount.toFixed(2) %>" oninput="calculateTotal()">
+                                            name="roundOffAmount" value="<%= bill.roundOffAmount.toFixed(2) %>"
+                                            oninput="calculateTotal()">
                                     </td>
 
-                                <!-- Total Amount & In Words Row -->
+                                    <!-- Total Amount & In Words Row -->
                                     <td><label for="totalAmount">Total Amount:</label></td>
                                     <td>
                                         <p class="form-control-plaintext">Rs. <span id="totalAmount">
