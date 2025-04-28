@@ -42,15 +42,15 @@
         <div class="row">
             <div class="col">
                 <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
-                    <h1 class="mt-5">Units</h1>
+                    <h1 class="mt-5">Main Units</h1>
 
                     <!-- Add Units Form -->
                     <div class="card mt-4">
                         <div class="card-header">
-                            Add New Unit
+                            Add New Main Unit
                         </div>
                         <div class="card-body">
-                            <form action="/units" method="post">
+                            <form action="/MainUnits" method="post">
                                 <div class="form-group">
                                     <label for="name">Unit Name <i style="color: red;">*</i></label>
                                     <input type="text" class="form-control" id="name" name="name"
@@ -68,7 +68,7 @@
             <!-- Existing Units List -->
             <div class="col">
                 <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp" style="height: 600px;">
-                    <h1 style="text-align: center; text-decoration: underline;">Existing Units</h1>
+                    <h1 style="text-align: center; text-decoration: underline;">Existing Main Units</h1>
                     <!-- Print and Back Buttons -->
                     <div class="row">
                         <div class="col-2">
@@ -98,10 +98,10 @@
                                 </tr>
                             </thead>
                             <tbody id="unitsList">
-                                <% if (units && units.length> 0) { %>
-                                    <% units.sort((a, b)=> a.name.localeCompare(b.name)); %>
+                                <% if (mainUnits && mainUnits.length> 0) { %>
+                                    <% mainUnits.sort((a, b)=> a.name.localeCompare(b.name)); %>
                                         <!-- Sorting units alphabetically -->
-                                        <% units.forEach((unit, index)=> { %>
+                                        <% mainUnits.forEach((unit, index)=> { %>
                                             <tr class="searchUnitClass">
                                                 <td><strong>
                                                         <%=index +1 %>. <%= unit.name %>
@@ -110,8 +110,9 @@
                                                     <button class="btn btn-sm btn-warning"
                                                         onclick="editUnit('<%= unit._id %>', '<%= unit.name %>')"><i
                                                             class="fas fa-edit"></i></button>
-                                                    <form action="/units/<%= unit._id %>?_method=DELETE" method="post"
-                                                        class="d-inline" onsubmit="return confirmDeletion()">
+                                                    <form action="/mainUnits/<%= unit._id %>?_method=DELETE"
+                                                        method="post" class="d-inline"
+                                                        onsubmit="return confirmDeletion()">
                                                         <button type="submit" class="btn btn-sm btn-danger"><i
                                                                 class="fas fa-trash"></i></button>
                                                     </form>
@@ -135,7 +136,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
+                        <h5 class="modal-title" id="editUnitModalLabel">Edit Main Unit</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -144,7 +145,8 @@
                         <form id="editUnitForm" method="post">
                             <div class="form-group">
                                 <label for="editName">Unit Name <i style="color: red;">*</i></label>
-                                <input type="text" class="form-control" id="editName" name="name" autocomplete="off" required>
+                                <input type="text" class="form-control" id="editName" name="name" autocomplete="off"
+                                    required>
                             </div>
                             <button type="submit" class="btn btn-primary">Save changes</button>
                         </form>
@@ -160,7 +162,7 @@
     <script>
         function editUnit(id, name) {
             $('#editUnitModal').modal('show');
-            $('#editUnitForm').attr('action', '/units/' + id + '?_method=PUT');
+            $('#editUnitForm').attr('action', '/mainUnits/' + id + '?_method=PUT');
             $('#editName').val(name);
         }
 
@@ -227,8 +229,8 @@
             });
         });
 
-           // Search functionality for units from add input
-           document.getElementById('name').addEventListener('input', function () {
+        // Search functionality for units
+        document.getElementById('name').addEventListener('input', function () {
             const searchValue = this.value.toLowerCase();
             const rows = document.querySelectorAll('#unitsList .searchUnitClass');
             rows.forEach(row => {

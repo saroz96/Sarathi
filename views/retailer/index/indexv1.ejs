@@ -118,19 +118,22 @@
           </li>
           <li class="nav-item d-none d-md-block"><a href="#" class="nav-link">Home</a></li>
           <li class="nav-item d-none d-md-block"><a href="#" class="nav-link" id="contactsButton">Contact(F4)</a></li>
+          <li class="nav-item d-none d-md-block"><a href="#" class="nav-link" id="compositionButton">Composition(F6)</a>
+          </li>
           <li class="nav-item d-none d-md-block"> <a href="#" class="nav-link" id="productsButton">Products(F9)</a>
-            <li class="nav-item d-none d-md-block"> <a href="#" class="nav-link" id="denominationButton">Denomination(F10)</a>
+          <li class="nav-item d-none d-md-block"> <a href="#" class="nav-link"
+              id="denominationButton">Denomination(F10)</a>
           </li>
         </ul>
         <!--end::Start Navbar Links-->
         <!--begin::End Navbar Links-->
         <ul class="navbar-nav ms-auto">
           <!--begin::Navbar Search-->
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link" data-widget="navbar-search" href="#" role="button">
               <i class="bi bi-search"></i>
             </a>
-          </li>
+          </li> -->
           <!--end::Navbar Search-->
           <!--begin::Messages Dropdown Menu-->
           <li class="nav-item dropdown">
@@ -239,12 +242,12 @@
           </li>
           <!--end::Notifications Dropdown Menu-->
           <!--begin::Fullscreen Toggle-->
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link" href="#" data-lte-toggle="fullscreen">
               <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
               <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
             </a>
-          </li>
+          </li> -->
           <!--end::Fullscreen Toggle-->
           <!--begin::User Menu Dropdown-->
           <li class="nav-item dropdown user-menu">
@@ -405,6 +408,18 @@
                     <p>Unit</p>
                   </a>
                 </li>
+                <li class="nav-item">
+                  <a href="/mainUnits" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Main Unit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/compositions" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Composition</p>
+                  </a>
+                </li>
               </ul>
             </li>
 
@@ -421,7 +436,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-file-invoice"></i>
                     <p>
-                      Sales Register
+                      Sales Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -491,7 +506,7 @@
                     <li class="nav-item">
                       <a href="/bills-list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List Sales</p>
+                        <p>Sales Register</p>
                       </a>
                     </li>
                   </ul>
@@ -500,7 +515,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-undo"></i>
                     <p>
-                      Sales Rtn. Register
+                      Sales Rtn Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -509,7 +524,7 @@
                       <a href="#" class="nav-link">
                         <i class="fas fa-shopping-bag"></i>
                         <p>
-                          Party Sales Rtn.
+                          Party Sales Rtn
                           <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                       </a>
@@ -534,13 +549,13 @@
                       <a href="#" class="nav-link">
                         <i class="fas fa-money-bill-wave"></i>
                         <p>
-                          Cash Sales Rtn.
+                          Cash Sales Rtn
                           <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                       </a>
                       <ul class="nav nav-treeview">
                         <li class="nav-item">
-                          <a href="/cash/sales-return" class="nav-link">
+                          <a href="/cash/sales-return/add" class="nav-link">
                             <i class="nav-icon bi bi-circle"></i>
                             <p>Add</p>
                           </a>
@@ -558,7 +573,7 @@
                     <li class="nav-item">
                       <a href="/sales-return/list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Sales Rtn Register</p>
                       </a>
                     </li>
                   </ul>
@@ -568,7 +583,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
                     <p>
-                      Purchase Register
+                      Purchase Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -588,7 +603,7 @@
                     <li class="nav-item">
                       <a href="/purchase-bills-list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Purchase Register</p>
                       </a>
                     </li>
                   </ul>
@@ -597,7 +612,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-undo"></i> <!-- Return icon -->
                     <p>
-                      Purchase Rt. Register
+                      Purchase Rtn Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -617,7 +632,7 @@
                     <li class="nav-item">
                       <a href="/purchase-return/list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Purchase Rtn Register</p>
                       </a>
                     </li>
                   </ul>
@@ -655,16 +670,16 @@
                         <p>Add</p>
                       </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                       <a href="/stockAdjustments/finds" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
                         <p>Edit</p>
                       </a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                       <a href="/stockAdjustments" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Stock Adj. Register</p>
                       </a>
                     </li>
                   </ul>
@@ -937,7 +952,7 @@
                   </a>
                 </li>
               </ul>
-            </li> 
+            </li>
             <li class="nav-item">
               <a href="/dashboard" class="nav-link">
                 <i class="bi bi-building"></i>
@@ -1334,12 +1349,12 @@
     <!--begin::Footer-->
     <footer class="app-footer">
       <!--begin::To the end-->
-      <div class="float-end d-none d-sm-inline">Anything you want</div>
+      <!-- <div class="float-end d-none d-sm-inline">Anything you want</div> -->
       <!--end::To the end-->
       <!--begin::Copyright-->
       <strong>
-        Copyright &copy; 2014-2024&nbsp;
-        <a href="https://adminlte.io" class="text-decoration-none">AdminLTE.io</a>.
+        Copyright &copy; 2025&nbsp;
+        <a href="#" class="text-decoration-none">Sarathi Account Software</a>.
       </strong>
       All rights reserved.
       <!--end::Copyright-->
@@ -1348,29 +1363,28 @@
   </div>
   <!--end::App Wrapper-->
 
-      <!-- Denomination Modal -->
-      <div class="modal fade" id="denominationModal" tabindex="-1" role="dialog" aria-labelledby="denominationModalLabel"
-      aria-hidden="true">
-      <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="denominationModalLabel">Cash Denomination</h5>
-            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <!-- Content will be loaded dynamically -->
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" onclick="printDenominations()">
-              <i class="fas fa-print"></i> Print
-            </button>
-          </div>
+  <!-- Denomination Modal -->
+  <div class="modal fade" id="denominationModal" tabindex="-1" aria-labelledby="denominationModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 50%;">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="denominationModalLabel">Cash Denomination</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Content will be loaded dynamically -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="printDenominations()">
+            <i class="fas fa-print"></i> Print
+          </button>
         </div>
       </div>
     </div>
+  </div>
 
   <!-- Modal for Product Details -->
   <div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
@@ -1379,7 +1393,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="productsModalLabel">Product Details</h5>
-          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
         <div class="modal-body">
           <form class="mb-4">
@@ -1427,7 +1443,8 @@
     <div class="modal-dialog modal-lg"> <!-- Changed to modal-lg for better fit -->
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="purchasePriceModalLabel">Purchase Price</h5>
+          <h5 class="modal-title" id="purchasePriceModalLabel"><span id="selectedProductName"></span>
+          </h5>
           <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -1441,6 +1458,13 @@
               <span class="expiry-badge-modal safe ms-2">OK</span>
             </small>
           </div>
+          <hr>
+          <div class="composition-section">
+            <h6><strong>Composition:</strong></h6>
+            <ul id="compositionList" class="list-group list-group-flush mt-2">
+              <!-- Compositions will be inserted here -->
+            </ul>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
@@ -1448,6 +1472,32 @@
       </div>
     </div>
   </div>
+
+  <style>
+    #selectedProductName {
+      font-weight: bold;
+      color: #0d6efd;
+      /* Bootstrap primary color */
+      text-transform: capitalize;
+    }
+
+    .composition-section {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+
+    .composition-section h6 {
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    #compositionList {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
 
   <!-- Batch Update Modal -->
   <div class="modal fade" id="updateBatchModal" tabindex="-1" aria-labelledby="updateBatchModalLabel"
@@ -1520,6 +1570,83 @@
       </div>
     </div>
   </div>
+
+
+  <!-- Composition Modal -->
+  <div class="modal fade" id="compositionModal" tabindex="-1" aria-labelledby="compositionModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 75%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="compositionModalLabel">Composition Details</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form class="mb-4">
+            <div class="form-group">
+              <input type="text" class="form-control" id="searchCompositionInput"
+                placeholder="Search compositions by name or code..." autocomplete="off" onfocus="selectValue(this)">
+            </div>
+          </form>
+          <!-- Container for compositions -->
+          <div id="compositionDetailsContainer">
+            <!-- Header Row -->
+            <ul id="compositionDetailsHeader">
+              <li class="composition-cell">#</li>
+              <li class="composition-cell">Code</li>
+              <li class="composition-cell composition-name">Name</li>
+            </ul>
+            <ul id="compositionDetailsList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+              <!-- Composition details will be dynamically inserted here -->
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Related Items Modal -->
+  <div class="modal fade" id="relatedItemsModal" tabindex="-1" aria-labelledby="relatedItemsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 75%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="relatedItemsModalLabel"><span id="selectedCompositionName"></span></h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form class="mb-4">
+            <div class="form-group">
+              <input type="text" class="form-control" id="searchRelatedItemsInput"
+                placeholder="Search items by name or code..." autocomplete="off">
+            </div>
+          </form>
+          <div id="relatedItemsContainer">
+            <!-- Header Row -->
+            <ul id="relatedItemsHeader">
+              <li class="item-cell">#</li>
+              <li class="item-cell">Code</li>
+              <li class="item-cell item-name">Item Name</li>
+              <li class="item-cell">Category</li>
+            </ul>
+            <ul id="relatedItemsList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+              <!-- Related items will be inserted here -->
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
 
   <!--end:: Modal for Product Details-->
@@ -2018,6 +2145,9 @@
 
     function openPurchasePriceModal(product) {
       selectedProduct = product; // Store product globally
+      // Set the product name in the modal header
+      document.getElementById('selectedProductName').textContent = product.name;
+
       const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
       if (purchasePriceDisplay) {
         let tableContent = `
@@ -2031,6 +2161,7 @@
                         <th>Expiry Date</th>
                         <th>Status</th>
                         <th>S.P</th>
+                        <th>MRP</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -2078,6 +2209,7 @@
                             </span>
                         </td>
                         <td>Rs.${Math.round(entry.price * 100) / 100}</td>
+                        <td>Rs.${Math.round(entry.mrp * 100) / 100}</td>
                         <td>
                             <button class="btn btn-sm btn-primary" onclick="openBatchUpdateModal(${index}, '${entry.batchNumber}', '${entry.expiryDate}', '${entry.price}')">
                                 Update
@@ -2105,6 +2237,17 @@
 
         tableContent += '</tbody></table>';
         purchasePriceDisplay.innerHTML = tableContent;
+
+        const compositionList = document.getElementById('compositionList');
+        if (product.composition && product.composition.length > 0) {
+          compositionList.innerHTML = product.composition.map(comp =>
+            `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>${comp.uniqueNumber ? comp.uniqueNumber + ' - ' : ''}${comp.name}</span>
+                </li>`
+          ).join('');
+        } else {
+          compositionList.innerHTML = '<li class="list-group-item text-muted">No composition available</li>';
+        }
 
         // Show the modal
         new bootstrap.Modal(document.getElementById('purchasePriceModal')).show();
@@ -2186,6 +2329,10 @@
 
     $(document).ready(function () {
       $('#productsModal').on('shown.bs.modal', function () { $('#searchInput').focus(); });
+    });
+
+    $(document).ready(function () {
+      $('#compositionModal').on('shown.bs.modal', function () { $('#searchCompositionInput').focus(); });
     });
 
     $(document).ready(function () {
@@ -2395,7 +2542,7 @@
             .catch(error => console.error('Error fetching product details:', error));
         }
 
-        if (event.key === 'F5') {
+        if (event.key === 'F3') {
           event.preventDefault();
           window.location.href = '/statement';
         }
@@ -2554,6 +2701,613 @@
       });
     });
   </script>
+
+  <script>
+
+    // $(document).ready(function () {
+    //   $('#compositionModal').on('shown.bs.modal', function () {
+    //     $('#searchCompositionInput').focus();
+    //   });
+
+    //   $('#relatedItemsModal').on('shown.bs.modal', function () {
+    //     const firstItem = document.querySelector('#relatedItemsList .list-group-item');
+    //     if (firstItem) {
+    //       firstItem.focus();
+    //     }
+    //   });
+    // });
+
+    // document.addEventListener('DOMContentLoaded', function () {
+    //   let compositions = [];
+    //   let relatedItems = [];
+    //   let currentCompositionFocus = 0;
+    //   let currentItemFocus = 0;
+    //   let allCompositions = [];
+    //   const searchInput = document.getElementById('searchCompositionInput');
+
+    //   // Function to open composition modal with F6 key
+    //   document.addEventListener('keydown', function (event) {
+    //     if (event.key === 'F6') {
+    //       event.preventDefault();
+    //       fetch('/api/compositions')
+    //         .then(response => response.json())
+    //         .then(data => {
+    //           allCompositions = data;
+    //           compositions = data;
+    //           displayCompositions(compositions);
+    //           $('#compositionModal').modal('show');
+    //         })
+    //         .catch(error => console.error('Error fetching composition details:', error));
+    //     }
+    //   });
+
+    //   // Search functionality for compositions
+    //   searchInput.addEventListener('input', function () {
+    //     const searchQuery = this.value.toLowerCase();
+    //     const filteredCompositions = allCompositions.filter(composition =>
+    //       composition.name.toLowerCase().includes(searchQuery) ||
+    //       (composition.uniqueNumber && composition.uniqueNumber.toString().toLowerCase().includes(searchQuery))
+    //     );
+    //     compositions = filteredCompositions;
+    //     displayCompositions(compositions);
+    //   });
+
+    //   function displayCompositions(compositions) {
+    //     const list = document.getElementById('compositionDetailsList');
+    //     list.innerHTML = '';
+    //     currentCompositionFocus = 0;
+
+    //     compositions.forEach((composition, index) => {
+    //       const listItem = document.createElement('li');
+    //       listItem.className = 'composition-row list-group-item';
+    //       listItem.dataset.index = index;
+    //       listItem.dataset.compositionId = composition._id;
+    //       listItem.dataset.compositionName = composition.name;
+    //       listItem.tabIndex = -1; // Make programmatically focusable but not via tab
+
+    //       listItem.innerHTML = `
+    //     <div class="composition-cell">${index + 1}</div>
+    //     <div class="composition-cell">${composition.uniqueNumber || 'N/A'}</div>
+    //     <div class="composition-cell composition-name">${composition.name}</div>
+    //   `;
+
+    //       listItem.addEventListener('click', () => {
+    //         const compositionId = listItem.dataset.compositionId;
+    //         const compositionName = listItem.dataset.compositionName;
+    //         showRelatedItems(compositionId, compositionName);
+    //       });
+
+    //       list.appendChild(listItem);
+    //     });
+
+    //     highlightComposition(currentCompositionFocus);
+    //   }
+
+    //   function showRelatedItems(compositionId, compositionName) {
+    //     document.getElementById('selectedCompositionName').textContent = compositionName;
+
+    //     fetch(`/api/items?composition=${compositionId}`)
+    //       .then(response => response.json())
+    //       .then(items => {
+    //         relatedItems = items;
+    //         const itemsList = document.getElementById('relatedItemsList');
+    //         itemsList.innerHTML = '';
+    //         currentItemFocus = 0;
+
+    //         if (items.length === 0) {
+    //           itemsList.innerHTML = '<li class="list-group-item text-muted">No items found with this composition</li>';
+    //           return;
+    //         }
+
+    //         items.forEach((item, index) => {
+    //           const listItem = document.createElement('li');
+    //           listItem.className = 'item-row list-group-item';
+    //           listItem.dataset.index = index;
+    //           listItem.tabIndex = 0;
+
+    //           listItem.innerHTML = `
+    //         <div class="item-cell">${index + 1}</div>
+    //         <div class="item-cell">${item.uniqueNumber || 'N/A'}</div>
+    //         <div class="item-cell item-name">${item.name}</div>
+    //         <div class="item-cell">${item.category?.name || 'N/A'}</div>
+    //       `;
+
+    //           listItem.addEventListener('click', () => {
+    //             console.log('Selected item:', item);
+    //           });
+
+    //           listItem.addEventListener('keydown', (e) => {
+    //             if (e.key === 'Enter') {
+    //               console.log('Selected item:', item);
+    //             }
+    //           });
+
+    //           itemsList.appendChild(listItem);
+    //         });
+
+    //         $('#compositionModal').modal('hide');
+    //         $('#relatedItemsModal').modal('show');
+    //         highlightItem(currentItemFocus);
+    //       })
+    //       .catch(error => {
+    //         console.error('Error fetching related items:', error);
+    //         alert('Failed to load related items');
+    //       });
+    //   }
+
+    //   function highlightComposition(index) {
+    //     const items = document.querySelectorAll('#compositionDetailsList .list-group-item');
+    //     items.forEach(item => {
+    //       item.classList.remove('active');
+    //       item.style.backgroundColor = '';
+    //       item.style.color = 'black';
+    //     });
+
+    //     if (items[index]) {
+    //       items[index].classList.add('active');
+    //       items[index].style.backgroundColor = '#518CE8';
+    //       items[index].style.color = 'white';
+    //       items[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    //     }
+    //   }
+
+    //   function highlightItem(index) {
+    //     const items = document.querySelectorAll('#relatedItemsList .list-group-item');
+    //     items.forEach(item => {
+    //       item.classList.remove('active');
+    //       item.style.backgroundColor = '';
+    //       item.style.color = 'black';
+    //     });
+
+    //     if (items[index]) {
+    //       items[index].classList.add('active');
+    //       items[index].style.backgroundColor = '#518CE8';
+    //       items[index].style.color = 'white';
+    //       items[index].focus();
+    //       items[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    //     }
+    //   }
+
+    //   // Global keyboard navigation handler
+    //   document.addEventListener('keydown', function (event) {
+    //     // Composition modal navigation
+    //     if ($('#compositionModal').is(':visible')) {
+    //       const items = document.querySelectorAll('#compositionDetailsList .list-group-item');
+
+    //       if (event.key === 'ArrowDown') {
+    //         event.preventDefault();
+    //         currentCompositionFocus = (currentCompositionFocus + 1) % items.length;
+    //         highlightComposition(currentCompositionFocus);
+    //         // Keep focus on search input
+    //         searchInput.focus();
+    //       } else if (event.key === 'ArrowUp') {
+    //         event.preventDefault();
+    //         currentCompositionFocus = (currentCompositionFocus - 1 + items.length) % items.length;
+    //         highlightComposition(currentCompositionFocus);
+    //         // Keep focus on search input
+    //         searchInput.focus();
+    //       } else if (event.key === 'Enter' && items[currentCompositionFocus]) {
+    //         event.preventDefault();
+    //         const compositionId = items[currentCompositionFocus].dataset.compositionId;
+    //         const compositionName = items[currentCompositionFocus].dataset.compositionName;
+    //         showRelatedItems(compositionId, compositionName);
+    //       }
+    //     }
+    //     // Related items modal navigation
+    //     else if ($('#relatedItemsModal').is(':visible')) {
+    //       const items = document.querySelectorAll('#relatedItemsList .list-group-item');
+    //       if (event.key === 'ArrowDown') {
+    //         event.preventDefault();
+    //         currentItemFocus = (currentItemFocus + 1) % items.length;
+    //         highlightItem(currentItemFocus);
+    //       } else if (event.key === 'ArrowUp') {
+    //         event.preventDefault();
+    //         currentItemFocus = (currentItemFocus - 1 + items.length) % items.length;
+    //         highlightItem(currentItemFocus);
+    //       } else if (event.key === 'Enter' && items[currentItemFocus]) {
+    //         event.preventDefault();
+    //         console.log('Selected item:', relatedItems[currentItemFocus]);
+    //       } else if (event.key === 'Escape') {
+    //         event.preventDefault();
+    //         $('#relatedItemsModal').modal('hide');
+    //       }
+    //     }
+    //   });
+    // });
+
+    $(document).ready(function () {
+      $('#compositionModal').on('shown.bs.modal', function () {
+        $('#searchCompositionInput').focus();
+      });
+
+      $('#relatedItemsModal').on('shown.bs.modal', function () {
+        const firstItem = document.querySelector('#relatedItemsList .list-group-item');
+        if (firstItem) {
+          firstItem.focus();
+        }
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      let compositions = [];
+      let relatedItems = [];
+      let allRelatedItems = []; // To store all related items for search functionality
+      let currentCompositionFocus = 0;
+      let currentItemFocus = 0;
+      let allCompositions = [];
+      const searchInput = document.getElementById('searchCompositionInput');
+      const searchRelatedItemsInput = document.getElementById('searchRelatedItemsInput');
+
+      // Function to open composition modal with F6 key
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'F6') {
+          event.preventDefault();
+          fetch('/api/compositions')
+            .then(response => response.json())
+            .then(data => {
+              allCompositions = data;
+              compositions = data;
+              displayCompositions(compositions);
+              $('#compositionModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching composition details:', error));
+        }
+      });
+
+      // Search functionality for compositions
+      searchInput.addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredCompositions = allCompositions.filter(composition =>
+          composition.name.toLowerCase().includes(searchQuery) ||
+          (composition.uniqueNumber && composition.uniqueNumber.toString().toLowerCase().includes(searchQuery))
+        );
+        compositions = filteredCompositions;
+        displayCompositions(compositions);
+      });
+
+      // Search functionality for related items
+      searchRelatedItemsInput.addEventListener('input', function () {
+        // Store the current focus state
+        const isFocused = document.activeElement === searchRelatedItemsInput;
+        const searchQuery = this.value.toLowerCase();
+        const filteredItems = allRelatedItems.filter(item =>
+          item.name.toLowerCase().includes(searchQuery) ||
+          (item.uniqueNumber && item.uniqueNumber.toString().toLowerCase().includes(searchQuery)) ||
+          (item.category?.name && item.category.name.toLowerCase().includes(searchQuery))
+        );
+        relatedItems = filteredItems;
+        displayRelatedItems(relatedItems);
+
+        // Restore focus if it was on the search input
+        if (isFocused) {
+          searchRelatedItemsInput.focus();
+        }
+      });
+
+      // Update the related items modal shown event to focus on search input first
+      $('#relatedItemsModal').on('shown.bs.modal', function () {
+        searchRelatedItemsInput.focus(); // Focus on search input first
+
+        // Then focus on first item if available
+        const firstItem = document.querySelector('#relatedItemsList .list-group-item');
+        if (firstItem) {
+          firstItem.focus();
+        }
+      });
+
+      function displayCompositions(compositions) {
+        const list = document.getElementById('compositionDetailsList');
+        list.innerHTML = '';
+        currentCompositionFocus = 0;
+
+        compositions.forEach((composition, index) => {
+          const listItem = document.createElement('li');
+          listItem.className = 'composition-row list-group-item';
+          listItem.dataset.index = index;
+          listItem.dataset.compositionId = composition._id;
+          listItem.dataset.compositionName = composition.name;
+          listItem.tabIndex = -1; // Make programmatically focusable but not via tab
+
+          listItem.innerHTML = `
+        <div class="composition-cell">${index + 1}</div>
+        <div class="composition-cell">${composition.uniqueNumber || 'N/A'}</div>
+        <div class="composition-cell composition-name">${composition.name}</div>
+      `;
+
+          listItem.addEventListener('click', () => {
+            const compositionId = listItem.dataset.compositionId;
+            const compositionName = listItem.dataset.compositionName;
+            showRelatedItems(compositionId, compositionName);
+          });
+
+          list.appendChild(listItem);
+        });
+
+        highlightComposition(currentCompositionFocus);
+      }
+
+      function showRelatedItems(compositionId, compositionName) {
+        document.getElementById('selectedCompositionName').textContent = compositionName;
+        searchRelatedItemsInput.value = ''; // Clear previous search
+
+        fetch(`/api/items?composition=${compositionId}`)
+          .then(response => response.json())
+          .then(items => {
+            relatedItems = items;
+            allRelatedItems = items; // Store all items for search functionality
+            displayRelatedItems(relatedItems);
+
+            $('#compositionModal').modal('hide');
+            $('#relatedItemsModal').modal('show');
+          })
+          .catch(error => {
+            console.error('Error fetching related items:', error);
+            alert('Failed to load related items');
+          });
+      }
+
+      function displayRelatedItems(items) {
+        const itemsList = document.getElementById('relatedItemsList');
+        itemsList.innerHTML = '';
+        currentItemFocus = 0;
+
+        if (items.length === 0) {
+          itemsList.innerHTML = '<li class="list-group-item text-muted">No items found with this composition</li>';
+          return;
+        }
+
+        items.forEach((item, index) => {
+          const listItem = document.createElement('li');
+          listItem.className = 'item-row list-group-item';
+          listItem.dataset.index = index;
+          listItem.tabIndex = 0;
+
+          listItem.innerHTML = `
+        <div class="item-cell">${index + 1}</div>
+        <div class="item-cell">${item.uniqueNumber || 'N/A'}</div>
+        <div class="item-cell item-name">${item.name}</div>
+        <div class="item-cell">${item.category?.name || 'N/A'}</div>
+      `;
+
+          listItem.addEventListener('click', () => {
+            console.log('Selected item:', item);
+          });
+
+          listItem.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              console.log('Selected item:', item);
+            }
+          });
+
+          itemsList.appendChild(listItem);
+        });
+
+        highlightItem(currentItemFocus);
+      }
+
+      function highlightComposition(index) {
+        const items = document.querySelectorAll('#compositionDetailsList .list-group-item');
+        items.forEach(item => {
+          item.classList.remove('active');
+          item.style.backgroundColor = '';
+          item.style.color = 'black';
+        });
+
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+
+      function highlightItem(index) {
+        const items = document.querySelectorAll('#relatedItemsList .list-group-item');
+        items.forEach(item => {
+          item.classList.remove('active');
+          item.style.backgroundColor = '';
+          item.style.color = 'black';
+        });
+
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].focus();
+          items[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+
+      // Global keyboard navigation handler
+      document.addEventListener('keydown', function (event) {
+        // Composition modal navigation
+        if ($('#compositionModal').is(':visible')) {
+          const items = document.querySelectorAll('#compositionDetailsList .list-group-item');
+
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            currentCompositionFocus = (currentCompositionFocus + 1) % items.length;
+            highlightComposition(currentCompositionFocus);
+            // Keep focus on search input
+            searchInput.focus();
+          } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            currentCompositionFocus = (currentCompositionFocus - 1 + items.length) % items.length;
+            highlightComposition(currentCompositionFocus);
+            // Keep focus on search input
+            searchInput.focus();
+          } else if (event.key === 'Enter' && items[currentCompositionFocus]) {
+            event.preventDefault();
+            const compositionId = items[currentCompositionFocus].dataset.compositionId;
+            const compositionName = items[currentCompositionFocus].dataset.compositionName;
+            showRelatedItems(compositionId, compositionName);
+          }
+        }
+        // Related items modal navigation
+        else if ($('#relatedItemsModal').is(':visible')) {
+          const items = document.querySelectorAll('#relatedItemsList .list-group-item');
+          // Allow Ctrl+F or / to focus on search input
+          if ((event.ctrlKey && event.key === 'f') || event.key === '/') {
+            event.preventDefault();
+            searchRelatedItemsInput.focus();
+            return;
+          }
+
+          // If search input is focused, allow arrow keys to move to items
+          if (document.activeElement === searchRelatedItemsInput) {
+            if (event.key === 'ArrowDown' && items.length > 0) {
+              event.preventDefault();
+              currentItemFocus = 0;
+              highlightItem(currentItemFocus);
+              return;
+            }
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            currentItemFocus = (currentItemFocus + 1) % items.length;
+            highlightItem(currentItemFocus);
+          } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            currentItemFocus = (currentItemFocus - 1 + items.length) % items.length;
+            highlightItem(currentItemFocus);
+          } else if (event.key === 'Enter' && items[currentItemFocus]) {
+            event.preventDefault();
+            console.log('Selected item:', relatedItems[currentItemFocus]);
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            $('#relatedItemsModal').modal('hide');
+          }
+        }
+      });
+    });
+  </script>
+
+  <style>
+    /* Composition Modal Styles */
+    #compositionDetailsContainer {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #compositionDetailsHeader {
+      display: flex;
+      padding: 0px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+
+    .composition-row {
+      display: flex;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .composition-row:hover {
+      background-color: #f8f9fa;
+    }
+
+    .composition-row.active {
+      background-color: #518CE8 !important;
+      color: white !important;
+    }
+
+    .composition-cell {
+      padding: 0px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .composition-name {
+      flex: 2;
+    }
+
+    .view-items-btn {
+      white-space: nowrap;
+    }
+
+    /* Related Items Modal Styles */
+    #relatedItemsContainer {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #relatedItemsHeader {
+      display: flex;
+      padding: 0px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+
+    .item-row {
+      display: flex;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .item-row:hover {
+      background-color: #f8f9fa;
+    }
+
+    .item-cell {
+      padding: 0px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-name {
+      flex: 2;
+    }
+
+    /* Composition and Item Rows */
+    .composition-row,
+    .item-row {
+      display: flex;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      outline: none;
+      /* Remove default focus outline */
+    }
+
+    .composition-row:hover,
+    .item-row:hover {
+      background-color: #f8f9fa;
+    }
+
+    .composition-row.active,
+    .item-row.active {
+      background-color: #518CE8 !important;
+      color: white !important;
+    }
+
+    /* Focus styles for keyboard navigation */
+    .composition-row:focus,
+    .item-row:focus {
+      box-shadow: 0 0 0 2px rgba(81, 140, 232, 0.5);
+    }
+
+    /* Cells */
+    .composition-cell,
+    .item-cell {
+      padding: 0px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .composition-name,
+    .item-name {
+      flex: 2;
+    }
+  </style>
   <style>
     #productDetailsHeader {
       display: flex;
@@ -2789,7 +3543,7 @@
     }
   </style>
 
-<script src="/javascript/denomination/cashDenom.js"></script>
+  <script src="/javascript/denomination/cashDenom.js"></script>
 
 </body>
 <!--end::Body-->

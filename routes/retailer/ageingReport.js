@@ -91,7 +91,7 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
         const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english'; // Default to 'english'
 
-        let currentDate;
+        // let currentDate;
 
         if (companyDateFormat === 'nepali') {
             // Use NepaliDate if the company's date format is Nepali
@@ -141,10 +141,22 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
             account: accountId,
             isActive: true,
             $or: [
-                { billId: { $exists: true } }, // Sales
-                { purchaseBillId: { $exists: true } }, // Purchase
-                { purchaseReturnBillId: { $exists: true } },
-                { salesReturnBillId: { $exists: true } }, // Sales Return
+                {
+                    billId: { $exists: true }, // Sales
+                    paymentMode: { $ne: 'cash' } // Exclude cash sales
+                },
+                {
+                    purchaseBillId: { $exists: true }, // Purchase
+                    paymentMode: { $ne: 'cash' } // Exclude cash purchases
+                },
+                {
+                    purchaseReturnBillId: { $exists: true }, // Purchase Return
+                    paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+                },
+                {
+                    salesReturnBillId: { $exists: true }, // Sales Return
+                    paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+                },
                 { paymentAccountId: { $exists: true } },
                 { receiptAccountId: { $exists: true } },
                 { journalBillId: { $exists: true } },
@@ -173,26 +185,6 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
             openingBalance: openingBalance.amount, // Add opening balance
             transactions: []
         };
-
-        // Helper function to apply receipt credit to outstanding sales transactions (FIFO)
-        // function applyReceiptFIFO(remainingCredit, agingData) {
-        //     const periods = ['ninetyPlus', 'sixtyOneToNinety', 'thirtyOneToSixty', 'oneToThirty'];
-
-        //     for (const period of periods) {
-        //         if (remainingCredit <= 0) break; // Stop if no remaining credit
-
-        //         if (agingData[period] > 0) { // Apply only to the current period if it has balance
-        //             const appliedAmount = Math.min(agingData[period], remainingCredit);
-        //             agingData[period] -= appliedAmount;  // Deduct the applied amount from the period balance
-        //             remainingCredit -= appliedAmount;  // Decrease remaining credit by applied amount
-
-        //             // Stop moving to the next period if there is no remaining credit after deduction
-        //             if (remainingCredit <= 0) break;
-        //         }
-        //     }
-        //     return remainingCredit; // Return any remaining credit if any
-        // }
-
         // Loop through transactions to calculate outstanding amounts and balance
         transactions.forEach(transaction => {
             // Determine debit or credit effect on totalOutstanding
@@ -225,10 +217,6 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
                     runningBalance += transaction.debit;
                     agingData.totalOutstanding -= transaction.debit;
                 } else if (transaction.credit > 0) {
-                    // Apply receipt credit to outstanding sales amounts using FIFO
-                    // const remainingCredit = applyReceiptFIFO(transaction.credit, agingData);
-                    // agingData.totalOutstanding -= (transaction.credit - remainingCredit); // Adjust total outstanding
-                    // runningBalance += transaction.credit;
                     runningBalance += transaction.credit;
                     agingData.totalOutstanding += transaction.credit;
                 }
@@ -629,11 +617,24 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                 account: accountId,
                 isActive: true,
                 date: { $lt: new Date(fromDate) },
+                
                 $or: [
-                    { billId: { $exists: true } },
-                    { purchaseBillId: { $exists: true } },
-                    { purchaseReturnBillId: { $exists: true } },
-                    { salesReturnBillId: { $exists: true } },
+                    { 
+                        billId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales
+                    },
+                    { 
+                        purchaseBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchases
+                    },
+                    { 
+                        purchaseReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+                    },
+                    { 
+                        salesReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+                    },
                     { paymentAccountId: { $exists: true } },
                     { receiptAccountId: { $exists: true } },
                     { journalBillId: { $exists: true } },
@@ -681,10 +682,22 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                     $lte: endDate
                 },
                 $or: [
-                    { billId: { $exists: true } },
-                    { purchaseBillId: { $exists: true } },
-                    { purchaseReturnBillId: { $exists: true } },
-                    { salesReturnBillId: { $exists: true } },
+                    { 
+                        billId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales
+                    },
+                    { 
+                        purchaseBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchases
+                    },
+                    { 
+                        purchaseReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+                    },
+                    { 
+                        salesReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+                    },
                     { paymentAccountId: { $exists: true } },
                     { receiptAccountId: { $exists: true } },
                     { journalBillId: { $exists: true } },
@@ -923,10 +936,22 @@ router.get('/day-count-aging', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 isActive: true,
                 date: { $lt: new Date(fromDate) },
                 $or: [
-                    { billId: { $exists: true } },
-                    { purchaseBillId: { $exists: true } },
-                    { purchaseReturnBillId: { $exists: true } },
-                    { salesReturnBillId: { $exists: true } },
+                    { 
+                        billId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales
+                    },
+                    { 
+                        purchaseBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchases
+                    },
+                    { 
+                        purchaseReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+                    },
+                    { 
+                        salesReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+                    },
                     { paymentAccountId: { $exists: true } },
                     { receiptAccountId: { $exists: true } },
                     { journalBillId: { $exists: true } },
@@ -974,10 +999,22 @@ router.get('/day-count-aging', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     $lte: endDate
                 },
                 $or: [
-                    { billId: { $exists: true } },
-                    { purchaseBillId: { $exists: true } },
-                    { purchaseReturnBillId: { $exists: true } },
-                    { salesReturnBillId: { $exists: true } },
+                    { 
+                        billId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales
+                    },
+                    { 
+                        purchaseBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchases
+                    },
+                    { 
+                        purchaseReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+                    },
+                    { 
+                        salesReturnBillId: { $exists: true },
+                        paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+                    },
                     { paymentAccountId: { $exists: true } },
                     { receiptAccountId: { $exists: true } },
                     { journalBillId: { $exists: true } },

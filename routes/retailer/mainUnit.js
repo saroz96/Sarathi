@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const Unit = require('../../models/retailer/Unit');
 const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const Company = require('../../models/retailer/Company');
 const FiscalYear = require('../../models/retailer/FiscalYear');
+const MainUnit = require('../../models/retailer/MainUnit');
 
-
-
-router.get('/units', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.get('/mainUnits', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
         const companyId = req.session.currentCompany;
@@ -45,34 +43,34 @@ router.get('/units', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
-        const units = await Unit.find({ company: companyId });
-        res.render('retailer/unit/units', {
+        const mainUnits = await MainUnit.find({ company: companyId });
+        res.render('retailer/mainUnit/mainUnits', {
             company,
             currentFiscalYear,
-            units,
+            mainUnits,
             companyId,
             currentCompanyName,
-            title: 'Item Unit',
-            body: 'retailer >> item >> unit',
+            title: '',
+            body: '',
             user: req.user,
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         })
     }
 })
 
-router.post('/units', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.post('/mainUnits', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const { name } = req.body;
             const companyId = req.session.currentCompany;
-            const newUnit = new Unit({ name, company: companyId });
+            const newUnit = new MainUnit({ name, company: companyId });
             await newUnit.save();
-            req.flash('success', 'Successfully saved an units');
-            res.redirect('/units');
+            req.flash('success', 'Successfully saved a main units');
+            res.redirect('/mainUnits');
         } catch (err) {
             if (err.code === 11000) {
-                req.flash('error', 'An units with this name already exists within the selected company.');
-                return res.redirect('/units');
+                req.flash('error', 'A main units with this name already exists within the selected company.');
+                return res.redirect('/mainUnits');
             }
             console.error(err);
             res.status(500).json({ error: err.message });
@@ -80,33 +78,33 @@ router.post('/units', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
     }
 });
 
+
 // Route to handle form submission and update the items category
-router.put('/units/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.put('/mainUnits/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const { name } = req.body;
-            await Unit.findByIdAndUpdate(req.params.id, {
+            await MainUnit.findByIdAndUpdate(req.params.id, {
                 name,
                 company: req.session.currentCompany
             });
-            req.flash('success', 'units updated successfully');
-            res.redirect('/units');
+            req.flash('success', 'main units updated successfully');
+            res.redirect('/mainUnits');
         } catch (err) {
-            console.error('Error updating units:', err);
-            req.flash('error', 'Error updating units');
-            res.redirect(`/units/${req.params.id}/edit`);
+            console.error('Error updating main units:', err);
+            req.flash('error', 'Error updating main units');
+            res.redirect(`/mainUnits/${req.params.id}/edit`);
         }
     }
 });
 
-
 // Route to handle form submission and delete the category
-router.delete('/units/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.delete('/mainUnits/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const { id } = req.params;
-        await Unit.findByIdAndDelete(id);
-        req.flash('success', 'unit deleted successfully');
-        res.redirect('/units');
+        await MainUnit.findByIdAndDelete(id);
+        req.flash('success', 'Main unit deleted successfully');
+        res.redirect('/mainUnits');
     }
 })
 

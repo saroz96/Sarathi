@@ -1,12 +1,5 @@
 const mongoose = require('mongoose');
 
-// Helper function to calculate default expiry date (2 years from now)
-// const getDefaultExpiryDate = () => {
-//     const currentDate = new Date();
-//     currentDate.setFullYear(currentDate.getFullYear() + 2);
-//     return currentDate.toISOString().split("T")[0]; // Returns in YYYY-MM-DD format
-// };
-
 const getDefaultExpiryDate = () => {
     const currentDate = new Date();
     currentDate.setFullYear(currentDate.getFullYear() + 2);
@@ -115,9 +108,11 @@ const itemSchema = new mongoose.Schema({
 
     mainUnit: {
         type: mongoose.Schema.Types.ObjectId, ref: 'MainUnit',
-        required: true
     },
-
+    composition: [{
+        type: mongoose.Schema.Types.ObjectId,  // Array of ObjectIds
+        ref: 'Composition'
+    }],
     WSUnit: {
         type: Number, // Alternative unit name (e.g., "Box")
         default: 0

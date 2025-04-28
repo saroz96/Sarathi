@@ -396,6 +396,18 @@
                     <p>Unit</p>
                   </a>
                 </li>
+                <li class="nav-item">
+                  <a href="/mainUnits" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Main Unit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/compositions" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Composition</p>
+                  </a>
+                </li>
               </ul>
             </li>
 
@@ -412,7 +424,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-file-invoice"></i>
                     <p>
-                      Sales Register
+                      Sales Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -482,7 +494,7 @@
                     <li class="nav-item">
                       <a href="/bills-list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List Sales</p>
+                        <p>Sales Register</p>
                       </a>
                     </li>
                   </ul>
@@ -491,7 +503,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-undo"></i>
                     <p>
-                      Sales Rtn. Register
+                      Sales Rtn Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -500,7 +512,7 @@
                       <a href="#" class="nav-link">
                         <i class="fas fa-shopping-bag"></i>
                         <p>
-                          Party Sales Rtn.
+                          Party Sales Rtn
                           <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                       </a>
@@ -525,13 +537,13 @@
                       <a href="#" class="nav-link">
                         <i class="fas fa-money-bill-wave"></i>
                         <p>
-                          Cash Sales Rtn.
+                          Cash Sales Rtn
                           <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                       </a>
                       <ul class="nav nav-treeview">
                         <li class="nav-item">
-                          <a href="/cash/sales-return" class="nav-link">
+                          <a href="/cash/sales-return/add" class="nav-link">
                             <i class="nav-icon bi bi-circle"></i>
                             <p>Add</p>
                           </a>
@@ -549,7 +561,7 @@
                     <li class="nav-item">
                       <a href="/sales-return/list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Sales Rtn Register</p>
                       </a>
                     </li>
                   </ul>
@@ -559,7 +571,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
                     <p>
-                      Purchase Register
+                      Purchase Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -579,7 +591,7 @@
                     <li class="nav-item">
                       <a href="/purchase-bills-list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Purchase Register</p>
                       </a>
                     </li>
                   </ul>
@@ -588,7 +600,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-undo"></i> <!-- Return icon -->
                     <p>
-                      Purchase Rt. Register
+                      Purchase Rtn Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -608,7 +620,7 @@
                     <li class="nav-item">
                       <a href="/purchase-return/list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Purchase Rtn Register</p>
                       </a>
                     </li>
                   </ul>
@@ -646,16 +658,16 @@
                         <p>Add</p>
                       </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                       <a href="/stockAdjustments/finds" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
                         <p>Edit</p>
                       </a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                       <a href="/stockAdjustments" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Stock Adj. Register</p>
                       </a>
                     </li>
                   </ul>
@@ -1950,7 +1962,7 @@
             .catch(error => console.error('Error fetching product details:', error));
         }
 
-        if (event.key === 'F5') {
+        if (event.key === 'F3') {
           event.preventDefault();
           window.location.href = '/statement';
         }

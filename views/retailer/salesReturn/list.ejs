@@ -194,8 +194,8 @@
       <table class="table table-striped" id="billsList">
         <thead>
           <tr>
-            <th>Bill no.</th>
             <th>Date</th>
+            <th>Vch. No.</th>
             <th>Party Name</th>
             <th>Pay.Mode</th>
             <th class="text-end">Sub Total</th>
@@ -211,9 +211,9 @@
         <tbody>
           <% bills.forEach(salesReturnBill=> { %>
             <tr class="searchClass bill-row" data-payment-mode="<%= salesReturnBill.paymentMode %>">
-              <td><%= salesReturnBill.billNumber %></td>
               <td><%= new Date(salesReturnBill.date).toLocaleDateString() %></td>
-              <td><%= salesReturnBill.account ? salesReturnBill.account.name : 'Account Not Found' %></td>
+              <td><%= salesReturnBill.billNumber %></td>
+              <td><%= salesReturnBill.account && salesReturnBill.account.name ? salesReturnBill.account.name : (salesReturnBill.cashAccount || 'N/A') %></td>
               <td><%= salesReturnBill.paymentMode %></td>
               <td class="text-end"><%= salesReturnBill.subTotal.toFixed(2) %></td>
               <td class="text-end"><%= salesReturnBill.discountPercentage.toFixed(2) %>% - <%= salesReturnBill.discountAmount.toFixed(2) %></td>
@@ -227,9 +227,18 @@
                   <a href="/sales-return/<%= salesReturnBill._id %>/print" class="btn btn-sm btn-info me-1">
                     <i class="fas fa-eye"></i>
                   </a>
-                  <a href="/sales-return/edit/<%=salesReturnBill._id%>" class="btn btn-sm btn-warning me-1">
+                  <!-- <a href="/sales-return/edit/<%=salesReturnBill._id%>" class="btn btn-sm btn-warning me-1">
                     <i class="fas fa-edit"></i>
-                  </a>
+                  </a> -->
+                  <% if (salesReturnBill.account && salesReturnBill.account._id) { %>
+                    <a href="/sales-return/edit/<%=salesReturnBill._id%>" class="btn btn-sm btn-warning me-1">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  <% } else if(salesReturnBill.cashAccount) { %>
+                    <a href="/sales-return/editCashAccount/<%= salesReturnBill._id %>" class="btn btn-sm btn-warning me-1">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  <% } %>
                 </div>
               </td>
             </tr>

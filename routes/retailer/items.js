@@ -23,6 +23,7 @@ const StockAdjustment = require('../../models/retailer/StockAdjustment');
 
 const moment = require('moment');
 const MainUnit = require('../../models/retailer/MainUnit');
+const Composition = require('../../models/retailer/Composition');
 
 // Example backend route to handle item search
 router.get('/items/search/get', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
@@ -363,7 +364,8 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
             const items = await Item.find({
                 company: companyId,
                 fiscalYear: fiscalYear // Match items based on fiscalYearId
-            }).populate('category').populate('unit').populate('mainUnit');
+            }).populate('category').populate('unit').populate('mainUnit').populate('composition')  // This is crucial!
+
 
             // Extract openingStock and openingStockBalance if they exist for the current fiscal year
             const itemsWithOpeningStock = items.map(item => {
@@ -378,7 +380,7 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
             const categories = await Category.find({ company: companyId });
             const units = await Unit.find({ company: companyId });
             const mainUnits = await MainUnit.find({ company: companyId });
-
+            const composition = await Composition.find({ company: companyId });
 
             // Render the items page with the fetched data
             res.render('retailer/item/items', {
@@ -389,6 +391,7 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
                 categories,
                 units,
                 mainUnits,
+                composition,
                 companyId,
                 currentCompanyName,
                 companyDateFormat,
@@ -418,9 +421,39 @@ router.get('/products', ensureAuthenticated, ensureCompanySelected, ensureTradeT
         const products = await Item.find({
             company: companyId,
             fiscalYear: fiscalYear // Match items based on fiscalYearId
-        }).populate('category').populate('unit');
+        }).populate('category').populate('unit').populate('composition');
         res.json(products);// this is for index.ejs to fetch products details
         // res.render('item/items', { products });
+    }
+});
+
+// Get all compositions
+router.get('/api/compositions', async (req, res) => {
+    try {
+        const compositions = await Composition.find({ company: req.session.currentCompany })
+            .lean();
+        res.json(compositions);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch compositions" });
+    }
+});
+
+// Get items by composition
+router.get('/api/items', async (req, res) => {
+    try {
+        const query = { company: req.session.currentCompany };
+        if (req.query.composition) {
+            query.composition = req.query.composition;
+        }
+
+        const items = await Item.find(query)
+            .populate('category')
+            .populate('unit')
+            .lean();
+
+        res.json(items);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch items" });
     }
 });
 
@@ -618,11 +651,32 @@ router.get('/items/reorder', ensureAuthenticated, ensureCompanySelected, ensureT
 router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
-        const { name, hscode, category, mainUnit, WSUnit, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
+        const { name, hscode, category, compositionIds, mainUnit, WSUnit, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
         const companyId = req.session.currentCompany;
 
         if (!companyId) {
             return res.status(400).json({ error: 'Company ID is required' });
+        }
+
+        // Process composition IDs - convert string to array of ObjectIds
+        let compositions = [];
+        if (compositionIds) {
+            compositions = compositionIds.split(',')
+                .map(id => id.trim())
+                .filter(id => mongoose.Types.ObjectId.isValid(id))
+                .map(id => new mongoose.Types.ObjectId(id));
+        }
+
+        // Validate compositions exist
+        if (compositions.length > 0) {
+            const existingCompositions = await Composition.countDocuments({
+                _id: { $in: compositions },
+                company: companyId
+            });
+
+            if (existingCompositions !== compositions.length) {
+                return res.status(400).json({ error: 'One or more invalid compositions' });
+            }
         }
 
         // Fetch the company and populate the fiscalYear
@@ -680,7 +734,22 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
         if (existingItem) {
             return res.status(400).json({ error: 'Item already exists for the current fiscal year.' });
         }
+        // Process composition IDs
+        // const compositions = compositionIds
+        //     ? compositionIds.split(',').filter(id => mongoose.Types.ObjectId.isValid(id))
+        //     : [];
 
+        // // Validate compositions exist
+        // if (compositions.length > 0) {
+        //     const existingCompositions = await Composition.countDocuments({
+        //         _id: { $in: compositions },
+        //         company: companyId
+        //     });
+
+        //     if (existingCompositions !== compositions.length) {
+        //         return res.status(400).json({ error: 'One or more invalid compositions' });
+        //     }
+        // }
         // Generate a unique ID for the stock entry
         const uniqueId = uuidv4();
 
@@ -689,6 +758,7 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
             name,
             hscode,
             category,
+            composition: compositions, // Array of composition IDs
             mainUnit,
             WSUnit,
             unit,
@@ -989,6 +1059,10 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             .populate('unit')
             .populate('mainUnit')
             .populate('WSUnit')
+            .populate({
+                path: 'composition',
+                select: 'name uniqueNumber' // Include any other fields you need
+            })
             .lean(); // Use .lean() to get plain JavaScript objects instead of Mongoose documents
 
         if (!items) {
@@ -1022,8 +1096,8 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             purchasePrice,
             fiscalYear,
             currentCompanyName,
-            title: 'Items',
-            body: 'retailer >> Items >> view',
+            title: '',
+            body: '',
             user: req.user,
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });
@@ -1038,9 +1112,25 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
 router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
-            const { name, hscode, category, price, puPrice, vatStatus, openingStock, reorderLevel, mainUnit, WSUnit, unit, openingStockBalance } = req.body;
+            const { name, hscode, category, compositionIds, price, puPrice, vatStatus, openingStock, reorderLevel, mainUnit, WSUnit, unit, openingStockBalance } = req.body;
             const companyId = req.session.currentCompany;
 
+            // Process composition IDs
+            const compositions = compositionIds
+                ? compositionIds.split(',').filter(id => mongoose.Types.ObjectId.isValid(id))
+                : [];
+
+            // Validate compositions exist
+            if (compositions.length > 0) {
+                const existingCompositions = await Composition.countDocuments({
+                    _id: { $in: compositions },
+                    company: companyId
+                });
+
+                if (existingCompositions !== compositions.length) {
+                    return res.status(400).json({ error: 'One or more invalid compositions' });
+                }
+            }
             // Fetch the company and populate the fiscalYear
             const company = await Company.findById(companyId).populate('fiscalYear');
 
@@ -1109,6 +1199,7 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 name,
                 hscode,
                 category,
+                composition: compositions, // Add compositions array
                 mainUnit,
                 WSUnit,
                 unit,

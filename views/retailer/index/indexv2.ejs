@@ -34,11 +34,11 @@
     integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0=" crossorigin="anonymous" />
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- jQuery CDN -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
-    <!-- Bootstrap JS (for modals) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS (for modals) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 
 
@@ -395,6 +395,18 @@
                     <p>Unit</p>
                   </a>
                 </li>
+                <li class="nav-item">
+                  <a href="/mainUnits" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Main Unit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/compositions" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Composition</p>
+                  </a>
+                </li>
               </ul>
             </li>
 
@@ -411,7 +423,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-file-invoice"></i>
                     <p>
-                      Sales Register
+                      Sales Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -481,7 +493,7 @@
                     <li class="nav-item">
                       <a href="/bills-list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List Sales</p>
+                        <p>Sales Register</p>
                       </a>
                     </li>
                   </ul>
@@ -490,7 +502,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-undo"></i>
                     <p>
-                      Sales Rtn. Register
+                      Sales Rtn Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -499,7 +511,7 @@
                       <a href="#" class="nav-link">
                         <i class="fas fa-shopping-bag"></i>
                         <p>
-                          Party Sales Rtn.
+                          Party Sales Rtn
                           <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                       </a>
@@ -524,13 +536,13 @@
                       <a href="#" class="nav-link">
                         <i class="fas fa-money-bill-wave"></i>
                         <p>
-                          Cash Sales Rtn.
+                          Cash Sales Rtn
                           <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                       </a>
                       <ul class="nav nav-treeview">
                         <li class="nav-item">
-                          <a href="/cash/sales-return" class="nav-link">
+                          <a href="/cash/sales-return/add" class="nav-link">
                             <i class="nav-icon bi bi-circle"></i>
                             <p>Add</p>
                           </a>
@@ -548,7 +560,7 @@
                     <li class="nav-item">
                       <a href="/sales-return/list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Sales Rtn Register</p>
                       </a>
                     </li>
                   </ul>
@@ -558,7 +570,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
                     <p>
-                      Purchase Register
+                      Purchase Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -578,7 +590,7 @@
                     <li class="nav-item">
                       <a href="/purchase-bills-list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Purchase Register</p>
                       </a>
                     </li>
                   </ul>
@@ -587,7 +599,7 @@
                   <a href="#" class="nav-link">
                     <i class="fas fa-undo"></i> <!-- Return icon -->
                     <p>
-                      Purchase Rt. Register
+                      Purchase Rtn Department
                       <i class="nav-arrow bi bi-chevron-right"></i>
                     </p>
                   </a>
@@ -599,7 +611,7 @@
                       </a>
                     </li>
                     <li class="nav-item">
-                      <a href="#" class="nav-link">
+                      <a href="/purchase-return/finds" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
                         <p>Edit</p>
                       </a>
@@ -607,7 +619,7 @@
                     <li class="nav-item">
                       <a href="/purchase-return/list" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Purchase Rtn Register</p>
                       </a>
                     </li>
                   </ul>
@@ -645,16 +657,16 @@
                         <p>Add</p>
                       </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                       <a href="/stockAdjustments/finds" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
                         <p>Edit</p>
                       </a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                       <a href="/stockAdjustments" class="nav-link">
                         <i class="nav-icon bi bi-circle"></i>
-                        <p>List</p>
+                        <p>Stock Adj. Register</p>
                       </a>
                     </li>
                   </ul>
@@ -1798,7 +1810,7 @@
     <!--end::Footer-->
   </div>
 
-  
+
   <!-- Modal for Product Details -->
   <div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
     <!-- <div class="modal-dialog modal-xl"> -->
@@ -2206,14 +2218,14 @@
     });
   </script>
 
-  
-<script>
 
-  function openPurchasePriceModal(product) {
-    selectedProduct = product; // Store product globally
-    const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
-    if (purchasePriceDisplay) {
-      let tableContent = `
+  <script>
+
+    function openPurchasePriceModal(product) {
+      selectedProduct = product; // Store product globally
+      const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
+      if (purchasePriceDisplay) {
+        let tableContent = `
           <table class="table table-bordered">
               <thead>
                   <tr>
@@ -2229,36 +2241,36 @@
               </thead>
               <tbody>`;
 
-      // Filter out entries with quantity <= 0
-      const validStockEntries = product.stockEntries.filter(entry => entry.quantity > 0);
-      const now = new Date();
+        // Filter out entries with quantity <= 0
+        const validStockEntries = product.stockEntries.filter(entry => entry.quantity > 0);
+        const now = new Date();
 
-      if (validStockEntries.length > 0) {
-        tableContent += validStockEntries.map((entry, index) => {
-          // Calculate expiry status for this batch
-          const expiryDate = new Date(entry.expiryDate);
-          const timeDiff = expiryDate.getTime() - now.getTime();
-          const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        if (validStockEntries.length > 0) {
+          tableContent += validStockEntries.map((entry, index) => {
+            // Calculate expiry status for this batch
+            const expiryDate = new Date(entry.expiryDate);
+            const timeDiff = expiryDate.getTime() - now.getTime();
+            const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-          let status = 'safe';
-          let statusText = 'OK';
-          let statusClass = 'safe';
+            let status = 'safe';
+            let statusText = 'OK';
+            let statusClass = 'safe';
 
-          if (daysUntilExpiry <= 0) {
-            status = 'expired';
-            statusText = 'EXPIRED';
-            statusClass = 'expired';
-          } else if (daysUntilExpiry <= 30) {
-            status = 'danger';
-            statusText = `${daysUntilExpiry}d`;
-            statusClass = 'danger';
-          } else if (daysUntilExpiry <= 90) {
-            status = 'warning';
-            statusText = `${daysUntilExpiry}d`;
-            statusClass = 'warning';
-          }
+            if (daysUntilExpiry <= 0) {
+              status = 'expired';
+              statusText = 'EXPIRED';
+              statusClass = 'expired';
+            } else if (daysUntilExpiry <= 30) {
+              status = 'danger';
+              statusText = `${daysUntilExpiry}d`;
+              statusClass = 'danger';
+            } else if (daysUntilExpiry <= 90) {
+              status = 'warning';
+              statusText = `${daysUntilExpiry}d`;
+              statusClass = 'warning';
+            }
 
-          return `
+            return `
                   <tr class="${status}">
                       <td>Rs.${entry.puPrice.toFixed(2)}</td>
                       <td>${entry.quantity}</td>
@@ -2277,10 +2289,10 @@
                           </button>
                       </td>
                   </tr>`;
-        }).join('');
-      } else {
-        // If no stock entries exist or all have 0 quantity
-        tableContent += `
+          }).join('');
+        } else {
+          // If no stock entries exist or all have 0 quantity
+          tableContent += `
               <tr>
                   <td>Rs.0.00</td>
                   <td>0</td>
@@ -2294,161 +2306,161 @@
                   </td>
               </tr>
           `;
+        }
+
+        tableContent += '</tbody></table>';
+        purchasePriceDisplay.innerHTML = tableContent;
+
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('purchasePriceModal')).show();
       }
-
-      tableContent += '</tbody></table>';
-      purchasePriceDisplay.innerHTML = tableContent;
-
-      // Show the modal
-      new bootstrap.Modal(document.getElementById('purchasePriceModal')).show();
     }
-  }
 
-  // First, add a helper function to format dates for input fields
-  function formatDateForInput(date) {
-    if (!date) return '';
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+    // First, add a helper function to format dates for input fields
+    function formatDateForInput(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
-  function openBatchUpdateModal(index, batchNumber, expiryDate, price) {
-    document.getElementById('batchIndex').value = index;
-    document.getElementById('batchNumberInput').value = batchNumber;
-    document.getElementById('expiryDateInput').value = formatDateForInput(expiryDate);
-    document.getElementById('salesPriceInput').value = Math.round(price * 100) / 100;
+    function openBatchUpdateModal(index, batchNumber, expiryDate, price) {
+      document.getElementById('batchIndex').value = index;
+      document.getElementById('batchNumberInput').value = batchNumber;
+      document.getElementById('expiryDateInput').value = formatDateForInput(expiryDate);
+      document.getElementById('salesPriceInput').value = Math.round(price * 100) / 100;
 
-    new bootstrap.Modal(document.getElementById('updateBatchModal')).show();
-  }
+      new bootstrap.Modal(document.getElementById('updateBatchModal')).show();
+    }
 
-  async function updateBatch() {
-    const index = document.getElementById('batchIndex').value;
-    const updatedBatchNumber = document.getElementById('batchNumberInput').value;
-    const updatedExpiryDate = document.getElementById('expiryDateInput').value;
-    const updatedSalesPrice = document.getElementById('salesPriceInput').value;
+    async function updateBatch() {
+      const index = document.getElementById('batchIndex').value;
+      const updatedBatchNumber = document.getElementById('batchNumberInput').value;
+      const updatedExpiryDate = document.getElementById('expiryDateInput').value;
+      const updatedSalesPrice = document.getElementById('salesPriceInput').value;
 
-    if (selectedProduct && selectedProduct._id) {
-      try {
-        const response = await fetch(`/update-batch/${selectedProduct._id}/${index}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            batchNumber: updatedBatchNumber,
-            expiryDate: updatedExpiryDate,
-            price: updatedSalesPrice,
+      if (selectedProduct && selectedProduct._id) {
+        try {
+          const response = await fetch(`/update-batch/${selectedProduct._id}/${index}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              batchNumber: updatedBatchNumber,
+              expiryDate: updatedExpiryDate,
+              price: updatedSalesPrice,
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('Batch updated successfully!');
+            selectedProduct.stockEntries[index].batchNumber = updatedBatchNumber;
+            selectedProduct.stockEntries[index].expiryDate = updatedExpiryDate;
+            selectedProduct.stockEntries[index].price = updatedSalesPrice;
+            openPurchasePriceModal(selectedProduct); // Refresh modal
+            // bootstrap.Modal.getInstance(document.getElementById('updateBatchModal')).hide();
+
+            const updateModal = document.getElementById('updateBatchModal');
+            const modalInstance = bootstrap.Modal.getInstance(updateModal);
+            if (modalInstance) {
+              modalInstance.hide();
+            }
+
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+
+          } else {
+            alert(`Error: ${data.message}`);
+          }
+        } catch (error) {
+          console.error('Error updating batch:', error);
+        }
+      } else {
+        alert('Invalid product data!');
+      }
+    }
+
+
+
+
+    $(document).ready(function () {
+      $('#productsModal').on('shown.bs.modal', function () { $('#searchInput').focus(); });
+    });
+
+    $(document).ready(function () {
+      $('#contactsModal').on('shown.bs.modal', function () { $('#contactSearch').focus(); });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      let products = [];
+      let currentFocus = 0;
+      let allProducts = []; // Store all products for filtering
+
+      document.getElementById('productsButton').addEventListener('click', function () {
+        document.getElementById('searchInput').value = ''; // Clear the search field
+        fetch('/products')
+          .then(response => response.json())
+          .then(data => {
+            allProducts = data;
+            products = data; // Display first 10 products
+            displayProducts(products);
+            new bootstrap.Modal(document.getElementById('productsModal')).show();
           })
-        });
+          .catch(error => console.error('Error fetching product details:', error));
+      });
 
-        const data = await response.json();
+      document.getElementById('searchInput').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredProducts = allProducts.filter(product =>
+          product.name.toLowerCase().includes(searchQuery) ||
+          (product.category && product.category.name.toLowerCase().includes(searchQuery)) ||
+          product.uniqueNumber.toString().toLowerCase().includes(searchQuery)
+        );
+        products = filteredProducts; // Display first 10 filtered products
+        displayProducts(products);
+      });
 
-        if (response.ok) {
-          alert('Batch updated successfully!');
-          selectedProduct.stockEntries[index].batchNumber = updatedBatchNumber;
-          selectedProduct.stockEntries[index].expiryDate = updatedExpiryDate;
-          selectedProduct.stockEntries[index].price = updatedSalesPrice;
-          openPurchasePriceModal(selectedProduct); // Refresh modal
-          // bootstrap.Modal.getInstance(document.getElementById('updateBatchModal')).hide();
+      function displayProducts(products) {
+        const list = document.getElementById('productDetailsList');
+        list.innerHTML = '';
+        currentFocus = 0;
 
-          const updateModal = document.getElementById('updateBatchModal');
-          const modalInstance = bootstrap.Modal.getInstance(updateModal);
-          if (modalInstance) {
-            modalInstance.hide();
+        products.forEach((product, index) => {
+          const listItem = document.createElement('li');
+          listItem.className = 'product-row list-group-item';
+          listItem.dataset.index = index;
+          listItem.dataset.vatStatus = product.vatStatus;
+
+          // Calculate expiry status for the product
+          const expiryStatus = calculateProductExpiryStatus(product);
+
+          // Add expiry status class to the row
+          if (expiryStatus.status === 'expired') {
+            listItem.classList.add('expired');
+          } else if (expiryStatus.status === 'danger') {
+            listItem.classList.add('danger');
+          } else if (expiryStatus.status === 'warning') {
+            listItem.classList.add('warning');
           }
 
-          document.body.classList.remove('modal-open');
-          document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+          if (product.vatStatus === 'vatable') {
+            listItem.classList.add('vatable');
+          } else if (product.vatStatus === 'vatExempt') {
+            listItem.classList.add('vatExempt');
+          }
 
+          const totalStock = product.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+          const latestStockEntry = product.stockEntries[product.stockEntries.length - 1];
+          const price = latestStockEntry ? latestStockEntry.price : 0;
+          const margin = latestStockEntry ? latestStockEntry.marginPercentage : 'Null';
 
-        } else {
-          alert(`Error: ${data.message}`);
-        }
-      } catch (error) {
-        console.error('Error updating batch:', error);
-      }
-    } else {
-      alert('Invalid product data!');
-    }
-  }
-
-
-
-
-  $(document).ready(function () {
-    $('#productsModal').on('shown.bs.modal', function () { $('#searchInput').focus(); });
-  });
-
-  $(document).ready(function () {
-    $('#contactsModal').on('shown.bs.modal', function () { $('#contactSearch').focus(); });
-  });
-
-  document.addEventListener('DOMContentLoaded', function () {
-    let products = [];
-    let currentFocus = 0;
-    let allProducts = []; // Store all products for filtering
-
-    document.getElementById('productsButton').addEventListener('click', function () {
-      document.getElementById('searchInput').value = ''; // Clear the search field
-      fetch('/products')
-        .then(response => response.json())
-        .then(data => {
-          allProducts = data;
-          products = data; // Display first 10 products
-          displayProducts(products);
-          new bootstrap.Modal(document.getElementById('productsModal')).show();
-        })
-        .catch(error => console.error('Error fetching product details:', error));
-    });
-
-    document.getElementById('searchInput').addEventListener('input', function () {
-      const searchQuery = this.value.toLowerCase();
-      const filteredProducts = allProducts.filter(product =>
-        product.name.toLowerCase().includes(searchQuery) ||
-        (product.category && product.category.name.toLowerCase().includes(searchQuery)) ||
-        product.uniqueNumber.toString().toLowerCase().includes(searchQuery)
-      );
-      products = filteredProducts; // Display first 10 filtered products
-      displayProducts(products);
-    });
-
-    function displayProducts(products) {
-      const list = document.getElementById('productDetailsList');
-      list.innerHTML = '';
-      currentFocus = 0;
-
-      products.forEach((product, index) => {
-        const listItem = document.createElement('li');
-        listItem.className = 'product-row list-group-item';
-        listItem.dataset.index = index;
-        listItem.dataset.vatStatus = product.vatStatus;
-
-        // Calculate expiry status for the product
-        const expiryStatus = calculateProductExpiryStatus(product);
-
-        // Add expiry status class to the row
-        if (expiryStatus.status === 'expired') {
-          listItem.classList.add('expired');
-        } else if (expiryStatus.status === 'danger') {
-          listItem.classList.add('danger');
-        } else if (expiryStatus.status === 'warning') {
-          listItem.classList.add('warning');
-        }
-
-        if (product.vatStatus === 'vatable') {
-          listItem.classList.add('vatable');
-        } else if (product.vatStatus === 'vatExempt') {
-          listItem.classList.add('vatExempt');
-        }
-
-        const totalStock = product.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
-        const latestStockEntry = product.stockEntries[product.stockEntries.length - 1];
-        const price = latestStockEntry ? latestStockEntry.price : 0;
-        const margin = latestStockEntry ? latestStockEntry.marginPercentage : 'Null';
-
-        listItem.innerHTML = `
+          listItem.innerHTML = `
           <div class="product-cell">${product.uniqueNumber}</div>
           <div class="product-cell">${product.hscode}</div>
           <div class="product-cell product-name">${product.name}</div>
@@ -2459,188 +2471,188 @@
           <div class="product-cell">${margin}</div>
         `;
 
-        listItem.addEventListener('click', () => openPurchasePriceModal(product));
-        list.appendChild(listItem);
-      });
+          listItem.addEventListener('click', () => openPurchasePriceModal(product));
+          list.appendChild(listItem);
+        });
 
-      highlightItem(currentFocus);
-    }
+        highlightItem(currentFocus);
+      }
 
-    // Helper function to calculate expiry status for a product
-    function calculateProductExpiryStatus(product) {
-      const now = new Date();
-      let nearestExpiry = null;
-      let expiredItems = 0;
-      let warningItems = 0;
-      let dangerItems = 0;
+      // Helper function to calculate expiry status for a product
+      function calculateProductExpiryStatus(product) {
+        const now = new Date();
+        let nearestExpiry = null;
+        let expiredItems = 0;
+        let warningItems = 0;
+        let dangerItems = 0;
 
-      product.stockEntries.forEach(entry => {
-        const expiryDate = new Date(entry.expiryDate);
-        if (expiryDate < now) {
-          expiredItems += entry.quantity;
-        } else {
-          if (!nearestExpiry || expiryDate < nearestExpiry) {
-            nearestExpiry = expiryDate;
+        product.stockEntries.forEach(entry => {
+          const expiryDate = new Date(entry.expiryDate);
+          if (expiryDate < now) {
+            expiredItems += entry.quantity;
+          } else {
+            if (!nearestExpiry || expiryDate < nearestExpiry) {
+              nearestExpiry = expiryDate;
+            }
+
+            const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
+            if (daysUntilExpiry <= 30) {
+              dangerItems += entry.quantity;
+            } else if (daysUntilExpiry <= 90) {
+              warningItems += entry.quantity;
+            }
+          }
+        });
+
+        return {
+          nearestExpiry,
+          expiredItems,
+          warningItems,
+          dangerItems,
+          status: expiredItems > 0 ? 'expired' :
+            dangerItems > 0 ? 'danger' :
+              warningItems > 0 ? 'warning' : 'safe'
+        };
+      }
+
+      function highlightItem(index) {
+        const items = document.querySelectorAll('#productDetailsList .list-group-item');
+        items.forEach(item => {
+          const vatStatus = item.dataset.vatStatus;
+          if (vatStatus === 'vatable') {
+            item.style.backgroundColor = 'lightgreen';
+          } else if (vatStatus === 'vatExempt') {
+            item.style.backgroundColor = 'lightyellow';
+          } else {
+            item.style.backgroundColor = '';
           }
 
-          const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
-          if (daysUntilExpiry <= 30) {
-            dangerItems += entry.quantity;
-          } else if (daysUntilExpiry <= 90) {
-            warningItems += entry.quantity;
+          // Re-apply expiry status classes
+          if (item.classList.contains('expired')) {
+            item.style.backgroundColor = '#ffdddd';
+          } else if (item.classList.contains('danger')) {
+            item.style.backgroundColor = '#ffcccc';
+          } else if (item.classList.contains('warning')) {
+            item.style.backgroundColor = '#fff3cd';
+          }
+
+          item.classList.remove('active');
+          item.style.color = 'black';
+        });
+
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].scrollIntoView({ block: 'center' });
+        }
+      }
+
+      document.addEventListener('keydown', function (event) {
+        const items = document.querySelectorAll('#productDetailsList .list-group-item');
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          currentFocus = (currentFocus + 1) % items.length;
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          currentFocus = (currentFocus - 1 + items.length) % items.length;
+        } else if (event.key === 'Enter' && items[currentFocus]) {
+          event.preventDefault();
+          items[currentFocus].click();
+        }
+        highlightItem(currentFocus);
+      });
+
+      // Handle F9 key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'F9') {
+          event.preventDefault();
+          fetch('/products')
+            .then(response => response.json())
+            .then(data => {
+              allProducts = data;
+              products = data;
+              displayProducts(products);
+              $('#productsModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching product details:', error));
+        }
+
+        if (event.key === 'F3') {
+          event.preventDefault();
+          window.location.href = '/statement';
+        }
+      });
+
+      // Handle Escape key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          const purchasePriceModalElement = document.getElementById('purchasePriceModal');
+          const productsModalElement = document.getElementById('productsModal');
+
+          const purchasePriceModal = bootstrap.Modal.getInstance(purchasePriceModalElement);
+          const productsModal = bootstrap.Modal.getInstance(productsModalElement);
+
+          if (purchasePriceModal && purchasePriceModal._isShown) {
+            purchasePriceModal.hide();
+          } else if (productsModal && productsModal._isShown) {
+            productsModal.hide();
           }
         }
       });
-
-      return {
-        nearestExpiry,
-        expiredItems,
-        warningItems,
-        dangerItems,
-        status: expiredItems > 0 ? 'expired' :
-          dangerItems > 0 ? 'danger' :
-            warningItems > 0 ? 'warning' : 'safe'
-      };
-    }
-
-    function highlightItem(index) {
-      const items = document.querySelectorAll('#productDetailsList .list-group-item');
-      items.forEach(item => {
-        const vatStatus = item.dataset.vatStatus;
-        if (vatStatus === 'vatable') {
-          item.style.backgroundColor = 'lightgreen';
-        } else if (vatStatus === 'vatExempt') {
-          item.style.backgroundColor = 'lightyellow';
-        } else {
-          item.style.backgroundColor = '';
-        }
-
-        // Re-apply expiry status classes
-        if (item.classList.contains('expired')) {
-          item.style.backgroundColor = '#ffdddd';
-        } else if (item.classList.contains('danger')) {
-          item.style.backgroundColor = '#ffcccc';
-        } else if (item.classList.contains('warning')) {
-          item.style.backgroundColor = '#fff3cd';
-        }
-
-        item.classList.remove('active');
-        item.style.color = 'black';
-      });
-
-      if (items[index]) {
-        items[index].classList.add('active');
-        items[index].style.backgroundColor = '#518CE8';
-        items[index].style.color = 'white';
-        items[index].scrollIntoView({ block: 'center' });
-      }
-    }
-
-    document.addEventListener('keydown', function (event) {
-      const items = document.querySelectorAll('#productDetailsList .list-group-item');
-      if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        currentFocus = (currentFocus + 1) % items.length;
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        currentFocus = (currentFocus - 1 + items.length) % items.length;
-      } else if (event.key === 'Enter' && items[currentFocus]) {
-        event.preventDefault();
-        items[currentFocus].click();
-      }
-      highlightItem(currentFocus);
     });
 
-    // Handle F9 key press
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'F9') {
-        event.preventDefault();
-        fetch('/products')
+    function selectValue(input) {
+      input.select(); // Select the value of the input field when it is focused
+    }
+
+
+    //----for contacts--------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+      let contacts = [];
+      let currentFocus = 0;
+      let allContacts = []; // Store all contacts for filtering
+
+      document.getElementById('contactsButton').addEventListener('click', function () {
+        document.getElementById('contactSearch').value = ''; // Clear the search field
+        fetch('/api/contacts')
           .then(response => response.json())
           .then(data => {
-            allProducts = data;
-            products = data;
-            displayProducts(products);
-            $('#productsModal').modal('show');
+            allContacts = data;
+            contacts = data;
+            displayContacts(contacts);
+            new bootstrap.Modal(document.getElementById('contactsModal')).show();
           })
-          .catch(error => console.error('Error fetching product details:', error));
-      }
+          .catch(error => console.error('Error fetching contact details:', error));
+      });
 
-      if (event.key === 'F5') {
-        event.preventDefault();
-        window.location.href = '/statement';
-      }
-    });
+      document.getElementById('contactSearch').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredContacts = allContacts.filter(contact =>
+          (contact.name && contact.name.toLowerCase().includes(searchQuery)) ||
+          (contact.address && contact.address.toLowerCase().includes(searchQuery)) ||
+          (contact.phone && contact.phone.toLowerCase().includes(searchQuery)) ||
+          (contact.email && contact.email.toLowerCase().includes(searchQuery)) ||
+          (contact.contactperson && contact.contactperson.toLowerCase().includes(searchQuery))
+        );
+        contacts = filteredContacts;
+        displayContacts(contacts);
+      });
 
-    // Handle Escape key press
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape') {
-        const purchasePriceModalElement = document.getElementById('purchasePriceModal');
-        const productsModalElement = document.getElementById('productsModal');
+      function displayContacts(contacts) {
+        const list = document.getElementById('contactsList');
+        list.innerHTML = '';
+        currentFocus = 0;
 
-        const purchasePriceModal = bootstrap.Modal.getInstance(purchasePriceModalElement);
-        const productsModal = bootstrap.Modal.getInstance(productsModalElement);
+        if (contacts.length === 0) {
+          list.innerHTML = '<li class="contact-row"><div class="contact-cell text-center py-4 text-muted">No matching contacts found</div></li>';
+        } else {
+          contacts.forEach((contact, index) => {
+            const listItem = document.createElement('li');
+            listItem.className = 'contact-row list-group-item';
+            listItem.dataset.index = index;
 
-        if (purchasePriceModal && purchasePriceModal._isShown) {
-          purchasePriceModal.hide();
-        } else if (productsModal && productsModal._isShown) {
-          productsModal.hide();
-        }
-      }
-    });
-  });
-
-  function selectValue(input) {
-    input.select(); // Select the value of the input field when it is focused
-  }
-
-
-  //----for contacts--------------------------
-  document.addEventListener('DOMContentLoaded', function () {
-    let contacts = [];
-    let currentFocus = 0;
-    let allContacts = []; // Store all contacts for filtering
-
-    document.getElementById('contactsButton').addEventListener('click', function () {
-      document.getElementById('contactSearch').value = ''; // Clear the search field
-      fetch('/api/contacts')
-        .then(response => response.json())
-        .then(data => {
-          allContacts = data;
-          contacts = data;
-          displayContacts(contacts);
-          new bootstrap.Modal(document.getElementById('contactsModal')).show();
-        })
-        .catch(error => console.error('Error fetching contact details:', error));
-    });
-
-    document.getElementById('contactSearch').addEventListener('input', function () {
-      const searchQuery = this.value.toLowerCase();
-      const filteredContacts = allContacts.filter(contact =>
-        (contact.name && contact.name.toLowerCase().includes(searchQuery)) ||
-        (contact.address && contact.address.toLowerCase().includes(searchQuery)) ||
-        (contact.phone && contact.phone.toLowerCase().includes(searchQuery)) ||
-        (contact.email && contact.email.toLowerCase().includes(searchQuery)) ||
-        (contact.contactperson && contact.contactperson.toLowerCase().includes(searchQuery))
-      );
-      contacts = filteredContacts;
-      displayContacts(contacts);
-    });
-
-    function displayContacts(contacts) {
-      const list = document.getElementById('contactsList');
-      list.innerHTML = '';
-      currentFocus = 0;
-
-      if (contacts.length === 0) {
-        list.innerHTML = '<li class="contact-row"><div class="contact-cell text-center py-4 text-muted">No matching contacts found</div></li>';
-      } else {
-        contacts.forEach((contact, index) => {
-          const listItem = document.createElement('li');
-          listItem.className = 'contact-row list-group-item';
-          listItem.dataset.index = index;
-
-          listItem.innerHTML = `
+            listItem.innerHTML = `
           <div class="contact-cell">${contact.name || 'N/A'}</div>
           <div class="contact-cell">${contact.address || 'N/A'}</div>
           <div class="contact-cell">${contact.phone || 'N/A'}</div>
@@ -2648,317 +2660,317 @@
           <div class="contact-cell">${contact.contactperson || 'N/A'}</div>
         `;
 
-          listItem.addEventListener('click', () => selectContact(contact));
-          list.appendChild(listItem);
+            listItem.addEventListener('click', () => selectContact(contact));
+            list.appendChild(listItem);
+          });
+        }
+
+        // Update result count
+        document.getElementById('resultCount').textContent = `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} found`;
+        highlightItem(currentFocus);
+      }
+
+      function selectContact(contact) {
+        // Handle contact selection here
+        console.log('Selected contact:', contact);
+        // You might want to fill some form fields with this contact's data
+        bootstrap.Modal.getInstance(document.getElementById('contactsModal')).hide();
+      }
+
+      function highlightItem(index) {
+        const items = document.querySelectorAll('#contactsList .list-group-item');
+        items.forEach(item => {
+          item.classList.remove('active');
+          item.style.color = 'black';
+          item.style.backgroundColor = '';
         });
-      }
 
-      // Update result count
-      document.getElementById('resultCount').textContent = `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} found`;
-      highlightItem(currentFocus);
-    }
-
-    function selectContact(contact) {
-      // Handle contact selection here
-      console.log('Selected contact:', contact);
-      // You might want to fill some form fields with this contact's data
-      bootstrap.Modal.getInstance(document.getElementById('contactsModal')).hide();
-    }
-
-    function highlightItem(index) {
-      const items = document.querySelectorAll('#contactsList .list-group-item');
-      items.forEach(item => {
-        item.classList.remove('active');
-        item.style.color = 'black';
-        item.style.backgroundColor = '';
-      });
-
-      if (items[index]) {
-        items[index].classList.add('active');
-        items[index].style.backgroundColor = '#518CE8';
-        items[index].style.color = 'white';
-        items[index].scrollIntoView({ block: 'center' });
-      }
-    }
-
-    document.addEventListener('keydown', function (event) {
-      const items = document.querySelectorAll('#contactsList .list-group-item');
-      if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        currentFocus = (currentFocus + 1) % items.length;
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        currentFocus = (currentFocus - 1 + items.length) % items.length;
-      } else if (event.key === 'Enter' && items[currentFocus]) {
-        event.preventDefault();
-        items[currentFocus].click();
-      }
-      highlightItem(currentFocus);
-    });
-
-    // Handle F4 key press
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'F4') {
-        event.preventDefault();
-        fetch('/api/contacts')
-          .then(response => response.json())
-          .then(data => {
-            allContacts = data;
-            contacts = data;
-            displayContacts(contacts);
-            $('#contactsModal').modal('show');
-          })
-          .catch(error => console.error('Error fetching contact details:', error));
-      }
-    });
-
-    // Handle Escape key press
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape') {
-        const contactsModalElement = document.getElementById('contactsModal');
-        const contactsModal = bootstrap.Modal.getInstance(contactsModalElement);
-
-        if (contactsModal && contactsModal._isShown) {
-          contactsModal.hide();
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].scrollIntoView({ block: 'center' });
         }
       }
+
+      document.addEventListener('keydown', function (event) {
+        const items = document.querySelectorAll('#contactsList .list-group-item');
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          currentFocus = (currentFocus + 1) % items.length;
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          currentFocus = (currentFocus - 1 + items.length) % items.length;
+        } else if (event.key === 'Enter' && items[currentFocus]) {
+          event.preventDefault();
+          items[currentFocus].click();
+        }
+        highlightItem(currentFocus);
+      });
+
+      // Handle F4 key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'F4') {
+          event.preventDefault();
+          fetch('/api/contacts')
+            .then(response => response.json())
+            .then(data => {
+              allContacts = data;
+              contacts = data;
+              displayContacts(contacts);
+              $('#contactsModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching contact details:', error));
+        }
+      });
+
+      // Handle Escape key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          const contactsModalElement = document.getElementById('contactsModal');
+          const contactsModal = bootstrap.Modal.getInstance(contactsModalElement);
+
+          if (contactsModal && contactsModal._isShown) {
+            contactsModal.hide();
+          }
+        }
+      });
     });
-  });
-</script>
-<style>
-  #productDetailsHeader {
-    display: flex;
-    background: #333;
-    color: white;
-    padding: 2px;
-    font-weight: bold;
-    text-align: center;
-  }
+  </script>
+  <style>
+    #productDetailsHeader {
+      display: flex;
+      background: #333;
+      color: white;
+      padding: 2px;
+      font-weight: bold;
+      text-align: center;
+    }
 
-  .product-row {
-    display: flex;
-    padding: 2px;
-    border-bottom: 1px solid #ddd;
-    cursor: pointer;
-    align-items: center;
-  }
+    .product-row {
+      display: flex;
+      padding: 2px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      align-items: center;
+    }
 
-  .product-cell {
-    flex: 1;
-    padding: 5px;
-    text-align: left;
-    min-width: 100px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    .product-cell {
+      flex: 1;
+      padding: 5px;
+      text-align: left;
+      min-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-  .product-name {
-    min-width: 30ch;
-    max-width: 40ch;
-  }
+    .product-name {
+      min-width: 30ch;
+      max-width: 40ch;
+    }
 
-  .product-row.active {
-    background-color: blue !important;
-    color: white;
-  }
+    .product-row.active {
+      background-color: blue !important;
+      color: white;
+    }
 
-  .vatable {
-    background-color: lightgreen;
-  }
+    .vatable {
+      background-color: lightgreen;
+    }
 
-  .vatExempt {
-    background-color: lightyellow;
-  }
+    .vatExempt {
+      background-color: lightyellow;
+    }
 
-  .modal-dialog {
-    max-width: 75%;
-    margin: 1.75rem auto;
-  }
+    .modal-dialog {
+      max-width: 75%;
+      margin: 1.75rem auto;
+    }
 
-  .modal-content {
-    font-size: 1.2rem;
-  }
+    .modal-content {
+      font-size: 1.2rem;
+    }
 
-  .modal-body {
-    padding: 2rem;
-  }
+    .modal-body {
+      padding: 2rem;
+    }
 
-  .modal-header {
-    font-size: 1.5rem;
-  }
+    .modal-header {
+      font-size: 1.5rem;
+    }
 
-  .product-cell {
-    font-size: 1.1rem;
-  }
+    .product-cell {
+      font-size: 1.1rem;
+    }
 
-  #productsContainer {
-    max-height: 400px;
-    /* Adjust this height as needed */
-    overflow-y: auto;
-    /* Enable vertical scrolling */
-  }
+    #productsContainer {
+      max-height: 400px;
+      /* Adjust this height as needed */
+      overflow-y: auto;
+      /* Enable vertical scrolling */
+    }
 
-  #productDetailsList {
-    list-style-type: none;
-    padding: 0;
-  }
+    #productDetailsList {
+      list-style-type: none;
+      padding: 0;
+    }
 
-  /* Add these to your existing CSS */
-  .expiry-status {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-left: 8px;
-    display: inline-block;
-  }
+    /* Add these to your existing CSS */
+    .expiry-status {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+      display: inline-block;
+    }
 
-  .expiry-status.safe {
-    background-color: #d4edda;
-    color: #155724;
-  }
+    .expiry-status.safe {
+      background-color: #d4edda;
+      color: #155724;
+    }
 
-  .expiry-status.warning {
-    background-color: #fff3cd;
-    color: #856404;
-  }
+    .expiry-status.warning {
+      background-color: #fff3cd;
+      color: #856404;
+    }
 
-  .expiry-status.danger {
-    background-color: #f8d7da;
-    color: #721c24;
-  }
+    .expiry-status.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
 
-  .expiry-status.expired {
-    background-color: #ee1a22;
-    color: white;
-  }
+    .expiry-status.expired {
+      background-color: #ee1a22;
+      color: white;
+    }
 
-  /* Row coloring based on expiry status */
-  .product-row.expired {
-    background-color: #ee1a22 !important;
-  }
+    /* Row coloring based on expiry status */
+    .product-row.expired {
+      background-color: #ee1a22 !important;
+    }
 
-  .product-row.warning {
-    background-color: #FFFF00 !important;
-  }
+    .product-row.warning {
+      background-color: #FFFF00 !important;
+    }
 
-  .product-row.danger {
-    background-color: #ff7376 !important;
-  }
+    .product-row.danger {
+      background-color: #ff7376 !important;
+    }
 
-  /* Small badge for expiry count */
-  .expiry-badge {
-    font-size: 0.7rem;
-    margin-left: 4px;
-    vertical-align: middle;
-  }
+    /* Small badge for expiry count */
+    .expiry-badge {
+      font-size: 0.7rem;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
 
-  /* Add these to your existing CSS */
-  .expiry-badge-modal {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-left: 8px;
-    display: inline-block;
-  }
+    /* Add these to your existing CSS */
+    .expiry-badge-modal {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+      display: inline-block;
+    }
 
-  .expiry-badge-modal.safe {
-    background-color: #d4edda;
-    color: #155724;
-  }
+    .expiry-badge-modal.safe {
+      background-color: #d4edda;
+      color: #155724;
+    }
 
-  .expiry-badge-modal.warning {
-    background-color: #fff3cd;
-    color: #856404;
-  }
+    .expiry-badge-modal.warning {
+      background-color: #fff3cd;
+      color: #856404;
+    }
 
-  .expiry-badge-modal.danger {
-    background-color: #f8d7da;
-    color: #721c24;
-  }
+    .expiry-badge-modal.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
 
-  .expiry-badge-modal.expired {
-    background-color: #dc3545;
-    color: white;
-  }
+    .expiry-badge-modal.expired {
+      background-color: #dc3545;
+      color: white;
+    }
 
-  /* Row coloring for purchase price modal */
-  .table-row-expired {
-    background-color: #ffdddd !important;
-  }
+    /* Row coloring for purchase price modal */
+    .table-row-expired {
+      background-color: #ffdddd !important;
+    }
 
-  .table-row-warning {
-    background-color: #fff3cd !important;
-  }
+    .table-row-warning {
+      background-color: #fff3cd !important;
+    }
 
-  .table-row-danger {
-    background-color: #ffcccc !important;
-  }
+    .table-row-danger {
+      background-color: #ffcccc !important;
+    }
 
-  #contactsHeader {
-    display: flex;
-    background: #333;
-    color: white;
-    padding: 2px;
-    font-weight: bold;
-    text-align: center;
-  }
+    #contactsHeader {
+      display: flex;
+      background: #333;
+      color: white;
+      padding: 2px;
+      font-weight: bold;
+      text-align: center;
+    }
 
-  .contact-row {
-    display: flex;
-    padding: 2px;
-    border-bottom: 1px solid #ddd;
-    cursor: pointer;
-    align-items: center;
-  }
+    .contact-row {
+      display: flex;
+      padding: 2px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      align-items: center;
+    }
 
-  .contact-cell {
-    flex: 1;
-    padding: 5px;
-    text-align: left;
-    min-width: 100px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    .contact-cell {
+      flex: 1;
+      padding: 5px;
+      text-align: left;
+      min-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-  .contact-row.active {
-    background-color: blue !important;
-    color: white;
-  }
+    .contact-row.active {
+      background-color: blue !important;
+      color: white;
+    }
 
-  .modal-dialog {
-    max-width: 75%;
-    margin: 1.75rem auto;
-  }
+    .modal-dialog {
+      max-width: 75%;
+      margin: 1.75rem auto;
+    }
 
-  .modal-content {
-    font-size: 1.2rem;
-  }
+    .modal-content {
+      font-size: 1.2rem;
+    }
 
-  .modal-body {
-    padding: 2rem;
-  }
+    .modal-body {
+      padding: 2rem;
+    }
 
-  .modal-header {
-    font-size: 1.5rem;
-  }
+    .modal-header {
+      font-size: 1.5rem;
+    }
 
-  .contact-cell {
-    font-size: 1.1rem;
-  }
+    .contact-cell {
+      font-size: 1.1rem;
+    }
 
-  #contactsContainer {
-    max-height: 400px;
-  }
+    #contactsContainer {
+      max-height: 400px;
+    }
 
-  #contactsList {
-    list-style-type: none;
-    padding: 0;
-  }
-</style>
+    #contactsList {
+      list-style-type: none;
+      padding: 0;
+    }
+  </style>
 
 </body>
 <!--end::Body-->

@@ -225,6 +225,20 @@
             });
         });
 
+               // Search functionality for categories
+               document.getElementById('name').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#categoriesList .searchCategoryClass');
+            rows.forEach(row => {
+                const categoryName = row.querySelector('td').textContent.toLowerCase();
+                if (categoryName.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
         // Print functionality for categories
         function printCategories() {
             const printContents = document.querySelector('.card').innerHTML;

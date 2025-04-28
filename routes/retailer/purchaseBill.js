@@ -1103,7 +1103,7 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                 const stockEntry = product.stockEntries.find(entry =>
                     entry.batchNumber === existingItem.batchNumber &&
                     new Date(entry.date).toDateString() === new Date(existingBill.date).toDateString() &&
-                    entry.purchaseBillId.toString() === existingBill._id.toString() && entry.uniqueUuId === existingItem.uniqueUuId // Match the purchase bill ID
+                    entry.uniqueUuId === existingItem.uniqueUuId // Match the purchase bill ID
                 );
 
                 console.log('Stock Entry:', stockEntry);
@@ -1130,7 +1130,6 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
 
                 const stockEntryIndex = product.stockEntries.findIndex(entry =>
                     entry.batchNumber === existingItem.batchNumber &&
-                    entry.purchaseBillId.toString() === existingBill._id.toString() &&
                     entry.uniqueUuId === existingItem.uniqueUuId
                 );
 
@@ -1170,7 +1169,6 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                 // Find the stock entry for the removed item
                 const stockEntryIndex = product.stockEntries.findIndex(entry =>
                     entry.batchNumber === removedItem.batchNumber &&
-                    entry.purchaseBillId.toString() === existingBill._id.toString() &&
                     entry.uniqueUuId === removedItem.uniqueUuId
                 );
 

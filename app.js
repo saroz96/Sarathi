@@ -12,6 +12,7 @@ const initializePassport = require('./config/passport-config');
 
 const salesBillsRoutes = require('./routes/retailer/SalesBill');
 const unitRoutes = require('./routes/retailer/unit');
+const mainUnitRoutes = require('./routes/retailer/mainUnit');
 const accountRoutes = require('./routes/retailer/account');
 const companyGroupRoutes = require('./routes/retailer/companyGroup');
 const itemsCategoryRoutes = require('./routes/retailer/items_category');
@@ -36,6 +37,7 @@ const ageingReportRoutes = require('./routes/retailer/ageingReport');
 const stockStatusRoutes = require('./routes/retailer/stockStatus');
 const profitAnalysisRoutes = require('./routes/retailer/profitAnalysis');
 const monthlyVatReportRoutes = require('./routes/retailer/monthlyVatReport');
+const compositionRoutes = require('./routes/retailer/composition');
 
 //Admin Panel
 const systemAdminDashboardRoutes = require('./routes/systemAdmin/adminDashboard');
@@ -113,6 +115,7 @@ app.locals.numberToWords = numberToWords;
 // Routes
 app.use('/', salesBillsRoutes);
 app.use('/', unitRoutes);
+app.use('/', mainUnitRoutes);
 app.use('/', accountRoutes);
 app.use('/', companyGroupRoutes);
 app.use('/', itemsCategoryRoutes);
@@ -137,6 +140,7 @@ app.use('/', ageingReportRoutes);
 app.use('/retailer', stockStatusRoutes);
 app.use('/retailer', profitAnalysisRoutes);
 app.use('/retailer', monthlyVatReportRoutes);
+app.use('/', compositionRoutes);
 
 //Admin Panel
 app.use('/', systemAdminDashboardRoutes);

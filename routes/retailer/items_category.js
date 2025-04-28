@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const Category = require('../../models/retailer/Category');
-const { ensureAuthenticated, ensureCompanySelected } = require('../../middleware/auth');
+const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const Company = require('../../models/retailer/Company');
 const FiscalYear = require('../../models/retailer/FiscalYear');
@@ -10,7 +10,7 @@ const Item = require('../../models/retailer/Item');
 
 
 // Category routes
-router.get('/categories', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.get('/categories', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
@@ -61,7 +61,7 @@ router.get('/categories', ensureAuthenticated, ensureCompanySelected, ensureTrad
     }
 });
 
-router.post('/categories', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.post('/categories', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const { name } = req.body;
@@ -85,7 +85,7 @@ router.post('/categories', ensureAuthenticated, ensureCompanySelected, ensureTra
 });
 
 
-router.get('/categories/:id/edit', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.get('/categories/:id/edit', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const categories = await Category.findById(req.params.id);
@@ -101,7 +101,7 @@ router.get('/categories/:id/edit', ensureAuthenticated, ensureCompanySelected, e
 })
 
 // Route to handle form submission and update the items category
-router.put('/categories/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.put('/categories/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const { name } = req.body;
@@ -119,18 +119,8 @@ router.put('/categories/:id', ensureAuthenticated, ensureCompanySelected, ensure
     }
 });
 
-// // Route to handle form submission and delete the category
-// router.delete('/categories/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
-//     if (req.tradeType === 'retailer') {
-//         const { id } = req.params;
-//         await Category.findByIdAndDelete(id);
-//         req.flash('success', 'Category deleted successfully');
-//         res.redirect('/categories');
-//     }
-// })
-
 // Route to handle form submission and delete the category
-router.delete('/categories/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.delete('/categories/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const { id } = req.params;
 

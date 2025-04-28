@@ -122,15 +122,6 @@ function calculateTotal() {
     $('#denomination-total').text(total.toFixed(2));
 }
 
-// function printDenominations() {
-//     calculateTotal();
-//     let printContent = "CASH DENOMINATION REPORT\n\n";
-//     denominations.forEach(denom => {
-//         printContent += `रु${denom.value}: ${denom.count} × रु${denom.amount.toFixed(2)}\n`;
-//     });
-//     printContent += `\nTOTAL: रु${$('#denomination-total').text()}`;
-//     alert(printContent);
-// }
 
 function printDenominations() {
     calculateTotal();

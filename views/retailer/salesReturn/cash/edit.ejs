@@ -1,6 +1,5 @@
-<%- include('../layouts/boilerplate', { title: '' , body:''}) %>
+<%- include('../../layouts/boilerplate', { title: '' , body:''}) %>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
     <!-- Nepali Datepicker -->
     <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
         rel="stylesheet" type="text/css" />
@@ -210,213 +209,325 @@
     <div class="container wow-form expanded-container">
         <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
             <div class="card-header">
-                Sales Return Entry
+                Update Sales Return
                 <span id="customAlertForBillNumber" style="color: red; display: none;">Invoice is
                     required!</span>
                 <span id="transactionDateError" style="color: red; display: none;">Invalid date!</span>
                 <span id="nepaliDateError" style="color: red; display: none;">Invalid date!</span>
             </div>
             <div class="card-body">
-                <form action="/sales-return" method="post" id="billForm" class="wow-form">
+                <form action="/sales-return/editCashAccount/<%=salesReturnBill._id%>?_method=PUT" method="post"
+                    id="salesReturnBillForm" class="wow-form">
                     <div class="form-group row">
 
                         <% if (companyDateFormat==='nepali' ) { %>
+                            <!-- Nepali Date Fields -->
                             <div class="col">
-                                <label for="transactionDateNepali">Tran.Date:</label>
+                                <label for="transactionDateNepali">Transaction Date:</label>
                                 <input type="text" name="transactionDateNepali" id="transactionDateNepali"
-                                    class="form-control" value="<%= transactionDateNepali ||'' %>" autofocus required
-                                    onfocus="selectValue(this)">
+                                    class="form-control"
+                                    value="<%= salesReturnBill.transactionDate ? salesReturnBill.transactionDate.toISOString().split('T')[0]: '' %>"
+                                    autofocus required>
+
                             </div>
                             <div class="col">
                                 <label for="nepaliDate">Invoice Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)">
+                                    value="<%= salesReturnBill.date ? salesReturnBill.date.toISOString().split('T')[0] : '' %>"
+                                    autofocus>
                             </div>
+
                             <% } else { %>
+                                <!-- English Date Fields -->
                                 <div class="col">
                                     <label for="transactionDateRoman">Transaction Date:</label>
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
-                                        class="form-control" value="<%= new Date().toISOString().split('T')[0]%>"
-                                        onfocus="selectValue(this)" onblur="validateDate(this)" autofocus required>
-                                    <span class="error-message" style="color: red; display: none;"></span>
+                                        class="form-control"
+                                        value="<%= salesReturnBill.transactionDate ? salesReturnBill.transactionDate.toISOString().split('T')[0]: '' %>"
+                                        autofocus onblur="validateDate(this)" required>
                                 </div>
                                 <div class="col">
-                                    <label for="billDate">Invoice Date:</label>
-                                    <input type="date" name="billDate" id="billDate" class="form-control" required
-                                        value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onfocus="selectValue(this)" onblur="validateDate(this)" autofocus>
-                                    <span class="error-message" style="color: red; display: none;"></span>
+                                    <label for="salesReturnBillDate">Invoice Date:</label>
+                                    <input type="date" name="salesReturnBillDate" id="salesReturnBillDate"
+                                        class="form-control" required
+                                        value="<%= salesReturnBill.date ? salesReturnBill.date.toISOString().split('T')[0] : '' %>"
+                                        onblur="validateDate(this)">
+                                    <% } %>
+                                        <div class="col">
+                                            <label for="billNumber">Vch. No:</label>
+                                            <input type="number" name="billNumber" id="billNumber" class="form-control"
+                                                value="<%= salesReturnBill.billNumber %>"
+                                                oninput="this.value='<%= salesReturnBill.billNumber %>'" required>
+                                        </div>
+                                        <div class="col hidden">
+                                            <label for="paymentMode">Payment Mode:</label>
+                                            <input type="text" class="form-control" id="paymentMode" name="paymentMode"
+                                                placeholder="" autocomplete="off" value="<%=salesReturnBill.paymentMode%>">
+                                        </div>
+
+                                        <div class="col">
+                                            <label for="isVatExempt">VAT</label>
+                                            <select name="isVatExempt" id="isVatExempt" class="form-control"
+                                                onchange="toggleVatInputs()" autocomplete="off">
+                                                <% if (vatEnabled) {%>
+                                                    <option value="all"
+                                                        <%=salesReturnBill.isVatExempt===false&&salesReturnBill.isVatAll==='true'
+                                                        ? 'selected' :'' %>>All</option>
+                                                    <option value="false"
+                                                        <%=salesReturnBill.isVatExempt===false&&salesReturnBill.isVatAll==='false'
+                                                        ? 'selected' : '' %>>13%
+                                                    </option>
+                                                    <%}%>
+                                                        <option value="true"
+                                                            <%=salesReturnBill.isVatExempt===true&&salesReturnBill.isVatAll==='false'
+                                                            ? 'selected' : '' %>>Exempt
+                                                        </option>
+                                            </select>
+                                        </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col hidden">
+                                        <label for="purchaseSalesType">Return From:</label>
+                                        <select id="purchaseSalesType" name="purchaseSalesType" class="form-control"
+                                            disabled>
+                                            <option value="Sales">Sales</option>
+                                        </select>
+                                    </div>
+                                    <div class="col hidden">
+                                        <label for="purchaseSalesReturnType">Type:</label>
+                                        <select id="purchaseSalesReturnType" name="purchaseSalesReturnType"
+                                            class="form-control" disabled>
+                                            <option value="Sales Return">Sales Return</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-6">
+                                        <!-- Account Selection Input -->
+                                        <label for="cashAccount">Party Name:</label>
+                                        <input type="text" id="cashAccount" name="cashAccount" class="form-control"
+                                            value="<%=salesReturnBill.cashAccount%>" required>
+                                            <input type="hidden" id="accountId" name="accountId" value="<%= salesReturnBill.cashAccount %>">
+
+                                    </div>
+
+                                    <div class="col">
+                                        <!-- New field for the address -->
+                                        <label for="cashAccountAddress">Party Address:</label>
+                                        <input type="text" id="cashAccountAddress" name="cashAccountAddress" class="form-control"
+                                            value="<%=salesReturnBill.cashAccountAddress%>">
+                                    </div>
+                                    <div class="col">
+                                        <!-- New field for the address -->
+                                        <label for="cashAccountPan">Vat No:</label>
+                                        <input type="text" id="cashAccountPan" name="cashAccountPan" class="form-control"
+                                            value="<%=salesReturnBill.cashAccountPan%>">
+                                    </div>
+
                                 </div>
 
-                                <% } %>
+                                <div id="bill-details-container">
+                                    <table class="table table-bordered compact-table" id="itemsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>S.No.</th>
+                                                <th>#</th>
+                                                <th>HSN</th>
+                                                <th>Description of Goods</th>
+                                                <th>Batch</th>
+                                                <th>Expiry</th>
+                                                <th>Qty</th>
+                                                <th>Unit</th>
+                                                <th>Rate</th>
+                                                <th>Amount</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="items">
+                                            <!-- Item rows will be dynamically added here -->
+                                            <% if (items && items.length> 0) { %>
+                                                <% items.forEach((item, index)=> { %>
+                                                    <tr
+                                                        class="item <%= item.vatStatus ? 'vatable-item' : 'non-vatable-item' %>">
+                                                        <td>
+                                                            <%= index + 1 %>
+                                                        </td>
+                                                        <td>
+                                                            <%= item.item.uniqueNumber || 'N/A' %>
+                                                        </td>
+                                                        <td>
+                                                            <input type="hidden" name="items[<%= index %>][hscode]"
+                                                                value="<%= item.item.hscode || 'N/A' %>">
+                                                            <%= item.item.hscode || 'N/A' %>
+                                                        </td>
+                                                        <td class="col-3">
+                                                            <input type="hidden" name="items[<%= index %>][item]"
+                                                                value="<%= item.item._id %>">
+                                                            <%= item.item.name || 'N/A' %>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="items[<%= index %>][batchNumber]"
+                                                                value="<%= item.batchNumber || '' %>"
+                                                                class="form-control item-batchNumber"
+                                                                id="batchNumber-<%= index %>"
+                                                                onkeydown="handleBatchKeydown(event, <%= index %>)"
+                                                                onfocus="selectValue(this)" autocomplete="off">
+                                                        </td>
+                                                        <td>
+                                                            <input type="date" name="items[<%= index %>][expiryDate]"
+                                                                value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
+                                                                class="form-control item-expiryDate"
+                                                                id="expiryDate-<%= index %>"
+                                                                onkeydown="handleExpDateKeydown(event, <%= index %>)"
+                                                                onfocus="selectValue(this)">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" name="items[<%= index %>][quantity]"
+                                                                value="<%= item.quantity %>"
+                                                                class="form-control item-quantity"
+                                                                id="quantity-<%= index %>" step="any"
+                                                                oninput="updateItemTotal(this)"
+                                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
+                                                                onfocus="selectValue(this)">
+                                                        </td>
+
+                                                        <td>
+                                                            <%= item.unit.name %>
+                                                                <input type="hidden" name="items[<%= index %>][unit]"
+                                                                    value="<%= item.unit._id %>">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" name="items[<%= index %>][price]"
+                                                                value="<%= item.price || 0 %>"
+                                                                class="form-control item-price" id="price-<%= index %>"
+                                                                step="any" oninput="updateItemTotal(this)"
+                                                                onkeydown="handlePriceKeydown(event, <%= index %>)"
+                                                                onfocus="selectValue(this)">
+                                                        </td>
+                                                        <td class="item-amount">
+                                                            <%= (item.quantity * item.price).toFixed(2) %>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-danger"
+                                                                onclick="removeItem(this)">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </td>
+                                                        <input type="hidden" name="items[<%= index %>][vatStatus]"
+                                                            value="<%= item.vatStatus %>">
+
+                                                        <td class="hidden">
+                                                            <input type="text" name="items[<%=index%>][uniqueUuId]"
+                                                                value="<%=item.uniqueUuId%>">
+
+                                                        </td>
+                                                    </tr>
+                                                    <% }); %>
+                                                        <% } %>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="form-group row">
                                     <div class="col">
-                                        <label for="billNumber">Vch. No:</label>
-                                        <input type="number" name="billNumber" id="billNumber" class="form-control"
-                                            value="<%=nextBillNumber %>" oninput="this.value='<%=nextBillNumber%>'"
-                                            onfocus="selectValue(this)">
+                                        <label for="itemSearch">Search Item</label>
+                                        <input type="text" id="itemSearch" class="form-control"
+                                            placeholder="Search for an item" oninput="filterItems(this)"
+                                            autocomplete="off" onkeydown="handleItemSearchKeydown(event)">
+                                        <div id="dropdownMenu" class="dropdown-menu"></div>
                                     </div>
-                                    <div class="col">
-                                        <label for="paymentMode">Payment Mode:</label>
-                                        <select class="form-control" name="paymentMode" id="paymentMode"
-                                            autocomplete="off">
-                                            <option value="credit">credit</option>
-                                            <option value="cash">cash</option>
-                                        </select>
-                                    </div>
+                                </div>
 
-                                    <div class="col">
-                                        <label for="isVatExempt">VAT</label>
-                                        <select name="isVatExempt" id="isVatExempt" class="form-control"
-                                            onchange="toggleVatInputs()" autocomplete="off">
-                                            <% if (vatEnabled) {%>
-                                                <option value="all">All</option>
-                                                <option value="false">13%</option>
-                                                <%}%>
-                                                    <option value="true">Exempt</option>
-                                        </select>
-                                    </div>
-                    </div>
-                    <div class="form-group row">
-                        <div class="col hidden">
-                            <label for="purchaseSalesType">Return From:</label>
-                            <select id="purchaseSalesType" name="purchaseSalesType" class="form-control" disabled>
-                                <option value="Sales">Sales</option>
-                            </select>
-                        </div>
-                        <div class="col hidden">
-                            <label for="purchaseSalesReturnType">Type:</label>
-                            <select id="purchaseSalesReturnType" name="purchaseSalesReturnType" class="form-control"
-                                disabled>
-                                <option value="Sales Return">Sales Return</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <!-- Account Selection Input -->
-                            <label for="account">Party Name:</label>
-                            <input type="text" id="account" name="account" class="form-control" placeholder=""
-                                autocomplete="off" required>
-                            <input type="hidden" id="accountId" name="accountId">
-                        </div>
-                        <div class="col">
-                            <label for="address">Party Address:</label>
-                            <input type="text" id="address" class="form-control" placeholder="" autocomplete="off"
-                                onfocus="selectValue(this)">
-                        </div>
-                        <div class="col">
-                            <label for="pan">Vat No:</label>
-                            <input type="text" id="pan" name="pan" class="form-control" autocomplete="off"
-                                onfocus="selectValue(this)">
-                        </div>
+                                <!-- Bill Details Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="6" class="text-center bg-light">Bill Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Sub Total Row -->
+                                            <tr>
+                                                <td><label for="subTotal">Sub Total:</label></td>
+                                                <td class="text-right">
+                                                    <p class="form-control-plaintext">Rs. <span id="subTotal">
+                                                            <%= salesReturnBill.subTotal.toFixed(2) %>
+                                                        </span></p>
+                                                </td>
 
-                    </div>
-                    <div id="bill-details-container">
-                        <table class="table table-bordered compact-table" id="itemsTable">
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>#</th>
-                                    <th>HSN</th>
-                                    <th>Description of Goods</th>
-                                    <th>Batch</th>
-                                    <th>Expiry</th>
-                                    <th>Qty</th>
-                                    <th>Unit</th>
-                                    <th>Rate</th>
-                                    <th>Amount</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="items">
-                                <!-- Item rows will be dynamically added here -->
-                            </tbody>
-                        </table>
-                    </div>
+                                                <td><label for="discountPercentage">Discount %:</label></td>
+                                                <td>
+                                                    <input type="number" step="any" name="discountPercentage"
+                                                        id="discountPercentage" class="form-control"
+                                                        value="<%= salesReturnBill.discountPercentage.toFixed(2) %>"
+                                                        oninput="calculateTotal()" onfocus="selectValue(this)">
+                                                </td>
+                                                <td><label for="discountAmount">Discount (Rs.):</label></td>
+                                                <td>
+                                                    <input type="number" step="any" name="discountAmount"
+                                                        id="discountAmount"
+                                                        value="<%= salesReturnBill.discountAmount.toFixed(2) %>"
+                                                        class="form-control" oninput="calculateTotal()"
+                                                        onfocus="selectValue(this)">
+                                                </td>
+                                            </tr>
 
-                    <div class="form-group row">
-                        <div class="col">
-                            <label for="itemSearch">Search Item</label>
-                            <input type="text" id="itemSearch" class="form-control" placeholder="Search for an item"
-                                autocomplete="off" onkeydown="handleItemSearchKeydown(event)">
-                            <div id="dropdownMenu" class="dropdown-menu"></div>
-                        </div>
-                    </div>
+                                            <!-- VAT Rows (Initially visible) -->
+                                            <tr id="taxableAmountRow">
+                                                <td><label for="taxableAmount">Taxable Amount:</label></td>
+                                                <td class="text-right">
+                                                    <p class="form-control-plaintext">Rs. <span id="taxableAmount">
+                                                            <%= salesReturnBill.taxableAmount.toFixed(2) %>
+                                                        </span>
+                                                    </p>
+                                                </td>
+                                                <td><label for="vatPercentage">VAT (13%):</label></td>
+                                                <td>
+                                                    <input type="number" name="vatPercentage" id="vatPercentage"
+                                                        class="form-control" value="13.00" readonly>
+                                                </td>
+                                                <td><label for="vatAmount">VAT Amount:</label></td>
+                                                <td class="text-right">
+                                                    <p class="form-control-plaintext">Rs. <span id="vatAmount">
+                                                            <%= salesReturnBill.vatAmount.toFixed(2) %>
+                                                        </span></p>
+                                                </td>
+                                            </tr>
+                                            <!-- Round Off & Total Row -->
+                                            <tr>
+                                                <td><label for="roundOffAmount">Round Off:</label></td>
+                                                <td>
+                                                    <input type="number" class="form-control" step="any"
+                                                        id="roundOffAmount" name="roundOffAmount"
+                                                        value="<%= salesReturnBill.roundOffAmount.toFixed(2) %>"
+                                                        oninput="calculateTotal()" onfocus="selectValue(this)">
+                                                </td>
+                                                <td><label for="totalAmount">Total Amount:</label></td>
+                                                <td>
+                                                    <p class="form-control-plaintext">Rs. <span id="totalAmount">
+                                                            <%= salesReturnBill.totalAmount.toFixed(2) %>
+                                                        </span></p>
+                                                </td>
+                                                <td><label for="amountInWords">In Words:</label></td>
+                                                <td class="col-3 text-right">
+                                                    <p class="form-control-plaintext" id="amountInWords">Zero Only.</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th colspan="6" class="text-center bg-light">Bill Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Sub Total, Discount % and Discount Amount in the same row -->
-                                <tr>
-                                    <td><label for="subTotal">Sub Total:</label></td>
-                                    <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="subTotal">0.00</span></p>
-                                    </td>
-                                    <td><label for="discountPercentage">Discount %:</label></td>
-                                    <td>
-                                        <input type="number" step="any" name="discountPercentage"
-                                            id="discountPercentage" class="form-control" value="0.00"
-                                            oninput="calculateTotal()" onfocus="selectValue(this)">
-                                    </td>
-                                    <td><label for="discountAmount">Discount (Rs.):</label></td>
-                                    <td>
-                                        <input type="number" step="any" name="discountAmount" id="discountAmount"
-                                            value="0.00" class="form-control" oninput="calculateTotal()"
-                                            onfocus="selectValue(this)">
-                                    </td>
-                                </tr>
-
-                                <!-- Taxable Amount, VAT % and VAT Amount in the same row -->
-                                <tr id="taxableAmountRow">
-                                    <td><label for="taxableAmount">Taxable Amount:</label></td>
-                                    <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span></p>
-                                    </td>
-                                    <td><label for="vatPercentage">VAT (13%):</label></td>
-                                    <td>
-                                        <input type="number" name="vatPercentage" id="vatPercentage"
-                                            class="form-control" value="13.00" readonly onfocus="selectValue(this)">
-                                    </td>
-                                    <td><label for="vatAmount">VAT Amount:</label></td>
-                                    <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="vatAmount">0.00</span></p>
-                                    </td>
-                                </tr>
-
-                                <!-- Round Off and Total Amount in the same row -->
-                                <tr>
-                                    <td><label for="roundOffAmount">Round Off:</label></td>
-                                    <td>
-                                        <input type="number" class="form-control" step="any" id="roundOffAmount"
-                                            name="roundOffAmount" value="0.00" oninput="calculateTotal()"
-                                            onfocus="selectValue(this)">
-                                    </td>
-                                    <td><label for="totalAmount">Total Amount:</label></td>
-                                    <td>
-                                        <p class="form-control-plaintext">Rs. <span id="totalAmount">0.00</span></p>
-                                    </td>
-                                    <td><label for="amountInWords">In Words:</label></td>
-                                    <td class="text-right">
-                                        <p class="form-control-plaintext" id="amountInWords">Zero Only.</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex justify-content-end mt-4">
-                        <button type="button" class="btn btn-primary mr-2 p-3" id="saveBill"
-                            onclick="submitBillForm(false)">
-                            <i class="bi bi-save"></i>
-                        </button>
-                        <button type="button" class="btn btn-secondary p-3" onclick="submitBillForm(true)">
-                            <i class="bi bi-printer"></i>
-                        </button>
-                    </div>
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="button" class="btn btn-primary mr-2 p-3" id="saveBill"
+                                        onclick="submitBillForm(false)">
+                                        <i class="bi bi-save"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary p-3" onclick="submitBillForm(true)">
+                                        <i class="bi bi-printer"></i>
+                                    </button>
+                                </div>
                 </form>
             </div>
         </div>
@@ -430,6 +541,20 @@
             /* Limits height */
             overflow-y: auto;
             /* Allows scrolling */
+        }
+    </style>
+
+    <style>
+        #bill-details-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #items {
+            table-layout: fixed;
+            width: 100%;
         }
     </style>
 
@@ -459,7 +584,6 @@
         </div>
     </div>
 
-
     <!-- Transaction Modal -->
     <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel"
         aria-hidden="true">
@@ -484,37 +608,181 @@
         </div>
     </div>
 
-    <style>
-        #bill-details-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-
-        #items {
-            table-layout: fixed;
-            width: 100%;
-        }
-    </style>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 
     <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
         type="text/javascript"></script>
 
-    <script>
-        let itemIndex = 0;
-        let currentFocus = 0;
-        let isFirstLoad = true;
+    <script type="text/javascript">
 
         function selectValue(input) {
             input.select(); // Select the value of the input field when it is focused
         }
+
+        //for account
+        $(document).ready(function () {
+            let selectedIndex = 0;
+            let allAccounts = [];
+            let customNameAllowed = true;
+
+            const $accountInput = $("#cashAccount");
+            const $accountIdInput = $("#accountId"); // Hidden input field to store account ID
+            const $accountModal = $("#accountModal");
+            const $searchInput = $("#searchAccount");
+            const $accountList = $("#accountList");
+            const $modalBody = $accountList.parent();
+
+            // Open modal when input is focused
+            $accountInput.focus(function () {
+                $accountModal.modal("show");
+                fetchAccounts();
+            });
+
+            // Focus on search input when modal opens
+            $accountModal.on("shown.bs.modal", function () {
+                $searchInput.focus();
+            });
+
+            // Allow typing a new name directly
+            $accountInput.on("input", function () {
+                customNameAllowed = true;
+                $accountIdInput.val(""); // Clear account ID when typing a new name
+            });
+
+            // Fetch accounts from server
+            function fetchAccounts() {
+                $.ajax({
+                    url: "/api/fetch/cashaccounts",
+                    method: "GET",
+                    success: function (data) {
+                        allAccounts = data;
+                        renderAccounts();
+                    },
+                    error: function (err) {
+                        console.error("Error fetching accounts:", err);
+                        $accountList.html('<li class="list-group-item text-danger">Failed to load accounts</li>');
+                    }
+                });
+            }
+
+            // Render accounts dynamically
+            function renderAccounts(filtered = allAccounts) {
+                $accountList.empty();
+
+                filtered.forEach((account, index) => {
+                    const isActive = index === 0 ? "active" : "";
+                    $accountList.append(`
+                <li class="list-group-item account-item ${isActive}" 
+                    data-id="${account._id}" 
+                    data-name="${account.name}" 
+                    data-address="${account.address || ''}" 
+                    data-pan="${account.pan || 'N/A'}"
+                    data-index="${index}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${account.name}</strong>
+                        <span>📍 ${account.address || ''} | 🆔 PAN: ${account.pan || ''}</span>
+                    </div>
+                </li>
+            `);
+                });
+
+                selectedIndex = 0;
+            }
+
+            // Search accounts dynamically
+            $searchInput.on("input", function () {
+                let searchText = $(this).val().toLowerCase();
+                let filteredAccounts = allAccounts.filter(account =>
+                    account.name.toLowerCase().includes(searchText)
+                );
+
+                renderAccounts(filteredAccounts);
+            });
+
+            // Handle keyboard navigation & pressing "Enter"
+            $searchInput.on("keydown", function (e) {
+                let visibleItems = $(".account-item");
+
+                if (e.key === "ArrowDown") {
+                    if (selectedIndex < visibleItems.length - 1) {
+                        selectedIndex++;
+                    }
+                } else if (e.key === "ArrowUp") {
+                    if (selectedIndex > 0) {
+                        selectedIndex--;
+                    }
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (visibleItems.length > 0) {
+                        selectAccount(visibleItems.eq(selectedIndex));
+                    } else {
+                        // If no accounts are displayed, allow custom name selection
+                        selectCustomName();
+                    }
+                }
+
+                // Highlight the selected item
+                visibleItems.removeClass("active");
+                let selectedItem = visibleItems.eq(selectedIndex);
+                selectedItem.addClass("active");
+
+                adjustScroll(selectedItem);
+            });
+
+            // Click to select account
+            $(document).on("click", ".account-item", function () {
+                selectAccount($(this));
+            });
+
+            // Function to select account and populate fields
+            function selectAccount(element) {
+                let accountId = element.data("id"); // Get account ID
+                let accountName = element.data("name");
+                let accountAddress = element.data("address");
+                let accountPan = element.data("pan");
+
+                $accountInput.val(accountName);
+                $accountIdInput.val(accountId); // Store account ID in hidden input
+                $("#cashAccountAddress").val(accountAddress);
+                $("#cashAccountPan").val(accountPan);
+                $accountModal.modal("hide");
+
+                customNameAllowed = false; // Prevent custom name typing when an account is selected
+                // Move focus to the Party Address field
+                setTimeout(() => {
+                    $("#cashAccountAddress").focus();
+                }, 300);
+            }
+
+            // Function to handle custom name selection
+            function selectCustomName() {
+                let typedName = $searchInput.val().trim();
+                if (typedName !== "") {
+                    $accountInput.val(typedName);
+                    $accountIdInput.val(""); // Clear account ID for new name
+                    $accountModal.modal("hide");
+
+                    // Move focus to the Party Address field
+                    setTimeout(() => {
+                        $("#cashAccountAddress").focus().select();
+                    }, 300);
+                }
+            }
+
+            // Function to adjust scroll position
+            function adjustScroll(selectedItem) {
+                let itemTop = selectedItem.position().top;
+                let itemHeight = selectedItem.outerHeight();
+                let modalHeight = $modalBody.innerHeight();
+
+                if (itemTop + itemHeight > modalHeight) {
+                    $modalBody.scrollTop($modalBody.scrollTop() + itemHeight);
+                } else if (itemTop < 0) {
+                    $modalBody.scrollTop($modalBody.scrollTop() - itemHeight);
+                }
+            }
+        });
+        //-----------------------------------------------------------------------------------------------
 
         window.onload = function () {
             var transactionDateNepali = document.getElementById("transactionDateNepali");
@@ -612,172 +880,12 @@
                 errorMessage.style.display = "none"; // Hide error if valid
             }
         }
+    </script>
 
-        //----------------------------------------------------------------------------------------
-
-
-        //for account
-        $(document).ready(function () {
-
-            let selectedIndex = 0;
-            let allAccounts = [];
-
-            const $accountInput = $("#account");
-            const $accountIdInput = $("#accountId"); // Hidden input field to store account ID
-            const $accountModal = $("#accountModal");
-            const $searchInput = $("#searchAccount");
-            const $accountList = $("#accountList");
-            const $modalBody = $accountList.parent();
-
-            // Open modal when input is focused
-            $accountInput.focus(function () {
-                $accountModal.modal("show");
-                fetchAccounts();
-            });
-
-            // Focus on search input when modal opens
-            $accountModal.on("shown.bs.modal", function () {
-                $searchInput.focus();
-            });
-
-            // Fetch accounts from server
-            function fetchAccounts() {
-                $.ajax({
-                    url: "/api/accounts",
-                    method: "GET",
-                    success: function (data) {
-                        allAccounts = data;
-
-                        // Sort the accounts alphabetically by name (assuming `name` is the field you want to sort by)
-                        allAccounts.sort(function (a, b) {
-                            const nameA = a.name.toLowerCase(); // Convert to lowercase to handle case-insensitive comparison
-                            const nameB = b.name.toLowerCase();
-
-                            if (nameA < nameB) {
-                                return -1; // a should come before b
-                            }
-                            if (nameA > nameB) {
-                                return 1; // b should come before a
-                            }
-                            return 0; // a and b are equal
-                        });
-
-                        renderAccounts(); // Now render the accounts after sorting
-                    },
-                    error: function (err) {
-                        console.error("Error fetching accounts:", err);
-                        $accountList.html('<li class="list-group-item text-danger">Failed to load accounts</li>');
-                    }
-                });
-            }
-
-            // Render accounts dynamically
-            function renderAccounts(filtered = allAccounts) {
-                $accountList.empty();
-
-                if (filtered.length === 0) {
-                    $accountList.html('<li class="list-group-item text-muted">No accounts found</li>');
-                    return;
-                }
-
-                filtered.forEach((account, index) => {
-                    const isActive = index === 0 ? "active" : "";
-                    $accountList.append(`
-    <li class="list-group-item account-item ${isActive}" 
-        data-uniqueNumber="${account.uniqueNumber || 'N/A'}"
-        data-id="${account._id}" 
-        data-name="${account.name}" 
-        data-address="${account.address || 'N/A'}" 
-        data-pan="${account.pan || 'N/A'}"
-        data-index="${index}">
-        <div class="d-flex justify-content-between">
-            <strong> ${account.uniqueNumber || 'N/A'} ${account.name}</strong>
-            <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
-        </div>
-    </li>
-`);
-                });
-
-                selectedIndex = 0;
-            }
-
-            // Search accounts dynamically
-            $searchInput.on("input", function () {
-                let searchText = $(this).val().toLowerCase();
-                let filteredAccounts = allAccounts.filter(account =>
-                    account.name.toLowerCase().includes(searchText)
-                );
-
-                renderAccounts(filteredAccounts);
-            });
-
-            // Handle keyboard navigation & scrolling
-            $searchInput.on("keydown", function (e) {
-                let visibleItems = $(".account-item");
-
-                if (e.key === "ArrowDown") {
-                    if (selectedIndex < visibleItems.length - 1) {
-                        selectedIndex++;
-                    }
-                } else if (e.key === "ArrowUp") {
-                    if (selectedIndex > 0) {
-                        selectedIndex--;
-                    }
-                } else if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (visibleItems.length > 0) {
-                        selectAccount(visibleItems.eq(selectedIndex));
-                    }
-                }
-
-                // Highlight the selected item
-                visibleItems.removeClass("active");
-                let selectedItem = visibleItems.eq(selectedIndex);
-                selectedItem.addClass("active");
-
-                adjustScroll(selectedItem);
-            });
-
-            // Click to select account
-            $(document).on("click", ".account-item", function () {
-                selectAccount($(this));
-            });
-
-            // Function to select account and populate fields
-            function selectAccount(element) {
-                let accountId = element.data("id"); // Get account ID
-                let accountName = element.data("name");
-                let accountAddress = element.data("address");
-                let accountPan = element.data("pan");
-
-                $accountInput.val(accountName);
-                $accountIdInput.val(accountId); // Store account ID in hidden input
-                $("#address").val(accountAddress);
-                $("#pan").val(accountPan);
-                $accountModal.modal("hide");
-
-                // Move focus to the next input field
-                setTimeout(() => {
-                    $("#address").focus();
-                }, 300);
-            }
-
-            // Function to adjust scroll position
-            function adjustScroll(selectedItem) {
-                let itemTop = selectedItem.position().top;
-                let itemHeight = selectedItem.outerHeight();
-                let modalHeight = $modalBody.innerHeight();
-
-                if (itemTop + itemHeight > modalHeight) {
-                    $modalBody.scrollTop($modalBody.scrollTop() + itemHeight);
-                } else if (itemTop < 0) {
-                    $modalBody.scrollTop($modalBody.scrollTop() - itemHeight);
-                }
-            }
-        });
-
-        //---------------------------------------------------------------------------------------------------
-
+    <script>
+        let itemIndex = 0;
+        let currentFocus = 0;
+        let isFirstLoad = true;
 
         async function fetchItems(query, vatStatus, existingItemIds) {
             try {
@@ -853,7 +961,6 @@
             }
         }
 
-
         function updateInputWithHighlightedItem(items) {
             const inputField = document.getElementById('itemSearch');
             if (currentFocus > -1 && items[currentFocus]) {
@@ -895,7 +1002,7 @@
             <div><strong>Name</strong></div>
             <div><strong>Stock</strong></div>
             <div><strong>Unit</strong></div>
-            <div><strong>Rate</strong></div>
+            <div><strong>S.Rate</strong></div>
         `;
                 headerRow.style.backgroundColor = '#f0f0f0';
                 headerRow.style.fontWeight = 'bold';
@@ -915,17 +1022,13 @@
 
                     const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
 
-                    const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
-                    const price = latestStockEntry ? latestStockEntry.price : 0;
-
-
                     dropdownItem.innerHTML = `
                 <div>${item.uniqueNumber || 'N/A'}</div>
                 <div>${item.hscode || 'N/A'}</div>
                 <div>${item.name}</div>
                 <div>${totalStock}</div>
                 <div>${item.unit ? item.unit.name : ''}</div>
-                <div>Rs.${price}</div>
+                <div>Rs.${item.price}</div>
             `;
 
                     dropdownItem.addEventListener('click', () => {
@@ -1032,6 +1135,7 @@
             }
         });
 
+
         function addItemToBill(item, dropdownMenu) {
             const tbody = document.getElementById('items');
             const inputField = document.getElementById('itemSearch');
@@ -1054,44 +1158,53 @@
             // Use price from the first stock entry
             const batchPrice = lastStockEntry.price || 0;
 
+            // Use the current itemIndex value in the name attributes
             tr.innerHTML = `
-            <td>${serialNumber}</td>
-            <td>${item.uniqueNumber}</td>
-             <td>
-            <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
-            ${item.hscode}
-        </td>
-        <td class="col-3">
-            <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
-            ${item.name}
-        </td>
-           <td>
-            <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" value="XXX" onfocus="selectValue(this)" autocomplete="off">
-        </td>
-         <td>
-            <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" value="${getDefaultExpiryDate()}" onfocus="selectValue(this)" required>
-        </td>
-        <td><input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)"></td>
-        <td>
-            ${item.unit ? item.unit.name : ''}
-            <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
-        </td>
-        <td><input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
-        <td class="item-amount">0.00</td>
-        <td>
-             <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </td>
-        <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
-    `;
-            tbody.appendChild(tr);
+<td>${serialNumber}</td>
+<td>${item.uniqueNumber}</td>
+<td>
+    <input type="hidden" name="items[${itemIndex}][hscode]" value="${item.hscode}">
+    ${item.hscode}
+</td>
+<td class="col-3">
+    <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
+    ${item.name}
+</td>
+<td>
+    <input type="text" name="items[${itemIndex}][batchNumber]" class="form-control item-batchNumber" id="batchNumber-${itemIndex}" step="any" onkeydown="handleBatchKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="XXX" autocomplete="off" required>
+</td>
+<td>
+    <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
+</td>
+<td>
+    <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)" required>
+</td>
 
+<td>
+    ${item.unit ? item.unit.name : ''}
+    <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
+</td>
+<td>
+    <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
+</td>
+<td class="item-amount">0.00</td>
+<td>
+    <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</td>
+<input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
+`;
+
+            tbody.appendChild(tr);
+            // Increment itemIndex after adding the new item
             itemIndex++;
             calculateTotal();
 
             // Fetch and display last transactions for the added item
             fetchLastTransactions(item._id);
+            fetchLastItemsData(item._id);
+
 
             // Hide the dropdown menu after selecting an item
             dropdownMenu.classList.remove('show');
@@ -1101,111 +1214,6 @@
 
             // Focus on the quantity input field of the newly added row
             document.getElementById(`quantity-${itemIndex - 1}`).focus();
-
-            // Focus on the newly added row's quantity input
-            document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
-            const currentIndex = itemIndex - 1;
-            const batchNumberInput = document.getElementById(`batchNumber-${currentIndex}`);
-            const expiryDateInput = document.getElementById(`expiryDate-${currentIndex}`);
-            const quantityInput = document.getElementById(`quantity-${currentIndex}`);
-
-            // Focus on batch number first
-            batchNumberInput.focus();
-
-            // Validation for batch number
-            batchNumberInput.addEventListener('blur', function () {
-                validateBatchNumber(this);
-            });
-
-            batchNumberInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Tab' || e.key === 'Enter') {
-                    if (!validateBatchNumber(this)) {
-                        e.preventDefault();
-                    }
-                }
-            });
-
-            // Validation for expiry date
-            expiryDateInput.addEventListener('blur', function () {
-                validateExpiryDate(this);
-            });
-
-            expiryDateInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Tab' || e.key === 'Enter') {
-                    if (!validateExpiryDate(this)) {
-                        e.preventDefault();
-                    }
-                }
-            });
-
-            // Validation functions
-            function validateBatchNumber(input) {
-                if (!input.value.trim()) {
-                    input.classList.add('is-invalid');
-                    showValidationTooltip(input, 'batch number is required');
-                    input.focus();
-                    return false;
-                }
-                input.classList.remove('is-invalid');
-                hideValidationTooltip(input);
-                return true;
-            }
-
-            function validateExpiryDate(input) {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const selectedDate = new Date(input.value);
-
-                if (!input.value) {
-                    input.classList.add('is-invalid');
-                    showValidationTooltip(input, 'Please select an expiry date');
-                    input.focus();
-                    return false;
-                } else if (selectedDate < today) {
-                    input.classList.add('is-invalid');
-                    showValidationTooltip(input, 'Expiry date cannot be in the past');
-                    input.focus();
-                    return false;
-                }
-                input.classList.remove('is-invalid');
-                hideValidationTooltip(input);
-                return true;
-            }
-
-            function showValidationTooltip(input, message) {
-                // Remove any existing tooltip
-                hideValidationTooltip(input);
-
-                // Create and show tooltip
-                const tooltip = document.createElement('div');
-                tooltip.className = 'validation-tooltip';
-                tooltip.textContent = message;
-
-                const rect = input.getBoundingClientRect();
-                tooltip.style.position = 'absolute';
-                tooltip.style.left = `${rect.left}px`;
-                tooltip.style.top = `${rect.bottom}px`;
-                tooltip.style.zIndex = '1000';
-                tooltip.style.backgroundColor = '#ff4444';
-                tooltip.style.color = 'white';
-                tooltip.style.padding = '5px 10px';
-                tooltip.style.borderRadius = '4px';
-                tooltip.style.fontSize = '14px';
-
-                document.body.appendChild(tooltip);
-                input.dataset.tooltipId = 'tooltip-' + Date.now();
-                tooltip.id = input.dataset.tooltipId;
-            }
-
-            function hideValidationTooltip(input) {
-                if (input.dataset.tooltipId) {
-                    const tooltip = document.getElementById(input.dataset.tooltipId);
-                    if (tooltip) {
-                        tooltip.remove();
-                    }
-                    delete input.dataset.tooltipId;
-                }
-            }
         }
 
         function removeItem(button) {
@@ -1228,22 +1236,43 @@
             const quantity = parseFloat(row.querySelector('input.item-quantity').value) || 0;
             const price = parseFloat(row.querySelector('input.item-price').value) || 0;
             const amount = quantity * price;
+
+            // Update the item's total amount
             row.querySelector('.item-amount').textContent = amount.toFixed(2);
+
+            // Recalculate total, discounts, and update live
             calculateTotal();
+            updateDiscountFromPercentage(); // Ensure discount is updated live
         }
+
 
         function updateDiscountFromPercentage() {
             const subTotal = calculateSubTotal();
             const discountPercentage = parseFloat(document.getElementById('discountPercentage').value) || 0;
+
+            // Calculate the discount amount based on the percentage
             const discountAmount = (subTotal * discountPercentage) / 100;
+
+            // Update the discount amount field
             document.getElementById('discountAmount').value = discountAmount.toFixed(2);
+
+            // Recalculate the total with the updated discount
+            calculateTotal();
         }
+
 
         function updateDiscountFromAmount() {
             const subTotal = calculateSubTotal();
             const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+
+            // Calculate the discount percentage based on the amount
             const discountPercentage = (discountAmount / subTotal) * 100;
+
+            // Update the discount percentage field
             document.getElementById('discountPercentage').value = discountPercentage.toFixed(2);
+
+            // Recalculate the total with the updated discount
+            calculateTotal();
         }
 
         function calculateSubTotal() {
@@ -1252,17 +1281,12 @@
 
             rows.forEach(row => {
                 const amount = parseFloat(row.querySelector('.item-amount').textContent) || 0;
-                const vatStatus = row.querySelector('input[name$="[vatStatus]"]').value === 'true';
-
                 subTotal += amount;
-                if (vatStatus) {
-                    taxableAmount += amount;
-                    vatAmount += amount * 0.13; // VAT is 13%
-                }
             });
 
             return subTotal;
         }
+
 
         function calculateTotal() {
             const rows = document.querySelectorAll('#items tr.item');
@@ -1312,9 +1336,22 @@
             document.getElementById('vatAmount').textContent = vatAmount.toFixed(2);
             document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
 
-            const amountInWords = numberToWords(totalAmount) + ' Only.';
+            // Convert total amount to words including paisa
+            const amountInWords = convertToRupeesAndPaisa(totalAmount) + ' Only.';
             document.getElementById('amountInWords').textContent = amountInWords;
         }
+
+        // Attach event listeners for live updates
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update discount fields dynamically
+            document.getElementById('discountPercentage').addEventListener('input', updateDiscountFromPercentage);
+            document.getElementById('discountAmount').addEventListener('input', updateDiscountFromAmount);
+
+            // Ensure item inputs update totals live
+            document.querySelectorAll('input.item-quantity, input.item-puPrice').forEach(input => {
+                input.addEventListener('input', () => updateItemTotal(input));
+            });
+        });
 
 
         function toggleCreditPartyOptions() {
@@ -1325,27 +1362,22 @@
             });
         }
 
-
         function toggleVatInputs() {
             const isVatExempt = document.getElementById('isVatExempt').value === 'true';
 
             // VAT-related fields
+            const vatInputs = document.getElementById('vatInputs'); // Group for VAT-related inputs
             const taxableAmountRow = document.getElementById('taxableAmountRow');
-            const vatPercentageRow = document.getElementById('vatPercentageRow');
 
             // Toggle display based on VAT exemption
             if (isVatExempt) {
                 taxableAmountRow.style.display = 'none';
-                // vatPercentageRow.style.display = 'none';
-                // Move focus to the next available input field
-                // moveToNextVisibleInput(document.getElementById('isVatExempt'));
             } else {
                 taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
-                // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
             }
+
             // Recalculate total when toggling VAT
             calculateTotal();
-
         }
 
         function moveToNextVisibleInput(currentElement) {
@@ -1363,14 +1395,12 @@
             }
         }
 
-
-
         function showPrintModal() {
             $('#printModal').modal('show');
         }
         function submitBillForm(print) {
             shouldPrint = print;
-            const billForm = document.getElementById('billForm');
+            const salesReturnBillForm = document.getElementById('salesReturnBillForm');
             const saveButton = document.getElementById('saveBill');
 
             // Change button text and disable it
@@ -1378,24 +1408,25 @@
             saveButton.disabled = true;
 
             if (print) {
-                const url = new URL(billForm.action);
+                const url = new URL(salesReturnBillForm.action);
                 url.searchParams.append('print', 'true');
-                billForm.action = url.toString();
+                salesReturnBillForm.action = url.toString();
             }
 
             // Simulate form submission (replace this with actual form submission logic)
-            billForm.submit();
+            salesReturnBillForm.submit();
 
             // Reset button text and enable it after submission
             saveButton.disabled = false;
         }
 
-        document.getElementById('billForm').addEventListener('submit', function (event) {
+        document.getElementById('salesReturnBillForm').addEventListener('submit', function (event) {
             if (!shouldPrint && event.submitter && event.submitter.innerText === 'Save & Print Bill') {
                 event.preventDefault();
                 showPrintModal();
             }
         });
+
         function numberToWords(num) {
             const ones = [
                 '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -1448,6 +1479,24 @@
 
             return words.trim();
         }
+
+        function convertToRupeesAndPaisa(amount) {
+            const rupees = Math.floor(amount); // Integer part (Rupees)
+            const paisa = Math.round((amount - rupees) * 100); // Fractional part (Paisa)
+
+            let words = '';
+
+            if (rupees > 0) {
+                words += numberToWords(rupees) + ' Rupees';
+            }
+
+            if (paisa > 0) {
+                words += (rupees > 0 ? ' and ' : '') + numberToWords(paisa) + ' Paisa';
+            }
+
+            return words || 'Zero Rupees';
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             toggleVatInputs();
             toggleCreditPartyOptions();
@@ -1463,10 +1512,6 @@
                 updateDiscountFromAmount();
                 calculateTotal();
             });
-
-            // document.querySelectorAll('.price-input, .quantity-input, .item-select').forEach(element => {
-            //     element.addEventListener('input', calculateTotal);
-            // });
 
             document.getElementById('roundOffAmount').addEventListener('input', function () {
                 calculateTotal();
@@ -1516,6 +1561,7 @@
             <table class="table table-sm">
                 <thead>
                     <tr>
+                        <th>Trans. Id</th>
                         <th>Date</th>
                         <th>Bill No.</th>
                         <th>Type</th>
@@ -1523,7 +1569,7 @@
                         <th>Pay.Mode</th>
                         <th>Qty.</th>
                         <th>Unit</th>
-                        <th>Rate</th>
+                        <th>S.price</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1539,6 +1585,7 @@
 
                     return `
                 <tr onclick="window.location.href='/bills/${transaction.billId._id}/print'" style="cursor: pointer;">
+                    <td>${transaction._id}</td>
                     <td>${new Date(transaction.date).toLocaleDateString()}</td>
                     <td>${transaction.billNumber}</td>
                     <td>${transaction.type}</td>
@@ -1578,6 +1625,16 @@
             const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
         });
 
+        function openModalAndFocusCloseButton() {
+            // Open the modal
+            $('#transactionModal').modal('show');
+
+            // Wait until the modal is fully shown before focusing the close button
+            $('#transactionModal').on('shown.bs.modal', function () {
+                document.getElementById('closeModalButton').focus();
+            });
+        }
+
         async function handleItemSearchKeydown(event) {
             const itemSearchInput = document.getElementById('itemSearch');
             const itemsTable = document.getElementById('itemsTable');
@@ -1586,10 +1643,10 @@
             if (itemSearchInput.value.length > 0) {
                 if (event.key === 'Enter') {
                     // Fetch and check if transactions should be displayed
-                    const displayTransactionsForSalesReturn = await shouldDisplayTransactions();
+                    const displayTransactions = await shouldDisplayTransactions();
 
-                    // Only open the modal if displayTransactionsForSalesReturn is true
-                    if (displayTransactionsForSalesReturn) {
+                    // Only open the modal if displayTransactions is true
+                    if (displayTransactions) {
                         openModalAndFocusCloseButton();
                     } else {
                         focusOnLastRow('item-batchNumber');
@@ -1602,49 +1659,60 @@
                 }
             }
         }
-        function openModalAndFocusCloseButton() {
-            // Open the modal
-            $('#transactionModal').modal('show');
-
-            // Wait until the modal is fully shown before focusing the close button
-            $('#transactionModal').on('shown.bs.modal', function () {
-                document.getElementById('closeModalButton').focus();
-            });
-        }
 
         function handleCloseButtonKeydown(event) {
             if (event.key === 'Enter') {
                 // Close the modal (optional, depending on your implementation)
                 $('#transactionModal').modal('hide');
 
-                // Focus on the quantity input field
-                document.getElementById(`batchNumber-${itemIndex - 1}`).focus();
-                // focusOnLastRow('quantity');
+                // Focus on the quantity input field in the last row
+                const lastRow = document.querySelector('#items tr.item:last-child');
+                if (lastRow) {
+                    const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+                    if (batchNumberInput) {
+                        batchNumberInput.focus();
+                    }
+                }
             }
         }
 
         function handleQuantityKeydown(event) {
             if (event.key === 'Enter') {
-                // Focus on the price input field
-                const priceInput = document.getElementById(`price-${itemIndex - 1}`);
-                priceInput.focus();
-                priceInput.select();
-
+                const lastRow = document.querySelector('#items tr.item:last-child');
+                if (lastRow) {
+                    // const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+                    const priceInput = lastRow.querySelector('.item-price');
+                    if (priceInput) {
+                        priceInput.focus();
+                        priceInput.select();
+                    }
+                }
             }
         }
+
         function handleBatchKeydown(event) {
             if (event.key === 'Enter') {
-                const expDateInput = document.getElementById(`expiryDate-${itemIndex - 1}`);
-                expDateInput.focus();
-                expDateInput.select();
+                const lastRow = document.querySelector('#items tr.item:last-child');
+                if (lastRow) {
+                    const expDateInput = lastRow.querySelector('.item-expiryDate');
+                    if (expDateInput) {
+                        expDateInput.focus();
+                        expDateInput.select();
+                    }
+                }
             }
         }
 
         function handleExpDateKeydown(event) {
             if (event.key === 'Enter') {
-                const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
-                quantityInput.focus();
-                quantityInput.select();
+                const lastRow = document.querySelector('#items tr.item:last-child');
+                if (lastRow) {
+                    const quantityInput = lastRow.querySelector('.item-quantity');
+                    if (quantityInput) {
+                        quantityInput.focus();
+                        quantityInput.select();
+                    }
+                }
             }
         }
 
@@ -1658,16 +1726,48 @@
             }
         }
 
-        function focusOnLastRow(fieldClass) {
-            const rows = document.querySelectorAll('.item');
-            if (rows.length > 0) {
-                const lastRow = rows[rows.length - 1];
-                const inputField = lastRow.querySelector(`.${fieldClass}`);
-                if (inputField) {
-                    inputField.focus();
-                    inputField.select();
+        // Attach event listeners dynamically to the last row
+        function attachEventListenersToLastRow() {
+            const lastRow = document.querySelector('#items tr.item:last-child');
+            if (lastRow) {
+                const quantityInput = lastRow.querySelector('.item-quantity');
+                const batchNumberInput = lastRow.querySelector('.item-batchNumber');
+                const expDateInput = lastRow.querySelector('.item-expiryDate');
+                const priceInput = lastRow.querySelector('.item-price');
+
+                if (quantityInput) {
+                    quantityInput.addEventListener('keydown', handleQuantityKeydown);
+                }
+                if (batchNumberInput) {
+                    batchNumberInput.addEventListener('keydown', handleBatchKeydown);
+                }
+                if (expDateInput) {
+                    expDateInput.addEventListener('keydown', handleExpDateKeydown);
                 }
             }
+        }
+
+        // Re-attach event listeners when a new row is added
+        document.addEventListener('DOMContentLoaded', () => {
+            // Attach event listeners to the last row initially
+            attachEventListenersToLastRow();
+
+            // Monitor changes to the table for new rows
+            const observer = new MutationObserver(() => {
+                attachEventListenersToLastRow();
+            });
+
+            // Observe the `#items` table for child changes
+            const itemsTable = document.getElementById('items');
+            if (itemsTable) {
+                observer.observe(itemsTable, { childList: true, subtree: true });
+            }
+        });
+
+
+
+        function selectValue(input) {
+            input.select(); // Select the value of the input field when it is focused
         }
 
         function moveToNextInput(event) {
@@ -1679,7 +1779,6 @@
             }
         }
 
-
         // Get all the input elements within the form
         const inputs = document.querySelectorAll('form input, form select form group');
 
@@ -1688,7 +1787,17 @@
             input.addEventListener('keydown', moveToNextInput);
         });
 
-
+        function focusOnLastRow(fieldClass) {
+            const rows = document.querySelectorAll('.item');
+            if (rows.length > 0) {
+                const lastRow = rows[rows.length - 1];
+                const inputField = lastRow.querySelector(`.${fieldClass}`);
+                if (inputField) {
+                    inputField.focus();
+                    inputField.select();
+                }
+            }
+        }
 
         // Add an event listener to the paymentMode select element
         document.getElementById('paymentMode').addEventListener('keydown', function (event) {
@@ -1709,8 +1818,7 @@
                 event.preventDefault();
 
                 // Move focus to the next input field
-                document.getElementById('account').focus();
+                document.getElementById('cashAccount').focus();
             }
         });
-
     </script>

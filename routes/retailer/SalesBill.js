@@ -1523,7 +1523,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
 
             if (req.query.print === 'true') {
                 // Redirect to the print route
-                res.redirect(`/bills/${newBill._id}/direct-print`);
+                res.redirect(`/bills/${newBill._id}/direct-print/credit-open`);
             } else {
                 // Redirect to the bills list or another appropriate page
                 req.flash('success', 'Bill saved successfully!');
@@ -2064,7 +2064,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
 
             if (req.query.print === 'true') {
                 // Redirect to the print route
-                res.redirect(`/bills/${newBill._id}/direct-print`);
+                res.redirect(`/bills/${newBill._id}/cash/direct-print`);
             } else {
                 // Redirect to the bills list or another appropriate page
                 req.flash('success', 'Bill saved successfully!');
@@ -2615,7 +2615,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
 
             if (req.query.print === 'true') {
                 // Redirect to the print route
-                res.redirect(`/bills/${newBill._id}/direct-print`);
+                res.redirect(`/bills/${newBill._id}/direct-print/cash-open`);
             } else {
                 // Redirect to the bills list or another appropriate page
                 req.flash('success', 'Bill saved successfully!');
@@ -3316,7 +3316,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
 
             if (req.query.print === 'true') {
                 // Redirect to the print route
-                res.redirect(`/bills/${billId}/direct-print`);
+                res.redirect(`/bills/${billId}/direct-print-edit`);
             } else {
                 // Redirect to the bills list or another appropriate page
                 req.flash('success', 'Bill updated successfully');
@@ -3779,7 +3779,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
 
             if (req.query.print === 'true') {
                 // Redirect to the print route
-                res.redirect(`/bills/${billId}/direct-print`);
+                res.redirect(`/bills/${billId}/direct-print-edit`);
             } else {
                 // Redirect to the bills list or another appropriate page
                 req.flash('success', 'Bill updated successfully');
@@ -4029,6 +4029,452 @@ router.get('/bills/:id/direct-print', isLoggedIn, ensureAuthenticated, ensureCom
             }
 
             res.render('retailer/sales-bills/directPrint', {
+                bill,
+                currentCompanyName,
+                currentCompany,
+                firstBill,
+                lastBalance: finalBalance,
+                balanceLabel,
+                paymentMode: bill.paymentMode, // Pass paymentMode to the view if needed
+                nepaliDate,
+                englishDate: bill.englishDate,
+                companyDateFormat,
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+
+            });
+        } catch (error) {
+            console.error("Error fetching bill for printing:", error);
+            req.flash('error', 'Error fetching bill for printing');
+            res.redirect('/bills');
+        }
+    }
+});
+
+
+//directPrint for sales bill
+router.get('/bills/:id/direct-print/credit-open', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+
+        const currentCompanyName = req.session.currentCompanyName;
+        const companyId = req.session.currentCompany;
+        console.log("Company ID from session:", companyId); // Debugging line
+
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+        const company = await Company.findById(companyId);
+        const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
+
+        // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
+
+        // Validate the selectedDate
+        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+            throw new Error('Invalid date provided');
+        }
+
+        try {
+            const currentCompany = await Company.findById(new ObjectId(companyId));
+            console.log("Current Company:", currentCompany); // Debugging line
+
+            if (!currentCompany) {
+                req.flash('error', 'Company not found');
+                return res.redirect('/bills');
+            }
+
+            const billId = req.params.id;
+            const bill = await SalesBill.findById(billId)
+                .populate({ path: 'account', select: 'name pan address email phone openingBalance' }) // Populate account and only select openingBalance
+                .populate('items.item')
+                .populate('user');
+
+            if (!bill) {
+                req.flash('error', 'Bill not found');
+                return res.redirect('/bills');
+            }
+
+            // Populate unit for each item in the bill
+            for (const item of bill.items) {
+                await item.item.populate('unit');
+            }
+
+            const firstBill = !bill.firstPrinted; // Inverse logic based on your implementation
+
+            if (firstBill) {
+                bill.firstPrinted = true;
+                await bill.save();
+            }
+            let finalBalance = null;
+            let balanceLabel = '';
+
+            // Fetch the latest transaction for the current company and bill
+            if (bill.paymentMode === 'credit') {
+                const latestTransaction = await Transaction.findOne({
+                    company: new ObjectId(companyId),
+                    billId: new ObjectId(billId)
+                }).sort({ transactionDate: -1 });
+
+                let lastBalance = 0;
+
+                // Calculate the last balance based on the latest transaction
+                if (latestTransaction) {
+                    lastBalance = Math.abs(latestTransaction.balance || 0); // Ensure balance is positive
+
+                    // Determine if the amount is receivable (dr) or payable (cr)
+                    if (latestTransaction.debit) {
+                        balanceLabel = 'Dr'; // Receivable amount
+                    } else if (latestTransaction.credit) {
+                        balanceLabel = 'Cr'; // Payable amount
+                    }
+                }
+
+                // Retrieve the opening balance from the account
+                const openingBalance = bill.account ? bill.account.openingBalance : null;
+
+                // Add opening balance if it exists
+                if (openingBalance) {
+                    lastBalance += (openingBalance.type === 'Dr' ? openingBalance.amount : -openingBalance.amount);
+                    balanceLabel = openingBalance.type;
+                }
+
+                finalBalance = lastBalance;
+            }
+
+            res.render('retailer/sales-bills/directPrintCreditOpen', {
+                bill,
+                currentCompanyName,
+                currentCompany,
+                firstBill,
+                lastBalance: finalBalance,
+                balanceLabel,
+                paymentMode: bill.paymentMode, // Pass paymentMode to the view if needed
+                nepaliDate,
+                englishDate: bill.englishDate,
+                companyDateFormat,
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+
+            });
+        } catch (error) {
+            console.error("Error fetching bill for printing:", error);
+            req.flash('error', 'Error fetching bill for printing');
+            res.redirect('/bills');
+        }
+    }
+});
+
+
+
+//directPrint for sales bill
+router.get('/bills/:id/cash/direct-print', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+
+        const currentCompanyName = req.session.currentCompanyName;
+        const companyId = req.session.currentCompany;
+        console.log("Company ID from session:", companyId); // Debugging line
+
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+        const company = await Company.findById(companyId);
+        const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
+
+        // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
+
+        // Validate the selectedDate
+        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+            throw new Error('Invalid date provided');
+        }
+
+        try {
+            const currentCompany = await Company.findById(new ObjectId(companyId));
+            console.log("Current Company:", currentCompany); // Debugging line
+
+            if (!currentCompany) {
+                req.flash('error', 'Company not found');
+                return res.redirect('/bills');
+            }
+
+            const billId = req.params.id;
+            const bill = await SalesBill.findById(billId)
+                .populate({ path: 'account', select: 'name pan address email phone openingBalance' }) // Populate account and only select openingBalance
+                .populate('items.item')
+                .populate('user');
+
+            if (!bill) {
+                req.flash('error', 'Bill not found');
+                return res.redirect('/bills');
+            }
+
+            // Populate unit for each item in the bill
+            for (const item of bill.items) {
+                await item.item.populate('unit');
+            }
+
+            const firstBill = !bill.firstPrinted; // Inverse logic based on your implementation
+
+            if (firstBill) {
+                bill.firstPrinted = true;
+                await bill.save();
+            }
+            let finalBalance = null;
+            let balanceLabel = '';
+
+            // Fetch the latest transaction for the current company and bill
+            if (bill.paymentMode === 'credit') {
+                const latestTransaction = await Transaction.findOne({
+                    company: new ObjectId(companyId),
+                    billId: new ObjectId(billId)
+                }).sort({ transactionDate: -1 });
+
+                let lastBalance = 0;
+
+                // Calculate the last balance based on the latest transaction
+                if (latestTransaction) {
+                    lastBalance = Math.abs(latestTransaction.balance || 0); // Ensure balance is positive
+
+                    // Determine if the amount is receivable (dr) or payable (cr)
+                    if (latestTransaction.debit) {
+                        balanceLabel = 'Dr'; // Receivable amount
+                    } else if (latestTransaction.credit) {
+                        balanceLabel = 'Cr'; // Payable amount
+                    }
+                }
+
+                // Retrieve the opening balance from the account
+                const openingBalance = bill.account ? bill.account.openingBalance : null;
+
+                // Add opening balance if it exists
+                if (openingBalance) {
+                    lastBalance += (openingBalance.type === 'Dr' ? openingBalance.amount : -openingBalance.amount);
+                    balanceLabel = openingBalance.type;
+                }
+
+                finalBalance = lastBalance;
+            }
+
+            res.render('retailer/sales-bills/cash/directPrint', {
+                bill,
+                currentCompanyName,
+                currentCompany,
+                firstBill,
+                lastBalance: finalBalance,
+                balanceLabel,
+                paymentMode: bill.paymentMode, // Pass paymentMode to the view if needed
+                nepaliDate,
+                englishDate: bill.englishDate,
+                companyDateFormat,
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+
+            });
+        } catch (error) {
+            console.error("Error fetching bill for printing:", error);
+            req.flash('error', 'Error fetching bill for printing');
+            res.redirect('/bills');
+        }
+    }
+});
+
+
+//directPrint for sales bill
+router.get('/bills/:id/direct-print/cash-open', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+
+        const currentCompanyName = req.session.currentCompanyName;
+        const companyId = req.session.currentCompany;
+        console.log("Company ID from session:", companyId); // Debugging line
+
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+        const company = await Company.findById(companyId);
+        const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
+
+        // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
+
+        // Validate the selectedDate
+        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+            throw new Error('Invalid date provided');
+        }
+
+        try {
+            const currentCompany = await Company.findById(new ObjectId(companyId));
+            console.log("Current Company:", currentCompany); // Debugging line
+
+            if (!currentCompany) {
+                req.flash('error', 'Company not found');
+                return res.redirect('/bills');
+            }
+
+            const billId = req.params.id;
+            const bill = await SalesBill.findById(billId)
+                .populate({ path: 'account', select: 'name pan address email phone openingBalance' }) // Populate account and only select openingBalance
+                .populate('items.item')
+                .populate('user');
+
+            if (!bill) {
+                req.flash('error', 'Bill not found');
+                return res.redirect('/bills');
+            }
+
+            // Populate unit for each item in the bill
+            for (const item of bill.items) {
+                await item.item.populate('unit');
+            }
+
+            const firstBill = !bill.firstPrinted; // Inverse logic based on your implementation
+
+            if (firstBill) {
+                bill.firstPrinted = true;
+                await bill.save();
+            }
+            let finalBalance = null;
+            let balanceLabel = '';
+
+            // Fetch the latest transaction for the current company and bill
+            if (bill.paymentMode === 'credit') {
+                const latestTransaction = await Transaction.findOne({
+                    company: new ObjectId(companyId),
+                    billId: new ObjectId(billId)
+                }).sort({ transactionDate: -1 });
+
+                let lastBalance = 0;
+
+                // Calculate the last balance based on the latest transaction
+                if (latestTransaction) {
+                    lastBalance = Math.abs(latestTransaction.balance || 0); // Ensure balance is positive
+
+                    // Determine if the amount is receivable (dr) or payable (cr)
+                    if (latestTransaction.debit) {
+                        balanceLabel = 'Dr'; // Receivable amount
+                    } else if (latestTransaction.credit) {
+                        balanceLabel = 'Cr'; // Payable amount
+                    }
+                }
+
+                // Retrieve the opening balance from the account
+                const openingBalance = bill.account ? bill.account.openingBalance : null;
+
+                // Add opening balance if it exists
+                if (openingBalance) {
+                    lastBalance += (openingBalance.type === 'Dr' ? openingBalance.amount : -openingBalance.amount);
+                    balanceLabel = openingBalance.type;
+                }
+
+                finalBalance = lastBalance;
+            }
+
+            res.render('retailer/sales-bills/cash/directPrintCashOpen', {
+                bill,
+                currentCompanyName,
+                currentCompany,
+                firstBill,
+                lastBalance: finalBalance,
+                balanceLabel,
+                paymentMode: bill.paymentMode, // Pass paymentMode to the view if needed
+                nepaliDate,
+                englishDate: bill.englishDate,
+                companyDateFormat,
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+
+            });
+        } catch (error) {
+            console.error("Error fetching bill for printing:", error);
+            req.flash('error', 'Error fetching bill for printing');
+            res.redirect('/bills');
+        }
+    }
+});
+
+
+
+//directPrint for sales bill
+router.get('/bills/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+
+        const currentCompanyName = req.session.currentCompanyName;
+        const companyId = req.session.currentCompany;
+        console.log("Company ID from session:", companyId); // Debugging line
+
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+        const company = await Company.findById(companyId);
+        const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
+
+        // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
+
+        // Validate the selectedDate
+        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+            throw new Error('Invalid date provided');
+        }
+
+        try {
+            const currentCompany = await Company.findById(new ObjectId(companyId));
+            console.log("Current Company:", currentCompany); // Debugging line
+
+            if (!currentCompany) {
+                req.flash('error', 'Company not found');
+                return res.redirect('/bills');
+            }
+
+            const billId = req.params.id;
+            const bill = await SalesBill.findById(billId)
+                .populate({ path: 'account', select: 'name pan address email phone openingBalance' }) // Populate account and only select openingBalance
+                .populate('items.item')
+                .populate('user');
+
+            if (!bill) {
+                req.flash('error', 'Bill not found');
+                return res.redirect('/bills');
+            }
+
+            // Populate unit for each item in the bill
+            for (const item of bill.items) {
+                await item.item.populate('unit');
+            }
+
+            const firstBill = !bill.firstPrinted; // Inverse logic based on your implementation
+
+            if (firstBill) {
+                bill.firstPrinted = true;
+                await bill.save();
+            }
+            let finalBalance = null;
+            let balanceLabel = '';
+
+            // Fetch the latest transaction for the current company and bill
+            if (bill.paymentMode === 'credit') {
+                const latestTransaction = await Transaction.findOne({
+                    company: new ObjectId(companyId),
+                    billId: new ObjectId(billId)
+                }).sort({ transactionDate: -1 });
+
+                let lastBalance = 0;
+
+                // Calculate the last balance based on the latest transaction
+                if (latestTransaction) {
+                    lastBalance = Math.abs(latestTransaction.balance || 0); // Ensure balance is positive
+
+                    // Determine if the amount is receivable (dr) or payable (cr)
+                    if (latestTransaction.debit) {
+                        balanceLabel = 'Dr'; // Receivable amount
+                    } else if (latestTransaction.credit) {
+                        balanceLabel = 'Cr'; // Payable amount
+                    }
+                }
+
+                // Retrieve the opening balance from the account
+                const openingBalance = bill.account ? bill.account.openingBalance : null;
+
+                // Add opening balance if it exists
+                if (openingBalance) {
+                    lastBalance += (openingBalance.type === 'Dr' ? openingBalance.amount : -openingBalance.amount);
+                    balanceLabel = openingBalance.type;
+                }
+
+                finalBalance = lastBalance;
+            }
+
+            res.render('retailer/sales-bills/directPrintEdit', {
                 bill,
                 currentCompanyName,
                 currentCompany,

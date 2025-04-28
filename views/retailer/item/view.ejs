@@ -58,6 +58,21 @@
                         </ul>
                     </div>
                 </div>
+                <hr>
+                <div class="row">
+                    <h5 class="card-title"><strong>Composition: </strong></h5>
+                    <ul class="list-group list-group-flush">
+                        <% if (items.composition && items.composition.length) { %>
+                            <% items.composition.forEach(comp=> { %>
+                                <li class="list-group-item">
+                                    <%= comp.uniqueNumber %> - <%= comp.name %>
+                                </li>
+                                <% }); %>
+                                    <% } else { %>
+                                        <li class="list-group-item">No Composition</li>
+                                        <% } %>
+                    </ul>
+                </div>
             </div>
             <div class="col">
                 <button id="backButton" class="back-button">

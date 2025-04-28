@@ -2,6 +2,15 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <style>
+        #compositionModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+
         .card {
             margin-bottom: 20px;
         }
@@ -64,7 +73,7 @@
                                 <div class="col-3">
                                     <label for="category">Category <i style="color: red;">*</i></label>
                                     <select class="form-control" id="category" name="category" required
-                                        onkeydown="handleItemCategoryInputKeydown(event)" onfocus="selectValue(this)">
+                                        onfocus="selectValue(this)">
                                         <% if (categories && categories.length> 0) { %>
                                             <option value="" disabled selected>Select category</option>
                                             <% categories.forEach(category=> { %>
@@ -77,8 +86,12 @@
                                                         <% } %>
                                     </select>
                                 </div>
-
-
+                            </div>
+                            <div class="mb-3">
+                                <label for="composition" class="form-label">Composition</label>
+                                <textarea class="form-control" id="composition" name="composition" rows="2"
+                                    placeholder="Press F6 to add compositions"></textarea>
+                                <input type="hidden" id="compositionIds" name="compositionIds">
                             </div>
                             <div class="form-group row">
                                 <div class="col">
@@ -227,8 +240,10 @@
                                                     <a href="/items/<%= item._id %>"><button class="btn-sm btn-info"><i
                                                                 class="fas fa-eye"></i></button></a>
                                                     <button class="btn btn-sm btn-warning" onclick="editItem('<%= item._id %>', '<%= item.name %>','<%= item.hscode %>', '<%= item.category._id %>', 
+                                                    '<%= item.composition ? item.composition.map(c => c.name).join(", ") : "" %>',
+        '<%= item.composition ? item.composition.map(c => c._id).join(",") : "" %>',
                                     '<%=item.mainUnit._id%>','<%=item.WSUnit%>','<%= item.unit._id %>','<%= item.vatStatus %>','<%= item.reorderLevel %>', '<%= item.price %>','<%= item.puPrice %>',
-                                     '<%= item.openingStock %>','<%= item.openingStockBalance %>')"><i
+                                     '<%= item.openingStock %>','<%= item.openingStockBalance %>',)"><i
                                                             class="fas fa-edit"></i></button>
                                                     <form action="/items/<%= item._id %>?_method=DELETE" method="post"
                                                         class="d-inline">
@@ -237,7 +252,9 @@
                                                     </form>
 
                                                     <!-- Add the Select button -->
-                                                    <button class="btn btn-sm btn-success" onclick="selectItem('<%= item.name %>', '<%= item.hscode %>', '<%= item.category._id %>', 
+                                                    <button class="btn btn-sm btn-success" onclick="selectItem('<%= item.name %>', '<%= item.hscode %>', '<%= item.category._id %>',
+                                                    '<%= item.composition ? item.composition.map(c => c.name).join(", ") : "" %>',
+        '<%= item.composition ? item.composition.map(c => c._id).join(",") : "" %>', 
         '<%=item.mainUnit._id%>','<%=item.WSUnit%>','<%= item.unit._id %>','<%= item.vatStatus %>','<%= item.reorderLevel %>', '<%= item.price %>','<%= item.puPrice %>',
         '<%= item.openingStock %>','<%= item.openingStockBalance %>')"><i class="fas fa-check"></i></button>
                                                 </td>
@@ -296,6 +313,12 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="mb-3">
+                                    <label for="editComposition" class="form-label">Composition</label>
+                                    <textarea class="form-control" id="editComposition" name="composition" rows="2"
+                                        placeholder="Press F6 to add compositions"></textarea>
+                                    <input type="hidden" id="editCompositionIds" name="compositionIds">
+                                </div>
                                 <div class="form-group row">
                                     <div class="col">
                                         <label for="editMainUnit">Main Unit<i style="color: red;">*</i></label>
@@ -353,13 +376,13 @@
                                     <div class="col">
                                         <label for="editPrice">Sales Price</label>
                                         <input type="number" class="form-control" id="editPrice" name="price"
-                                            step="0.01" value="0.00" onfocus="selectValue(this)" required>
+                                            value="0.00" step="any" onfocus="selectValue(this)">
                                     </div>
                                     <div class="col">
                                         <label for="editpuPrice">Purchase Price</label>
                                         <input type="number" class="form-control" id="editpuPrice" name="puPrice"
-                                            step="0.01" oninput="calculateTotalOpeningStockBalanceInEditForm()"
-                                            value="0.00" onfocus="selectValue(this)" required>
+                                            oninput="calculateTotalOpeningStockBalanceInEditForm()" value="0.00"
+                                            step="any" onfocus="selectValue(this)">
                                     </div>
 
                                     <div class="col">
@@ -372,7 +395,8 @@
                                     <div class="col">
                                         <label for="editOpeningStockBalance">Op. Stock Value</label>
                                         <input type="number" class="form-control" id="editOpeningStockBalance"
-                                            name="openingStockBalance" value="0.00" step="any" onfocus="selectValue(this)">
+                                            name="openingStockBalance" value="0.00" step="any"
+                                            onfocus="selectValue(this)">
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Save changes</button>
@@ -383,279 +407,261 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-            function selectItem(name, hscode, categoryId, mainUnitId, WSUnit, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
-                // Populate the form fields with the selected item data
-                document.getElementById('searchValue').value = name;
-                document.getElementById('hscode').value = hscode;
-                document.getElementById('category').value = categoryId;
-                document.getElementById('mainUnit').value = mainUnitId;
-                document.getElementById('WSUnit').value = WSUnit;
-                document.getElementById('unit').value = unitId;
-                document.getElementById('vatStatus').value = vatStatus;
-                document.getElementById('reorderLevel').value = reorderLevel;
-                document.getElementById('price').value = price;
-                document.getElementById('puPrice').value = puPrice;
-            }
-        </script>
+    <div class="modal fade" id="compositionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Compositions</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="sticky-top p-3 bg-light">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="searchComposition" class="form-control"
+                                placeholder="Search compositions..." autofocus autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="overflow-auto" style="max-height: 60vh;">
+                        <ul id="compositionList" class="list-group list-group-flush">
+                            <!-- Compositions will be loaded here -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="text-muted me-auto">
+                        Selected: <span class="badge bg-primary" id="selectedCount">0</span>
+                    </small>
+                    <div class="form-check form-check-inline ms-2">
+                        <input class="form-check-input" type="checkbox" id="selectAllCompositions">
+                        <label class="form-check-label" for="selectAllCompositions">Select All</label>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <style>
-            .back-button {
-                background-color: #007bff;
-                /* Blue background */
-                color: white;
-                /* White text */
-                border: none;
-                /* No border */
-                padding: 10px 20px;
-                /* Padding */
-                font-size: 16px;
-                /* Font size */
-                cursor: pointer;
-                /* Pointer cursor on hover */
-                border-radius: 5px;
-                /* Rounded corners */
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                /* Space between icon and text */
-            }
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function selectItem(name, hscode, categoryId,compositionNames, compositionIds, mainUnitId, WSUnit, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
+            // Populate the form fields with the selected item data
+            document.getElementById('searchValue').value = name;
+            document.getElementById('hscode').value = hscode;
+            document.getElementById('category').value = categoryId;
+            // Set composition values
+    document.getElementById('editComposition').value = compositionNames;
+    document.getElementById('compositionIds').value = compositionIds;
+            document.getElementById('mainUnit').value = mainUnitId;
+            document.getElementById('WSUnit').value = WSUnit;
+            document.getElementById('unit').value = unitId;
+            document.getElementById('vatStatus').value = vatStatus;
+            document.getElementById('reorderLevel').value = reorderLevel;
+            document.getElementById('price').value = price;
+            document.getElementById('puPrice').value = puPrice;
+        }
+    </script>
 
-            .back-button:hover {
-                background-color: #0056b3;
-                /* Darker blue on hover */
-            }
+    <style>
+        .back-button {
+            background-color: #007bff;
+            /* Blue background */
+            color: white;
+            /* White text */
+            border: none;
+            /* No border */
+            padding: 10px 20px;
+            /* Padding */
+            font-size: 16px;
+            /* Font size */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+            border-radius: 5px;
+            /* Rounded corners */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Space between icon and text */
+        }
 
-            .icon {
-                font-size: 20px;
-                /* Icon size */
-            }
-        </style>
+        .back-button:hover {
+            background-color: #0056b3;
+            /* Darker blue on hover */
+        }
 
-        <script>
-            document.getElementById('backButton').addEventListener('click', function () {
-                // Navigate back twice to skip the success message page
-                window.history.go(-2);
+        .icon {
+            font-size: 20px;
+            /* Icon size */
+        }
+    </style>
+
+    <script>
+        document.getElementById('backButton').addEventListener('click', function () {
+            // Navigate back twice to skip the success message page
+            window.history.go(-2);
+        });
+    </script>
+
+    <script>
+
+        function selectValue(input) {
+            input.select(); // Select the value of the input field when it is focused
+        }
+
+        function editItem(id, name, hscode, categoryId,compositionNames, compositionIds, mainUnitId, WSUnitId, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
+            $('#editItemModal').modal('show');
+            $('#editItemForm').attr('action', '/items/' + id + '?_method=PUT');
+            $('#editName').val(name);
+            $('#editHscode').val(hscode);
+            $('#editCategory').val(categoryId);
+            // Set composition values
+    $('#editComposition').val(compositionNames);
+    $('#editCompositionIds').val(compositionIds);
+            $('#editMainUnit').val(mainUnitId);
+            $('#editWsUnit').val(WSUnitId);
+            $('#editUnit').val(unitId);
+            $('#editVatStatus').val(vatStatus);
+            $('#editReorderLevel').val(reorderLevel);
+            $('#editPrice').val(price);
+            $('#editpuPrice').val(puPrice);
+            $('#editOpeningStock').val(openingStock);
+            $('#editOpeningStockBalance').val(openingStockBalance);
+
+            // Set composition values
+            $('#editComposition').val(compositionNames);
+            $('#editCompositionIds').val(compositionIds);
+
+            // Initialize composition modal for this form
+            // initCompositionModal('#editComposition', '#editCompositionIds');
+        }
+
+        $(document).ready(function () {
+            $('#editItemModal').on('hidden.bs.modal', function () {
+                $('#editItemForm').trigger('reset');
+                $('#editItemForm').attr('action', '');
             });
+        });
 
-            // document.getElementById('backButton').addEventListener('click', function () {
-            //     // Store the current history length when first arriving at the page
-            //     if (!sessionStorage.getItem('initialHistoryLength')) {
-            //         sessionStorage.setItem('initialHistoryLength', history.length);
-            //     }
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const itemsList = document.querySelectorAll('.searchClass');
+            let hasResults = false;
 
-            //     const initialLength = parseInt(sessionStorage.getItem('initialHistoryLength'));
-            //     const currentLength = history.length;
-
-            //     // Calculate how many steps back we need to go
-            //     const stepsBack = currentLength - initialLength + 1;
-
-            //     if (stepsBack > 1) {
-            //         // If we have history to go back through
-            //         window.history.go(-stepsBack);
-            //     } else {
-            //         // Fallback to default back behavior
-            //         window.history.back();
-            //     }
-            // });
-
-            // // Reset the history tracker when coming from another page
-            // window.addEventListener('pageshow', function (event) {
-            //     if (event.persisted || performance.navigation.type === 2) {
-            //         // Page was restored from bfcache or via back/forward navigation
-            //         sessionStorage.removeItem('initialHistoryLength');
-            //     }
-            // });
-
-            // Store whether we're currently on the items page
-            // let isOnItemsPage = window.location.pathname === '/items';
-
-            // document.getElementById('backButton')?.addEventListener('click', function () {
-            //     if (!isOnItemsPage) return;
-
-            //     // Store initial history length if not set
-            //     if (!sessionStorage.getItem('initialHistoryLength')) {
-            //         sessionStorage.setItem('initialHistoryLength', history.length);
-            //     }
-
-            //     const initialLength = parseInt(sessionStorage.getItem('initialHistoryLength'));
-            //     const stepsBack = history.length - initialLength + 1;
-
-            //     // Set flag that we're navigating back from items page
-            //     sessionStorage.setItem('navigatingBackFromItems', 'true');
-
-            //     if (stepsBack > 1) {
-            //         window.history.go(-stepsBack);
-            //     } else {
-            //         window.history.back();
-            //     }
-            // });
-
-            // // Reset initial history when arriving at previous page after back navigation
-            // window.addEventListener('pageshow', function (event) {
-            //     if (event.persisted || performance.navigation.type === 2) {
-            //         if (sessionStorage.getItem('navigatingBackFromItems') === 'true') {
-            //             sessionStorage.removeItem('initialHistoryLength');
-            //             sessionStorage.removeItem('navigatingBackFromItems');
-            //         }
-            //     }
-            // });
-
-            // // Update page tracking when URL changes
-            // window.addEventListener('popstate', function () {
-            //     isOnItemsPage = window.location.pathname === '/items';
-            // });
-        </script>
-
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-        <script>
-
-            function selectValue(input) {
-                input.select(); // Select the value of the input field when it is focused
-            }
-
-            function editItem(id, name, hscode, categoryId, mainUnitId, WSUnitId, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
-                $('#editItemModal').modal('show');
-                $('#editItemForm').attr('action', '/items/' + id + '?_method=PUT');
-                $('#editName').val(name);
-                $('#editHscode').val(hscode);
-                $('#editCategory').val(categoryId);
-                $('#editMainUnit').val(mainUnitId);
-                $('#editWsUnit').val(WSUnitId);
-                $('#editUnit').val(unitId);
-                $('#editVatStatus').val(vatStatus);
-                $('#editReorderLevel').val(reorderLevel);
-                $('#editPrice').val(price);
-                $('#editpuPrice').val(puPrice);
-                $('#editOpeningStock').val(openingStock);
-                $('#editOpeningStockBalance').val(openingStockBalance);
-            }
-
-            $(document).ready(function () {
-                $('#editItemModal').on('hidden.bs.modal', function () {
-                    $('#editItemForm').trigger('reset');
-                    $('#editItemForm').attr('action', '');
-                });
-            });
-
-            document.getElementById('searchInput').addEventListener('input', function () {
-                const searchTerm = this.value.toLowerCase();
-                const itemsList = document.querySelectorAll('.searchClass');
-                let hasResults = false;
-
-                itemsList.forEach(item => {
-                    const itemName = item.querySelector('td strong').textContent.toLowerCase();
-                    if (itemName.includes(searchTerm)) {
-                        item.style.display = '';
-                        hasResults = true;
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-
-                // Handle "No items found" row
-                let noItemsRow = document.getElementById('noItemsRow');
-
-                if (!hasResults) {
-                    if (!noItemsRow) {
-                        noItemsRow = document.createElement('tr');
-                        noItemsRow.id = 'noItemsRow';
-                        noItemsRow.innerHTML = `<td colspan="6" class="text-center"><strong>No items found</strong></td>`;
-                        document.getElementById('itemsList').appendChild(noItemsRow);
-                    }
+            itemsList.forEach(item => {
+                const itemName = item.querySelector('td strong').textContent.toLowerCase();
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                    hasResults = true;
                 } else {
-                    if (noItemsRow) {
-                        noItemsRow.remove(); // Remove "No items found" if results exist
-                    }
+                    item.style.display = 'none';
                 }
             });
 
+            // Handle "No items found" row
+            let noItemsRow = document.getElementById('noItemsRow');
 
-            document.getElementById('searchValue').addEventListener('input', function () {
-                const searchTerm = this.value.toLowerCase();
-                const itemsList = document.querySelectorAll('.searchClass');
-                let hasResults = false;
+            if (!hasResults) {
+                if (!noItemsRow) {
+                    noItemsRow = document.createElement('tr');
+                    noItemsRow.id = 'noItemsRow';
+                    noItemsRow.innerHTML = `<td colspan="6" class="text-center"><strong>No items found</strong></td>`;
+                    document.getElementById('itemsList').appendChild(noItemsRow);
+                }
+            } else {
+                if (noItemsRow) {
+                    noItemsRow.remove(); // Remove "No items found" if results exist
+                }
+            }
+        });
 
-                itemsList.forEach(item => {
-                    const itemName = item.querySelector('td strong').textContent.toLowerCase();
-                    if (itemName.includes(searchTerm)) {
-                        item.style.display = '';
-                        hasResults = true;
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-                // Handle "No items found" row
-                let noItemsRow = document.getElementById('noItemsRow');
 
-                if (!hasResults) {
-                    if (!noItemsRow) {
-                        noItemsRow = document.createElement('tr');
-                        noItemsRow.id = 'noItemsRow';
-                        noItemsRow.innerHTML = `<td colspan="6" class="text-center"><strong>No items found</strong></td>`;
-                        document.getElementById('itemsList').appendChild(noItemsRow);
-                    }
+        document.getElementById('searchValue').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const itemsList = document.querySelectorAll('.searchClass');
+            let hasResults = false;
+
+            itemsList.forEach(item => {
+                const itemName = item.querySelector('td strong').textContent.toLowerCase();
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                    hasResults = true;
                 } else {
-                    if (noItemsRow) {
-                        noItemsRow.remove(); // Remove "No items found" if results exist
-                    }
+                    item.style.display = 'none';
                 }
             });
+            // Handle "No items found" row
+            let noItemsRow = document.getElementById('noItemsRow');
 
-            //Handle step by step going when enter key is press
-            document.addEventListener('DOMContentLoaded', function () {
-                const itemNameInput = document.getElementById('name').focus(); // Initial focus on item search input
-            });
-
-            // Function to move focus to the next input field
-            function moveToNextInput(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault(); // Prevent form submission
-                    const form = event.target.form;
-                    const index = Array.prototype.indexOf.call(form, event.target);
-                    form.elements[index + 1].focus();
+            if (!hasResults) {
+                if (!noItemsRow) {
+                    noItemsRow = document.createElement('tr');
+                    noItemsRow.id = 'noItemsRow';
+                    noItemsRow.innerHTML = `<td colspan="6" class="text-center"><strong>No items found</strong></td>`;
+                    document.getElementById('itemsList').appendChild(noItemsRow);
+                }
+            } else {
+                if (noItemsRow) {
+                    noItemsRow.remove(); // Remove "No items found" if results exist
                 }
             }
+        });
 
-            // Get all the input elements within the form
-            const inputs = document.querySelectorAll('form input, form select');
+        //Handle step by step going when enter key is press
+        document.addEventListener('DOMContentLoaded', function () {
+            const itemNameInput = document.getElementById('name').focus(); // Initial focus on item search input
+        });
 
-            // Attach the moveToNextInput function to the keydown event for each input field
-            inputs.forEach(input => {
-                input.addEventListener('keydown', moveToNextInput);
-            });
-
-            //calculate openingStockBalance
-
-
-            function calculateTotalOpeningStockBalance(input) {
-                const puPrice = parseFloat(document.getElementById('puPrice').value) || 0;
-                const openingStock = parseFloat(document.getElementById('openingStock').value) || 0;
-
-                const totalOpeningStockBalance = puPrice * openingStock;
-
-                // Update the Opening Stock Balance field
-                document.getElementById('openingStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
             }
+        }
 
-            function calculateTotalOpeningStockBalanceInEditForm(input) {
-                const puPrice = parseFloat(document.getElementById('editpuPrice').value) || 0.00;
-                const openingStock = parseFloat(document.getElementById('editOpeningStock').value) || 0.00;
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
 
-                const totalOpeningStockBalance = puPrice * openingStock;
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
 
-                // Update the Opening Stock Balance field
-                document.getElementById('editOpeningStockBalance').value = totalOpeningStockBalance.toFixed(2);
-            }
+        //calculate openingStockBalance
 
-            // Function to print the list of accounts in table format
-            function printItems() {
-                // Create a table structure for printing
-                let printContent = `
+
+        function calculateTotalOpeningStockBalance(input) {
+            const puPrice = parseFloat(document.getElementById('puPrice').value) || 0;
+            const openingStock = parseFloat(document.getElementById('openingStock').value) || 0;
+
+            const totalOpeningStockBalance = puPrice * openingStock;
+
+            // Update the Opening Stock Balance field
+            document.getElementById('openingStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        }
+
+        function calculateTotalOpeningStockBalanceInEditForm(input) {
+            const puPrice = parseFloat(document.getElementById('editpuPrice').value) || 0.00;
+            const openingStock = parseFloat(document.getElementById('editOpeningStock').value) || 0.00;
+
+            const totalOpeningStockBalance = puPrice * openingStock;
+
+            // Update the Opening Stock Balance field
+            document.getElementById('editOpeningStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        }
+
+        // Function to print the list of accounts in table format
+        function printItems() {
+            // Create a table structure for printing
+            let printContent = `
             <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
@@ -669,7 +675,7 @@
                 <tbody>`;
 
         <% items.forEach((item, index) => { %>
-                    printContent += `
+                printContent += `
                 <tr>
                     <td><%= index + 1 %></td> <!-- Serial Number for Printing -->
                     <td><%= item.name %></td>
@@ -685,11 +691,11 @@
                 </tr>`;
         <% }); %>
 
-                    printContent += `</tbody></table>`;
+                printContent += `</tbody></table>`;
 
-                // Temporarily replace body content with the table for printing
-                const originalContent = document.body.innerHTML;
-                document.body.innerHTML = `
+            // Temporarily replace body content with the table for printing
+            const originalContent = document.body.innerHTML;
+            document.body.innerHTML = `
             <html>
             <head>
                 <title>Print Accounts</title>
@@ -715,12 +721,313 @@
             </html>
         `;
 
-                // Trigger the print dialog
-                window.print();
+            // Trigger the print dialog
+            window.print();
 
-                // Restore the original content after printing
-                document.body.innerHTML = originalContent;
-                window.location.reload();  // Reload the page to restore event listeners
+            // Restore the original content after printing
+            document.body.innerHTML = originalContent;
+            window.location.reload();  // Reload the page to restore event listeners
+        }
+
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax/3.2.6/jquery.ajax.min.js"></script>
+
+    <script>
+        // $(document).ready(function () {
+        //     let allCompositions = [];
+        //     let selectedCompositions = [];
+        //     const $compositionInput = $("#composition");
+        //     const $compositionModal = $("#compositionModal");
+        //     const $searchInput = $("#searchComposition");
+        //     const $compositionList = $("#compositionList");
+
+        //     // Initialize modal
+        //     $compositionModal.on('show.bs.modal', function () {
+        //         fetchCompositions();
+        //     });
+
+        //     // Fetch compositions using AJAX
+        //     function fetchCompositions() {
+        //         $.ajax({
+        //             url: "/api/compositions",
+        //             method: "GET",
+        //             dataType: "json",
+        //             beforeSend: function () {
+        //                 $compositionList.html('<li class="list-group-item">Loading compositions...</li>');
+        //             },
+        //             success: function (data) {
+        //                 if (data && data.length) {
+        //                     allCompositions = data;
+        //                     renderCompositions();
+        //                 } else {
+        //                     $compositionList.html('<li class="list-group-item text-muted">No compositions available</li>');
+        //                 }
+        //             },
+        //             error: function (xhr, status, error) {
+        //                 console.error("AJAX Error:", status, error);
+        //                 $compositionList.html(
+        //                     '<li class="list-group-item text-danger">Error loading compositions. Please try again.</li>'
+        //                 );
+        //             }
+        //         });
+        //     }
+
+        //     // Render compositions with checkboxes
+        //     function renderCompositions(filtered = allCompositions) {
+        //         $compositionList.empty();
+
+        //         if (filtered.length === 0) {
+        //             $compositionList.html('<li class="list-group-item text-muted">No matching compositions found</li>');
+        //             return;
+        //         }
+
+        //         filtered.forEach(composition => {
+        //             const isSelected = selectedCompositions.some(c => c._id === composition._id);
+        //             $compositionList.append(`
+        //         <li class="list-group-item composition-item ${isSelected ? 'active' : ''}" 
+        //             data-id="${composition._id}">
+        //             <div class="form-check">
+        //                 <input type="checkbox" class="form-check-input" 
+        //                     ${isSelected ? 'checked' : ''}>
+        //                 <label class="form-check-label">
+        //                     ${composition.uniqueNumber || 'N/A'} - ${composition.name}
+        //                 </label>
+        //             </div>
+        //         </li>
+        //     `);
+        //         });
+        //     }
+
+        //     // Handle composition selection
+        //     $(document).on('change', '.composition-item input[type="checkbox"]', function () {
+        //         const compositionId = $(this).closest('.composition-item').data('id');
+        //         const composition = allCompositions.find(c => c._id === compositionId);
+
+        //         if ($(this).is(':checked')) {
+        //             if (!selectedCompositions.some(c => c._id === compositionId)) {
+        //                 selectedCompositions.push(composition);
+        //             }
+        //         } else {
+        //             selectedCompositions = selectedCompositions.filter(c => c._id !== compositionId);
+        //         }
+
+        //         updateCompositionTextarea();
+        //     });
+
+        //     $('#selectAllCompositions').change(function () {
+        //         const isChecked = $(this).is(':checked');
+        //         $('.composition-item input[type="checkbox"]').prop('checked', isChecked).trigger('change');
+        //     });
+
+        //     // Update textarea with selected compositions
+        //     function updateCompositionTextarea() {
+        //         $compositionInput.val(selectedCompositions.map(c => c.name).join(', '));
+        //         // Also update the hidden field with the IDs
+        //         $('#compositionIds').val(selectedCompositions.map(c => c._id).join(','));
+        //         $('#selectedCount').text(selectedCompositions.length);
+        //     }
+
+        //     // Search functionality
+        //     $searchInput.on('input', function () {
+        //         const searchTerm = $(this).val().toLowerCase();
+        //         const filtered = allCompositions.filter(c =>
+        //             c.name.toLowerCase().includes(searchTerm) ||
+        //             (c.uniqueNumber && c.uniqueNumber.toString().includes(searchTerm))
+        //         );
+        //         renderCompositions(filtered);
+        //     });
+
+        //     // Initialize existing values if editing
+        //     function initExistingCompositions() {
+        //         const existingIds = $('#compositionIds').val().trim();
+        //         if (existingIds) {
+        //             const ids = existingIds.split(',').map(id => id.trim());
+        //             selectedCompositions = allCompositions.filter(c =>
+        //                 ids.includes(c._id.toString())
+        //             );
+        //             $compositionInput.val(selectedCompositions.map(c => c.name).join(', '));
+        //         }
+        //     }
+
+        //     // Open modal on F6 key
+        //     $(document).on('keydown', function (e) {
+        //         if (e.key === 'F6' && !$compositionModal.is(':visible')) {
+        //             e.preventDefault();
+        //             $compositionModal.modal('show');
+        //         }
+        //     });
+
+        //     // Initialize on page load
+        //     initExistingCompositions();
+        // });
+
+        $(document).ready(function () {
+            // Create a reusable composition modal controller
+            function CompositionModalController(textareaSelector, hiddenFieldSelector) {
+                let allCompositions = [];
+                let selectedCompositions = [];
+                const $compositionInput = $(textareaSelector);
+                const $compositionIdsInput = $(hiddenFieldSelector);
+                const $compositionModal = $("#compositionModal");
+                const $searchInput = $("#searchComposition");
+                const $compositionList = $("#compositionList");
+                const $selectedCount = $("#selectedCount");
+
+                // Initialize modal for this controller
+                function init() {
+                    // Fetch compositions when modal opens
+                    $compositionModal.on('show.bs.modal', function () {
+                        fetchCompositions();
+                        // Clear search when modal opens
+                        $searchInput.val('');
+                    });
+
+                    // Initialize existing values
+                    initExistingCompositions();
+                }
+
+                // Fetch compositions using AJAX
+                function fetchCompositions() {
+                    $.ajax({
+                        url: "/api/compositions",
+                        method: "GET",
+                        dataType: "json",
+                        beforeSend: function () {
+                            $compositionList.html('<li class="list-group-item">Loading compositions...</li>');
+                        },
+                        success: function (data) {
+                            if (data && data.length) {
+                                allCompositions = data;
+                                renderCompositions();
+                            } else {
+                                $compositionList.html('<li class="list-group-item text-muted">No compositions available</li>');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("AJAX Error:", status, error);
+                            $compositionList.html(
+                                '<li class="list-group-item text-danger">Error loading compositions. Please try again.</li>'
+                            );
+                        }
+                    });
+                }
+
+                // Render compositions with checkboxes
+                function renderCompositions(filtered = allCompositions) {
+                    $compositionList.empty();
+
+                    if (filtered.length === 0) {
+                        $compositionList.html('<li class="list-group-item text-muted">No matching compositions found</li>');
+                        return;
+                    }
+
+                    filtered.forEach(composition => {
+                        const isSelected = selectedCompositions.some(c => c._id === composition._id);
+                        $compositionList.append(`
+                    <li class="list-group-item composition-item ${isSelected ? 'active' : ''}" 
+                        data-id="${composition._id}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" 
+                                ${isSelected ? 'checked' : ''}>
+                            <label class="form-check-label">
+                                ${composition.uniqueNumber || 'N/A'} - ${composition.name}
+                            </label>
+                        </div>
+                    </li>
+                `);
+                    });
+                }
+
+                // Handle composition selection
+                $(document).on('change', '.composition-item input[type="checkbox"]', function () {
+                    const compositionId = $(this).closest('.composition-item').data('id');
+                    const composition = allCompositions.find(c => c._id === compositionId);
+
+                    if ($(this).is(':checked')) {
+                        if (!selectedCompositions.some(c => c._id === compositionId)) {
+                            selectedCompositions.push(composition);
+                        }
+                    } else {
+                        selectedCompositions = selectedCompositions.filter(c => c._id !== compositionId);
+                    }
+
+                    updateCompositionTextarea();
+                });
+
+                // Select all compositions
+                $('#selectAllCompositions').change(function () {
+                    const isChecked = $(this).is(':checked');
+                    $('.composition-item input[type="checkbox"]').prop('checked', isChecked).trigger('change');
+                });
+
+                // Update textarea with selected compositions
+                function updateCompositionTextarea() {
+                    $compositionInput.val(selectedCompositions.map(c => c.name).join(', '));
+                    $compositionIdsInput.val(selectedCompositions.map(c => c._id).join(','));
+                    $selectedCount.text(selectedCompositions.length);
+                }
+
+                // Search functionality
+                $searchInput.on('input', function () {
+                    const searchTerm = $(this).val().toLowerCase();
+                    const filtered = allCompositions.filter(c =>
+                        c.name.toLowerCase().includes(searchTerm) ||
+                        (c.uniqueNumber && c.uniqueNumber.toString().includes(searchTerm))
+                    );
+                    renderCompositions(filtered);
+                });
+
+                // Initialize existing values if editing
+                function initExistingCompositions() {
+                    const existingIds = $compositionIdsInput.val().trim();
+                    if (existingIds) {
+                        const ids = existingIds.split(',').map(id => id.trim());
+                        selectedCompositions = allCompositions.filter(c =>
+                            ids.includes(c._id.toString())
+                        );
+                        $compositionInput.val(selectedCompositions.map(c => c.name).join(', '));
+                        $selectedCount.text(selectedCompositions.length);
+                    }
+                }
+
+                // Public method to set selected compositions
+                this.setSelectedCompositions = function (compositionNames, compositionIds) {
+                    $compositionInput.val(compositionNames);
+                    $compositionIdsInput.val(compositionIds);
+                    initExistingCompositions();
+                };
+
+                // Initialize this controller
+                init();
             }
 
-        </script>
+            // Initialize controllers for both forms
+            const addFormController = new CompositionModalController("#composition", "#compositionIds");
+            const editFormController = new CompositionModalController("#editComposition", "#editCompositionIds");
+
+            // Open modal on F6 key for the currently focused composition field
+            $(document).on('keydown', function (e) {
+                if (e.key === 'F6' && !$("#compositionModal").is(':visible')) {
+                    e.preventDefault();
+                    const focusedElement = document.activeElement;
+                    if (focusedElement && (focusedElement.id === 'composition' || focusedElement.id === 'editComposition')) {
+                        $("#compositionModal").modal('show');
+                    }
+                }
+            });
+
+            // When Done button is clicked, focus back to the composition field that opened the modal
+            $("#compositionModal").on('hidden.bs.modal', function () {
+                const lastFocused = $(this).data('lastFocused');
+                if (lastFocused) {
+                    $(lastFocused).focus();
+                }
+            });
+
+            // Track which composition field opened the modal
+            $("#composition, #editComposition").on('focus', function () {
+                $("#compositionModal").data('lastFocused', this);
+            });
+        });
+    </script>
