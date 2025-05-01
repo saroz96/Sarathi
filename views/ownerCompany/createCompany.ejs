@@ -4,6 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval';
+               script-src * 'unsafe-inline' 'unsafe-eval';
+               connect-src * 'unsafe-inline';
+               img-src * data: 'unsafe-inline';
+               frame-src * 'unsafe-inline';">
+
     <title>Create New Company</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -82,14 +88,16 @@
             color: #495057;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             padding: 0.75rem 1rem;
             border-radius: 8px;
             border: 1px solid #ced4da;
             transition: all 0.3s ease;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
         }
@@ -182,7 +190,7 @@
             .create-card {
                 padding: 1.5rem;
             }
-            
+
             .page-title {
                 font-size: 1.5rem;
             }
@@ -224,12 +232,12 @@
                                 <i class="fas fa-plus-circle me-1"></i>Create Company
                             </a>
                         </li>
-                    <% } %>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </li>
+                        <% } %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/logout">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                </a>
+                            </li>
                 </ul>
             </div>
         </div>
@@ -248,7 +256,8 @@
             </div>
 
             <!-- Message Modal -->
-            <div class="modal fade message-modal" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal fade message-modal" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel"
+                aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -260,14 +269,16 @@
                         <div class="modal-body">
                             <% if (messages && messages.length) { %>
                                 <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i><%= messages %>
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <%= messages %>
                                 </div>
-                            <% } %>
-                            <% if (error && error.length) { %>
-                                <div class="alert alert-danger">
-                                    <i class="fas fa-exclamation-circle me-2"></i><%= error %>
-                                </div>
-                            <% } %>
+                                <% } %>
+                                    <% if (error && error.length) { %>
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            <%= error %>
+                                        </div>
+                                        <% } %>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
@@ -372,7 +383,7 @@
                     <!-- Date Format -->
                     <div class="col-md-6">
                         <label for="dateFormat" class="form-label">Date Format</label>
-                        <select class="form-select" id="dateFormat" name="dateFormat" required>
+                        <select class="form-select select2" id="dateFormat" name="dateFormat" required>
                             <option value="" disabled selected>Select date format</option>
                             <option value="nepali">Nepali Date</option>
                             <option value="english">English Date</option>
@@ -400,7 +411,8 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="vatEnabled" name="vatEnabled" value="true">
+                            <input class="form-check-input" type="checkbox" id="vatEnabled" name="vatEnabled"
+                                value="true">
                             <label class="form-check-label" for="vatEnabled">Enable VAT</label>
                         </div>
                     </div>
@@ -416,86 +428,116 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
     <!-- Select2 JS -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
+
+    <!-- At the BOTTOM of your body, RIGHT BEFORE your custom scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+
     <script>
-        $(document).ready(function() {
-            // Initialize Select2 for dropdowns
-            $('.select2').select2({
-                placeholder: "Select an option",
-                allowClear: false,
-                width: '100%'
-            });
+        document.addEventListener('DOMContentLoaded', function () {
+            $(function () {
+                $(document).ready(function () {
+                    // Initialize Select2 for dropdowns
+                    $('.select2').select2({
+                        placeholder: "Select an option",
+                        allowClear: false,
+                        width: '100%'
+                    });
 
-            // Handle Date Format change
-            $('#dateFormat').change(function() {
-                var selectedFormat = $(this).val();
-                if (selectedFormat === 'english') {
-                    $('.english-date-fields').show();
-                    $('.nepali-date-fields').hide();
-                } else if (selectedFormat === 'nepali') {
-                    $('.nepali-date-fields').show();
-                    $('.english-date-fields').hide();
-                }
-            });
-
-            // Form validation
-            (function() {
-                'use strict'
-                var forms = document.querySelectorAll('.needs-validation')
-                
-                Array.from(forms).forEach(function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        } else {
-                            showLoader();
+                    // Handle Date Format change
+                    $('#dateFormat').change(function () {
+                        var selectedFormat = $(this).val();
+                        if (selectedFormat === 'english') {
+                            $('.english-date-fields').show();
+                            $('.nepali-date-fields').hide();
+                        } else if (selectedFormat === 'nepali') {
+                            $('.nepali-date-fields').show();
+                            $('.english-date-fields').hide();
                         }
-                        
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-            })();
+                    });
+
+                    // Form validation
+                    (function () {
+                        'use strict'
+                        var forms = document.querySelectorAll('.needs-validation')
+
+                        Array.from(forms).forEach(function (form) {
+                            form.addEventListener('submit', function (event) {
+                                if (!form.checkValidity()) {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                } else {
+                                    showLoader();
+                                }
+
+                                form.classList.add('was-validated')
+                            }, false)
+                        })
+                    })();
 
             // Show message modal if there are messages
             <% if (messages && messages.length || error && error.length) { %>
                 var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
-                messageModal.show();
+                        messageModal.show();
             <% } %>
         });
 
-        // Loader functionality
-        function showLoader() {
-            document.getElementById("loader").style.display = "flex";
-            updateLoaderPercentage();
-        }
+                // Loader functionality
+                function showLoader() {
+                    document.getElementById("loader").style.display = "flex";
+                    updateLoaderPercentage();
+                }
 
-        function hideLoader() {
-            document.getElementById("loader").style.display = "none";
-        }
+                function hideLoader() {
+                    document.getElementById("loader").style.display = "none";
+                }
 
-        function updateLoaderPercentage() {
-            let percentage = 0;
-            const loaderPercentage = document.getElementById("loader-percentage");
-            const interval = setInterval(() => {
-                percentage += 10;
-                loaderPercentage.textContent = `${percentage}%`;
-                if (percentage >= 100) clearInterval(interval);
-            }, 100);
-        }
+                function updateLoaderPercentage() {
+                    let percentage = 0;
+                    const loaderPercentage = document.getElementById("loader-percentage");
+                    const interval = setInterval(() => {
+                        percentage += 10;
+                        loaderPercentage.textContent = `${percentage}%`;
+                        if (percentage >= 100) clearInterval(interval);
+                    }, 100);
+                }
 
-        // Handle back button navigation
-        window.onpageshow = function(event) {
-            if (event.persisted) {
-                hideLoader();
-            }
-        };
+                // Handle back button navigation
+                window.onpageshow = function (event) {
+                    if (event.persisted) {
+                        hideLoader();
+                    }
+                };
+
+                // Function to move focus to the next input field
+                function moveToNextInput(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault(); // Prevent form submission
+                        const form = event.target.form;
+                        const index = Array.prototype.indexOf.call(form, event.target);
+                        form.elements[index + 1].focus();
+                    }
+                }
+
+                // Get all the input elements within the form
+                const inputs = document.querySelectorAll('form input, form select');
+
+                // Attach the moveToNextInput function to the keydown event for each input field
+                inputs.forEach(input => {
+                    input.addEventListener('keydown', moveToNextInput);
+                });
+
+            });
+        });
     </script>
 </body>
+
 </html>

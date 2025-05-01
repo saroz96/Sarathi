@@ -18,7 +18,7 @@ const SalesBillSchema = new Schema({
     purchaseSalesType: { type: String, required: true },
     originalCopies: { type: Number, default: 1 },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    billNumber: { type: Number, required: true },
+    billNumber: { type: String, required: true },
     account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
     cashAccount: { type: String },
     cashAccountAddress: { type: String },

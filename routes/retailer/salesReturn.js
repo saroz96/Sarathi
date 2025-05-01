@@ -139,19 +139,33 @@ router.get('/sales-return', isLoggedIn, ensureAuthenticated, ensureCompanySelect
         // const billCounter = await BillCounter.findOne({ company: companyId });
         // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'SalesReturn' // Specify the transaction type for sales bill
+        // });
+
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'SalesReturn' // Specify the transaction type for sales bill
+            transactionType: 'salesReturn'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.salesReturn;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
+
         res.render('retailer/salesReturn/salesReturnEntry', {
             company,
             accounts: accounts,
@@ -285,12 +299,12 @@ router.get('/sales-return/edit/billNumber', isLoggedIn, ensureAuthenticated, ens
             return res.redirect('/sales-return/finds')
         }
 
-            // Check if the bill has an account field populated
-            if (!salesReturnBill.account) {
-                req.flash('error', 'This bill is not associated with a credit account. Please search for a valid credit sales return bill number.');
-                return res.redirect('/sales-return/finds');
-            }
-    
+        // Check if the bill has an account field populated
+        if (!salesReturnBill.account) {
+            req.flash('error', 'This bill is not associated with a credit account. Please search for a valid credit sales return bill number.');
+            return res.redirect('/sales-return/finds');
+        }
+
 
         res.render('retailer/salesReturn/edit', {
             salesReturnBill,
@@ -423,12 +437,12 @@ router.get('/cash-sales-return/sales-return/edit/billNumber', isLoggedIn, ensure
             return res.redirect('/sales-return/finds')
         }
 
-            // Check if the bill has an account field populated
-            if (!salesReturnBill.cashAccount) {
-                req.flash('error', 'This bill is not associated with a cash account. Please search for a valid cash sales return bill number.');
-                return res.redirect('/cash-sales-return/sales-return/finds');
-            }
-    
+        // Check if the bill has an account field populated
+        if (!salesReturnBill.cashAccount) {
+            req.flash('error', 'This bill is not associated with a cash account. Please search for a valid cash sales return bill number.');
+            return res.redirect('/cash-sales-return/sales-return/finds');
+        }
+
 
         res.render('retailer/salesReturn/edit', {
             salesReturnBill,
@@ -502,7 +516,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'SalesReturn')
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesReturn')
 
             // Check validation conditions after processing all items
             if (isVatExempt !== 'all') {
@@ -874,19 +888,32 @@ router.get('/cash/sales-return/add', isLoggedIn, ensureAuthenticated, ensureComp
         // const billCounter = await BillCounter.findOne({ company: companyId });
         // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'SalesReturn' // Specify the transaction type for sales bill
+        // });
+
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'SalesReturn' // Specify the transaction type for sales bill
+            transactionType: 'salesReturn'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.salesReturn;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
         res.render('retailer/salesReturn/cash/add', {
             company,
             accounts: accounts,
@@ -962,7 +989,7 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'SalesReturn')
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesReturn')
 
             // Check validation conditions after processing all items
             if (isVatExempt !== 'all') {
@@ -2611,7 +2638,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                 res.redirect(`/sales-return/${existingBill._id}/edit/direct-print`);
             } else {
                 req.flash('success', 'Sales return updated successfully');
-                res.redirect(`/sales-return/edit/${billId}`);
+                res.redirect(`/sales-return/editCashAccount/${billId}`);
             }
         } catch (error) {
             console.error('Error during edit:', error);

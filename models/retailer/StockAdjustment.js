@@ -19,7 +19,7 @@ const StockAdjustmentSchema = new Schema({
         },
     ],
     adjustmentType: { type: String, enum: ['xcess', 'short'], required: true },
-    billNumber: { type: Number, required: true },
+    billNumber: { type: String, required: true },
     date: { type: Date, default: Date.now },
     note: { type: String },
     company: { type: Schema.Types.ObjectId, ref: 'Company', required: true },

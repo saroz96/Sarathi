@@ -137,7 +137,6 @@ async function showAllItems(input) {
             }
 
             const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
-
             const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
             const puPrice = latestStockEntry ? latestStockEntry.puPrice : 0;
 
@@ -147,7 +146,7 @@ async function showAllItems(input) {
         <div>${item.name}</div>
         <div>${totalStock}</div>
         <div>${item.unit ? item.unit.name : ''}</div>
-        <div>Rs.${puPrice.toFixed(2)}</div>
+        <div>Rs.${Math.round(puPrice * 100) / 100}</div>
     `;
 
             dropdownItem.addEventListener('click', () => {
@@ -217,7 +216,6 @@ document.getElementById('itemSearch').addEventListener('input', function () {
                 }
 
                 const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
-
                 const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
                 const puPrice = latestStockEntry ? latestStockEntry.puPrice : 0;
 
@@ -228,7 +226,7 @@ document.getElementById('itemSearch').addEventListener('input', function () {
             <div>${item.category ? item.category.name : 'No Category'}</div>
             <div>${totalStock}</div>
             <div>${item.unit ? item.unit.name : ''}</div>
-            <div>Rs.${puPrice.toFixed()}</div>
+            <div>Rs.${Math.round(puPrice * 100) / 100}</div>
         `;
 
                 dropdownItem.addEventListener('click', () => {
@@ -308,7 +306,7 @@ function addItemToBill(item, dropdownMenu) {
     ${item.unit ? item.unit.name : ''}
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
-<td><input type="number" name="items[${itemIndex}][puPrice]" value="${selectedBatch.puPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
+<td><input type="number" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
 <td class="item-amount">0.00</td>
 <td>
      <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
@@ -364,7 +362,7 @@ function addItemToBill(item, dropdownMenu) {
     ${item.unit ? item.unit.name : ''}
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
-<td><input type="number" name="items[${itemIndex}][puPrice]" value="${selectedBatch.puPrice}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
+<td><input type="number" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
 <td class="item-amount">0.00</td>
 <td>
      <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
@@ -440,8 +438,8 @@ function showBatchModal(item, callback) {
             <td>${entry.quantity}</td>
             <td>${Math.round(entry.price * 100) / 100}</td>
             <td>${Math.round(entry.puPrice * 100) / 100}</td>
-            <td>${entry.marginPercentage}</td>
-            <td>${entry.mrp}</td>
+            <td>${Math.round(entry.marginPercentage * 100) / 100}</td>
+            <td>${Math.round(entry.mrp * 100) / 100}</td>
             <td class="hidden">${entry.uniqueUuId}</td>
         </tr>
     `;
@@ -866,7 +864,7 @@ async function fetchLastTransactions(itemId) {
                     <td>${transaction.paymentMode}</td>
                     <td>${transaction.quantity}</td>
                     <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-                    <td>Rs.${transaction.puPrice.toFixed(2)}</td>
+                    <td>Rs.${Math.round(transaction.puPrice * 100) / 100}</td>
                 </tr>
             `;
         }).join('');

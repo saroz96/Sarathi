@@ -68,10 +68,10 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
         }
 
         const bills = await SalesBill.find({ company: companyId, fiscalYear: fiscalYear })
-        .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
-        .populate('account')
-        .populate('items.item')
-        .populate('user');
+            .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
+            .populate('account')
+            .populate('items.item')
+            .populate('user');
         res.render('retailer/sales-bills/allbills', {
             company,
             currentFiscalYear,
@@ -86,6 +86,62 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
 });
 
 
+// router.get("/api/fetch/cashaccounts", async (req, res) => {
+//     try {
+//         const companyId = req.session.currentCompany;
+//         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+
+//         // Check if fiscal year is already in the session or available in the company
+//         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+//         let currentFiscalYear = null;
+
+//         if (fiscalYear) {
+//             // Fetch the fiscal year from the database if available in the session
+//             currentFiscalYear = await FiscalYear.findById(fiscalYear);
+//         }
+
+//         // If no fiscal year is found in session or currentCompany, throw an error
+//         if (!currentFiscalYear && company.fiscalYear) {
+//             currentFiscalYear = company.fiscalYear;
+
+//             // Set the fiscal year in the session for future requests
+//             req.session.currentFiscalYear = {
+//                 id: currentFiscalYear._id.toString(),
+//                 startDate: currentFiscalYear.startDate,
+//                 endDate: currentFiscalYear.endDate,
+//                 name: currentFiscalYear.name,
+//                 dateFormat: currentFiscalYear.dateFormat,
+//                 isActive: currentFiscalYear.isActive
+//             };
+
+//             // Assign fiscal year ID for use
+//             fiscalYear = req.session.currentFiscalYear.id;
+//         }
+
+//         if (!fiscalYear) {
+//             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+//         }
+
+//         // Fetch only the required company groups: Cash in Hand, Sundry Debtors, Sundry Creditors
+//         const relevantGroups = await CompanyGroup.find({
+//             name: { $in: ['Cash in Hand'] }
+//         }).exec();
+
+//         // Convert relevant group IDs to an array of ObjectIds
+//         const relevantGroupIds = relevantGroups.map(group => group._id);
+
+//         const accounts = await Account.find({
+//             company: companyId,
+//             fiscalYear: fiscalYear,
+//             isActive: true,
+//             companyGroups: { $in: relevantGroupIds }
+//         });
+//         res.json(accounts);
+//     } catch (error) {
+//         res.status(500).json({ error: "Failed to fetch accounts" });
+//     }
+// });
+
 router.get("/api/fetch/cashaccounts", async (req, res) => {
     try {
         const companyId = req.session.currentCompany;
@@ -96,15 +152,11 @@ router.get("/api/fetch/cashaccounts", async (req, res) => {
         let currentFiscalYear = null;
 
         if (fiscalYear) {
-            // Fetch the fiscal year from the database if available in the session
             currentFiscalYear = await FiscalYear.findById(fiscalYear);
         }
 
-        // If no fiscal year is found in session or currentCompany, throw an error
         if (!currentFiscalYear && company.fiscalYear) {
             currentFiscalYear = company.fiscalYear;
-
-            // Set the fiscal year in the session for future requests
             req.session.currentFiscalYear = {
                 id: currentFiscalYear._id.toString(),
                 startDate: currentFiscalYear.startDate,
@@ -113,8 +165,6 @@ router.get("/api/fetch/cashaccounts", async (req, res) => {
                 dateFormat: currentFiscalYear.dateFormat,
                 isActive: currentFiscalYear.isActive
             };
-
-            // Assign fiscal year ID for use
             fiscalYear = req.session.currentFiscalYear.id;
         }
 
@@ -122,22 +172,68 @@ router.get("/api/fetch/cashaccounts", async (req, res) => {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Fetch only the required company groups: Cash in Hand, Sundry Debtors, Sundry Creditors
+        // 1. Fetch active cash accounts from Account collection
         const relevantGroups = await CompanyGroup.find({
             name: { $in: ['Cash in Hand'] }
         }).exec();
 
-        // Convert relevant group IDs to an array of ObjectIds
         const relevantGroupIds = relevantGroups.map(group => group._id);
 
-        const accounts = await Account.find({
+        const activeAccounts = await Account.find({
             company: companyId,
             fiscalYear: fiscalYear,
             isActive: true,
             companyGroups: { $in: relevantGroupIds }
+        }).select('name address pan phone');
+
+        // 2. Fetch previously used cash accounts from SalesBill collection
+        const usedCashAccounts = await SalesBill.aggregate([
+            {
+                $match: {
+                    company: new mongoose.Types.ObjectId(companyId),
+                    cashAccount: { $exists: true, $ne: null }
+                }
+            },
+            {
+                $group: {
+                    _id: "$cashAccount",
+                    address: { $first: "$cashAccountAddress" },
+                    pan: { $first: "$cashAccountPan" },
+                    phone: { $first: "$cashAccountPhone" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                    address: 1,
+                    pan: 1,
+                    phone: 1,
+                    isHistorical: true // Flag to identify historical accounts
+                }
+            }
+        ]);
+
+        // Combine both results, ensuring no duplicates
+        const combinedAccounts = [...activeAccounts];
+
+        usedCashAccounts.forEach(usedAccount => {
+            // Only add if not already in activeAccounts
+            if (!activeAccounts.some(acc => acc.name === usedAccount.name)) {
+                combinedAccounts.push({
+                    _id: null, // No ID since it's from SalesBill
+                    name: usedAccount.name,
+                    address: usedAccount.address,
+                    pan: usedAccount.pan,
+                    phone: usedAccount.phone,
+                    isHistorical: true
+                });
+            }
         });
-        res.json(accounts);
+
+        res.json(combinedAccounts);
     } catch (error) {
+        console.error("Error fetching cash accounts:", error);
         res.status(500).json({ error: "Failed to fetch accounts" });
     }
 });
@@ -216,34 +312,44 @@ router.get('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
         const companyGroups = await CompanyGroup.find({ company: companyId });
 
         // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter;
-        try {
-            billCounter = await BillCounter.findOne({
-                company: companyId,
-                fiscalYear: fiscalYear,
-                transactionType: 'Sales' // Specify the transaction type for sales bill
-            });
-        } catch (error) {
-            console.error('Error fetching bill counter:', error);
-            return res.status(500).json({ error: 'An error occurred while fetching the bill counter.' });
-        }
+        // let billCounter;
+        // try {
+        //     billCounter = await BillCounter.findOne({
+        //         company: companyId,
+        //         fiscalYear: fiscalYear,
+        //         transactionType: 'Sales' // Specify the transaction type for sales bill
+        //     });
+        // } catch (error) {
+        //     console.error('Error fetching bill counter:', error);
+        //     return res.status(500).json({ error: 'An error occurred while fetching the bill counter.' });
+        // }
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
 
-        // // Extract openingStock and openingStockBalance if they exist for the current fiscal year
-        // const itemsWithOpeningStock = items.map(item => {
-        //     const openingStockEntry = item.openingStockByFiscalYear.find(entry => entry.fiscalYear.toString() === fiscalYear);
-        //     return {
-        //         ...item._doc,
-        //         openingStock: openingStockEntry ? openingStockEntry.openingStock : 0,
-        //         openingStockBalance: openingStockEntry ? openingStockEntry.openingStockBalance : 0
-        //     };
-        // });
+        // Get formatted bill number
+        // const nextBillNumber = await getNextBillNumber(
+        //     companyId,     // First parameter
+        //     fiscalYear,     // Second parameter
+        //     'Sales'         // Third parameter
+        // );
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
+            company: companyId,
+            fiscalYear: fiscalYear,
+            transactionType: 'sales'
+        });
+
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.sales;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
         // Fetch categories and units for item creation
         const categories = await Category.find({ company: companyId });
         const units = await Unit.find({ company: companyId });
@@ -675,7 +781,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
             }
 
             // Create the bill number **after successful validation and processing**
-            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'Sales');
+            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
 
             // Create new bill
             const newBill = new SalesBill({
@@ -1041,19 +1147,32 @@ router.get('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompan
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear }).populate('companyGroups');
         const companyGroups = await CompanyGroup.find({ company: companyId });
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'Sales' // Specify the transaction type for sales bill
+        // });
+
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'Sales' // Specify the transaction type for sales bill
+            transactionType: 'sales'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.sales;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
 
         const categories = await Category.find({ company: companyId });
         const units = await Unit.find({ company: companyId });
@@ -1201,7 +1320,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'Sales');
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
 
             // Apply discount proportionally to vatable and non-vatable items
             const discountForTaxable = (totalTaxableAmount * discount) / 100;
@@ -1598,25 +1717,38 @@ router.get('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySele
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear }).populate('companyGroups');
         const companyGroups = await CompanyGroup.find({ company: companyId });
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter;
-        try {
-            billCounter = await BillCounter.findOne({
-                company: companyId,
-                fiscalYear: fiscalYear,
-                transactionType: 'Sales' // Specify the transaction type for sales bill
-            });
-        } catch (error) {
-            console.error('Error fetching bill counter:', error);
-            return res.status(500).json({ error: 'An error occurred while fetching the bill counter.' });
-        }
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter;
+        // try {
+        //     billCounter = await BillCounter.findOne({
+        //         company: companyId,
+        //         fiscalYear: fiscalYear,
+        //         transactionType: 'Sales' // Specify the transaction type for sales bill
+        //     });
+        // } catch (error) {
+        //     console.error('Error fetching bill counter:', error);
+        //     return res.status(500).json({ error: 'An error occurred while fetching the bill counter.' });
+        // }
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
+            company: companyId,
+            fiscalYear: fiscalYear,
+            transactionType: 'sales'
+        });
+
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.sales;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
 
         // Fetch categories and units for item creation
         const categories = await Category.find({ company: companyId });
@@ -1797,7 +1929,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
             }
 
             // Create the bill number **after successful validation and processing**
-            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'Sales');
+            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
 
             // Create new bill
             const newBill = new SalesBill({
@@ -2137,19 +2269,32 @@ router.get('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompany
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear }).populate('companyGroups');
         const companyGroups = await CompanyGroup.find({ company: companyId });
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'Sales' // Specify the transaction type for sales bill
+        // });
+
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'Sales' // Specify the transaction type for sales bill
+            transactionType: 'sales'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.sales;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
 
         const categories = await Category.find({ company: companyId });
         const units = await Unit.find({ company: companyId });
@@ -2306,7 +2451,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'Sales');
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
 
             // Apply discount proportionally to vatable and non-vatable items
             const discountForTaxable = (totalTaxableAmount * discount) / 100;

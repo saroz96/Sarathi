@@ -236,19 +236,31 @@ router.get('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySele
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'Purchase' // Specify the transaction type for sales bill
+        // });
+
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'Purchase' // Specify the transaction type for sales bill
+            transactionType: 'purchase'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.purchase;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
         res.render('retailer/purchase/purchaseEntry', {
             company, items: items, purchasebills: purchasebills, nextPurchaseBillNumber: nextBillNumber,
             nepaliDate: nepaliDate, transactionDateNepali, companyDateFormat, currentFiscalYear, vatEnabled: company.vatEnabled,
@@ -563,7 +575,7 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 roundOffAmount = parseFloat(manualRoundOffAmount);
                 finalAmount = totalAmount + roundOffAmount;
             }
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'Purchase')
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'purchase')
 
             // Create new purchase bill
             const newBill = new PurchaseBill({

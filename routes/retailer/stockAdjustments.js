@@ -145,23 +145,32 @@ router.get('/stockAdjustments/new', isLoggedIn, ensureAuthenticated, ensureCompa
         }
         const items = await Item.find({ company: companyId, fiscalYear: fiscalYear }).populate('category').populate('unit').populate('mainUnit');
 
-        // Get the next bill number
-        // const billCounter = await BillCounter.findOne({ company: companyId });
-        // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'StockAdjustment' // Specify the transaction type for sales bill
+        // });
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'StockAdjustment' // Specify the transaction type for sales bill
+            transactionType: 'stockAdjustment'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.stockAdjustment;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
 
         res.render('retailer/stockAdjustments/new', {
             company, currentFiscalYear,
@@ -639,7 +648,7 @@ router.post('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected,
 
                 const totalAmount = finalTaxableAmount + finalNonTaxableAmount + vatAmount;
 
-                const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'StockAdjustment');
+                const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'stockAdjustment');
                 const newStockAdjustment = new StockAdjustment({
                     items: itemsArray,
                     billNumber,

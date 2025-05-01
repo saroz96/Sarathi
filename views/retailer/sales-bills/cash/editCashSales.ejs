@@ -59,7 +59,7 @@
                                 <% } %>
                                     <div class="col">
                                         <label for="billNumber">Inv. No:</label>
-                                        <input type="number" name="billNumber" id="billNumber" class="form-control"
+                                        <input type="text" name="billNumber" id="billNumber" class="form-control"
                                             value="<%= bill.billNumber %>" oninput="this.value='<%=bill.billNumber%>'"
                                             onfocus="selectValue(this)">
                                     </div>
@@ -107,15 +107,14 @@
 
                         <div class="col">
                             <!-- New field for the address -->
-                            <label for="cashAccountAddress">Party Address:</label>
+                            <label for="cashAccountAddress">Address:</label>
                             <input type="text" id="cashAccountAddress" name="cashAccountAddress" class="form-control"
                                 value="<%=bill.cashAccountAddress%>" onfocus="selectValue(this)">
                         </div>
                         <div class="col">
-                            <!-- New field for the address -->
-                            <label for="pan">Vat No:</label>
-                            <input type="text" id="cashAccountPan" name="cashAccountPan" class="form-control"
-                                value="<%=bill.cashAccountPan%>" onfocus="selectValue(this)">
+                            <label for="cashAccountPhone">Phone:</label>
+                            <input type="tel" id="cashAccountPhone" name="cashAccountPhone" class="form-control"
+                            value="<%=bill.cashAccountPhone%>" onfocus="selectValue(this)" autocomplete="off">
                         </div>
                     </div>
                     <hr style="border: 1px solid gray;">
@@ -565,10 +564,11 @@
                     data-name="${account.name}" 
                     data-address="${account.address || 'N/A'}" 
                     data-pan="${account.pan || 'N/A'}"
+                    data-phone="${account.phone || 'N/A'}"
                     data-index="${index}">
                     <div class="d-flex justify-content-between">
                         <strong>${account.name}</strong>
-                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}| 📞 ${account.phone || 'N/A'}</span>
                     </div>
                 </li>
             `);
@@ -628,11 +628,13 @@
                 let accountName = element.data("name");
                 let accountAddress = element.data("address");
                 let accountPan = element.data("pan");
+                let accountPhone = element.data("phone");
 
                 $accountInput.val(accountName);
                 $accountIdInput.val(accountId); // Store account ID in hidden input
                 $("#cashAccountAddress").val(accountAddress);
                 $("#cashAccountPan").val(accountPan);
+                $("#cashAccountPhone").val(accountPhone);
                 $accountModal.modal("hide");
 
                 customNameAllowed = false; // Prevent custom name typing when an account is selected

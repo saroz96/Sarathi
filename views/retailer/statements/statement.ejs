@@ -23,7 +23,7 @@
         @media print {
 
             /* Print-specific styles */
-            body * {
+            /* body * {
                 visibility: hidden;
             }
 
@@ -37,7 +37,7 @@
                 left: 0;
                 top: 0;
                 width: 100%;
-            }
+            } */
 
             th,
             td {
@@ -92,6 +92,24 @@
         .expanded-card {
             width: 100%;
             /* Ensure the card takes full width of the container */
+        }
+
+        /* Force single line layout */
+        .d-flex.flex-nowrap {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+        }
+
+        .col-4 {
+            flex: 0 0 33.333333% !important;
+            max-width: 33.333333% !important;
+            padding: 0 15px !important;
+        }
+
+        /* Ensure content alignment */
+        [class^="col-"] {
+            display: flex !important;
+            align-items: center !important;
         }
     </style>
 
@@ -171,6 +189,8 @@
                     <% if (selectedCompany) { %>
                         <a href="/statement/pdf?account=<%= selectedCompany %>&fromDate=<%= fromDate %>&toDate=<%= toDate %>&paymentMode=<%= paymentMode %>"
                             class="btn btn-secondary no-print">Export PDF</a>
+                        <!-- <button type="button" class="btn btn-info no-print" onclick="printStatement()">Print
+                            Statement</button> -->
                         <button type="button" class="btn btn-info no-print" onclick="printStatement()">Print
                             Statement</button>
                         <% } %>
@@ -190,7 +210,7 @@
                                 Account: <%=partyName%>
                             </h4>
                         </div>
-                        <div class=" row">
+                        <!-- <div class="row">
                             <div class="col"><strong>From:</strong>
                                 <%= fromDate %>
                             </div>
@@ -200,14 +220,35 @@
                             <div class="col"><strong>Payment Mode:</strong>
                                 <%= paymentMode.charAt(0).toUpperCase() + paymentMode.slice(1) %>
                             </div>
+                        </div> -->
+
+                        <div class="row d-flex flex-nowrap">
+                            <div class="col-4" style="display: inline-block; white-space: nowrap;">
+                                <strong style="display: inline-block; width: 70px;">From:</strong>
+                                <span>
+                                    <%= fromDate %>
+                                </span>
+                            </div>
+                            <div class="col-4" style="display: inline-block; white-space: nowrap;">
+                                <strong style="display: inline-block; width: 70px;">To:</strong>
+                                <span>
+                                    <%= toDate %>
+                                </span>
+                            </div>
+                            <div class="col-4" style="display: inline-block; white-space: nowrap;">
+                                <strong style="display: inline-block; width: 120px;">Payment Mode:</strong>
+                                <span>
+                                    <%= paymentMode.charAt(0).toUpperCase() + paymentMode.slice(1) %>
+                                </span>
+                            </div>
                         </div>
 
                         <table class="table table-stripped table-hover" id="ledgerTable">
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Type</th>
                                     <th>Vch. No.</th>
+                                    <th>Type</th>
                                     <th>Pay. Mode</th>
                                     <th>Account</th>
                                     <th>Debit (Rs.)</th>
@@ -219,17 +260,38 @@
                                 <% let totalDebit=0; let totalCredit=0; %>
                                     <% statement.forEach(entry=> { totalDebit += entry.debit || 0; totalCredit +=
                                         entry.credit || 0; %>
-                                        <tr ondblclick="window.location.href='/bills/<%= entry.billId %>/print'" class="table-row">
-                                            <td><%= new Date(entry.date).toLocaleDateString() %></td>
-                                            <td><%= entry.type %></td>
-                                            <td><%= entry.billNumber %></td>
-                                            <td><%= entry.paymentMode %></td>
-                                            <td><%= entry.accountType?.name || entry.purchaseSalesType || entry.journalAccountType || entry.purchaseSalesReturnType || entry.drCrNoteAccountType || entry.paymentReceiptAccountType || 'Opening' %> <%=entry.partyBillNumber%></td>
-                                            <td><%= entry.debit ? entry.debit.toFixed(2) : '-' %></td>
-                                            <td><%= entry.credit ? entry.credit.toFixed(2) : '-' %></td>
-                                            <td><%= entry.balance %></td>
+                                        <tr ondblclick="window.location.href='/bills/<%= entry.billId %>/print'"
+                                            class="table-row">
+                                            <td>
+                                                <%= new Date(entry.date).toLocaleDateString() %>
+                                            </td>
+                                            <td>
+                                                <%= entry.billNumber %>
+                                            </td>
+                                            <td>
+                                                <%= entry.type %>
+                                            </td>
+                                            <td>
+                                                <%= entry.paymentMode %>
+                                            </td>
+                                            <td>
+                                                <%= entry.accountType?.name || entry.purchaseSalesType ||
+                                                    entry.journalAccountType || entry.purchaseSalesReturnType ||
+                                                    entry.drCrNoteAccountType || entry.paymentReceiptAccountType
+                                                    || 'Opening' %>
+                                                    <%=entry.partyBillNumber%>
+                                            </td>
+                                            <td>
+                                                <%= entry.debit ? entry.debit.toFixed(2) : '-' %>
+                                            </td>
+                                            <td>
+                                                <%= entry.credit ? entry.credit.toFixed(2) : '-' %>
+                                            </td>
+                                            <td>
+                                                <%= entry.balance %>
+                                            </td>
                                         </tr>
-                                        
+
                                         <% }) %>
                                             <tr class="table-secondary">
                                                 <td colspan="5" class="text-end"><strong>Total:</strong></td>
@@ -246,12 +308,12 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <script>
                         document.addEventListener("DOMContentLoaded", function () {
                             let tableRows = document.querySelectorAll(".table-row");
                             let currentIndex = 0;
-                
+
                             function updateRowHighlight() {
                                 tableRows.forEach(row => row.classList.remove("selected-row"));
                                 if (currentIndex >= 0 && currentIndex < tableRows.length) {
@@ -261,7 +323,7 @@
 
                             // Highlight the first row initially
                             updateRowHighlight();
-                
+
                             document.addEventListener("keydown", function (event) {
                                 if (event.key === "ArrowDown") {
                                     if (currentIndex < tableRows.length - 1) {
@@ -280,46 +342,220 @@
                                     // window.location.href = tableRows[currentIndex].getAttribute("data-url");
                                 }
                             });
-                
+
                             // Highlight row on mouse click
                             tableRows.forEach((row, index) => {
                                 row.addEventListener("click", function () {
                                     currentIndex = index;
                                     updateRowHighlight();
                                 });
-                
+
                                 row.addEventListener("dblclick", function () {
                                     window.location.href = row.getAttribute("data-url");
                                 });
                             });
                         });
                     </script>
-                
+
                     <style>
                         /* Ensuring the background color remains even with Bootstrap styles */
                         .selected-row {
-                            background-color: #5897FB !important; /* Solid blue highlight */
+                            background-color: #5897FB !important;
+                            /* Solid blue highlight */
                             color: white !important;
                             font-weight: bold;
                         }
-                
+
                         /* Ensuring text color is white for visibility */
                         .selected-row td {
                             background-color: #5897FB !important;
                             color: white;
                         }
                     </style>
-                <% } else { %>
-                    <div class="alert alert-info">Please select a company.</div>
-                <% } %>
+                    <% } else { %>
+                        <div class="alert alert-info">Please select a company.</div>
+                        <% } %>
             </div>
         </div>
     </div>
 
     <script>
+
         function printStatement() {
-            window.print();
+            const printContent = document.querySelector('.statement-container').outerHTML;
+            const styles = Array.from(document.querySelectorAll('style'))
+                .map(style => style.outerHTML)
+                .join('');
+
+            const printWindow = window.open('', '_blank');
+
+            printWindow.document.write(`
+        <html>
+            <head>
+                <title>Print Statement</title>
+                ${styles}
+                <style>
+
+                    /* Print-specific styles */
+                    body { 
+                        margin: 1cm;
+                        color: black !important;
+                    }
+
+                    /* Header styling */
+                    .statement-container h3,
+                    .statement-container h4 {
+                        text-align: center !important;
+                        margin: 10px 0 !important;
+                    }
+
+                    .text-center {
+                        text-align: center !important;
+                    }
+                    
+                    table {
+                        border-color: black !important;
+                    }
+                    
+                    th, td {
+                        background-color: white !important;
+                        color: black !important;
+                        border-color: #ddd !important;
+                    }
+                    
+                    /* Override highlighted row colors */
+                    .selected-row,
+                    .selected-row td {
+                        background-color: white !important;
+                        color: black !important;
+                        font-weight: normal !important;
+                    }
+                    
+                    @media print {
+                        .statement-container {
+                            width: 100% !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        body {
+                            margin: 0.5cm;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                ${printContent}
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.onafterprint = () => window.close();
+                    };
+                <\/script>
+            </body>
+        </html>
+    `);
+            printWindow.document.close();
         }
+
+        //     function printStatement() {
+        //     const printContent = document.querySelector('.statement-container').outerHTML;
+        //     const styles = Array.from(document.querySelectorAll('style'))
+        //         .map(style => style.outerHTML)
+        //         .join('');
+
+        //     const printWindow = window.open('', '_blank');
+
+        //     printWindow.document.write(`
+        //         <html>
+        //             <head>
+        //                 <title>Print Statement</title>
+        //                 ${styles}
+        //                 <style>
+        //                     /* Header styling */
+        //                     .statement-container h3,
+        //                     .statement-container h4 {
+        //                         text-align: center !important;
+        //                         margin: 10px 0 !important;
+        //                     }
+
+        //                     .text-center {
+        //                         text-align: center !important;
+        //                     }
+
+        //                     /* Table header styling */
+        //                     th {
+        //                         background-color: #f8f9fa !important;
+        //                         text-align: center !important;
+        //                         font-weight: 600 !important;
+        //                         padding: 12px !important;
+        //                     }
+
+        //                     /* Table body styling */
+        //                     td {
+        //                         padding: 10px !important;
+        //                     }
+
+        //                     /* Total row styling */
+        //                     .table-secondary td {
+        //                         font-weight: bold !important;
+        //                         background-color: #e9ecef !important;
+        //                     }
+
+        //                     /* Print-specific styles */
+        //                     body { 
+        //                         margin: 1cm;
+        //                         color: black !important;
+        //                     }
+
+        //                     table {
+        //                         border-color: black !important;
+        //                         width: 100% !important;
+        //                         margin: 20px 0 !important;
+        //                     }
+
+        //                     th, td {
+        //                         background-color: white !important;
+        //                         color: black !important;
+        //                         border-color: #ddd !important;
+        //                         vertical-align: middle !important;
+        //                     }
+
+        //                     .selected-row,
+        //                     .selected-row td {
+        //                         background-color: white !important;
+        //                         color: black !important;
+        //                         font-weight: normal !important;
+        //                     }
+
+        //                     @media print {
+        //                         .statement-container {
+        //                             width: 100% !important;
+        //                             margin: 0 !important;
+        //                             padding: 0 !important;
+        //                         }
+        //                         body {
+        //                             margin: 0.5cm;
+        //                         }
+        //                         th {
+        //                             background-color: #f8f9fa !important;
+        //                         }
+        //                     }
+        //                 </style>
+        //             </head>
+        //             <body>
+        //                 ${printContent}
+        //                 <script>
+        //                     window.onload = function() {
+        //                         window.print();
+        //                         window.onafterprint = () => window.close();
+        //                     };
+        //                 <\/script>
+        //             </body>
+        //         </html>
+        //     `);
+        //     printWindow.document.close();
+        // }
+
 
         $(document).ready(function () {
             // Initialize Select2 for searchable dropdown
@@ -330,7 +566,7 @@
             });
         });
 
-        
+
         function moveToNextVisibleInput(currentElement) {
             const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
 

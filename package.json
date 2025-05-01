@@ -1,7 +1,7 @@
 {
   "name": "Sarathi",
   "version": "1.0.0",
-  "description": "A billing software to manage accounting",
+  "description": "Sarathi Accounting Software",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -21,6 +21,7 @@
     "connect-flash": "^0.1.1",
     "country-state-city": "^3.2.1",
     "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
     "ejs-mate": "^4.0.0",
     "express": "^4.21.2",
@@ -40,7 +41,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "electron": "^35.1.2",
+    "electron": "^36.0.1",
     "electron-builder": "^26.0.12",
     "electron-packager": "^17.1.2",
     "electron-winstaller": "^5.4.0",

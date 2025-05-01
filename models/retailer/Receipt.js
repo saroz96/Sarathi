@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const receiptSchema = new mongoose.Schema({
-    billNumber: { type: Number, required: true },
+    billNumber: { type: String, required: true },
     date: { type: Date, required: true },
     account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
     debit: { type: Number, default: 0 },

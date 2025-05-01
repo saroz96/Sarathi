@@ -70,7 +70,7 @@
 
                                     <div class="col">
                                         <label for="billNumber">Inv. No:</label>
-                                        <input type="number" class="form-control" id="billNumber"
+                                        <input type="text" class="form-control" id="billNumber"
                                             value="<%=nextBillNumber %>" onfocus="selectValue(this)"
                                             oninput="this.value='<%=nextBillNumber%>'">
                                     </div>
@@ -648,10 +648,11 @@
                     data-name="${account.name}" 
                     data-address="${account.address || 'N/A'}" 
                     data-pan="${account.pan || 'N/A'}"
+                    data-phone="${account.phone || 'N/A'}"
                     data-index="${index}">
                     <div class="d-flex justify-content-between">
                         <strong>${account.name}</strong>
-                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}| 📞 ${account.phone || 'N/A'}</span>
                     </div>
                 </li>
             `);
@@ -711,11 +712,13 @@
                 let accountName = element.data("name");
                 let accountAddress = element.data("address");
                 let accountPan = element.data("pan");
+                let accountPhone = element.data("phone");
 
                 $accountInput.val(accountName);
                 $accountIdInput.val(accountId); // Store account ID in hidden input
                 $("#cashAccountAddress").val(accountAddress);
                 $("#cashAccountPan").val(accountPan);
+                $("#cashAccountPhone").val(accountPhone);
                 $accountModal.modal("hide");
 
                 customNameAllowed = false; // Prevent custom name typing when an account is selected

@@ -255,14 +255,15 @@
                                     <% } %>
                                         <div class="col">
                                             <label for="billNumber">Vch. No:</label>
-                                            <input type="number" name="billNumber" id="billNumber" class="form-control"
+                                            <input type="text" name="billNumber" id="billNumber" class="form-control"
                                                 value="<%= salesReturnBill.billNumber %>"
                                                 oninput="this.value='<%= salesReturnBill.billNumber %>'" required>
                                         </div>
                                         <div class="col hidden">
                                             <label for="paymentMode">Payment Mode:</label>
                                             <input type="text" class="form-control" id="paymentMode" name="paymentMode"
-                                                placeholder="" autocomplete="off" value="<%=salesReturnBill.paymentMode%>">
+                                                placeholder="" autocomplete="off"
+                                                value="<%=salesReturnBill.paymentMode%>">
                                         </div>
 
                                         <div class="col">
@@ -306,21 +307,21 @@
                                         <label for="cashAccount">Party Name:</label>
                                         <input type="text" id="cashAccount" name="cashAccount" class="form-control"
                                             value="<%=salesReturnBill.cashAccount%>" required>
-                                            <input type="hidden" id="accountId" name="accountId" value="<%= salesReturnBill.cashAccount %>">
-
+                                        <input type="hidden" id="accountId" name="accountId"
+                                            value="<%= salesReturnBill.cashAccount %>">
                                     </div>
 
                                     <div class="col">
                                         <!-- New field for the address -->
-                                        <label for="cashAccountAddress">Party Address:</label>
-                                        <input type="text" id="cashAccountAddress" name="cashAccountAddress" class="form-control"
-                                            value="<%=salesReturnBill.cashAccountAddress%>">
+                                        <label for="cashAccountAddress">Address:</label>
+                                        <input type="text" id="cashAccountAddress" name="cashAccountAddress"
+                                            class="form-control" value="<%=salesReturnBill.cashAccountAddress%>">
                                     </div>
                                     <div class="col">
-                                        <!-- New field for the address -->
-                                        <label for="cashAccountPan">Vat No:</label>
-                                        <input type="text" id="cashAccountPan" name="cashAccountPan" class="form-control"
-                                            value="<%=salesReturnBill.cashAccountPan%>">
+                                        <label for="cashAccountPhone">Phone:</label>
+                                        <input type="tel" id="cashAccountPhone" name="cashAccountPhone"
+                                            class="form-control" value="<%=salesReturnBill.cashAccountPhone%>"
+                                            onfocus="selectValue(this)" autocomplete="off">
                                     </div>
 
                                 </div>
@@ -675,12 +676,13 @@
                 <li class="list-group-item account-item ${isActive}" 
                     data-id="${account._id}" 
                     data-name="${account.name}" 
-                    data-address="${account.address || ''}" 
+                    data-address="${account.address || 'N/A'}" 
                     data-pan="${account.pan || 'N/A'}"
+                    data-phone="${account.phone || 'N/A'}"
                     data-index="${index}">
                     <div class="d-flex justify-content-between">
                         <strong>${account.name}</strong>
-                        <span>📍 ${account.address || ''} | 🆔 PAN: ${account.pan || ''}</span>
+                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}| 📞 ${account.phone || 'N/A'}</span>
                     </div>
                 </li>
             `);
@@ -740,11 +742,13 @@
                 let accountName = element.data("name");
                 let accountAddress = element.data("address");
                 let accountPan = element.data("pan");
+                let accountPhone = element.data("phone");
 
                 $accountInput.val(accountName);
                 $accountIdInput.val(accountId); // Store account ID in hidden input
                 $("#cashAccountAddress").val(accountAddress);
                 $("#cashAccountPan").val(accountPan);
+                $("#cashAccountPhone").val(accountPhone);
                 $accountModal.modal("hide");
 
                 customNameAllowed = false; // Prevent custom name typing when an account is selected
@@ -1021,6 +1025,8 @@
                     }
 
                     const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+                    const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+                    const price = latestStockEntry ? latestStockEntry.price : 0;
 
                     dropdownItem.innerHTML = `
                 <div>${item.uniqueNumber || 'N/A'}</div>
@@ -1028,7 +1034,7 @@
                 <div>${item.name}</div>
                 <div>${totalStock}</div>
                 <div>${item.unit ? item.unit.name : ''}</div>
-                <div>Rs.${item.price}</div>
+                <div>Rs.${Math.round(price * 100) / 100}</div>
             `;
 
                     dropdownItem.addEventListener('click', () => {
@@ -1099,6 +1105,8 @@
                         }
 
                         const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+                        const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+                        const price = latestStockEntry ? latestStockEntry.price : 0;
 
                         dropdownItem.innerHTML = `
                     <div>${item.uniqueNumber || 'N/A'}</div>
@@ -1107,7 +1115,7 @@
                     <div>${item.category ? item.category.name : 'No Category'}</div>
                     <div>${totalStock}</div>
                     <div>${item.unit ? item.unit.name : ''}</div>
-                    <div>Rs.${item.price}</div>
+                    <div>Rs.${Math.round(price * 100) / 100}</div>
                 `;
 
                         dropdownItem.addEventListener('click', () => {
@@ -1185,7 +1193,7 @@
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
 <td>
-    <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
+    <input type="number" name="items[${itemIndex}][price]" value="${Math.round(batchPrice * 100) / 100}" class="form-control item-price" id="price-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
 </td>
 <td class="item-amount">0.00</td>
 <td>
@@ -1569,7 +1577,7 @@
                         <th>Pay.Mode</th>
                         <th>Qty.</th>
                         <th>Unit</th>
-                        <th>S.price</th>
+                        <th>S.P</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1593,7 +1601,7 @@
                     <td>${transaction.paymentMode}</td>
                     <td>${transaction.quantity}</td>
                     <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-                    <td>Rs.${transaction.price}</td>
+                    <td>Rs.${Math.round(transaction.price * 100) / 100}</td>
                 </tr>
             `;
                 }).join('');

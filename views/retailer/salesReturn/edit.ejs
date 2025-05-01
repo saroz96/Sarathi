@@ -255,7 +255,7 @@
                                     <% } %>
                                         <div class="col">
                                             <label for="billNumber">Vch. No:</label>
-                                            <input type="number" name="billNumber" id="billNumber" class="form-control"
+                                            <input type="text" name="billNumber" id="billNumber" class="form-control"
                                                 value="<%= salesReturnBill.billNumber %>"
                                                 oninput="this.value='<%= salesReturnBill.billNumber %>'" required>
                                         </div>
@@ -1008,6 +1008,8 @@
                     }
 
                     const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+                    const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+                    const price = latestStockEntry ? latestStockEntry.price : 0;
 
                     dropdownItem.innerHTML = `
                 <div>${item.uniqueNumber || 'N/A'}</div>
@@ -1015,7 +1017,7 @@
                 <div>${item.name}</div>
                 <div>${totalStock}</div>
                 <div>${item.unit ? item.unit.name : ''}</div>
-                <div>Rs.${item.price}</div>
+                <div>Rs.${Math.round(price * 100) / 100}</div>
             `;
 
                     dropdownItem.addEventListener('click', () => {
@@ -1086,6 +1088,8 @@
                         }
 
                         const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+                        const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+                        const price = latestStockEntry ? latestStockEntry.price : 0;
 
                         dropdownItem.innerHTML = `
                     <div>${item.uniqueNumber || 'N/A'}</div>
@@ -1094,7 +1098,7 @@
                     <div>${item.category ? item.category.name : 'No Category'}</div>
                     <div>${totalStock}</div>
                     <div>${item.unit ? item.unit.name : ''}</div>
-                    <div>Rs.${item.price}</div>
+                    <div>Rs.${Math.round(price * 100) / 100}</div>
                 `;
 
                         dropdownItem.addEventListener('click', () => {
@@ -1172,7 +1176,7 @@
     <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
 </td>
 <td>
-    <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
+    <input type="number" name="items[${itemIndex}][price]" value="${Math.round(batchPrice * 100) / 100}" class="form-control item-price" id="price-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
 </td>
 <td class="item-amount">0.00</td>
 <td>
@@ -1580,7 +1584,7 @@
                     <td>${transaction.paymentMode}</td>
                     <td>${transaction.quantity}</td>
                     <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-                    <td>Rs.${transaction.price}</td>
+                    <td>Rs.${Math.round(transaction.price * 100) / 100}</td>
                 </tr>
             `;
                 }).join('');

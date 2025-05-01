@@ -212,18 +212,31 @@ router.get('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySel
         // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
 
         // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'PurchaseReturn' // Specify the transaction type for sales bill
+        // });
+
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'PurchaseReturn' // Specify the transaction type for sales bill
+            transactionType: 'purchaseReturn'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.purchaseReturn;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
         res.render('retailer/purchaseReturn/purchaseReturnEntry', {
             company, accounts: accounts, items: items, bills: bills, nextBillNumber: nextBillNumber,
             nepaliDate: nepaliDate, transactionDateNepali, companyDateFormat, purchaseInvoice,
@@ -545,7 +558,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 roundOffAmount = parseFloat(manualRoundOffAmount);
                 finalAmount = totalAmount + roundOffAmount;
             }
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'PurchaseReturn');
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'purchaseReturn');
 
             // Create new bill
             const newBill = new PurchaseReturn({

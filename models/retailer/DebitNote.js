@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const debitNoteSchema = new mongoose.Schema({
     billNumber: {
-        type: Number,
+        type: String,
     },
     date: {
         type: Date,

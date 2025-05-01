@@ -162,27 +162,32 @@ router.get('/payments', isLoggedIn, ensureAuthenticated, ensureCompanySelected, 
             console.log('Cash Accounts:', cashAccounts);
             console.log('Bank Accounts:', bankAccounts);
 
-            // // Get the last payment voucher number and increment it
-            // const lastPayment = await Payment.findOne({ company: companyId }).sort({ voucherNumber: -1 }).exec();
-            // const newVoucherNumber = lastPayment ? lastPayment.voucherNumber + 1 : 1;
+            // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+            // let billCounter = await BillCounter.findOne({
+            //     company: companyId,
+            //     fiscalYear: fiscalYear,
+            //     transactionType: 'Payment' // Specify the transaction type for sales bill
+            // });
 
-            // Get the next bill number
-            // const billCounter = await BillCounter.findOne({ company: companyId });
-            // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
+            // let nextBillNumber;
+            // if (billCounter) {
+            //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+            // } else {
+            //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+            // }
 
-            // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-            let billCounter = await BillCounter.findOne({
-                company: companyId,
-                fiscalYear: fiscalYear,
-                transactionType: 'Payment' // Specify the transaction type for sales bill
-            });
-
-            let nextBillNumber;
-            if (billCounter) {
-                nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-            } else {
-                nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-            }
+            // Get last counter without incrementing
+                    const lastCounter = await BillCounter.findOne({
+                        company: companyId,
+                        fiscalYear: fiscalYear,
+                        transactionType: 'payment'
+                    });
+            
+                    // Calculate next number for display only
+                    const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+                    const fiscalYears = await FiscalYear.findById(fiscalYear);
+                    const prefix = fiscalYears.billPrefixes.payment;
+                    const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
             res.render('retailer/payment/payment', {
                 company,
                 currentFiscalYear,
@@ -292,7 +297,7 @@ router.post('/payments', ensureAuthenticated, ensureCompanySelected, ensureTrade
             // billCounter.count += 1;
             // await billCounter.save();
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'Payment')
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'payment')
 
             const debitedAccount = await Account.findById(accountId);
             if (!debitedAccount) {

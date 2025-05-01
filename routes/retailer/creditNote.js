@@ -60,23 +60,32 @@ router.get('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensur
 
         const accounts = await Account.find({ company: req.session.currentCompany, fiscalYear: fiscalYear });
 
-        // Get the next bill number
-        // const billCounter = await BillCounter.findOne({ company: companyId });
-        // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'CreditNote' // Specify the transaction type for sales bill
+        // });
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'CreditNote' // Specify the transaction type for sales bill
+            transactionType: 'creditNote'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.creditNote;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
         res.render('retailer/creditNote/new',
             {
                 company,
@@ -111,7 +120,7 @@ router.post('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensu
             // billCounter.count += 1;
             // await billCounter.save();
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'CreditNote')
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'creditNote')
 
             // Create the Journal Voucher
             const creditNote = new CreditNote({

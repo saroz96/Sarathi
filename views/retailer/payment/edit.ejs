@@ -111,7 +111,7 @@
                                 <% } %>
                                     <div class="col">
                                         <label for="billNumber">Vch. No:</label>
-                                        <input type="number" name="billNumber" id="billNumber" class="form-control"
+                                        <input type="text" name="billNumber" id="billNumber" class="form-control"
                                             value="<%= payments.billNumber %>"
                                             oninput="this.value='<%=payments.billNumber%>'"
                                             onkeydown="handleBillNumberKeydown(event)" required

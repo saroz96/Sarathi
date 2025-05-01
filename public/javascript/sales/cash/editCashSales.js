@@ -149,7 +149,7 @@ async function showAllItems(input) {
                 <div>${item.name}</div>
                 <div>${totalStock}</div>
                 <div>${item.unit ? item.unit.name : ''}</div>
-                <div>Rs.${price}</div>
+                <div>Rs.${Math.round(price * 100) / 100}</div>
             `;
 
             dropdownItem.addEventListener('click', () => {
@@ -218,7 +218,10 @@ document.getElementById('itemSearch').addEventListener('input', function () {
                     dropdownItem.classList.add('non-vatable-item');
                 }
 
+                // Calculate total stock and fetch price from stock entries
                 const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+                const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+                const price = latestStockEntry ? latestStockEntry.price : 0;
 
                 dropdownItem.innerHTML = `
                     <div>${item.uniqueNumber || 'N/A'}</div>
@@ -227,7 +230,7 @@ document.getElementById('itemSearch').addEventListener('input', function () {
                     <div>${item.category ? item.category.name : 'No Category'}</div>
                     <div>${totalStock}</div>
                     <div>${item.unit ? item.unit.name : ''}</div>
-                    <div>Rs.${item.price}</div>
+                    <div>Rs.${Math.round(price * 100) / 100}</div>
                 `;
 
                 dropdownItem.addEventListener('click', () => {
@@ -298,7 +301,7 @@ function addItemToBill(item, dropdownMenu) {
             ${item.unit ? item.unit.name : ''}
             <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
         </td>
-        <td><input type="number" name="items[${itemIndex}][price]" value="${selectedBatch.price}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
+        <td><input type="number" name="items[${itemIndex}][price]" value="${Math.round(selectedBatch.price * 100) / 100}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)"></td>
         <td class="item-amount">0.00</td>
         <td>
              <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
@@ -369,8 +372,8 @@ function showBatchModal(item, callback) {
                     <td>${entry.quantity}</td>
                     <td>${Math.round(entry.price * 100) / 100}</td>
                     <td>${Math.round(entry.puPrice * 100) / 100}</td>
-                    <td>${entry.marginPercentage}</td>
-                    <td>${entry.mrp}</td>
+                    <td>${Math.round(entry.marginPercentage * 100) / 100}</td>
+                    <td>${Math.round(entry.mrp * 100) / 100}</td>
                     <td class="hidden">${entry.uniqueUuId}</td>
                 </tr>
             `;

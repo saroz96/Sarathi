@@ -188,7 +188,7 @@ async function showAllItems(input) {
                 <div>${item.name}</div>
                 <div>${totalStock}</div>
                 <div>${item.unit ? item.unit.name : ''}</div>
-                <div>Rs.${price}</div>
+                <div>Rs.${Math.round(price * 100) / 100}</div>
             `;
 
             dropdownItem.addEventListener('click', () => {
@@ -265,7 +265,7 @@ document.getElementById('itemSearch').addEventListener('input', function () {
                     <div>${item.category ? item.category.name : 'No Category'}</div>
                     <div>${totalStock}</div>
                     <div>${item.unit ? item.unit.name : ''}</div>
-                    <div>Rs.${item.price}</div>
+                    <div>Rs.${Math.round(item.price * 100) / 100}</div>
                 `;
 
                 dropdownItem.addEventListener('click', () => {
@@ -364,7 +364,7 @@ async function fetchLastTransactions(itemId) {
             <td>${transaction.paymentMode}</td>
             <td>${transaction.quantity}</td>
             <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-            <td>Rs.${transaction.price.toFixed(2)}</td>
+            <td>Rs.${Math.round(transaction.price * 100) / 100}</td>
                 </tr>
             `;
         }).join('');
@@ -450,7 +450,7 @@ function addItemToBill(item, dropdownMenu) {
             <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
         </td>
         <td>
-            <input type="number" name="items[${itemIndex}][price]" value="${batchPrice}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+            <input type="number" name="items[${itemIndex}][price]" value="${Math.round(batchPrice * 100) / 100}" class="form-control item-price" id="price-${itemIndex}" step="any" oninput="updateItemTotal(this)" onkeydown="handlePriceKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
         </td>
         <td class="item-amount">0.00</td>
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${firstStockEntry.uniqueUuId}">

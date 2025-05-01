@@ -68,6 +68,7 @@ initializePassport(passport);
 // Connect with database
 // mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
 mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
+// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi?retryWrites=true&w=majority&appName=Cluster0')
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
@@ -450,7 +451,23 @@ async function sendExpiryNotification(company, items) {
 //     }
 // })();
 
+app.use((req, res, next) => {
+    res.setHeader(
+        'Content-Security-Policy',
+        "script-src 'self' 'unsafe-inline' http://localhost:3000"
+    );
+    next();
+});
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
 // Start the server
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
+
+// module.exports = app;
+

@@ -156,27 +156,33 @@ router.get('/receipts', isLoggedIn, ensureAuthenticated, ensureCompanySelected, 
         // Check for fetched data
         console.log('Cash Accounts:', cashAccounts);
         console.log('Bank Accounts:', bankAccounts);
-        // // Get the last payment voucher number and increment it
-        // const lastPayment = await Payment.findOne({ company: companyId }).sort({ voucherNumber: -1 }).exec();
-        // const newVoucherNumber = lastPayment ? lastPayment.voucherNumber + 1 : 1;
 
-        // Get the next bill number
-        // const billCounter = await BillCounter.findOne({ company: companyId });
-        // const nextBillNumber = billCounter ? billCounter.count + 1 : 1;
+        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
+        // let billCounter = await BillCounter.findOne({
+        //     company: companyId,
+        //     fiscalYear: fiscalYear,
+        //     transactionType: 'Receipt' // Specify the transaction type for sales bill
+        // });
 
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        let billCounter = await BillCounter.findOne({
+        // let nextBillNumber;
+        // if (billCounter) {
+        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
+        // } else {
+        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
+        // }
+
+        // Get last counter without incrementing
+        const lastCounter = await BillCounter.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
-            transactionType: 'Receipt' // Specify the transaction type for sales bill
+            transactionType: 'receipt'
         });
 
-        let nextBillNumber;
-        if (billCounter) {
-            nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        } else {
-            nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        }
+        // Calculate next number for display only
+        const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+        const fiscalYears = await FiscalYear.findById(fiscalYear);
+        const prefix = fiscalYears.billPrefixes.receipt;
+        const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
 
         res.render('retailer/receipt/receipt', {
             company,
@@ -278,7 +284,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 return res.status(400).json({ message: 'Debit amount must be a positive number.' });
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'Receipt')
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'receipt')
 
             const creditedAccount = await Account.findById(accountId);
             if (!creditedAccount) {
