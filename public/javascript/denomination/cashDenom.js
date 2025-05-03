@@ -13,15 +13,25 @@ const denominations = [
     { value: 1, count: 0, amount: 0 }
 ];
 
+// Reset function to clear all values
+function resetDenominations() {
+    denominations.forEach(denom => {
+        denom.count = 0;
+        denom.amount = 0;
+    });
+}
+
 // 2. MAIN FUNCTIONS
 function openDenominationModal() {
+    // Reset before opening to ensure clean state
+    resetDenominations();
     generateDenominationInputs();
     $('#denominationModal').modal('show');
 }
 
 function generateDenominationInputs() {
     // Clear previous content
-    $('.modal-body').empty();
+    const modalBody = $('.denomination-modal-body').empty();
 
     // Create table structure
     const table = $('<table>').addClass('table table-bordered');
@@ -51,11 +61,23 @@ function generateDenominationInputs() {
                         'data-value': denom.value
                     })
                     .addClass('form-control denomination-input')
-                    .val('0')
+                    .val(denom.count)
+                    .on('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            e.stopPropagation(); // Stop event from bubbling up
+                            const next = $(this).closest('tr').next().find('.denomination-input');
+                            if (next.length) {
+                                next.focus().select();
+                            } else {
+                                $('#denominationModal .btn-primary').focus();
+                            }
+                        }
+                    })
             ),
             $('<td>')
                 .attr('id', 'amount-' + denom.value)
-                .text('0.00')
+                .text(denom.amount.toFixed(2))
         );
         tbody.append(row);
     });
@@ -64,7 +86,8 @@ function generateDenominationInputs() {
     tfoot.append(
         $('<tr>').addClass('table-active').append(
             $('<th>').attr('colspan', '2').text('Total'),
-            $('<th>').attr('id', 'denomination-total').text('0.00')
+            $('<th>').attr('id', 'denomination-total').text(
+                denominations.reduce((sum, denom) => sum + denom.amount, 0).toFixed(2))
         )
     );
 
@@ -76,32 +99,19 @@ function generateDenominationInputs() {
         $('<div>').addClass('col-md-8').append(table)
     );
 
-    $('.modal-body').append(container);
+    modalBody.append(container);
     setupEventListeners();
 }
 
 function setupEventListeners() {
     // Remove previous listeners to avoid duplicates
-    $('.denomination-input').off('input keydown');
+    $('.denomination-input').off('input');
 
     // Input event for live calculation
-    $(document).on('input', '.denomination-input', function () {
+    $(document).on('input', '.denomination-input', function() {
         const value = parseInt($(this).data('value'));
         const count = parseInt($(this).val()) || 0;
         calculateDenomination(value, count);
-    });
-
-    // Enter key navigation
-    $(document).on('keydown', '.denomination-input', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const next = $(this).closest('tr').next().find('.denomination-input');
-            if (next.length) {
-                next.focus().select();
-            } else {
-                $('#denominationModal .btn-primary').focus();
-            }
-        }
     });
 }
 
@@ -121,8 +131,6 @@ function calculateTotal() {
     const total = denominations.reduce((sum, denom) => sum + denom.amount, 0);
     $('#denomination-total').text(total.toFixed(2));
 }
-
-
 function printDenominations() {
     calculateTotal();
 
@@ -222,7 +230,7 @@ function printDenominations() {
     printWindow.document.close();
 
     // Wait for content to load before printing
-    printWindow.onload = function () {
+    printWindow.onload = function() {
         setTimeout(() => {
             printWindow.print();
             printWindow.close();
@@ -231,9 +239,9 @@ function printDenominations() {
 }
 
 // 3. INITIALIZATION
-$(document).ready(function () {
+$(document).ready(function() {
     // F10 key handler
-    $(document).keydown(function (e) {
+    $(document).keydown(function(e) {
         if (e.key === 'F10') {
             e.preventDefault();
             openDenominationModal();
@@ -241,13 +249,21 @@ $(document).ready(function () {
     });
 
     // Click handler for denomination button
-    $('#denominationButton').click(function (e) {
+    $('#denominationButton').click(function(e) {
         e.preventDefault();
         openDenominationModal();
     });
 
     // Focus first input when modal opens
-    $('#denominationModal').on('shown.bs.modal', function () {
+    $('#denominationModal').on('shown.bs.modal', function() {
         $('#denom-2000').focus().select();
+    });
+
+    // Reset values when modal is closed
+    $('#denominationModal').on('hidden.bs.modal', function() {
+        // Remove all event handlers specific to this modal
+        $('.denomination-input').off('input keydown');
+        // Use setTimeout to ensure the modal is fully closed before resetting
+        setTimeout(resetDenominations, 300);
     });
 });

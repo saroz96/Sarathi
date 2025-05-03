@@ -951,6 +951,23 @@
                     <p>Existing Fiscal Year</p>
                   </a>
                 </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                    <p>
+                      Import
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/import" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Items Import</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
               </ul>
             </li>
             <li class="nav-item">
@@ -1363,29 +1380,6 @@
   </div>
   <!--end::App Wrapper-->
 
-  <!-- Denomination Modal -->
-  <div class="modal fade" id="denominationModal" tabindex="-1" aria-labelledby="denominationModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" style="max-width: 50%;">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="denominationModalLabel">Cash Denomination</h5>
-          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
-          </button>
-        </div>
-        <div class="modal-body">
-          <!-- Content will be loaded dynamically -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="printDenominations()">
-            <i class="fas fa-print"></i> Print
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal for Product Details -->
   <div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
     <!-- <div class="modal-dialog modal-xl"> -->
@@ -1647,7 +1641,28 @@
     </div>
   </div>
 
-
+  <!-- Denomination Modal -->
+  <div class="modal fade" id="denominationModal" tabindex="-1" aria-labelledby="denominationModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 50%;">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="denominationModalLabel">Cash Denomination</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
+          </button>
+        </div>
+        <div class="denomination-modal-body">
+          <!-- Content will be loaded dynamically -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="printDenominations()">
+            <i class="fas fa-print"></i> Print
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!--end:: Modal for Product Details-->
   <!--begin::Script-->
@@ -3328,7 +3343,7 @@
 
     .product-cell {
       flex: 1;
-      padding: 5px;
+      padding: 2px;
       text-align: left;
       min-width: 100px;
       white-space: nowrap;
@@ -3499,7 +3514,7 @@
 
     .contact-cell {
       flex: 1;
-      padding: 5px;
+      padding: 2px;
       text-align: left;
       min-width: 100px;
       white-space: nowrap;

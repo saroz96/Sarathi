@@ -1,0 +1,162 @@
+<%- include('../layouts/boilerplate', { title: 'Import Items' , body: '' }) %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Results - Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            flex: 1;
+            max-width: 800px;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .error-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .error-item {
+            padding: 1rem;
+            border-left: 4px solid #dc3545;
+            margin-bottom: 0.5rem;
+            background: #fff;
+            border-radius: 4px;
+            transition: transform 0.2s ease;
+        }
+
+        .error-item:hover {
+            transform: translateX(5px);
+        }
+
+        .back-btn {
+            width: 100%;
+            max-width: 200px;
+            margin-top: 1.5rem;
+        }
+
+        .status-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-file-import text-primary"></i> Import Results
+            </h1>
+        </div>
+
+        <div class="summary-card">
+            <div class="d-flex align-items-center mb-4">
+                <% if (results.errors.length === 0) { %>
+                    <i class="fas fa-check-circle text-success status-icon"></i>
+                <% } else { %>
+                    <i class="fas fa-exclamation-triangle text-warning status-icon"></i>
+                <% } %>
+                <div>
+                    <h2 class="h5 mb-1">
+                        <%= results.success %> / <%= results.total %> items imported successfully
+                    </h2>
+                    <p class="text-muted mb-0">Process completed with <%= results.errors.length %> errors</p>
+                </div>
+            </div>
+
+            <div class="progress mb-4" style="height: 8px;">
+                <div class="progress-bar bg-<%= results.errors.length === 0 ? 'success' : 'warning' %>" 
+                     role="progressbar" 
+                     style="width: <%= (results.success / results.total) * 100 %>%" 
+                     aria-valuenow="<%= results.success %>" 
+                     aria-valuemin="0" 
+                     aria-valuemax="<%= results.total %>">
+                </div>
+            </div>
+
+            <% if (results.errors.length > 0) { %>
+                <div class="error-section">
+                    <h3 class="h5 mb-3">
+                        <i class="fas fa-exclamation-circle text-danger"></i> 
+                        Error Details (<%= results.errors.length %>)
+                    </h3>
+                    
+                    <div class="error-list">
+                        <% results.errors.forEach(error => { %>
+                            <div class="error-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong class="text-danger">Row <%= error.row %></strong>
+                                    <small class="text-muted"><%= new Date().toLocaleDateString() %></small>
+                                </div>
+                                <p class="mb-0 mt-2"><%= error.message %></p>
+                                <% if (error.data) { %>
+                                    <div class="text-muted mt-2 small">
+                                        <strong>Data:</strong> <%= JSON.stringify(error.data) %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="alert alert-success d-flex align-items-center" role="alert">
+                    <i class="fas fa-check-circle fa-2x me-3"></i>
+                    <div>
+                        <h4 class="alert-heading mb-1">Perfect import!</h4>
+                        <p class="mb-0">All items were successfully imported without any errors.</p>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="/import" class="btn btn-outline-primary back-btn">
+                <i class="fas fa-arrow-left me-2"></i>Back to Import
+            </a>
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <% if (results.errors.length > 0) { %>
+    <script>
+        document.getElementById('downloadErrors').addEventListener('click', function() {
+            const errors = <%= JSON.stringify(results.errors) %>;
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Row,Error Message,Data\n" 
+                + errors.map(e => `${e.row},"${e.message}",${JSON.stringify(e.data || '')}`).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "import_errors.csv");
+            document.body.appendChild(link);
+            link.click();
+        });
+    </script>
+    <% } %>
+</body>
+</html>

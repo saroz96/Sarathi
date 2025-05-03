@@ -11,7 +11,688 @@ const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
 const CompanyGroup = require('../../models/retailer/CompanyGroup');
+const SalesBill = require('../../models/retailer/SalesBill');
+const SalesReturn = require('../../models/retailer/SalesReturn');
+const Payment = require('../../models/retailer/Payment');
+const Receipt = require('../../models/retailer/Receipt');
+const CreditNote = require('../../models/retailer/CreditNote');
 
+// // Ageing Receivables Report (Sundry Debtors)
+// router.get('/ageing-receivables', isLoggedIn, async (req, res) => {
+//     try {
+//         const companyId = req.session.currentCompany;
+//         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+//         const currentCompany = await Company.findById(companyId);
+//         const today = new Date();
+//         const nepaliDate = new NepaliDate(today);
+//         const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
+
+//         // Initialize currentDate based on company date format
+//         if (companyDateFormat === 'nepali') {
+//             currentDate = nepaliDate; // Get current Nepali date as object
+//         } else {
+//             currentDate = today; // Get current English date
+//         }
+
+//         // Get Sundry Debtors and Creditors groups
+//         const [debtorGroup, creditorGroup] = await Promise.all([
+//             CompanyGroup.findOne({ name: 'Sundry Debtors', company: companyId }),
+//             CompanyGroup.findOne({ name: 'Sundry Creditors', company: companyId })
+//         ]);
+
+//         if (!debtorGroup || !creditorGroup) {
+//             return res.status(400).json({ error: 'Required account groups not found.' });
+//         }
+//         // Fetch current fiscal year
+//         let currentFiscalYear = req.session.currentFiscalYear?.id
+//             ? await FiscalYear.findById(req.session.currentFiscalYear.id)
+//             : company.fiscalYear;
+
+//         if (!currentFiscalYear) {
+//             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+//         }
+
+//         // Get all debtor and creditor accounts
+//         const [debtorAccounts, creditorAccounts] = await Promise.all([
+//             Account.find({
+//                 company: companyId,
+//                 fiscalYear: currentFiscalYear._id,
+//                 companyGroups: debtorGroup._id
+//             }),
+//             Account.find({
+//                 company: companyId,
+//                 fiscalYear: currentFiscalYear._id,
+//                 companyGroups: creditorGroup._id
+//             })
+//         ]);
+
+//         const allAccounts = [...debtorAccounts, ...creditorAccounts];
+//         const accountIds = allAccounts.map(a => a._id);
+
+//         // Instead of querying multiple collections, use the Transaction model
+//         const transactions = await Transaction.find({
+//             company: companyId,
+//             fiscalYear: currentFiscalYear._id,
+//             account: { $in: accountIds },
+//             isActive: true,
+//             $or: [
+//                 { billId: { $exists: true } }, // Sales
+//                 { salesReturnBillId: { $exists: true } }, // Sales Returns
+//                 { receiptAccountId: { $exists: true } }, // Receipts
+//                 { creditNoteId: { $exists: true } }, // Credit Notes
+//                 { purchaseBillId: { $exists: true } },// Purchase
+//                 { purchaseReturnBillId: { $exists: true } }, // Purchase Return
+//                 { paymentAccountId: { $exists: true } }, // Payments
+//                 { journalBillId: { $exists: true } }, // Journal
+//                 { debitNoteId: { $exists: true } } // Debit Notes
+//             ]
+//         })
+//             .populate('billId')
+//             .populate('purchaseBillId')
+//             .populate('purchaseReturnBillId')
+//             .populate('salesReturnBillId')
+//             .populate('paymentAccountId')
+//             .populate('receiptAccountId')
+//             .populate('journalBillId')
+//             .populate('debitNoteId')
+//             .populate('creditNoteId')
+//             .sort({ date: 'asc' }) // Sort by date for better analysis
+//             .exec();
+
+//         // Process ageing
+//         const report = [];
+//         const bucketTotals = createBucketTemplate();
+
+//         for (const account of allAccounts) {
+//             const buckets = createBucketTemplate();
+//             const accountTransactions = [];
+
+//             // Prepare all transactions for this account
+//             transactions.filter(t => t.account.equals(account._id)).forEach(txn => {
+//                 let amount = 0;
+//                 let transactionDate = txn.date;
+//                 let type = '';
+
+//                 if (txn.billId) {
+//                     // Sales Bill
+//                     amount = txn.debit;
+//                     type = 'Sale';
+//                     transactionDate = txn.billId.transactionDate || txn.date;
+//                 } else if (txn.salesReturnBillId) {
+//                     // Sales Return
+//                     amount = -txn.credit;
+//                     type = 'SlRt';
+//                     transactionDate = txn.salesReturnBillId.date || txn.date;
+//                 } else if (txn.receiptAccountId) {
+//                     // Receipt
+//                     amount = -txn.credit;
+//                     type = 'Rcpt';
+//                     transactionDate = txn.receiptAccountId.date || txn.date;
+//                 } else if (txn.creditNoteId) {
+//                     // Credit Note
+//                     if (txn.debit > 0) {
+//                         amount = txn.debit; // Positive receivable adjustment
+//                     } else {
+//                         amount = -txn.credit; // Positive payable adjustment
+//                     }
+//                     type = 'CrNt';
+//                     transactionDate = txn.creditNoteId.date || txn.date;
+//                 }
+//                 else if (txn.purchaseBillId) {
+//                     // Purchase
+//                     amount = -txn.credit;
+//                     type = 'Purc';
+//                     transactionDate = txn.purchaseBillId.date || txn.date;
+//                 }
+//                 else if (txn.purchaseReturnBillId) {
+//                     // Purchase Return
+//                     amount = txn.credit;
+//                     type = 'PrRt';
+//                     transactionDate = txn.purchaseBillId.date || txn.date;
+//                 }
+//                 else if (txn.paymentAccountId) {
+//                     // Payment
+//                     amount = txn.credit;
+//                     type = 'Pymt';
+//                     transactionDate = txn.purchaseBillId.date || txn.date;
+//                 }
+//                 else if (txn.journalBillId) {
+//                     // Journal
+//                     amount = -txn.credit;
+//                     amount = txn.debit;
+//                     type = 'Jrnl';
+//                     transactionDate = txn.purchaseBillId.date || txn.date;
+//                 }
+//                 else if (txn.debitNoteId) {
+//                     // Journal
+//                     amount = -txn.credit;
+//                     amount = txn.debit;
+//                     type = 'Jrnl';
+//                     transactionDate = txn.purchaseBillId.date || txn.date;
+//                 }
+//                 if (amount !== 0) {
+//                     accountTransactions.push({
+//                         date: transactionDate,
+//                         amount: amount,
+//                         type: type,
+//                         originalDate: transactionDate
+//                     });
+//                 }
+//             });
+
+//             // Sort transactions by date
+//             accountTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+//             // Process transactions in chronological order (FIFO)
+//             const unpaidItems = [];
+//             for (const txn of accountTransactions) {
+//                 if (txn.amount > 0) {
+//                     unpaidItems.push({
+//                         date: txn.originalDate,
+//                         amount: txn.amount
+//                     });
+//                 } else {
+//                     let remaining = Math.abs(txn.amount);
+//                     while (remaining > 0 && unpaidItems.length > 0) {
+//                         const oldest = unpaidItems[0];
+//                         if (oldest.amount <= remaining) {
+//                             remaining -= oldest.amount;
+//                             unpaidItems.shift();
+//                         } else {
+//                             oldest.amount -= remaining;
+//                             remaining = 0;
+//                         }
+//                     }
+//                 }
+//             }
+//             let transactionDate;
+//             for (const item of unpaidItems) {
+//                 let ageInDays;
+//                 if (companyDateFormat === 'nepali') {
+//                     // Validate and convert the transaction date to NepaliDate
+//                     try {
+// // Make sure the transaction date is valid before converting
+// const nepaliTransactionDate = item.date; // NepaliDate instance
+// const nepaliCurrentDate = nepaliDate; // NepaliDate instance
+
+// const nepaliTransactionDateObject = new Date(nepaliTransactionDate); // Date object from transaction.date
+// const nepaliCurrentDateObject = new Date(nepaliCurrentDate); // Convert string to Date object
+
+// // Check if both dates are valid
+// if (isNaN(nepaliTransactionDateObject) || isNaN(nepaliCurrentDateObject)) {
+//     throw new Error('Invalid date for age calculation');
+// }
+// // Debug the values
+
+// console.log('Type of nepaliTransactionDate:', typeof nepaliTransactionDate);
+// console.log('nepaliTransactionDate:', nepaliTransactionDate);
+// console.log('Type of nepaliCurrentDate:', typeof nepaliCurrentDate);
+// console.log('nepaliCurrentDate:', nepaliCurrentDate);
+
+// // Calculate the difference in days using JavaScript date difference
+// ageInDays = (nepaliCurrentDateObject - nepaliTransactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
+// console.log('Age in days:', age);
+// // Use the original Nepali date string without formatting
+// transactionDate = item.date;
+//                     } catch (error) {
+//                         console.error('Error converting Nepali date:', error);
+//                         age = 0; // Default to 0 if the date conversion fails
+//                     }
+//                 } else {
+//                     // Validate and handle English date format
+//                     try {
+//                         const transactionDateObject = new Date(item.date); // Convert to Date object
+
+//                         if (isNaN(transactionDateObject)) {
+//                             throw new Error('Invalid English date');
+//                         }
+
+//                         // Calculate age in days using the difference between today's date and the transaction date
+//                         ageInDays = (today - transactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
+
+//                         // Use the original English date string without formatting
+//                         transactionDate = item.date;
+//                     } catch (error) {
+//                         console.error('Error converting English date:', error);
+//                         age = 0; // Default to 0 if the date conversion fails
+//                     }
+//                 }
+
+//                 // Categorize into buckets
+//                 if (ageInDays <= 30) {
+//                     buckets['0-30'] += item.amount;
+//                 } else if (ageInDays <= 60) {
+//                     buckets['30-60'] += item.amount;
+//                 } else if (ageInDays <= 90) {
+//                     buckets['60-90'] += item.amount;
+//                 } else if (ageInDays <= 120) {
+//                     buckets['90-120'] += item.amount;
+//                 } else {
+//                     buckets['over-120'] += item.amount;
+//                 }
+//             }
+
+//             // Calculate totals
+//             buckets.total = Object.values(buckets).reduce((a, b) => a + b, 0);
+
+//             if (buckets.total > 0) {
+//                 report.push({
+//                     accountName: account.name,
+//                     buckets: formatBuckets(buckets)
+//                 });
+//                 updateBucketTotals(bucketTotals, buckets);
+//             }
+//         }
+
+//         res.render('retailer/outstanding/ageing-receivables', {
+//             report,
+//             bucketTotals,
+//             formatCurrency: (num) => (num || 0).toFixed(2),
+//             company,
+//             currentFiscalYear: company.fiscalYear,
+//             currentCompanyName: req.session.currentCompanyName,
+//             user: req.user,
+//             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+//         });
+
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send('Server Error');
+//     }
+// });
+
+
+
+// // Helper functions
+// function createBucketTemplate() {
+//     return { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
+// }
+
+// function formatBuckets(buckets) {
+//     return Object.fromEntries(
+//         Object.entries(buckets).map(([key, val]) => [key, Math.max(0, val)])
+//     );
+// }
+
+// function updateBucketTotals(totals, buckets) {
+//     for (const key in buckets) {
+//         if (key !== 'total') totals[key] += buckets[key];
+//     }
+//     totals.total += buckets.total;
+// }
+
+// Ageing Receivables/Payables Report
+router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
+    try {
+        const companyId = req.session.currentCompany;
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const currentCompany = await Company.findById(companyId);
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today);
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
+
+        // Initialize currentDate based on company date format
+        let currentDate;
+        if (companyDateFormat === 'nepali') {
+            currentDate = nepaliDate;
+        } else {
+            currentDate = today;
+        }
+
+        // Get Sundry Debtors and Creditors groups
+        const [debtorGroup, creditorGroup] = await Promise.all([
+            CompanyGroup.findOne({ name: 'Sundry Debtors', company: companyId }),
+            CompanyGroup.findOne({ name: 'Sundry Creditors', company: companyId })
+        ]);
+
+        if (!debtorGroup || !creditorGroup) {
+            return res.status(400).json({ error: 'Required account groups not found.' });
+        }
+
+        // Fetch current fiscal year
+        let currentFiscalYear = req.session.currentFiscalYear?.id
+            ? await FiscalYear.findById(req.session.currentFiscalYear.id)
+            : company.fiscalYear;
+
+        if (!currentFiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        // Get all debtor and creditor accounts
+        const [debtorAccounts, creditorAccounts] = await Promise.all([
+            Account.find({
+                company: companyId,
+                fiscalYear: currentFiscalYear._id,
+                companyGroups: debtorGroup._id
+            }),
+            Account.find({
+                company: companyId,
+                fiscalYear: currentFiscalYear._id,
+                companyGroups: creditorGroup._id
+            })
+        ]);
+
+        const allAccounts = [...debtorAccounts, ...creditorAccounts];
+        const accountIds = allAccounts.map(a => a._id);
+
+        // Query all relevant transactions
+        const transactions = await Transaction.find({
+            company: companyId,
+            fiscalYear: currentFiscalYear._id,
+            account: { $in: accountIds },
+            isActive: true,
+            $or: [
+                {
+                    billId: { $exists: true }, // Sales
+                    paymentMode: { $ne: 'cash' } // Exclude cash sales
+                },
+                {
+                    purchaseBillId: { $exists: true }, // Purchase
+                    paymentMode: { $ne: 'cash' } // Exclude cash purchases
+                },
+                {
+                    purchaseReturnBillId: { $exists: true }, // Purchase Return
+                    paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+                },
+                {
+                    salesReturnBillId: { $exists: true }, // Sales Return
+                    paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+                },
+                { paymentAccountId: { $exists: true } },
+                { receiptAccountId: { $exists: true } },
+                { journalBillId: { $exists: true } },
+                { debitNoteId: { $exists: true } },
+                { creditNoteId: { $exists: true } },
+            ],
+        })
+            .populate('billId')
+            .populate('purchaseBillId')
+            .populate('purchaseReturnBillId')
+            .populate('salesReturnBillId')
+            .populate('paymentAccountId')
+            .populate('receiptAccountId')
+            .populate('journalBillId')
+            .populate('debitNoteId')
+            .populate('creditNoteId')
+            .sort({ date: 'asc' })
+            .exec();
+
+        // Process ageing
+        const report = [];
+        const receivableTotals = createBucketTemplate();
+        const payableTotals = createBucketTemplate();
+        const netTotals = createBucketTemplate();
+
+        for (const account of allAccounts) {
+            const accountTransactions = transactions.filter(t => t.account.equals(account._id));
+
+            // Calculate net balance for the account
+            const netBalance = accountTransactions.reduce((sum, txn) => {
+                return sum + (txn.debit - txn.credit);
+            }, 0);
+
+            // Skip accounts with zero balance
+            if (Math.abs(netBalance) < 0.01) continue;
+
+            const isReceivable = netBalance > 0;
+            const buckets = createBucketTemplate();
+
+            // Separate transactions into receivables and payables
+            const receivableItems = [];
+            const payableItems = [];
+
+            for (const txn of accountTransactions.sort((a, b) => new Date(a.date) - new Date(b.date))) {
+                if (txn.debit > 0) {
+                    receivableItems.push({
+                        date: txn.date,
+                        amount: txn.debit,
+                        originalDate: txn.date
+                    });
+                }
+                if (txn.credit > 0) {
+                    payableItems.push({
+                        date: txn.date,
+                        amount: txn.credit,
+                        originalDate: txn.date
+                    });
+                }
+            }
+
+            // Process receivables (FIFO)
+            const unpaidReceivables = [...receivableItems];
+            for (const payment of accountTransactions
+                .filter(t => t.credit > 0)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))) {
+
+                let remaining = payment.credit;
+                while (remaining > 0 && unpaidReceivables.length > 0) {
+                    const oldest = unpaidReceivables[0];
+                    if (oldest.amount <= remaining) {
+                        remaining -= oldest.amount;
+                        unpaidReceivables.shift();
+                    } else {
+                        oldest.amount -= remaining;
+                        remaining = 0;
+                    }
+                }
+            }
+
+            // Process payables (FIFO)
+            const unpaidPayables = [...payableItems];
+            for (const payment of accountTransactions
+                .filter(t => t.debit > 0)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))) {
+
+                let remaining = payment.debit;
+                while (remaining > 0 && unpaidPayables.length > 0) {
+                    const oldest = unpaidPayables[0];
+                    if (oldest.amount <= remaining) {
+                        remaining -= oldest.amount;
+                        unpaidPayables.shift();
+                    } else {
+                        oldest.amount -= remaining;
+                        remaining = 0;
+                    }
+                }
+            }
+
+            // Calculate ageing for remaining items
+            const calculateAgeing = (items, isReceivable) => {
+                for (const item of items) {
+                    let ageInDays;
+                    if (companyDateFormat === 'nepali') {
+                        try {
+                            const transactionDate = new Date(item.date);
+                            const currentDateObj = new Date(nepaliDate);
+                            ageInDays = (currentDateObj - transactionDate) / (1000 * 60 * 60 * 24);
+                        } catch (error) {
+                            console.error('Error calculating Nepali date difference:', error);
+                            ageInDays = 0;
+                        }
+                    } else {
+                        try {
+                            const transactionDate = new Date(item.date);
+                            ageInDays = Math.floor((today - transactionDate) / (1000 * 60 * 60 * 24));
+                        } catch (error) {
+                            console.error('Error calculating English date difference:', error);
+                            ageInDays = 0;
+                        }
+                    }
+
+                    // Determine bucket
+                    let bucketKey;
+                    if (ageInDays <= 30) bucketKey = '0-30';
+                    else if (ageInDays <= 60) bucketKey = '30-60';
+                    else if (ageInDays <= 90) bucketKey = '60-90';
+                    else if (ageInDays <= 120) bucketKey = '90-120';
+                    else bucketKey = 'over-120';
+
+                    // Add to appropriate bucket
+                    if (isReceivable) {
+                        buckets[bucketKey] += item.amount;
+                    } else {
+                        buckets[bucketKey] -= item.amount; // Negative for payables
+                    }
+                }
+            };
+
+            calculateAgeing(unpaidReceivables, true);
+            calculateAgeing(unpaidPayables, false);
+
+            // Calculate account total from buckets
+            buckets.total = Object.values(buckets).reduce((a, b) => a + b, 0);
+
+            // Add to appropriate totals
+            if (isReceivable) {
+                updateBucketTotals(receivableTotals, buckets);
+            } else {
+                // For payables, we need to store positive amounts in the totals
+                updateBucketTotals(payableTotals, negateBuckets(buckets));
+            }
+            updateBucketTotals(netTotals, buckets);
+
+            report.push({
+                accountName: account.name,
+                buckets: formatBuckets(buckets),
+                isReceivable: isReceivable,
+                netBalance: Math.abs(buckets.total)
+            });
+        }
+
+        res.render('retailer/outstanding/ageingAllAccounts', {
+            report,
+            receivableTotals,
+            payableTotals,
+            netTotals,
+            formatCurrency: (num) => (num || 0).toFixed(2),
+            company,
+            currentFiscalYear: company.fiscalYear,
+            currentCompanyName: req.session.currentCompanyName,
+            user: req.user,
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Helper functions
+function createBucketTemplate() {
+    return { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
+}
+
+function formatBuckets(buckets) {
+    return Object.fromEntries(
+        Object.entries(buckets).map(([key, val]) => [key, val])
+    );
+}
+
+function updateBucketTotals(totals, buckets) {
+    for (const key in buckets) {
+        if (key !== 'total') totals[key] += buckets[key];
+    }
+    totals.total += buckets.total;
+}
+
+function negateBuckets(buckets) {
+    const negated = {};
+    for (const key in buckets) {
+        negated[key] = -buckets[key];
+    }
+    return negated;
+}
+
+// // Ageing Payables Report (Sundry Creditors)
+// router.get('/ageing-payables', isLoggedIn, async (req, res) => {
+//     try {
+//         const companyId = req.session.currentCompany;
+//         const fiscalYearId = req.session.currentFiscalYear?.id;
+
+//         // Get Sundry Creditors group
+//         const creditorGroup = await CompanyGroup.findOne({
+//             name: 'Sundry Creditors',
+//             company: companyId
+//         });
+
+//         // Get all creditor accounts
+//         const creditorAccounts = await Account.find({
+//             company: companyId,
+//             fiscalYear: fiscalYearId,
+//             companyGroups: creditorGroup._id
+//         });
+
+//         // Get all purchase bills for these accounts
+//         const purchaseBills = await PurchaseBill.find({
+//             company: companyId,
+//             fiscalYear: fiscalYearId,
+//             account: { $in: creditorAccounts.map(a => a._id) },
+//             status: 'active'
+//         }).sort({ date: 1 });
+
+//         // Process ageing
+//         const report = [];
+//         const bucketTotals = createBucketTemplate();
+//         const now = new Date();
+
+//         for (const account of creditorAccounts) {
+//             const accountBills = purchaseBills.filter(b => b.account.equals(account._id));
+//             const buckets = createBucketTemplate();
+
+//             for (const bill of accountBills) {
+//                 // Calculate outstanding amount
+//                 const paidAmount = await Payment.find({
+//                     billId: bill._id,
+//                     status: 'active'
+//                 }).sum('amount');
+
+//                 const outstanding = bill.totalAmount - paidAmount;
+//                 if (outstanding <= 0) continue;
+
+//                 // Calculate ageing
+//                 const ageInDays = Math.floor((now - bill.date) / (1000 * 60 * 60 * 24));
+
+//                 if (ageInDays <= 30) buckets['0-30'] += outstanding;
+//                 else if (ageInDays <= 60) buckets['30-60'] += outstanding;
+//                 else if (ageInDays <= 90) buckets['60-90'] += outstanding;
+//                 else if (ageInDays <= 120) buckets['90-120'] += outstanding;
+//                 else buckets['over-120'] += outstanding;
+//             }
+
+//             buckets.total = Object.values(buckets).reduce((a, b) => a + b, 0);
+//             if (buckets.total > 0) {
+//                 report.push({
+//                     accountName: account.name,
+//                     buckets
+//                 });
+//                 updateBucketTotals(bucketTotals, buckets);
+//             }
+//         }
+
+//         res.render('ageing-payables', {
+//             report,
+//             bucketTotals,
+//             formatCurrency: (num) => (num || 0).toFixed(2)
+//         });
+
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send('Server Error');
+//     }
+// });
+
+// // Helper functions remain the same
+// function createBucketTemplate() {
+//     return { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
+// }
+
+// function updateBucketTotals(totals, buckets) {
+//     Object.keys(buckets).forEach(key => {
+//         if (key !== 'total') totals[key] += buckets[key];
+//     });
+//     totals.total += buckets.total;
+// }
 // Route to fetch all accounts
 router.get('/aging/accounts', isLoggedIn, ensureAuthenticated, ensureCompanySelected, async (req, res) => {
     try {
@@ -617,21 +1298,21 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                 account: accountId,
                 isActive: true,
                 date: { $lt: new Date(fromDate) },
-                
+
                 $or: [
-                    { 
+                    {
                         billId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales
                     },
-                    { 
+                    {
                         purchaseBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchases
                     },
-                    { 
+                    {
                         purchaseReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
                     },
-                    { 
+                    {
                         salesReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales returns
                     },
@@ -682,19 +1363,19 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                     $lte: endDate
                 },
                 $or: [
-                    { 
+                    {
                         billId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales
                     },
-                    { 
+                    {
                         purchaseBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchases
                     },
-                    { 
+                    {
                         purchaseReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
                     },
-                    { 
+                    {
                         salesReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales returns
                     },
@@ -936,19 +1617,19 @@ router.get('/day-count-aging', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 isActive: true,
                 date: { $lt: new Date(fromDate) },
                 $or: [
-                    { 
+                    {
                         billId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales
                     },
-                    { 
+                    {
                         purchaseBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchases
                     },
-                    { 
+                    {
                         purchaseReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
                     },
-                    { 
+                    {
                         salesReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales returns
                     },
@@ -999,19 +1680,19 @@ router.get('/day-count-aging', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     $lte: endDate
                 },
                 $or: [
-                    { 
+                    {
                         billId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales
                     },
-                    { 
+                    {
                         purchaseBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchases
                     },
-                    { 
+                    {
                         purchaseReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
                     },
-                    { 
+                    {
                         salesReturnBillId: { $exists: true },
                         paymentMode: { $ne: 'cash' } // Exclude cash sales returns
                     },

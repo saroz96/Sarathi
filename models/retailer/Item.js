@@ -191,7 +191,6 @@ const itemSchema = new mongoose.Schema({
     company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
-        required: true
     },
     fiscalYear: {
         type: mongoose.Schema.Types.ObjectId,

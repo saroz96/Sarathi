@@ -3,6 +3,9 @@ const router = express.Router();
 
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const multer = require('multer');
+const readXlsxFile = require('read-excel-file/node');
+const path = require('path');
 const Item = require('../../models/retailer/Item');
 const Category = require('../../models/retailer/Category');
 const Unit = require('../../models/retailer/Unit');
@@ -20,10 +23,202 @@ const PurchaseBill = require('../../models/retailer/PurchaseBill');
 const PurchaseReturn = require('../../models/retailer/PurchaseReturns');
 const Transaction = require('../../models/retailer/Transaction');
 const StockAdjustment = require('../../models/retailer/StockAdjustment');
-
 const moment = require('moment');
 const MainUnit = require('../../models/retailer/MainUnit');
 const Composition = require('../../models/retailer/Composition');
+
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload = multer({ storage });
+
+// Import items page
+router.get('/import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        const companyId = req.session.currentCompany;
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const currentCompanyName = req.session.currentCompanyName;
+        const currentCompany = await Company.findById(new ObjectId(companyId));
+        // Check if companyId is present
+        if (!companyId) {
+            return res.status(400).json({ error: 'Company ID not found in session.' });
+        }
+        // Check if fiscal year is already in the session or available in the company
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            // Fetch the fiscal year from the database if available in the session
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        // If no fiscal year is found in session or currentCompany, throw an error
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+
+            // Set the fiscal year in the session for future requests
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+
+            // Assign fiscal year ID for use
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        res.render('retailer/item/import', {
+            company, currentCompany, currentCompanyName, currentFiscalYear, fiscalYear, title: '',
+            body: '',
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+        });
+    }
+});
+
+router.post('/import', upload.single('excelFile'), async (req, res) => {
+    try {
+        const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        const companyId = req.session.currentCompany;
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const currentCompanyName = req.session.currentCompanyName;
+        const currentCompany = await Company.findById(new ObjectId(companyId));
+        // Check if companyId is present
+        if (!companyId) {
+            return res.status(400).json({ error: 'Company ID not found in session.' });
+        }
+        // Check if fiscal year is already in the session or available in the company
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            // Fetch the fiscal year from the database if available in the session
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        // If no fiscal year is found in session or currentCompany, throw an error
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+
+            // Set the fiscal year in the session for future requests
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+
+            // Assign fiscal year ID for use
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        const rows = await readXlsxFile(req.file.path);
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+        const dataRows = rows.slice(1);
+
+        const results = { total: dataRows.length, success: 0, errors: [] };
+
+        for (let i = 0; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            const rowData = {};
+            headers.forEach((header, index) => {
+                rowData[header] = row[index] ? row[index].toString().trim() : null;
+            });
+
+            try {
+                // Resolve relational references with exact match
+                const [category, mainUnit, unit, company] = await Promise.all([
+                    mongoose.model('Category').findOne({ name: new RegExp(`^${rowData.category}$`, 'i') }),
+                    mongoose.model('MainUnit').findOne({ name: new RegExp(`^${rowData.mainunit}$`, 'i') }),
+                    mongoose.model('Unit').findOne({ name: new RegExp(`^${rowData.unit}$`, 'i') }),
+                    mongoose.model('Company').findOne({ name: rowData.company }),
+                ]);
+
+                // Validate references
+                if (!category) throw new Error(`Category not found: ${rowData.category}`);
+                if (!mainUnit) throw new Error(`MainUnit not found: ${rowData.mainUnit}`);
+                if (!unit) throw new Error(`Unit not found: ${rowData.unit}`);
+                // if (!fiscalYear) throw new Error(`FiscalYear not found: ${rowData.fiscalyear}`);
+                if (!company) throw new Error(`Company not found: ${rowData.company}`);
+
+                // Create item with proper ObjectIds
+                const itemData = {
+                    name: rowData.name,
+                    hscode: rowData.hscode,
+                    category: category._id,
+                    mainUnit: mainUnit._id,
+                    unit: unit._id,
+                    vatStatus: rowData.vatstatus,
+                    fiscalYear: fiscalYearId,
+                    company: company._id,
+                };
+
+                // Check for existing item
+                const existingItem = await mongoose.model('Item').findOne({
+                    name: itemData.name,
+                    company: company._id,
+                    fiscalYear: fiscalYearId
+                });
+
+                if (existingItem) {
+                    throw new Error(`Item already exists: ${itemData.name}`);
+                }
+
+                const item = new Item(itemData);
+                await item.save();
+                results.success++;
+            } catch (error) {
+                results.errors.push({ row: i + 2, message: error.message });
+            }
+        }
+
+        res.render('retailer/item/import-results', {
+            results, company, currentCompany, currentCompanyName, currentFiscalYear, fiscalYear, title: '',
+            body: '',
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+        });
+    } catch (error) {
+        res.status(500).render('error', { error });
+    }
+});
+
+// Download template
+// router.get('/import-template', (req, res) => {
+//     const filePath = path.join(__dirname, '../templates/items-import-template.xlsx');
+//     res.download(filePath);
+// });
+
+// Update the route handler
+router.get('/import-template', (req, res) => {
+    const filePath = path.join(__dirname, '../../public/templates/items-import-template.xlsx');
+    res.download(filePath, 'Inventory-Import-Template.xlsx', (err) => {
+        if (err) {
+            console.error('Error downloading template:', err);
+            res.status(404).send('Template file not found');
+        }
+    });
+});
+
+
 
 // Example backend route to handle item search
 router.get('/items/search/get', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
@@ -1253,11 +1448,11 @@ router.delete('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
         const companyId = req.session.currentCompany;
 
         // Check if the item has any related transactions
-        const hasSales = await SalesBill.findOne({ 'items.itemId': id, company: companyId });
-        const hasSalesReturn = await SalesReturn.findOne({ 'items.itemId': id, company: companyId });
-        const hasPurchase = await PurchaseBill.findOne({ 'items.itemId': id, company: companyId });
-        const hasPurchaseReturn = await PurchaseReturn.findOne({ 'items.itemId': id, company: companyId });
-        const hasStockAdjustment = await StockAdjustment.findOne({ 'items.itemId': id, company: companyId });
+        const hasSales = await SalesBill.findOne({ 'items.item': id, company: companyId });
+        const hasSalesReturn = await SalesReturn.findOne({ 'items.item': id, company: companyId });
+        const hasPurchase = await PurchaseBill.findOne({ 'items.item': id, company: companyId });
+        const hasPurchaseReturn = await PurchaseReturn.findOne({ 'items.item': id, company: companyId });
+        const hasStockAdjustment = await StockAdjustment.findOne({ 'items.item': id, company: companyId });
         const hasTransaction = await Transaction.findOne({ item: id, company: companyId });
 
         if (hasSales || hasSalesReturn || hasPurchase || hasPurchaseReturn || hasStockAdjustment || hasTransaction) {
