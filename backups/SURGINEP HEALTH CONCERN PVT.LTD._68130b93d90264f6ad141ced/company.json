@@ -1,0 +1,26 @@
+{
+  "_id": "68130b93d90264f6ad141ced",
+  "name": "SURGINEP HEALTH CONCERN PVT.LTD.",
+  "address": "Tripureshwor",
+  "country": "Nepal",
+  "state": "Bagmati",
+  "city": "Kathmandu",
+  "pan": "609804593",
+  "phone": "9843714188",
+  "ward": 11,
+  "email": "surginephealthconcern@gmail.com",
+  "tradeType": "retailer",
+  "owner": "67e0de2adcb27a24684411ce",
+  "users": [],
+  "dateFormat": "nepali",
+  "fiscalYearStartDate": "2081-04-01",
+  "vatEnabled": true,
+  "notificationEmails": [
+    "surginephealthconcern@gmail.com",
+    "sarozbasnet96@gmail.com"
+  ],
+  "createdAt": "2081-03-31T18:15:00.000Z",
+  "updatedAt": "2025-05-01T05:50:11.264Z",
+  "__v": 0,
+  "fiscalYear": "68130b93d90264f6ad141cf0"
+}

@@ -78,8 +78,6 @@
     </style>
 </head>
 
-<!-- <body class="d-flex flex-column vh-100" style="background-color: rgb(223,233,246);"> -->
-
 <body>
     <%- include('../partials/footer') %>
         <%- include('../partials/header') %>
@@ -150,6 +148,14 @@
                     const forms = document.querySelectorAll("form");
 
                     forms.forEach(function (form) {
+
+                        if (form.id === "ledgerFilterForm") {
+                            form.addEventListener("submit", function (event) {
+                                // No showLoader() call here - this is what disables the loader
+                            });
+                            return; // Skip the rest of the form handling for this form
+                        }
+
                         // Skip the loader for the fiscal year switch form
                         if (form.id === "switchFiscalYearForm") {
                             form.addEventListener("submit", function (event) {
@@ -281,7 +287,7 @@
                 //         }
                 //     });
                 // });
-                
+
                 document.addEventListener("DOMContentLoaded", function () {
                     // Handle Escape key press
                     document.addEventListener('keydown', function (event) {

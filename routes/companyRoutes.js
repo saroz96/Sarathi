@@ -15,6 +15,26 @@ const Settings = require('../models/retailer/Settings');
 const { ensureNotAdministrator } = require('../middleware/adminAuth');
 const catchAsync = require('../catchAsync');
 const mainUnit = require('../models/retailer/MainUnit');
+const Item = require('../models/retailer/Item');
+const barcodePreference = require('../models/retailer/barcodePreference');
+const BillCounter = require('../models/retailer/billCounter');
+const CompanyGroup = require('../models/retailer/CompanyGroup');
+const Composition = require('../models/retailer/Composition');
+const MainUnit = require('../models/retailer/MainUnit');
+const PurchaseBill = require('../models/retailer/PurchaseBill');
+const PurchaseReturns = require('../models/retailer/PurchaseReturns');
+const { default: Rack } = require('../models/retailer/Rack');
+const SalesBill = require('../models/retailer/SalesBill');
+const SalesReturn = require('../models/retailer/SalesReturn');
+const StockAdjustment = require('../models/retailer/StockAdjustment');
+const { default: Store } = require('../models/retailer/Store');
+const Transaction = require('../models/retailer/Transaction');
+const CreditNote = require('../models/retailer/CreditNote');
+const DebitNote = require('../models/retailer/DebitNote');
+const JournalVoucher = require('../models/retailer/JournalVoucher');
+const OpeningStock = require('../models/retailer/OpeningStock');
+const Payment = require('../models/retailer/Payment');
+const Receipt = require('../models/retailer/Receipt');
 
 router.get('/company/new', ensureAuthenticated, ensureNotAdministrator, async (req, res) => {
     const companyId = req.session.currentCompany;
@@ -481,6 +501,31 @@ async function addDefaultItemMainUnit(companyId) {
     }
 }
 
+
+const defaultStore = {
+    name: 'Main'
+}
+async function addDefaultStore(companyId) {
+    const store = new Store({
+        name: defaultStore.name,
+        company: companyId,
+    });
+    await store.save();
+    return store;
+}
+
+const defaultRack = {
+    name: 'Default'
+};
+
+async function addDefaultRack(companyId, storeId) {
+    const rack = new Rack({
+        name: defaultRack.name,
+        store: storeId,
+        company: companyId,
+    });
+    await rack.save();
+}
 // Route for creating a new company
 router.post('/company', ensureAuthenticated, async (req, res) => {
     try {
@@ -599,6 +644,10 @@ router.post('/company', ensureAuthenticated, async (req, res) => {
         await addDefaultItemCategory(company._id);
         await addDefaultItemUnit(company._id);
         await addDefaultItemMainUnit(company._id);
+        // Create default store
+        const store = await addDefaultStore(company._id);
+        // Create default rack in the new store
+        await addDefaultRack(company._id, store._id);
         await User.findByIdAndUpdate(req.user._id, { $push: { companies: company._id } });
 
         // Create default settings for the new company with all boolean values set to false
@@ -702,7 +751,7 @@ router.get('/switch/:id/', ensureAuthenticated, async (req, res) => {
 
 
 // Route to view company details
-router.get('/company/:id', async (req, res) => {
+router.get('/company/:id', isLoggedIn, ensureAuthenticated, async (req, res) => {
     try {
         const companyId = req.params.id;
         let userCompanies;
@@ -929,12 +978,62 @@ router.put('/company/edit/:id', ensureAuthenticated, async (req, res) => {
     }
 });
 
-// Route to handle form submission and delete the category
+// // Route to handle form submission and delete the category
+// router.delete('/company/delete/:id', ensureAuthenticated, async (req, res) => {
+//     const { id } = req.params;
+//     await Company.findByIdAndDelete(id);
+//     req.flash('success', 'Company deleted successfully');
+//     res.redirect('/dashboard');
+// })
+
 router.delete('/company/delete/:id', ensureAuthenticated, async (req, res) => {
-    const { id } = req.params;
-    await Company.findByIdAndDelete(id);
-    req.flash('success', 'Company deleted successfully');
-    res.redirect('/dashboard');
-})
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { id } = req.params;
+
+            // Delete related documents
+            await Promise.all([
+                Item.deleteMany({ company: id }).session(session),
+                Unit.deleteMany({ company: id }).session(session),
+                Category.deleteMany({ company: id }).session(session),
+                Account.deleteMany({ company: id }).session(session),
+                barcodePreference.deleteMany({ company: id }).session(session),
+                BillCounter.deleteMany({ company: id }).session(session),
+                CompanyGroup.deleteMany({ company: id }).session(session),
+                Composition.deleteMany({ company: id }).session(session),
+                CreditNote.deleteMany({ company: id }).session(session),
+                DebitNote.deleteMany({ company: id }).session(session),
+                FiscalYear.deleteMany({ company: id }).session(session),
+                JournalVoucher.deleteMany({ company: id }).session(session),
+                MainUnit.deleteMany({ company: id }).session(session),
+                OpeningStock.deleteMany({ company: id }).session(session),
+                Payment.deleteMany({ company: id }).session(session),
+                PurchaseBill.deleteMany({ company: id }).session(session),
+                PurchaseReturns.deleteMany({ company: id }).session(session),
+                Rack.deleteMany({ company: id }).session(session),
+                Receipt.deleteMany({ company: id }).session(session),
+                SalesBill.deleteMany({ company: id }).session(session),
+                SalesReturn.deleteMany({ company: id }).session(session),
+                Settings.deleteMany({ company: id }).session(session),
+                StockAdjustment.deleteMany({ company: id }).session(session),
+                Store.deleteMany({ company: id }).session(session),
+                Transaction.deleteMany({ company: id }).session(session),
+            ]);
+
+            // Delete the company
+            await Company.deleteOne({ _id: id }, { session });
+        });
+
+        req.flash('success', 'Company and all related data deleted successfully');
+        res.redirect('/dashboard');
+    } catch (error) {
+        console.error('Error deleting company:', error);
+        req.flash('error', 'Failed to delete company');
+        res.redirect('/dashboard');
+    } finally {
+        session.endSession();
+    }
+});
 
 module.exports = router;

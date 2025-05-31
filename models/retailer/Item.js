@@ -60,7 +60,15 @@ const stockEntrySchema = new mongoose.Schema({
     daysUntilExpiry: {  // New field to store days until expiry
         type: Number,
         default: 730  // Default 2 years in days
-    }
+    },
+    store: {  // Add this field
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Store',
+    },
+    rack: {  // Add this field
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Rack',
+    },
 });
 
 
@@ -96,6 +104,10 @@ const itemSchema = new mongoose.Schema({
     hscode: Number,
     category: {
         type: mongoose.Schema.Types.ObjectId, ref: 'Category',
+        required: true
+    },
+    itemsCompany: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'itemsCompany',
         required: true
     },
     price: Number,
@@ -134,6 +146,46 @@ const itemSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    initialOpeningStock: {
+        initialFiscalYear: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FiscalYear'
+        },
+        openingStock: {
+            type: Number,
+            default: 0
+        },
+        openingStockBalance: {
+            type: String,
+            default: 0
+        },
+        purchasePrice: {
+            type: String,
+            default: 0
+        },
+        salesPrice: {
+            type: Number,
+            default: 0
+        },
+        date: {
+            type: Date,
+            default: Date.now()
+        }
+    },
+    closingStockByFiscalYear: [{
+        fiscalYear: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FiscalYear'
+        },
+        closingStock: {
+            type: Number,
+            default: 0
+        },
+        openingStockValue: {
+            type: String,
+            default: 0
+        },
+    }],
     openingStockByFiscalYear: [{
         fiscalYear: {
             type: mongoose.Schema.Types.ObjectId,
@@ -172,6 +224,11 @@ const itemSchema = new mongoose.Schema({
         type: Number,
         unique: true
     }, // 4-digit unique item number
+
+    barcodeNumber: {
+        type: Number,
+        unique: true
+    },
     sales: [{
         type: mongoose.Schema.Types.ObjectId, ref: 'SalesBill'
     }],
@@ -193,9 +250,18 @@ const itemSchema = new mongoose.Schema({
         ref: 'Company',
     },
     fiscalYear: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'FiscalYear', // Reference the current fiscal year
+        type: [mongoose.Schema.Types.ObjectId], // Array of ObjectIds
+        ref: 'FiscalYear',
         required: true
+    },
+    originalFiscalYear: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FiscalYear',
+    },
+    status: {
+        type: String,
+        enum: ['active', 'inactive'],
+        default: 'active'
     },
     createdAt: {
         type: Date,
@@ -206,6 +272,28 @@ const itemSchema = new mongoose.Schema({
 
 // Ensure unique item names within a company and fiscal year
 itemSchema.index({ name: 1, company: 1, fiscalYear: 1 }, { unique: true });
+
+// Add this static method to the item schema
+itemSchema.statics.initializeOriginalFiscalYear = async function () {
+    try {
+        const migrationResult = await this.updateMany(
+            { originalFiscalYear: { $exists: false } }, // Find docs without originalFiscalYear
+            [{ $set: { originalFiscalYear: "$fiscalYear" } }] // Set to fiscalYear's value
+        );
+        return migrationResult;
+    } catch (error) {
+        console.error('Original fiscal year migration failed:', error);
+        throw error;
+    }
+};
+
+// Add pre-save hook to ensure originalFiscalYear is set for new documents
+itemSchema.pre('save', function (next) {
+    if (!this.originalFiscalYear) {
+        this.originalFiscalYear = this.fiscalYear;
+    }
+    next();
+});
 
 // Pre-save hook to generate a unique 4-digit number for each item
 itemSchema.pre('save', async function (next) {
@@ -228,6 +316,67 @@ itemSchema.pre('save', async function (next) {
 });
 
 
+itemSchema.pre('save', async function (next) {
+    if (!this.barcodeNumber) {
+        let isUnique = false;
+        while (!isUnique) {
+            // Generate fixed prefix '9000000' + 6 random digits
+            const fixedPrefix = '9000000';
+            const randomSuffix = Math.floor(Math.random() * 1000000)
+                .toString()
+                .padStart(6, '0');
+            const fullBarcode = parseInt(`${fixedPrefix}${randomSuffix}`);
+
+            // Check if this number is already in use
+            const existingItem = await mongoose.model('Item').findOne({ barcodeNumber: fullBarcode });
+            if (!existingItem) {
+                this.barcodeNumber = fullBarcode;
+                isUnique = true;
+            }
+        }
+    }
+    next();
+});
+
+itemSchema.statics.generateMissingBarcodes = async function () {
+    const itemsWithoutBarcode = await this.find({
+        $or: [
+            { barcodeNumber: { $exists: false } },
+            { barcodeNumber: null },
+            { barcodeNumber: "" }
+        ]
+    });
+
+    for (const item of itemsWithoutBarcode) {
+        let isUnique = false;
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        while (!isUnique && attempts < maxAttempts) {
+            attempts++;
+            const fixedPrefix = '9000000';
+            const randomSuffix = Math.floor(Math.random() * 1000000)
+                .toString()
+                .padStart(6, '0');
+            const fullBarcode = parseInt(`${fixedPrefix}${randomSuffix}`);
+
+            const existingItem = await this.findOne({ barcodeNumber: fullBarcode });
+            if (!existingItem) {
+                item.barcodeNumber = fullBarcode;
+                await item.save();
+                isUnique = true;
+                console.log(`Generated barcode ${fullBarcode} for item ${item._id}`);
+            }
+        }
+
+        if (!isUnique) {
+            console.error(`Failed to generate unique barcode for item ${item._id} after ${maxAttempts} attempts`);
+        }
+    }
+
+    console.log('Barcode generation process completed');
+    return itemsWithoutBarcode.length;
+};
 //Create a static method to check for expiring items:
 
 itemSchema.statics.getExpiringItems = async function (companyId, thresholdDays = 30) {
@@ -354,6 +503,40 @@ itemSchema.methods.getExpiryStatus = function () {
             dangerItems > 0 ? 'danger' :
                 warningItems > 0 ? 'warning' : 'safe'
     };
+};
+
+// Modified static method
+itemSchema.statics.initializeItemStatus = async function () {
+    try {
+        // Check if any items need updating
+        const count = await this.countDocuments({
+            $or: [
+                { status: { $exists: false } },
+                { status: { $nin: ['active', 'inactive'] } }
+            ]
+        });
+
+        if (count === 0) {
+            // console.log('No items need status migration');
+            return { nModified: 0 };
+        }
+
+        const result = await this.updateMany(
+            {
+                $or: [
+                    { status: { $exists: false } },
+                    { status: { $nin: ['active', 'inactive'] } }
+                ]
+            },
+            { $set: { status: 'active' } }
+        );
+
+        console.log(`Updated ${result.nModified} items with default 'active' status`);
+        return result;
+    } catch (error) {
+        console.error('Error initializing item statuses:', error);
+        throw error;
+    }
 };
 
 module.exports = mongoose.model('Item', itemSchema);

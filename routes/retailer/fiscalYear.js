@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 const { switchFiscalYear } = require('../../services/fiscalYearService');
 const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
@@ -13,6 +15,7 @@ const Transaction = require('../../models/retailer/Transaction');
 const Account = require('../../models/retailer/Account');
 const BillCounter = require('../../models/retailer/billCounter');
 const CompanyGroup = require('../../models/retailer/CompanyGroup');
+const Settings = require('../../models/retailer/Settings');
 
 let progress = 0; // 0 to 100
 
@@ -935,9 +938,44 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
         sendEvent('log', { message: `Created new fiscal year: ${fiscalYearName}` });
         sendEvent('progress', { value: 33 });
 
+        // Step 1.5: Clone settings to new fiscal year
+        sendEvent('log', { message: 'Cloning settings to new fiscal year...' });
+        sendEvent('progress', { value: 15 });
+
+        const currentSettings = await Settings.findOne({
+            companyId: companyId,
+            fiscalYear: currentFiscalYear
+        });
+
+        if (currentSettings) {
+            // Create new settings document for the new fiscal year
+            const newSettings = new Settings({
+                ...currentSettings.toObject(), // Copy all existing values
+                _id: new mongoose.Types.ObjectId(), // Generate new ID
+                fiscalYear: newFiscalYear._id, // Update fiscal year reference
+                userId: currentSettings.userId // Maintain original user reference
+            });
+
+            await newSettings.save();
+            sendEvent('log', { message: 'Settings cloned successfully' });
+        } else {
+            // Create default settings if none exist (shouldn't happen normally)
+            const defaultSettings = new Settings({
+                companyId: companyId,
+                userId: req.user.id,
+                fiscalYear: newFiscalYear._id,
+                // Add other default values here
+            });
+
+            await defaultSettings.save();
+            sendEvent('log', { message: 'Created default settings for new fiscal year' });
+        }
+
+        sendEvent('progress', { value: 25 });
+
         // Step 2: Create items
         sendEvent('log', { message: 'Creating items for new fiscal year...' });
-        const items = await Item.find({ company: companyId, fiscalYear: currentFiscalYear });
+        const items = await Item.find({ company: companyId, fiscalYear: { $in: [currentFiscalYear] } });
 
         let itemsProcessed = 0;
         const totalItems = items.length;
@@ -1037,43 +1075,39 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
                         `Purchase Price: ${purchasePrice} (from ${totalQuantityFromEntries > 0 ? 'stock entries' : 'transactions'})`
                 });
 
-                // Create new item with calculated stock
-                const newItem = new Item({
-                    name: item.name,
-                    hscode: item.hscode,
-                    category: item.category,
-                    unit: item.unit,
-                    mainUnit: item.mainUnit,
-                    price: item.price,
-                    puPrice: purchasePrice,
-                    stock: openingStock,
-                    vatStatus: item.vatStatus,
-                    company: companyId,
+                // Add new fiscal year to the item's fiscalYear array
+                if (!item.fiscalYear.includes(newFiscalYear._id)) {
+                    item.fiscalYear.push(newFiscalYear._id);
+                }
+                item.originalFiscalYear = item.originalFiscalYear;
+                item.openingStockByFiscalYear.push({
                     fiscalYear: newFiscalYear._id,
-                    openingStockByFiscalYear: [{
-                        fiscalYear: newFiscalYear._id,
-                        openingStock: openingStock,
-                        openingStockBalance: openingStockBalance,
-                        purchasePrice: purchasePrice,
-                        salesPrice: item.price,
-                    }],
-                    stockEntries: item.stockEntries.map(stockEntry => ({
-                        quantity: stockEntry.quantity,
-                        batchNumber: stockEntry.batchNumber,
-                        expiryDate: stockEntry.expiryDate,
-                        price: stockEntry.price,
-                        mainUnitPuPrice: stockEntry.mainUnitPuPrice,
-                        puPrice: stockEntry.puPrice,
-                        mrp: stockEntry.mrp,
-                        marginPercentage: stockEntry.marginPercentage,
-                        date: stockEntry.date || new Date(),
-                        fiscalYear: newFiscalYear._id
-                    })),
+                    openingStock: openingStock,
+                    openingStockBalance: openingStockBalance,
+                    purchasePrice: purchasePrice,
+                    salesPrice: item.price,
                 });
 
-                await newItem.save();
+                item.closingStockByFiscalYear.push({
+                    fiscalYear: currentFiscalYear,
+                    closingStock: openingStock,
+                    openingStockValue: openingStockBalance,
+                });
+
+                // Clear old stock entries and update fiscal year references
+                item.stockEntries = item.stockEntries.map(entry => ({
+                    ...entry.toObject(),
+                    fiscalYear: newFiscalYear._id,
+                    _id: new mongoose.Types.ObjectId() // Generate new IDs for stock entries
+                }));
+
+                // Reset current stock values
+                item.stock = openingStock;
+                item.openingStock = openingStock;
+
+                await item.save();
                 itemsProcessed++;
-                sendEvent('log', { message: `Created item: ${newItem.name} with stock: ${newItem.stock}` });
+                sendEvent('log', { message: `Created item: ${item.name} with stock: ${item.stock}` });
                 sendEvent('progress', { value: 33 + (itemsProcessed * itemsProgressStep) });
             } catch (saveError) {
                 if (saveError.code === 11000) {
@@ -1088,8 +1122,8 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
         sendEvent('progress', { value: 66 });
 
         // Step 3: Create accounts (updated version)
-        sendEvent('log', { message: 'Creating accounts for new fiscal year...' });
-        const accounts = await Account.find({ company: companyId, fiscalYear: currentFiscalYear });
+        sendEvent('log', { message: 'Updating  accounts for new fiscal year...' });
+        const accounts = await Account.find({ company: companyId, fiscalYear: { $in: [currentFiscalYear] } });
 
         let accountsProcessed = 0;
         const totalAccounts = accounts.length;
@@ -1097,12 +1131,27 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
 
         // Define account groups that should have zero opening balance (except cash accounts)
         const zeroBalanceGroups = await CompanyGroup.find({
-            name: { $in: ['Purchase', 'Sale'] },
+            name: {
+                $in: ['Purchase', 'Sale', 'Fixed Assets',
+                    'Reserves & Surplus',
+                    'Secured Loans',
+                    'Securities & Deposits',
+                    'Stock in hand',
+                    'Unsecured Loans',
+                    'Expenses (Direct/Mfg.)',
+                    'Expenses (Indirect/Admn.)',
+                    'Income (Direct/Opr.)',
+                    'Income (Indirect)',
+                    'Loans & Advances',
+                    'Provisions/Expenses Payable',
+                    'Profit & Loss',
+                    'Current Assets',
+                ]
+            },
             company: companyId
         }).select('_id');
 
         const zeroBalanceGroupIds = zeroBalanceGroups.map(g => g._id);
-        const zeroBalanceAccountNames = ['Rounded Off'];
 
         // Get Cash in Hand group ID
         const cashInHandGroup = await CompanyGroup.findOne({
@@ -1156,8 +1205,7 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
 
                 // Determine if this account should have zero opening balance
                 const isZeroBalanceAccount =
-                    (account.companyGroups && zeroBalanceGroupIds.some(id => id.equals(account.companyGroups))) ||
-                    zeroBalanceAccountNames.includes(account.name);
+                    (account.companyGroups && zeroBalanceGroupIds.some(id => id.equals(account.companyGroups)))
 
                 // For zero balance accounts, skip balance calculation
                 let newOpeningBalance;
@@ -1202,41 +1250,56 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
                         (isSundryAccount ? ' (sundry account)' : '')
                 });
 
-                // Create a new account for the new fiscal year
-                const newAccount = new Account({
-                    name: account.name,
-                    address: account.address,
-                    ward: account.ward,
-                    phone: account.phone,
-                    pan: account.pan,
-                    contactperson: account.contactperson,
-                    email: account.email,
-                    openingBalance: newOpeningBalance,
-                    openingBalanceDate: startDateObject,
-                    companyGroups: account.companyGroups,
-                    company: companyId,
+                // account.fiscalYear = newFiscalYear._id;
+
+                if (!account.fiscalYear.includes(newFiscalYear._id)) {
+                    account.fiscalYear.push(newFiscalYear._id);
+                }
+                // Add new opening balance to historical array
+                account.openingBalanceByFiscalYear.push({
                     fiscalYear: newFiscalYear._id,
-                    transactions: []
+                    amount: newOpeningBalance.amount,
+                    type: newOpeningBalance.type,
+                    date: new Date()
                 });
 
-                await newAccount.save();
+                // Update current opening balance
+                account.openingBalance = {
+                    fiscalYear: newFiscalYear._id,
+                    amount: newOpeningBalance.amount,
+                    type: newOpeningBalance.type
+                };
+
+                account.closingBalanceByFiscalYear.push({
+                    fiscalYear: currentFiscalYear,
+                    amount: newOpeningBalance.amount,
+                    type: newOpeningBalance.type,
+                    date: new Date()
+                });
+
+                // Clear transactions for new fiscal year
+                account.transactions = [];
+
+                await account.save();
                 accountsProcessed++;
+
                 sendEvent('log', {
-                    message: `Created account: ${newAccount.name} with opening balance: ${newAccount.openingBalance.amount} ${newAccount.openingBalance.type}` +
-                        (isZeroBalanceAccount ? ' (reset to zero)' : '')
+                    message: `Updated account: ${account.name} with new balance: ${newOpeningBalance.amount} ${newOpeningBalance.type}`
                 });
                 sendEvent('progress', { value: 66 + (accountsProcessed * accountsProgressStep) });
             } catch (saveError) {
                 if (saveError.code === 11000) {
-                    sendEvent('log', { message: `Account ${account.name} already exists` });
+                    sendEvent('error', {
+                        message: `Account ${account.name} already exists in new fiscal year. This should not happen!`
+                    });
                 } else {
-                    sendEvent('error', { message: `Failed to create account ${account.name}: ${saveError.message}` });
+                    sendEvent('error', {
+                        message: `Failed to update account ${account.name}: ${saveError.message}`
+                    });
                 }
-                return res.end();
             }
         }
-
-        sendEvent('log', { message: `Completed creating ${accountsProcessed} accounts` });
+        sendEvent('log', { message: `Completed updating ${accountsProcessed} accounts` });
 
         // Initialize bill counters
         sendEvent('log', { message: 'Initializing bill counters...' });
@@ -1288,48 +1351,275 @@ router.get('/progress', (req, res) => {
     res.status(200).json({ progress });
 });
 
-// Route to delete fiscal year and set the latest one active
+
+// router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelected, async (req, res) => {
+//     const fiscalYearId = req.params.id;
+//     const companyId = req.session.currentCompany;
+
+//     try {
+//         // 1. Get the fiscal year to be deleted
+//         const fiscalYearToDelete = await FiscalYear.findOne({
+//             _id: fiscalYearId,
+//             company: companyId
+//         });
+
+//         if (!fiscalYearToDelete) {
+//             return res.status(404).json({ error: 'Fiscal year not found.' });
+//         }
+
+//         // 2. Check if it's the only fiscal year
+//         const fiscalYearCount = await FiscalYear.countDocuments({ company: companyId });
+//         if (fiscalYearCount === 1) {
+//             return res.status(400).json({ error: 'Cannot delete the only fiscal year.' });
+//         }
+
+//         // 3. Delete ONLY items created during this fiscal year's timeframe
+//         await Item.deleteMany({
+//             company: companyId,
+//             fiscalYear: fiscalYearId,
+//             createdAt: {
+//                 $gte: fiscalYearToDelete.startDate,
+//                 $lte: fiscalYearToDelete.endDate
+//             }
+//         });
+
+//         // 4. Delete the fiscal year
+//         await FiscalYear.findByIdAndDelete(fiscalYearId);
+
+//         // 5. Find and activate the latest remaining fiscal year
+//         const latestFiscalYear = await FiscalYear.findOne({ company: companyId })
+//             .sort({ startDate: -1 });
+
+//         if (latestFiscalYear) {
+//             await Company.findByIdAndUpdate(companyId, {
+//                 currentFiscalYear: latestFiscalYear._id
+//             });
+//         }
+
+//         res.json({
+//             success: true,
+//             message: 'Fiscal year and its items deleted successfully',
+//             newActiveFY: latestFiscalYear
+//         });
+//     } catch (err) {
+//         console.error('Error deleting fiscal year:', err);
+//         res.status(500).json({ error: 'Failed to delete fiscal year' });
+//     }
+// });
+
+
+// router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelected, async (req, res) => {
+//     const fiscalYearId = req.params.id;
+//     const companyId = req.session.currentCompany;
+
+//     try {
+//         // 1. Get the fiscal year to be deleted
+//         const fiscalYearToDelete = await FiscalYear.findOne({
+//             _id: fiscalYearId,
+//             company: companyId
+//         });
+
+//         if (!fiscalYearToDelete) {
+//             return res.status(404).json({ error: 'Fiscal year not found.' });
+//         }
+
+//         // 2. Prevent deletion of current fiscal year
+//         if (fiscalYearToDelete._id.equals(req.session.currentFiscalYear.id)) {
+//             return res.status(400).json({
+//                 error: 'Cannot delete the current active fiscal year. Switch to another fiscal year first.'
+//             });
+//         }
+
+//         // 3. Check if it's the only fiscal year
+//         const fiscalYearCount = await FiscalYear.countDocuments({ company: companyId });
+//         if (fiscalYearCount === 1) {
+//             return res.status(400).json({ error: 'Cannot delete the only fiscal year.' });
+//         }
+
+//         // 4. Delete ONLY items created during this fiscal year's timeframe
+//         await Item.deleteMany({
+//             company: companyId,
+//             fiscalYear: fiscalYearId,
+//             createdAt: {
+//                 $gte: fiscalYearToDelete.startDate,
+//                 $lte: fiscalYearToDelete.endDate
+//             }
+//         });
+
+//         // 4. Delete ONLY accounts created during this fiscal year's timeframe
+//         await Account.deleteMany({
+//             company: companyId,
+//             fiscalYear: fiscalYearId,
+//             createdAt: {
+//                 $gte: fiscalYearToDelete.startDate,
+//                 $lte: fiscalYearToDelete.endDate
+//             }
+//         });
+
+//         // 5. Delete the fiscal year
+//         await FiscalYear.findByIdAndDelete(fiscalYearId);
+
+//         // 6. Find and activate the latest remaining fiscal year
+//         const latestFiscalYear = await FiscalYear.findOne({ company: companyId })
+//             .sort({ startDate: -1 });
+
+//         if (latestFiscalYear) {
+//             await Company.findByIdAndUpdate(companyId, {
+//                 currentFiscalYear: latestFiscalYear._id
+//             });
+//         }
+
+//         res.json({
+//             success: true,
+//             message: 'Fiscal year and its items deleted successfully',
+//             newActiveFY: latestFiscalYear
+//         });
+//     } catch (err) {
+//         console.error('Error deleting fiscal year:', err);
+//         res.status(500).json({ error: 'Failed to delete fiscal year' });
+//     }
+// });
+
+
 router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelected, async (req, res) => {
     const fiscalYearId = req.params.id;
     const companyId = req.session.currentCompany;
 
     try {
-        // Check the number of fiscal years for the company
-        const fiscalYearCount = await FiscalYear.countDocuments({ company: companyId });
+        // 1. Get the fiscal year to be deleted
+        const fiscalYearToDelete = await FiscalYear.findOne({
+            _id: fiscalYearId,
+            company: companyId
+        });
 
-        // Prevent deletion if only one fiscal year exists
+        if (!fiscalYearToDelete) {
+            return res.status(404).json({ error: 'Fiscal year not found.' });
+        }
+
+        // 2. Prevent deletion of current fiscal year
+        if (fiscalYearToDelete._id.equals(req.session.currentFiscalYear.id)) {
+            return res.status(400).json({
+                error: 'Cannot delete the current active fiscal year. Switch to another fiscal year first.'
+            });
+        }
+
+        // 3. Check if it's the only fiscal year
+        const fiscalYearCount = await FiscalYear.countDocuments({ company: companyId });
         if (fiscalYearCount === 1) {
             return res.status(400).json({ error: 'Cannot delete the only fiscal year.' });
         }
 
-        // Find and delete the fiscal year
-        const fiscalYear = await FiscalYear.findOneAndDelete({ _id: fiscalYearId, company: companyId });
+        // 4. Delete items originally created in this fiscal year
+        const itemsToDelete = await Item.find({
+            company: companyId,
+            originalFiscalYear: fiscalYearId
+        });
 
-        if (!fiscalYear) {
-            return res.status(404).json({ error: 'Fiscal year not found.' });
+        // Delete items and their related data
+        if (itemsToDelete.length > 0) {
+            const itemIds = itemsToDelete.map(item => item._id);
+
+            // Delete related transactions
+            await Transaction.deleteMany({
+                company: companyId,
+                item: { $in: itemIds }
+            });
+
+            // Delete the items themselves
+            await Item.deleteMany({
+                _id: { $in: itemIds }
+            });
         }
 
-        // Optionally delete related items and accounts
-        await Item.deleteMany({ fiscalYear: fiscalYearId, company: companyId });
-        await Account.deleteMany({ fiscalYear: fiscalYearId, company: companyId });
+        // 5. Remove fiscal year references from remaining items
+        await Item.updateMany(
+            { company: companyId, fiscalYear: fiscalYearId },
+            {
+                $pull: {
+                    fiscalYear: fiscalYearId,
+                    openingStockByFiscalYear: { fiscalYear: fiscalYearId },
+                    closingStockByFiscalYear: { fiscalYear: fiscalYearId },
+                    stockEntries: { fiscalYear: fiscalYearId }
+                }
+            }
+        );
 
-        // After deletion, find the latest fiscal year (based on startDate or another relevant field)
-        const latestFiscalYear = await FiscalYear.findOne({ company: companyId }).sort({ startDate: -1 });
+        // 5. Delete accounts created in this fiscal year
+        const accountsToDelete = await Account.find({
+            company: companyId,
+            $or: [
+                { originalFiscalYear: fiscalYearId },
+                { fiscalYear: { $eq: [fiscalYearId] } } // Accounts only belonging to this FY
+            ]
+        });
+
+        if (accountsToDelete.length > 0) {
+            const accountIds = accountsToDelete.map(acc => acc._id);
+
+            // Delete related transactions
+            await Transaction.deleteMany({
+                company: companyId,
+                $or: [
+                    { account: { $in: accountIds } },
+                    { contraAccount: { $in: accountIds } }
+                ]
+            });
+
+            // Delete the accounts themselves
+            await Account.deleteMany({
+                _id: { $in: accountIds }
+            });
+        }
+
+        // 6. Remove references from accounts
+        await Account.updateMany(
+            { company: companyId, fiscalYear: fiscalYearId },
+            { $pull: { fiscalYear: fiscalYearId } }
+        );
+
+        // 7. Delete supporting records
+        await Transaction.deleteMany({
+            company: companyId,
+            fiscalYear: fiscalYearId
+        });
+
+        await Settings.deleteMany({
+            companyId: companyId,
+            fiscalYear: fiscalYearId
+        });
+
+        // 8. Delete the fiscal year
+        await FiscalYear.findByIdAndDelete(fiscalYearId);
+
+        // 9. Update company with new latest fiscal year
+        const latestFiscalYear = await FiscalYear.findOne({ company: companyId })
+            .sort({ startDate: -1 });
 
         if (latestFiscalYear) {
-            // Set the latest fiscal year as the active one
-            await Company.findOneAndUpdate(
-                { _id: companyId },
-                { currentFiscalYear: latestFiscalYear._id }
-            );
+            await Company.findByIdAndUpdate(companyId, {
+                currentFiscalYear: latestFiscalYear._id
+            });
+
+            // Update session with new fiscal year
+            req.session.currentFiscalYear = {
+                id: latestFiscalYear._id.toString(),
+                startDate: latestFiscalYear.startDate,
+                endDate: latestFiscalYear.endDate,
+                name: latestFiscalYear.name,
+                dateFormat: latestFiscalYear.dateFormat,
+                isActive: latestFiscalYear.isActive
+            };
         }
 
-        res.status(200).json({ success: true, message: 'Fiscal year deleted and latest fiscal year set as active.' });
+        res.json({
+            success: true,
+            message: `Fiscal year and ${itemsToDelete.length} associated items deleted successfully`,
+            newActiveFY: latestFiscalYear
+        });
     } catch (err) {
-        console.error('Error deleting fiscal year or setting latest fiscal year:', err);
-        res.status(500).json({ error: 'Failed to delete fiscal year or set latest fiscal year active.' });
+        console.error('Error deleting fiscal year:', err);
+        res.status(500).json({ error: 'Failed to delete fiscal year' });
     }
 });
-
 
 module.exports = router;

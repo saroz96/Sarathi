@@ -6,6 +6,8 @@ const ObjectId = mongoose.Types.ObjectId;
 const multer = require('multer');
 const readXlsxFile = require('read-excel-file/node');
 const path = require('path');
+const bwipjs = require('bwip-js');
+
 const Item = require('../../models/retailer/Item');
 const Category = require('../../models/retailer/Category');
 const Unit = require('../../models/retailer/Unit');
@@ -26,6 +28,9 @@ const StockAdjustment = require('../../models/retailer/StockAdjustment');
 const moment = require('moment');
 const MainUnit = require('../../models/retailer/MainUnit');
 const Composition = require('../../models/retailer/Composition');
+const BarcodePreference = require('../../models/retailer/barcodePreference');
+const { createCanvas, loadImage } = require('canvas');
+const itemsCompany = require('../../models/retailer/itemsCompany');
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
@@ -38,6 +43,97 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+// Modified migration runner
+async function runMigration() {
+    try {
+        const Item = mongoose.model('Item');
+        const result = await Item.initializeItemStatus();
+
+        if (result.nModified > 0) {
+            console.log('Item status migration completed successfully');
+        }
+    } catch (error) {
+        console.error('Item status migration failed:', error);
+    }
+}
+// Execute the migration
+runMigration();
+
+async function initializeDataMigrations() {
+    try {
+        const Item = mongoose.model('Item');
+        const result = Item.initializeOriginalFiscalYear();
+
+        if (result.nModified > 0) {
+            console.log('Item original fiscal year migration completed successfully');
+        }
+
+        // Add other migrations here if needed
+    } catch (error) {
+        console.error('Data migrations failed:', error);
+        process.exit(1);
+    }
+}
+initializeDataMigrations()
+
+// async function migrateFiscalYearStructure() {
+
+//     try {
+//         // Step 1: Convert fiscalYear to array format
+//         console.log('Converting fiscalYear to arrays...');
+//         await Item.updateMany(
+//             { fiscalYear: { $type: 'objectId' } },
+//             [{ $set: { fiscalYear: ["$fiscalYear"] } }],
+//             { strict: false }
+//         );
+
+//         // Step 2: Process each document individually
+//         console.log('Processing individual items...');
+//         const items = await Item.find();
+
+//         for (const item of items) {
+//             // Set originalFiscalYear if missing
+//             if (!item.originalFiscalYear && item.fiscalYear.length > 0) {
+//                 item.originalFiscalYear = item.fiscalYear[0];
+//             }
+
+//             // Update stockEntries with fiscalYear reference
+//             if (item.stockEntries.length > 0) {
+//                 item.stockEntries = item.stockEntries.map(entry => ({
+//                     ...entry.toObject(),
+//                     fiscalYear: item.fiscalYear[0]
+//                 }));
+//             }
+
+//             // Update openingStockByFiscalYear if needed
+//             item.openingStockByFiscalYear = item.openingStockByFiscalYear.map(os => ({
+//                 ...os.toObject(),
+//                 fiscalYear: os.fiscalYear || item.fiscalYear[0]
+//             }));
+
+//             await item.save();
+//         }
+
+//         console.log('Migration completed successfully');
+//         process.exit(0);
+//     } catch (error) {
+//         console.error('Migration failed:', error);
+//         process.exit(1);
+//     }
+// }
+
+// migrateFiscalYearStructure();
+
+router.get('/generate-missing-barcodes', async (req, res) => {
+    try {
+        const count = await mongoose.model('Item').generateMissingBarcodes();
+        res.send(`Generated barcodes for ${count} items`);
+    } catch (error) {
+        console.error('Barcode generation error:', error);
+        res.status(500).send('Error generating barcodes');
+    }
+});
 
 // Import items page
 router.get('/import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, async (req, res) => {
@@ -201,11 +297,6 @@ router.post('/import', upload.single('excelFile'), async (req, res) => {
     }
 });
 
-// Download template
-// router.get('/import-template', (req, res) => {
-//     const filePath = path.join(__dirname, '../templates/items-import-template.xlsx');
-//     res.download(filePath);
-// });
 
 // Update the route handler
 router.get('/import-template', (req, res) => {
@@ -340,9 +431,19 @@ router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelecte
         }
 
         // Get all items for the company with pagination
-        const items = await Item.find({ company: companyId, fiscalYear: currentFiscalYear })
+        const items = await Item.find({
+            company: companyId, status: 'active',
+            $or: [
+                { originalFiscalYear: fiscalYear }, // Created here
+                {
+                    fiscalYear: fiscalYear,
+                    originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                }
+            ]
+        })
             .populate('category', 'name')
             .populate('unit', 'name')
+            .populate('originalFiscalYear')
             .sort({ name: 1 })
             .limit(200); // Limit results for performance
 
@@ -398,18 +499,25 @@ router.get('/items/search', ensureAuthenticated, ensureCompanySelected, ensureTr
             console.log('Search Query:', searchQuery);
             console.log('VAT Exempt:', vatExempt);
             console.log('Exclude IDs:', excludeIds);
-
             // Fetch the current fiscal year from the session
             const fiscalYear = req.session.currentFiscalYear.id;
 
             // Initialize the search conditions
             let searchConditions = {
                 company: companyId,
-                fiscalYear: fiscalYear,
+                // fiscalYear: fiscalYear,
+                status: 'active',
                 _id: { $nin: excludeIds }, // Exclude items that are already in the table
                 $or: [
                     { name: { $regex: new RegExp(searchQuery, 'i') } }, // Search by name
                     { uniqueNumber: parseInt(searchQuery, 10) || null } // Search by uniqueNumber
+                ],
+                $or: [
+                    { originalFiscalYear: fiscalYear }, // Created here
+                    {
+                        fiscalYear: fiscalYear,
+                        originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                    }
                 ]
             };
 
@@ -558,8 +666,21 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
             // Find items that belong to the current fiscal year
             const items = await Item.find({
                 company: companyId,
-                fiscalYear: fiscalYear // Match items based on fiscalYearId
-            }).populate('category').populate('unit').populate('mainUnit').populate('composition')  // This is crucial!
+                // fiscalYear: fiscalYear, // Match items based on fiscalYearId
+                $or: [
+                    { originalFiscalYear: fiscalYear }, // Created here
+                    {
+                        fiscalYear: fiscalYear,
+                        originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                    }
+                ]
+            })
+                .populate('category')
+                .populate('itemsCompany')
+                .populate('unit')
+                .populate('mainUnit')
+                .populate('composition')  // This is crucial!
+                .populate('originalFiscalYear')
 
 
             // Extract openingStock and openingStockBalance if they exist for the current fiscal year
@@ -573,6 +694,7 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
             });
             // Fetch categories and units for item creation
             const categories = await Category.find({ company: companyId });
+            const itemsCompanies = await itemsCompany.find({ company: companyId });
             const units = await Unit.find({ company: companyId });
             const mainUnits = await MainUnit.find({ company: companyId });
             const composition = await Composition.find({ company: companyId });
@@ -584,6 +706,7 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
                 vatEnabled: company.vatEnabled,
                 items: itemsWithOpeningStock,
                 categories,
+                itemsCompanies,
                 units,
                 mainUnits,
                 composition,
@@ -615,8 +738,16 @@ router.get('/products', ensureAuthenticated, ensureCompanySelected, ensureTradeT
 
         const products = await Item.find({
             company: companyId,
-            fiscalYear: fiscalYear // Match items based on fiscalYearId
-        }).populate('category').populate('unit').populate('composition');
+            // fiscalYear: fiscalYear, // Match items based on fiscalYearId
+            status: 'active',
+            $or: [
+                { originalFiscalYear: fiscalYear }, // Created here
+                {
+                    fiscalYear: fiscalYear,
+                    originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                }
+            ]
+        }).populate('category').populate('itemsCompany').populate('unit').populate('composition').populate('originalFiscalYear');
         res.json(products);// this is for index.ejs to fetch products details
         // res.render('item/items', { products });
     }
@@ -846,7 +977,7 @@ router.get('/items/reorder', ensureAuthenticated, ensureCompanySelected, ensureT
 router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
-        const { name, hscode, category, compositionIds, mainUnit, WSUnit, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
+        const { name, hscode, category, itemsCompany, compositionIds, mainUnit, WSUnit, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
         const companyId = req.session.currentCompany;
 
         if (!companyId) {
@@ -914,6 +1045,10 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
             return res.status(400).json({ error: 'Invalid item category for this company' });
         }
 
+        // const itemsCompanies = await itemsCompany.findOne({ _id: itemsCompany, company: companyId });
+        // if (!itemsCompanies) {
+        //     return res.status(400).json({ error: 'Invalid item company for this company' });
+        // }
         const units = await Unit.findOne({ _id: unit, company: companyId });
         if (!units) {
             return res.status(400).json({ error: 'Invalid item unit for this company' });
@@ -925,26 +1060,11 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
         }
 
         // Check if an item with the same name already exists for the current fiscal year
-        const existingItem = await Item.findOne({ name, company: companyId, fiscalYear: fiscalYear });
+        const existingItem = await Item.findOne({ name, company: companyId, fiscalYear: { $in: [fiscalYear] } });
         if (existingItem) {
             return res.status(400).json({ error: 'Item already exists for the current fiscal year.' });
         }
-        // Process composition IDs
-        // const compositions = compositionIds
-        //     ? compositionIds.split(',').filter(id => mongoose.Types.ObjectId.isValid(id))
-        //     : [];
 
-        // // Validate compositions exist
-        // if (compositions.length > 0) {
-        //     const existingCompositions = await Composition.countDocuments({
-        //         _id: { $in: compositions },
-        //         company: companyId
-        //     });
-
-        //     if (existingCompositions !== compositions.length) {
-        //         return res.status(400).json({ error: 'One or more invalid compositions' });
-        //     }
-        // }
         // Generate a unique ID for the stock entry
         const uniqueId = uuidv4();
 
@@ -953,6 +1073,7 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
             name,
             hscode,
             category,
+            itemsCompany,
             composition: compositions, // Array of composition IDs
             mainUnit,
             WSUnit,
@@ -965,6 +1086,14 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
             company: companyId,
             reorderLevel,
             maxStock: reorderLevel,
+            initialOpeningStock: {
+                fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
+                salesPrice: price,
+                purchasePrice: puPrice,
+                openingStock: openingStock,
+                openingStockBalance: openingStockBalance,
+                date: currentFiscalYear.startDate,
+            },
             openingStockByFiscalYear: [{
                 fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
                 salesPrice: price,
@@ -980,7 +1109,9 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
                 uniqueUuId: uniqueId,
                 fiscalYear: fiscalYear // Record stock entry with fiscal year
             }] : [],
-            fiscalYear: fiscalYear, // Associate the item with the current fiscal year
+            fiscalYear: [fiscalYear], // Associate the item with the current fiscal year
+            originalFiscalYear: currentFiscalYear,
+            createdAt: currentFiscalYear.startDate,
         });
 
         // Save the new item
@@ -1280,6 +1411,35 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
         const salesPrice = openingStockForFiscalYear ? openingStockForFiscalYear.salesPrice : 0;
         const purchasePrice = openingStockForFiscalYear ? openingStockForFiscalYear.purchasePrice : 0;
 
+
+        // Add stock entries to the data passed to the view
+        const stockEntries = items.stockEntries.map(entry => ({
+            ...entry,
+            expiryDate: entry.expiryDate.toISOString().split('T')[0],
+            barcodeData: `${currentCompanyName}|${items.uniqueNumber}|${entry.mrp}|${entry.batchNumber}|${entry.expiryDate.toISOString().split('T')[0]}`
+        }));
+
+        // Add printer options (you might want to fetch these from a database or config)
+        // const printerOptions = [
+        //     { name: 'Default Printer', value: 'default' },
+        //     { name: 'Label Printer 1', value: 'label_printer_1' },
+        //     { name: 'Office Printer', value: 'office_printer' }
+        // ];
+
+        // Get user's barcode preferences
+        const barcodePreferences = await BarcodePreference.findOne({
+            user: req.user._id
+        });
+
+        // Create default preferences if none exist
+        const printPreferences = barcodePreferences || {
+            labelWidth: 70,
+            labelHeight: 40,
+            labelsPerRow: 3,
+            barcodeType: 'code128',
+            defaultQuantity: 1
+        };
+
         // Render the page with the item details and opening stock for the current fiscal year
         res.render('retailer/item/view', {
             company,
@@ -1289,6 +1449,10 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             openingStockBalance,
             salesPrice,
             purchasePrice,
+            stockEntries,
+            // printerOptions,
+            printPreferences,
+            barcodeBaseUrl: `/item/${items._id}/barcode`, // Base URL for barcode generation
             fiscalYear,
             currentCompanyName,
             title: '',
@@ -1422,7 +1586,7 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
                     openingStock: newOpeningStock,
                     openingStockBalance: openingStockBal
                 }],
-                fiscalYear: fiscalYear // Ensure item is associated with the current fiscal year
+                fiscalYear: [fiscalYear], // Associate the item with the current fiscal year
             });
 
             req.flash('success', 'Item updated successfully');
@@ -1673,4 +1837,483 @@ router.get('/api/sold-items', isLoggedIn, ensureAuthenticated, ensureCompanySele
     }
 });
 
+router.post('/items/:id/status', isLoggedIn, ensureCompanySelected, async (req, res) => {
+    try {
+        const item = await Item.findById(req.params.id);
+
+        if (!item) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+
+        // Check stock before deactivation
+        if (req.body.status === 'inactive') {
+            const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+            if (totalStock > 0) {
+                return res.status(400).json({ error: 'Item has stock and cannot be deactivated' });
+            }
+        }
+
+        item.status = req.body.status;
+        await item.save();
+        res.status(200).json({ message: 'Status updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
+// router.get('/item/:itemId/barcode/:stockEntryId', isLoggedIn, ensureAuthenticated, async (req, res) => {
+//     try {
+//         const item = await Item.findById(req.params.itemId)
+//             .populate('company', 'name')
+//             .populate('stockEntries._id');
+
+//         const stockEntry = item.stockEntries.id(req.params.stockEntryId);
+
+//         if (!item) return res.status(404).send('Item not found');
+
+//         if (!stockEntry) return res.status(404).send('Stock entry not found');
+
+//         // Validate required fields
+//         const requiredFields = ['mrp', 'batchNumber', 'expiryDate'];
+//         const missingFields = requiredFields.filter(field => !stockEntry[field]);
+//         if (missingFields.length > 0) {
+//             return res.status(400).send(`Missing fields: ${missingFields.join(', ')}`);
+//         }
+
+//         // Format data for barcode
+//         const companyText = [
+//             item.company.name,
+//         ].join('|');
+
+//         // Format data for barcode
+//         const barcodeText = [
+//             item.company.name,
+//             item.name,
+//             item.uniqueNumber,
+//             `MRP:${stockEntry.mrp}`,
+//             `BATCH:${stockEntry.batchNumber}`,
+//             `EXP:${stockEntry.expiryDate.toISOString().split('T')[0]}`
+//         ].join('|');
+
+//         // Generate barcode
+//         bwipjs.toBuffer({
+//             bcid: 'code128',
+//             companyText: companyText,
+//             text: barcodeText,
+//             scale: 2,
+//             height: 15,
+//             includetext: true,
+//             textxalign: 'center',
+//             textsize: 10,
+//             backgroundcolor: 'ffffff',
+//             paddingwidth: 10,
+//             paddingheight: 10
+//         }, (err, png) => {
+//             if (err) {
+//                 console.error('Barcode error:', err);
+//                 return res.status(500).send('Error generating barcode');
+//             }
+//             res.set({
+//                 'Content-Type': 'image/png',
+//                 'Cache-Control': 'no-store, max-age=0'
+//             });
+//             res.send(png);
+//         });
+
+//     } catch (error) {
+//         console.error('Barcode generation error:', error);
+//         res.status(500).send('Error generating barcode');
+//     }
+// });
+
+// router.get('/item/:itemId/barcode/:stockEntryId/:width/:height/:type',
+//     isLoggedIn, ensureAuthenticated, async (req, res) => {
+//         try {
+//             const item = await Item.findById(req.params.itemId)
+//                 .populate('company', 'name')
+//                 .populate('stockEntries._id');
+
+//             const stockEntry = item.stockEntries.id(req.params.stockEntryId);
+
+//             // Validate parameters
+//             if (!item || !stockEntry) return res.status(404).send('Not found');
+
+//             const { width, height, type } = req.params;
+//             const validTypes = ['code128', 'code39', 'qr'];
+
+//             if (!validTypes.includes(type)) {
+//                 return res.status(400).send('Invalid barcode type');
+//             }
+
+//             // Generate barcode text
+//             const barcodeText = [
+//                 item.company.name,
+//                 item.name,
+//                 item.uniqueNumber,
+//                 `MRP:${stockEntry.mrp}`,
+//                 `BATCH:${stockEntry.batchNumber}`,
+//                 `EXP:${stockEntry.expiryDate.toISOString().split('T')[0]}`
+//             ].join('|');
+
+//             // Configure barcode options
+//             const options = {
+//                 bcid: type,
+//                 text: barcodeText,
+//                 scale: type === 'qr' ? Math.min(10, Math.round(width / 15)) : Math.round(width / 35),
+//                 height: type === 'qr' ? undefined : Math.round(height / 2),
+//                 includetext: true,
+//                 textxalign: 'center',
+//                 backgroundcolor: 'ffffff',
+//                 paddingwidth: 5,
+//                 paddingheight: 5
+//             };
+
+//             // Generate barcode
+//             bwipjs.toBuffer(options, (err, png) => {
+//                 if (err) return res.status(500).send('Error generating barcode');
+//                 res.set({ 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+//                 res.send(png);
+//             });
+
+//         } catch (error) {
+//             console.error('Barcode error:', error);
+//             res.status(500).send('Error generating barcode');
+//         }
+//     });
+
+
+// router.get('/item/:itemId/barcode/:stockEntryId/:width/:height/:type',
+//     isLoggedIn, ensureAuthenticated, async (req, res) => {
+//         try {
+//             const item = await Item.findById(req.params.itemId)
+//                 .populate('stockEntries._id');
+
+//             const stockEntry = item.stockEntries.id(req.params.stockEntryId);
+
+//             // Validate parameters
+//             if (!item || !stockEntry) {
+//                 return res.status(404).send('Item or stock entry not found');
+//             }
+
+//             const { width, height, type } = req.params;
+//             const numericWidth = parseInt(width);
+//             const numericHeight = parseInt(height);
+
+//             // Validate dimensions
+//             if (isNaN(numericWidth) || isNaN(numericHeight) || numericWidth < 20 || numericHeight < 20) {
+//                 return res.status(400).send('Invalid dimensions - minimum 20x20mm');
+//             }
+
+//             // Hidden encoded data
+//             const companyName = [
+//                 item.company.name,
+//             ];
+
+//             const itemName = [
+//                 item.name
+//             ];
+
+//             // Hidden encoded data
+//             const barcodePayload = [
+//                 item.barcodeNumber,
+//             ].join('|');
+
+//             // Visible text
+//             const humanReadable = [
+//                 item.barcodeNumber,
+//             ].join('|');
+
+//             const batchExpiry = [
+//                 `MRP:${stockEntry.mrp}`,
+//                 `EXP:${stockEntry.expiryDate.toLocaleDateString()}`
+//             ].join('|');
+
+//             // Barcode configuration
+//             const options = {
+//                 bcid: type.toLowerCase(),
+//                 companyName: companyName,
+//                 text: barcodePayload,
+//                 alttext: humanReadable,
+//                 itemName: itemName,
+//                 batchExpiry: batchExpiry,
+//                 includetext: true,
+//                 textxalign: 'center',
+//                 textyoffset: 5,
+//                 backgroundcolor: 'FFFFFF',
+//                 barcolor: '000000',
+//                 scale: type === 'qr' ?
+//                     Math.min(8, Math.floor(numericWidth / 15)) :
+//                     Math.min(5, Math.floor(numericWidth / 25)),
+//                 height: type === 'qr' ? undefined : numericHeight * 0.7
+//             };
+
+//             // Generate barcode
+//             bwipjs.toBuffer(options, (err, png) => {
+//                 if (err) {
+//                     console.error('Barcode Generation Error:', err);
+//                     return res.status(500).send(`Barcode generation failed: ${err.message}`);
+//                 }
+//                 res.set({
+//                     'Content-Type': 'image/png',
+//                     'Cache-Control': 'no-store, no-cache, must-revalidate',
+//                     'Pragma': 'no-cache'
+//                 });
+//                 res.send(png);
+//             });
+
+//         } catch (error) {
+//             console.error('Barcode Endpoint Crash:', error);
+//             res.status(500).send('Internal server error');
+//         }
+//     });
+
+// router.get('/item/:itemId/barcode/:stockEntryId/:width/:height/:type',
+//     isLoggedIn, ensureAuthenticated, async (req, res) => {
+//         try {
+//             const item = await Item.findById(req.params.itemId)
+//                 .populate('stockEntries._id')
+//                 .populate('company');
+
+//             const stockEntry = item.stockEntries.id(req.params.stockEntryId);
+
+//             // Validate parameters
+//             if (!item || !stockEntry) {
+//                 return res.status(404).send('Item or stock entry not found');
+//             }
+
+//             const { width, height, type } = req.params;
+//             const numericWidth = parseInt(width);
+//             const numericHeight = parseInt(height);
+
+//             // Validate dimensions
+//             if (isNaN(numericWidth) || isNaN(numericHeight) || numericWidth < 20 || numericHeight < 20) {
+//                 return res.status(400).send('Invalid dimensions - minimum 20x20mm');
+//             }
+
+//             // Create text elements
+//             const textElements = {
+//                 companyName: item.company.name,
+//                 itemName: item.name,
+//                 barcodeNumber: item.barcodeNumber.toString(),
+//                 batchExpiry: `MRP: ₹${stockEntry.mrp.toFixed(2)} | EXP: ${stockEntry.expiryDate.toLocaleDateString()}`
+//             };
+
+//             // Barcode configuration
+//             const options = {
+//                 bcid: type.toLowerCase(),
+//                 text: textElements.barcodeNumber,
+//                 includetext: true,
+//                 textsize: 10,
+//                 textxalign: 'center',
+//                 textfont: 'Inconsolata',
+//                 backgroundcolor: 'FFFFFF',
+//                 barcolor: '000000',
+//                 scale: type === 'qr' ?
+//                     Math.min(8, Math.floor(numericWidth / 15)) :
+//                     Math.min(5, Math.floor(numericWidth / 25)),
+//                 height: numericHeight * 0.5, // Adjust height for text elements
+//                 paddingwidth: 10,
+//                 paddingheight: 15
+//             };
+
+//             // Generate barcode
+//             bwipjs.toBuffer(options, (err, png) => {
+//                 if (err) {
+//                     console.error('Barcode Generation Error:', err);
+//                     return res.status(500).send(`Barcode generation failed: ${err.message}`);
+//                 }
+
+//                 // Create final image with text elements
+//                 const canvas = createCanvas(numericWidth, numericHeight);
+//                 const ctx = canvas.getContext('2d');
+
+//                 // Load barcode image
+//                 loadImage(png).then((barcodeImage) => {
+//                     // Set up text styling
+//                     ctx.fillStyle = '#000000';
+//                     ctx.textAlign = 'center';
+
+//                     // Calculate positions
+//                     const lineHeight = 12;
+//                     const textBlockHeight = lineHeight * 4;
+//                     const barcodeHeight = numericHeight - textBlockHeight;
+
+//                     // Draw company name
+//                     ctx.font = `bold ${lineHeight}px Arial`;
+//                     ctx.fillText(textElements.companyName, numericWidth / 2, lineHeight);
+
+//                     // Draw item name
+//                     ctx.font = `${lineHeight}px Arial`;
+//                     ctx.fillText(textElements.itemName, numericWidth / 2, lineHeight * 2);
+
+//                     // Draw barcode image
+//                     ctx.drawImage(barcodeImage, 0, textBlockHeight, numericWidth, barcodeHeight);
+
+//                     // Draw barcode number
+//                     ctx.font = `bold ${lineHeight}px Arial`;
+//                     ctx.fillText(textElements.barcodeNumber, numericWidth / 2, textBlockHeight + barcodeHeight + lineHeight);
+
+//                     // Draw batch/expiry info
+//                     ctx.font = `${lineHeight - 2}px Arial`;
+//                     ctx.fillText(textElements.batchExpiry, numericWidth / 2, textBlockHeight + barcodeHeight + (lineHeight * 2));
+
+//                     // Convert to buffer and send
+//                     const finalBuffer = canvas.toBuffer('image/png');
+//                     res.set({
+//                         'Content-Type': 'image/png',
+//                         'Cache-Control': 'no-store, no-cache, must-revalidate',
+//                         'Pragma': 'no-cache'
+//                     });
+//                     res.send(finalBuffer);
+//                 });
+//             });
+
+//         } catch (error) {
+//             console.error('Barcode Endpoint Crash:', error);
+//             res.status(500).send('Internal server error');
+//         }
+//     });
+
+router.get('/item/:itemId/barcode/:stockEntryId/:width/:height/:type',
+    isLoggedIn, ensureAuthenticated, async (req, res) => {
+        try {
+            const item = await Item.findById(req.params.itemId)
+                .populate('stockEntries._id')
+                .populate('company');
+
+            const stockEntry = item.stockEntries.id(req.params.stockEntryId);
+
+            if (!item || !stockEntry) {
+                return res.status(404).send('Item or stock entry not found');
+            }
+
+            const { width, height, type } = req.params;
+            const numericWidth = parseInt(width);  // Should be 50 (mm)
+            const numericHeight = parseInt(height); // Should be 30 (mm)
+
+            // Validate dimensions for 50x30mm
+            if (isNaN(numericWidth) || isNaN(numericHeight) || numericWidth !== 50 || numericHeight !== 30) {
+                return res.status(400).send('Invalid dimensions - must be 50x30mm');
+            }
+
+            // Convert mm to pixels (1mm = 3.78px @ 96dpi)
+            const pixelWidth = Math.round(50 * 3.78);  // ≈189px
+            const pixelHeight = Math.round(30 * 3.78); // ≈113px
+
+            // Text configuration
+            const textElements = {
+                companyName: item.company.name,
+                itemName: item.name,
+                barcodeNumber: item.barcodeNumber.toString(),
+                batchExpiry: `MRP: ${stockEntry.mrp.toFixed(2)} | EXP: ${stockEntry.expiryDate.toLocaleDateString()}`
+            };
+
+            // Barcode configuration
+            const options = {
+                bcid: type.toLowerCase(),
+                text: textElements.barcodeNumber,
+                includetext: false,
+                textsize: 8,
+                textxalign: 'center',
+                textfont: 'Arial',
+                backgroundcolor: 'FFFFFF',
+                barcolor: '000000',
+                scale: type === 'qr' ? 3 : 2,
+                height: 12, // Barcode bar height
+                paddingwidth: 5,
+                paddingheight: 5
+            };
+
+            // Generate barcode
+            bwipjs.toBuffer(options, (err, png) => {
+                if (err) {
+                    console.error('Barcode Generation Error:', err);
+                    return res.status(500).send(`Barcode generation failed: ${err.message}`);
+                }
+
+                // Create canvas with exact dimensions
+                const canvas = createCanvas(pixelWidth, pixelHeight);
+                const ctx = canvas.getContext('2d');
+
+                // Load barcode image
+                loadImage(png).then((barcodeImage) => {
+                    // Set up text styling
+                    ctx.fillStyle = '#000000';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+
+                    // Calculate layout
+                    const textAreaHeight = 40; // Total text area (px)
+                    const barcodeAreaHeight = pixelHeight - textAreaHeight;
+
+                    // Company Name (top)
+                    ctx.font = 'bold 8px Arial';
+                    ctx.fillText(textElements.companyName, pixelWidth / 2, 4);
+
+                    // Item Name (below company)
+                    ctx.font = '7px Arial';
+                    ctx.fillText(textElements.itemName, pixelWidth / 2, 16);
+
+                    // Draw barcode image (center)
+                    const barcodeY = textAreaHeight / 2;
+                    ctx.drawImage(
+                        barcodeImage,
+                        10, // left margin
+                        barcodeY,
+                        pixelWidth - 20, // width with margins
+                        barcodeAreaHeight - 10
+                    );
+
+                    // Barcode Number (below barcode)
+                    ctx.font = 'bold 8px Arial';
+                    ctx.fillText(textElements.barcodeNumber, pixelWidth / 2, barcodeY + barcodeAreaHeight - 4);
+
+                    // Batch/Expiry (bottom line)
+                    ctx.font = '6px Arial';
+                    ctx.fillText(textElements.batchExpiry, pixelWidth / 2, pixelHeight - 12);
+
+                    // Convert to buffer and send
+                    const finalBuffer = canvas.toBuffer('image/png');
+                    res.set({
+                        'Content-Type': 'image/png',
+                        'Cache-Control': 'no-store, no-cache, must-revalidate',
+                        'Pragma': 'no-cache'
+                    });
+                    res.send(finalBuffer);
+                });
+            });
+
+        } catch (error) {
+            console.error('Barcode Endpoint Crash:', error);
+            res.status(500).send('Internal server error');
+        }
+    });
+
+router.post('/user/barcode-preferences', isLoggedIn, async (req, res) => {
+    try {
+        const preferences = await BarcodePreference.findOneAndUpdate(
+            { user: req.user._id },
+            {
+                $set: {
+                    labelWidth: req.body.labelWidth,
+                    labelHeight: req.body.labelHeight,
+                    labelsPerRow: req.body.labelsPerRow,
+                    barcodeType: req.body.barcodeType,
+                    defaultQuantity: req.body.quantity,
+                    saveSettings: req.body.saveSettings // Add this line
+                }
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
+        res.json({ success: true, preferences });
+    } catch (error) {
+        console.error('Preferences Save Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to save settings. ' + error.message
+        });
+    }
+});
 module.exports = router;

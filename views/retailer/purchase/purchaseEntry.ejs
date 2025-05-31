@@ -1,4 +1,6 @@
 <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+
+ 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <link rel="stylesheet" href="/stylesheet/purchase/purchaseEntry.css">
@@ -143,6 +145,8 @@
                                     <th>WS Unit</th>
                                     <th>Batch</th>
                                     <th>Expiry</th>
+                                    <th>Store</th>
+                                    <th>Rack</th>
                                     <th>Qty</th>
                                     <th>Bonus</th>
                                     <th>Unit</th>
@@ -644,4 +648,9 @@
         });
     </script>
 
+<script>
+    // Server data first
+    const serverStores = <%- JSON.stringify(stores || []) %>;
+    const serverRacksByStore = <%- JSON.stringify(racksByStore || {}) %>;
+</script>
     <script src="/javascript/purchase/purchaseEntry.js"></script>

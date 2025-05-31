@@ -287,7 +287,7 @@ function addItemToBill(item, dropdownMenu) {
     <input type="hidden" name="items[${itemIndex}][hscode]" value="${item.hscode}">
     ${item.hscode}
 </td>
-<td class="col-3">
+<td class="col-2">
     <input type="hidden" name="items[${itemIndex}][item]" value="${item._id}">
     ${item.name}
 </td>
@@ -299,6 +299,18 @@ function addItemToBill(item, dropdownMenu) {
 </td>
 <td>
     <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
+</td>
+<td>
+    <select name="items[${itemIndex}][store]" class="form-control item-store" id="store-${itemIndex}" onkeydown="handleStoreKeydown(event, ${itemIndex})" required>
+        ${serverStores.map(s => `
+            <option value="${s._id}">${s.name}</option>
+        `).join('')}
+    </select>
+</td>
+<td>
+    <select name="items[${itemIndex}][rack]" class="form-control item-rack" id="rack-${itemIndex}" onkeydown="handleRackKeydown(event, ${itemIndex})" required>
+            <!-- Options populated dynamically -->
+    </select>
 </td>
 <td>
     <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)" required>
@@ -443,6 +455,22 @@ function addItemToBill(item, dropdownMenu) {
             delete input.dataset.tooltipId;
         }
     }
+    // Add dynamic rack population
+    const storeSelect = tr.querySelector(`#store-${currentIndex}`);
+    const rackSelect = tr.querySelector(`#rack-${currentIndex}`);
+
+    function updateRackOptions() {
+        const selectedStore = storeSelect.value;
+        const racks = serverRacksByStore[selectedStore] || [];
+        rackSelect.innerHTML = '' +
+            racks.map(r => `
+            <option value="${r._id}">${r.name}</option>
+        `).join('');
+    }
+
+    storeSelect.addEventListener('change', updateRackOptions);
+    updateRackOptions(); // Initial population
+
 }
 
 // Function to fetch last transactions for the selected item
@@ -944,6 +972,21 @@ function handleBatchKeydown(event) {
 
 function handleExpDateKeydown(event) {
     if (event.key === 'Enter') {
+        const storeInput = document.getElementById(`store-${itemIndex - 1}`);
+        storeInput.focus();
+        storeInput.select();
+    }
+}
+
+function handleStoreKeydown(event) {
+    if (event.key === 'Enter') {
+        const rackInput = document.getElementById(`rack-${itemIndex - 1}`);
+        rackInput.focus();
+        rackInput.select();
+    }
+}
+function handleRackKeydown(event) {
+     if (event.key === 'Enter') {
         const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
         quantityInput.focus();
         quantityInput.select();

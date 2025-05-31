@@ -1,0 +1,43 @@
+[
+  {
+    "_id": "67eb8b3268d544b82d41714e",
+    "name": "SOOTHER",
+    "hscode": 9018,
+    "category": "67eb8a8b68d544b82d417064",
+    "price": null,
+    "puPrice": null,
+    "mainUnitPuPrice": 0,
+    "mainUnit": "67eb8a8b68d544b82d41707a",
+    "WSUnit": 24,
+    "unit": "67eb8a8b68d544b82d417070",
+    "vatStatus": "vatExempt",
+    "stock": null,
+    "openingStock": null,
+    "openingStockByFiscalYear": [
+      {
+        "fiscalYear": "67eb8a8468d544b82d416f81",
+        "openingStock": null,
+        "openingStockBalance": "0.00",
+        "purchasePrice": "",
+        "salesPrice": null,
+        "_id": "67eb8b3268d544b82d41714f"
+      }
+    ],
+    "minStock": 0,
+    "maxStock": 10,
+    "reorderLevel": 10,
+    "sales": [],
+    "salesReturn": [],
+    "purchase": [],
+    "PurchaseReturn": [],
+    "stockAdjustments": [],
+    "stockEntries": [],
+    "company": "67eb8a8468d544b82d416f7f",
+    "fiscalYear": "67eb8a8468d544b82d416f81",
+    "createdAt": "2025-04-01T06:38:21.185Z",
+    "date": "2025-04-01T06:38:21.185Z",
+    "uniqueNumber": 8922,
+    "__v": 0,
+    "status": "active"
+  }
+]

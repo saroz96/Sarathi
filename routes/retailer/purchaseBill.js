@@ -20,6 +20,9 @@ const FiscalYear = require('../../models/retailer/FiscalYear');
 const BillCounter = require('../../models/retailer/billCounter');
 const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
 const CompanyGroup = require('../../models/retailer/CompanyGroup');
+const { default: Store } = require('../../models/retailer/Store');
+const { default: Rack } = require('../../models/retailer/Rack');
+
 
 
 // Fetch all purchase bills
@@ -128,8 +131,15 @@ router.get("/api/accounts", async (req, res) => {
 
         const accounts = await Account.find({
             company: companyId,
-            fiscalYear: fiscalYear,
+            // fiscalYear: fiscalYear,
             isActive: true,
+            $or: [
+                { originalFiscalYear: fiscalYear }, // Created here
+                {
+                    fiscalYear: fiscalYear,
+                    originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                }
+            ],
             companyGroups: { $in: relevantGroupIds }
         });
         res.json(accounts);
@@ -236,19 +246,6 @@ router.get('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySele
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        // let billCounter = await BillCounter.findOne({
-        //     company: companyId,
-        //     fiscalYear: fiscalYear,
-        //     transactionType: 'Purchase' // Specify the transaction type for sales bill
-        // });
-
-        // let nextBillNumber;
-        // if (billCounter) {
-        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        // } else {
-        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        // }
         // Get last counter without incrementing
         const lastCounter = await BillCounter.findOne({
             company: companyId,
@@ -261,12 +258,28 @@ router.get('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySele
         const fiscalYears = await FiscalYear.findById(fiscalYear);
         const prefix = fiscalYears.billPrefixes.purchase;
         const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
+
+        // Add these 2 crucial queries
+        const stores = await Store.find({ company: companyId });
+        const racks = await Rack.find({ company: companyId }).populate('store');
+
+        // Group racks by store
+        const racksByStore = {};
+        racks.forEach(rack => {
+            if (!racksByStore[rack.store._id]) {
+                racksByStore[rack.store._id] = [];
+            }
+            racksByStore[rack.store._id].push(rack);
+        });
+
         res.render('retailer/purchase/purchaseEntry', {
             company, items: items, purchasebills: purchasebills, nextPurchaseBillNumber: nextBillNumber,
             nepaliDate: nepaliDate, transactionDateNepali, companyDateFormat, currentFiscalYear, vatEnabled: company.vatEnabled,
             user: req.user, currentCompanyName: req.session.currentCompanyName,
-            title: 'Purchase Entry',
-            body: 'retailer >> purchase >> add',
+            stores: stores,  // Must match EJS variable name
+            racksByStore: racksByStore,  // Must match EJS variable name
+            title: '',
+            body: '',
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });
     }
@@ -615,7 +628,7 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
             const uniqueId = uuidv4();
 
             // FIFO stock addition function (unchanged)
-            async function addStock(product, batchNumber, expiryDate, WSUnit, quantity, bonus, price, puPrice, marginPercentage, mrp, currency, uniqueId) {
+            async function addStock(product, batchNumber, expiryDate, WSUnit, quantity, bonus, price, puPrice, marginPercentage, mrp, currency, store, rack, uniqueId) {
                 const quantityNumber = Number(quantity) + Number(bonus);
                 const bonusNumber = Number(bonus);
                 const parsedPrice = price !== undefined && price !== "" ? parseFloat(price) : 0;
@@ -639,6 +652,8 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     marginPercentage: marginPercentage,
                     currency: currency,
                     purchaseBillId: newBill._id,
+                    store: store,
+                    rack: rack,
                     uniqueUuId: uniqueId
                 };
 
@@ -675,6 +690,8 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     item.marginPercentage,
                     item.mrp,
                     item.currency,
+                    item.store,
+                    item.rack,
                     uniqueId
                 );
 
@@ -695,6 +712,8 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     mrp: item.mrp,
                     marginPercentage: item.marginPercentage,
                     currency: item.currency,
+                    store: item.store,
+                    rack: item.rack,
                     unit: item.unit,
                     vatStatus: product.vatStatus,
                     uniqueUuId: uniqueId

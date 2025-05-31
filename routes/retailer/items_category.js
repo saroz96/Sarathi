@@ -7,6 +7,7 @@ const { ensureTradeType } = require('../../middleware/tradeType');
 const Company = require('../../models/retailer/Company');
 const FiscalYear = require('../../models/retailer/FiscalYear');
 const Item = require('../../models/retailer/Item');
+const itemsCompany = require('../../models/retailer/itemsCompany');
 
 
 // Category routes

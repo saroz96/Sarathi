@@ -336,6 +336,45 @@
                                     placeholder="Select an item..." autocomplete="off">
                             </div>
                         </div>
+                        <form id="ledgerFilterForm" class="mb-4">
+                            <div class="row g-3">
+                                <% if (companyDateFormat==='english' ) { %>
+                                    <div class="filter-group">
+                                        <label for="fromDate">From Date</label>
+                                        <input type="text" name="fromDate" id="fromDate" class="form-control datepicker"
+                                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                            autofocus>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label for="toDate">To Date</label>
+                                        <input type="text" name="toDate" id="toDate" class="form-control datepicker"
+                                            value="<%= new Date().toISOString().split('T')[0] %>">
+                                    </div>
+                                    <% } else { %>
+                                        <div class="filter-group">
+                                            <label for="fromDate">From Date</label>
+                                            <input type="text" name="fromDate" id="fromDate"
+                                                class="form-control datepicker"
+                                                value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                                autofocus>
+                                        </div>
+                                        <div class="filter-group">
+                                            <label for="toDate">To Date</label>
+                                            <input type="text" name="toDate" id="toDate" class="form-control datepicker"
+                                                value="<%= nepaliDate %>">
+                                        </div>
+                                        <% } %>
+
+                                            <div class="filter-group">
+                                                <label for=""></label>
+                                                <div class="action-buttons">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-chart-line me-2"></i>Generate Report
+                                                    </button>
+                                                </div>
+                                            </div>
+                            </div>
+                        </form>
                         <div class="filter-group">
                             <label for="searchInput" class="font-weight-bold">Search Party</label>
                             <div class="input-group">
@@ -646,18 +685,35 @@
                 selectedIndex = 0;
 
                 // Update UI
+                // $ledgerTitle.text(`Items Ledger: ${itemName}`);
+                // fetchItemLedger(itemId);
+
+                // Update UI without fetching data
                 $ledgerTitle.text(`Items Ledger: ${itemName}`);
-                fetchItemLedger(itemId);
+                $ledgerTableBody.html('<tr><td colspan="10" class="text-center py-4">Select dates and click "Generate Report" to view ledger</td></tr>');
+                $("#ledgerTableFooter").hide();
+                $printAllBtn.prop('disabled', true);
+                $printFilteredBtn.prop('disabled', true);
 
                 // Move focus to the next input field
                 setTimeout(() => {
-                    $("#searchInput").focus();
+                    $("#fromDate").focus();
                 }, 300);
             }
 
             function fetchItemLedger(itemId) {
+
+                const fromDate = $('#fromDate').val();
+                const toDate = $('#toDate').val();
+
+                if (!fromDate || !toDate) {
+                    alert('Please select both From Date and To Date');
+                    return;
+                }
+
                 $.ajax({
-                    url: `/items-ledger/${itemId}`,
+                    // url: `/items-ledger/${itemId}`,
+                    url: `/items-ledger/${itemId}?fromDate=${encodeURIComponent(fromDate)}&toDate=${encodeURIComponent(toDate)}`,
                     method: 'GET',
                     beforeSend: function () {
                         $ledgerTableBody.html('<tr><td colspan="10" class="text-center py-4">Loading ledger data...</td></tr>');
@@ -678,6 +734,16 @@
                     }
                 });
             }
+
+            // Modify form submission handler to require item selection
+            $('#ledgerFilterForm').on('submit', function (e) {
+                e.preventDefault();
+                if (!currentItem) {
+                    alert('Please select an item first.');
+                    return;
+                }
+                fetchItemLedger(currentItem.id);
+            });
 
             function renderLedgerData(data) {
                 $ledgerTableBody.empty();
@@ -967,5 +1033,24 @@
 
             // Initial filter
             filterAdjustment();
+        });
+
+
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
         });
     </script>

@@ -151,11 +151,11 @@
                                         <div class="form-group">
                                             <label for="paymentMode">Payment Mode</label>
                                             <select name="paymentMode" id="paymentMode" class="form-control">
-                                                <option value="exclude-cash" <%=paymentMode==='exclude-cash'
-                                                    ? 'selected' : '' %>>All (Exclude Cash)</option>
-                                                <option value="all" <%=paymentMode==='all' ? 'selected' : '' %>>All
+                                                 <option value="all" <%=paymentMode==='all' ? 'selected' : '' %>>All
                                                     (Include
                                                     Cash)</option>
+                                                <option value="exclude-cash" <%=paymentMode==='exclude-cash'
+                                                    ? 'selected' : '' %>>All (Exclude Cash)</option>
                                                 <option value="cash" <%=paymentMode==='cash' ? 'selected' : '' %>>Cash
                                                 </option>
                                                 <option value="credit" <%=paymentMode==='credit' ? 'selected' : '' %>

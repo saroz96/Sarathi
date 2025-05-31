@@ -149,7 +149,7 @@
 
         /* Custom styles to resize the form */
         .expanded-container {
-            max-width: 90%;
+            max-width: 100%;
             /* Expand the container to 90% of the viewport width */
         }
 
@@ -160,7 +160,7 @@
 
         @media (min-width: 768px) {
             .expanded-container {
-                max-width: 90%;
+                max-width: 100%;
                 /* Adjust width for medium and larger screens */
             }
         }

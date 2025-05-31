@@ -1,0 +1,23 @@
+{
+  "_id": "67e3f717dc47ec62af63daeb",
+  "name": "RIJAL DRUG HOUSE PVT. LTD.",
+  "address": "Anamnagar",
+  "country": "Nepal",
+  "state": "Bagmati",
+  "city": "Kathmandu",
+  "pan": "610156779",
+  "phone": "9805678931",
+  "ward": 29,
+  "email": "rijaldrughouse@gmail.com",
+  "tradeType": "retailer",
+  "owner": "67e3f69cdc47ec62af63dae0",
+  "users": [],
+  "dateFormat": "nepali",
+  "fiscalYearStartDate": "2081-04-01",
+  "vatEnabled": false,
+  "createdAt": "2081-03-31T18:15:00.000Z",
+  "updatedAt": "2025-04-01T13:40:41.277Z",
+  "__v": 0,
+  "fiscalYear": "67e3f717dc47ec62af63daed",
+  "renewalDate": "2082-12-18"
+}

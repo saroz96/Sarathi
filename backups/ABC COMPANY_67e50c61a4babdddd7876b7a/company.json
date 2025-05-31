@@ -1,0 +1,22 @@
+{
+  "_id": "67e50c61a4babdddd7876b7a",
+  "name": "ABC COMPANY",
+  "address": "TRIPURESHWOR",
+  "country": "Nepal",
+  "state": "BAGMATI",
+  "city": "KATHMANDU",
+  "pan": "602154789",
+  "phone": "9801018236",
+  "ward": 11,
+  "email": "ABC@GMAIL.COM",
+  "tradeType": "Wholeseller",
+  "owner": "67e50c11a4babdddd7876b6f",
+  "users": [],
+  "dateFormat": "nepali",
+  "fiscalYearStartDate": "2081-04-01",
+  "vatEnabled": true,
+  "createdAt": "2081-03-31T18:15:00.000Z",
+  "updatedAt": "2025-03-27T08:29:21.456Z",
+  "__v": 0,
+  "fiscalYear": "67e50c61a4babdddd7876b7c"
+}

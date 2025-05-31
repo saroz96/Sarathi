@@ -2,204 +2,247 @@
 
     <title>Ageing Receivables/Payables Report</title>
     <style>
-
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-        th { background-color: #f2f2f2; text-align: center; }
-        .total-row { background-color: #e6e6e6; font-weight: bold; }
-        .account-name { text-align: left; }
-        .negative { color: red; }
-        .receivable-row { background-color: #e6f7ff; }
-        .payable-row { background-color: #fff7e6; }
-        .net-total { background-color: #f0f0f0; font-weight: bold; }
-        .type-col { text-align: center; width: 100px; }
-        .filter-container { margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-        .filter-group { display: flex; gap: 10px; align-items: center; }
-        select, button, input { padding: 8px 12px; border-radius: 4px; border: 1px solid #ddd; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        #searchInput { width: 250px; }
-
-/*         
-        .table-container {
-            max-height: 70vh;
-            overflow-y: auto;
-            margin-top: 20px;
-            position: relative;
-        }
-        table { 
-            width: 100%; 
+        table {
+            width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 8px; 
-            text-align: right; 
-            position: relative;
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
         }
-        th { 
-            background-color: #f2f2f2; 
-            text-align: center; 
-            position: sticky;
-            top: 0;
-            z-index: 10;
+
+        th {
+            background-color: #f2f2f2;
+            text-align: center;
         }
-        .total-row { 
-            background-color: #e6e6e6; 
-            font-weight: bold; 
+
+        .total-row {
+            background-color: #e6e6e6;
+            font-weight: bold;
         }
-        .account-name { 
-            text-align: left; 
-            position: sticky;
-            left: 0;
-            background-color: inherit;
-            z-index: 5;
+
+        .account-name {
+            text-align: left;
         }
-        .negative { 
-            color: red; 
+
+        .negative {
+            color: red;
         }
-        .receivable-row { 
-            background-color: #e6f7ff; 
+
+        .receivable-row {
+            background-color: #e6f7ff;
         }
-        .payable-row { 
-            background-color: #fff7e6; 
+
+        .payable-row {
+            background-color: #fff7e6;
         }
-        .net-total { 
-            background-color: #f0f0f0; 
-            font-weight: bold; 
+
+        .net-total {
+            background-color: #f0f0f0;
+            font-weight: bold;
         }
-        .type-col { 
-            text-align: center; 
-            width: 100px; 
+
+        .type-col {
+            text-align: center;
+            width: 100px;
         }
-        .filter-container { 
-            margin-bottom: 20px; 
-            display: flex; 
-            gap: 15px; 
-            align-items: center; 
-            flex-wrap: wrap; 
+
+        .filter-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        .filter-group { 
-            display: flex; 
-            gap: 10px; 
-            align-items: center; 
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
-        select, button, input { 
-            padding: 8px 12px; 
-            border-radius: 4px; 
-            border: 1px solid #ddd; 
+
+        select,
+        button,
+        input {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
         }
-        button { 
-            background-color: #4CAF50; 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
         }
-        button:hover { 
-            background-color: #45a049; 
-        } */
-        #searchInput { 
-            width: 250px; 
+
+        button:hover {
+            background-color: #45a049;
         }
+
+        #searchInput {
+            width: 250px;
+        }
+
+        #searchInput {
+            width: 250px;
+        }
+
         .highlight-row {
-            background-color: #ffffcc !important;
+            background-color: #5897FB !important;
+            color: white;
         }
     </style>
 
-<div class="container-fluid">
-    <h1 class="text-center">Ageing Receivables/Payables Report</h1>
-    
-    <div class="filter-container">
-        <div class="filter-group">
-            <label for="searchInput">Search Account:</label>
-            <input type="text" id="searchInput" placeholder="Enter account name...">
-        </div>
-        
-        <div class="filter-group">
-            <label for="typeFilter">Filter by Type:</label>
-            <select id="typeFilter">
-                <option value="all">All</option>
-                <option value="receivable">Receivable</option>
-                <option value="payable">Payable</option>
-            </select>
-            <button onclick="applyFilters()">Apply Filters</button>
-            <button onclick="printReport()">Print Report</button>
-        </div>
-    </div>
+    <div class="container-fluid">
+        <h1 class="text-center">Ageing Report</h1>
 
-    <div class="table-container" id="scrollContainer">
-        <table id="reportTable">
-            <thead>
-                <tr>
-                    <th class="account-name">Account</th>
-                    <th class="type-col">Type</th>
-                    <th>0-30 Days</th>
-                    <th>31-60 Days</th>
-                    <th>61-90 Days</th>
-                    <th>91-120 Days</th>
-                    <th>Over 120 Days</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% report.forEach((account, index) => { %>
-                    <tr class="<%= account.isReceivable ? 'receivable-row' : 'payable-row' %> <%= index === 0 ? 'highlight-row' : '' %>" 
-                        data-type="<%= account.isReceivable ? 'receivable' : 'payable' %>"
-                        data-account="<%= account.accountName.toLowerCase() %>"
-                        data-bucket-0-30="<%= account.buckets['0-30'] %>"
-                        data-bucket-30-60="<%= account.buckets['30-60'] %>"
-                        data-bucket-60-90="<%= account.buckets['60-90'] %>"
-                        data-bucket-90-120="<%= account.buckets['90-120'] %>"
-                        data-bucket-over-120="<%= account.buckets['over-120'] %>"
-                        data-total="<%= account.netBalance %>"
-                        tabindex="0">
-                        <td class="account-name"><%= account.accountName %></td>
-                        <td class="type-col"><%= account.isReceivable ? 'Receivable' : 'Payable' %></td>
-                        <td><%= formatCurrency(account.buckets['0-30']) %></td>
-                        <td><%= formatCurrency(account.buckets['30-60']) %></td>
-                        <td><%= formatCurrency(account.buckets['60-90']) %></td>
-                        <td><%= formatCurrency(account.buckets['90-120']) %></td>
-                        <td><%= formatCurrency(account.buckets['over-120']) %></td>
-                        <td><%= formatCurrency(account.netBalance) %></td>
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="searchInput">Search Account:</label>
+                <input type="text" id="searchInput" placeholder="Enter account name...">
+            </div>
+
+            <div class="filter-group">
+                <label for="typeFilter">Filter by Type:</label>
+                <select id="typeFilter">
+                    <option value="all">All</option>
+                    <option value="receivable">Receivable</option>
+                    <option value="payable">Payable</option>
+                </select>
+                <button onclick="applyFilters()">Apply Filters</button>
+                <button onclick="printReport()">Print Report</button>
+            </div>
+        </div>
+
+        <div class="table-container" id="scrollContainer">
+            <table id="reportTable">
+                <thead>
+                    <tr>
+                        <th class="account-name">Account</th>
+                        <th class="type-col">Type</th>
+                        <th>0-30 Days</th>
+                        <th>31-60 Days</th>
+                        <th>61-90 Days</th>
+                        <th>91-120 Days</th>
+                        <th>Over 120 Days</th>
+                        <th>Closing</th>
                     </tr>
-                <% }); %>
-                
-                <!-- Receivables Total -->
-                <tr class="total-row receivable-total">
-                    <td colspan="2">Total Receivables</td>
-                    <td id="receivable-0-30"><%= formatCurrency(receivableTotals['0-30']) %></td>
-                    <td id="receivable-30-60"><%= formatCurrency(receivableTotals['30-60']) %></td>
-                    <td id="receivable-60-90"><%= formatCurrency(receivableTotals['60-90']) %></td>
-                    <td id="receivable-90-120"><%= formatCurrency(receivableTotals['90-120']) %></td>
-                    <td id="receivable-over-120"><%= formatCurrency(receivableTotals['over-120']) %></td>
-                    <td id="receivable-total"><%= formatCurrency(receivableTotals.total) %></td>
-                </tr>
-                
-                <!-- Payables Total -->
-                <tr class="total-row payable-total">
-                    <td colspan="2">Total Payables</td>
-                    <td id="payable-0-30"><%= formatCurrency(payableTotals['0-30']) %></td>
-                    <td id="payable-30-60"><%= formatCurrency(payableTotals['30-60']) %></td>
-                    <td id="payable-60-90"><%= formatCurrency(payableTotals['60-90']) %></td>
-                    <td id="payable-90-120"><%= formatCurrency(payableTotals['90-120']) %></td>
-                    <td id="payable-over-120"><%= formatCurrency(payableTotals['over-120']) %></td>
-                    <td id="payable-total"><%= formatCurrency(payableTotals.total) %></td>
-                </tr>
-                
-                <!-- Net Total -->
-                <tr class="net-total">
-                    <td colspan="2">Net Total</td>
-                    <td id="net-0-30"><%= formatCurrency(netTotals['0-30']) %></td>
-                    <td id="net-30-60"><%= formatCurrency(netTotals['30-60']) %></td>
-                    <td id="net-60-90"><%= formatCurrency(netTotals['60-90']) %></td>
-                    <td id="net-90-120"><%= formatCurrency(netTotals['90-120']) %></td>
-                    <td id="net-over-120"><%= formatCurrency(netTotals['over-120']) %></td>
-                    <td id="net-total"><%= formatCurrency(netTotals.total) %></td>
-                </tr>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% report.forEach((account, index)=> { %>
+                        <tr class="<%= account.isReceivable ? 'receivable-row' : 'payable-row' %> <%= index === 0 ? 'highlight-row' : '' %>"
+                            data-type="<%= account.isReceivable ? 'receivable' : 'payable' %>"
+                            data-account="<%= account.accountName.toLowerCase() %>"
+                            data-bucket-0-30="<%= account.buckets['0-30'] %>"
+                            data-bucket-30-60="<%= account.buckets['30-60'] %>"
+                            data-bucket-60-90="<%= account.buckets['60-90'] %>"
+                            data-bucket-90-120="<%= account.buckets['90-120'] %>"
+                            data-bucket-over-120="<%= account.buckets['over-120'] %>"
+                            data-total="<%= account.netBalance %>" tabindex="0">
+                            <td class="account-name">
+                                <%= account.accountName %>
+                            </td>
+                            <td class="type-col">
+                                <%= account.isReceivable ? 'Receivable' : 'Payable' %>
+                            </td>
+                            <td>
+                                <%= formatCurrency(account.buckets['0-30']) %>
+                            </td>
+                            <td>
+                                <%= formatCurrency(account.buckets['30-60']) %>
+                            </td>
+                            <td>
+                                <%= formatCurrency(account.buckets['60-90']) %>
+                            </td>
+                            <td>
+                                <%= formatCurrency(account.buckets['90-120']) %>
+                            </td>
+                            <td>
+                                <%= formatCurrency(account.buckets['over-120']) %>
+                            </td>
+                            <td>
+                                <%= formatCurrency(account.netBalance) %>
+                            </td>
+                        </tr>
+                        <% }); %>
+
+                            <!-- Receivables Total -->
+                            <tr class="total-row receivable-total">
+                                <td colspan="2">Total Receivables</td>
+                                <td id="receivable-0-30">
+                                    <%= formatCurrency(receivableTotals['0-30']) %>
+                                </td>
+                                <td id="receivable-30-60">
+                                    <%= formatCurrency(receivableTotals['30-60']) %>
+                                </td>
+                                <td id="receivable-60-90">
+                                    <%= formatCurrency(receivableTotals['60-90']) %>
+                                </td>
+                                <td id="receivable-90-120">
+                                    <%= formatCurrency(receivableTotals['90-120']) %>
+                                </td>
+                                <td id="receivable-over-120">
+                                    <%= formatCurrency(receivableTotals['over-120']) %>
+                                </td>
+                                <td id="receivable-total">
+                                    <%= formatCurrency(receivableTotals.total) %>
+                                </td>
+                            </tr>
+
+                            <!-- Payables Total -->
+                            <tr class="total-row payable-total">
+                                <td colspan="2">Total Payables</td>
+                                <td id="payable-0-30">
+                                    <%= formatCurrency(payableTotals['0-30']) %>
+                                </td>
+                                <td id="payable-30-60">
+                                    <%= formatCurrency(payableTotals['30-60']) %>
+                                </td>
+                                <td id="payable-60-90">
+                                    <%= formatCurrency(payableTotals['60-90']) %>
+                                </td>
+                                <td id="payable-90-120">
+                                    <%= formatCurrency(payableTotals['90-120']) %>
+                                </td>
+                                <td id="payable-over-120">
+                                    <%= formatCurrency(payableTotals['over-120']) %>
+                                </td>
+                                <td id="payable-total">
+                                    <%= formatCurrency(payableTotals.total) %>
+                                </td>
+                            </tr>
+
+                            <!-- Net Total -->
+                            <tr class="net-total">
+                                <td colspan="2">Net Total</td>
+                                <td id="net-0-30">
+                                    <%= formatCurrency(netTotals['0-30']) %>
+                                </td>
+                                <td id="net-30-60">
+                                    <%= formatCurrency(netTotals['30-60']) %>
+                                </td>
+                                <td id="net-60-90">
+                                    <%= formatCurrency(netTotals['60-90']) %>
+                                </td>
+                                <td id="net-90-120">
+                                    <%= formatCurrency(netTotals['90-120']) %>
+                                </td>
+                                <td id="net-over-120">
+                                    <%= formatCurrency(netTotals['over-120']) %>
+                                </td>
+                                <td id="net-total">
+                                    <%= formatCurrency(netTotals.total) %>
+                                </td>
+                            </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
     <script>
         let currentHighlightedRow = null;
@@ -208,22 +251,22 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             const filterValue = document.getElementById('typeFilter').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const rows = document.querySelectorAll('#reportTable tbody tr[data-type]');
-            
+
             // Reset totals
             const receivableTotals = { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
             const payableTotals = { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
             const netTotals = { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
 
             let firstVisibleRow = null;
-            
+
             rows.forEach((row, index) => {
                 const type = row.getAttribute('data-type');
                 const accountName = row.getAttribute('data-account');
-                
+
                 // Check if row matches both filters
                 const typeMatches = filterValue === 'all' || filterValue === type;
                 const searchMatches = searchTerm === '' || accountName.includes(searchTerm);
-                
+
                 const showRow = typeMatches && searchMatches;
                 row.style.display = showRow ? '' : 'none';
 
@@ -233,7 +276,7 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                         highlightRow(row);
                         firstVisibleRow = row;
                     }
-                    
+
                     // Get the bucket values from data attributes
                     const bucketValues = {
                         '0-30': parseFloat(row.getAttribute('data-bucket-0-30')),
@@ -271,19 +314,19 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                     r.classList.remove('highlight-row');
                 }
             });
-            
+
             // Add highlight to selected row (if not a total row)
             if (row && !row.classList.contains('total-row') && !row.classList.contains('net-total')) {
                 row.classList.add('highlight-row');
                 currentHighlightedRow = row;
                 row.focus(); // Focus the row for keyboard navigation
-                
+
                 // Scroll to the highlighted row
                 const container = document.getElementById('scrollContainer');
                 const rowTop = row.offsetTop;
                 const containerHeight = container.clientHeight;
                 const rowHeight = row.clientHeight;
-                
+
                 if (rowTop < container.scrollTop) {
                     container.scrollTop = rowTop;
                 } else if (rowTop + rowHeight > container.scrollTop + containerHeight) {
@@ -301,15 +344,15 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
 
             let nextRow = currentHighlightedRow;
             do {
-                nextRow = direction === 'up' 
-                    ? nextRow.previousElementSibling 
+                nextRow = direction === 'up'
+                    ? nextRow.previousElementSibling
                     : nextRow.nextElementSibling;
-                
+
                 if (!nextRow) break;
-                
-            } while (nextRow && (nextRow.style.display === 'none' || 
-                   nextRow.classList.contains('total-row') || 
-                   nextRow.classList.contains('net-total')));
+
+            } while (nextRow && (nextRow.style.display === 'none' ||
+                nextRow.classList.contains('total-row') ||
+                nextRow.classList.contains('net-total')));
 
             if (nextRow) {
                 highlightRow(nextRow);
@@ -347,23 +390,23 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         }
 
         // Initialize with all data shown
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Add event listener for Enter key in search input
-            document.getElementById('searchInput').addEventListener('keyup', function(event) {
+            document.getElementById('searchInput').addEventListener('keyup', function (event) {
                 if (event.key === 'Enter') {
                     applyFilters();
                 }
             });
-            
+
             // Add click event to highlight rows
             document.querySelectorAll('#reportTable tbody tr').forEach(row => {
-                row.addEventListener('click', function() {
+                row.addEventListener('click', function () {
                     highlightRow(this);
                 });
             });
-            
+
             // Add keyboard navigation
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
                     moveHighlight('down');
@@ -372,24 +415,24 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                     moveHighlight('up');
                 }
             });
-            
+
             applyFilters();
         });
 
         function printReport() {
-    // Get the current filter values
-    const filterValue = document.getElementById('typeFilter').value;
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
-    // Start building the HTML content
-    let printContent = `
+            // Get the current filter values
+            const filterValue = document.getElementById('typeFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+
+            // Start building the HTML content
+            let printContent = `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Ageing Receivables/Payables Report</title>
+            <title>Ageing Receivables/Payables Report/${new Date().toLocaleString()}</title>
             <style>
                 body { font-family: Arial, sans-serif; }
                 table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -409,7 +452,8 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         </head>
         <body>
             <div class="print-header">
-                <h1>Ageing Receivables/Payables Report</h1>
+                <h1><%= currentCompanyName %></h1>
+                <h1>Ageing Report</h1>
                 <p>Generated on: ${new Date().toLocaleString()}</p>
                 ${filterValue !== 'all' ? `<p>Filter: ${filterValue.charAt(0).toUpperCase() + filterValue.slice(1)}</p>` : ''}
                 ${searchTerm ? `<p>Search: ${searchTerm}</p>` : ''}
@@ -424,27 +468,27 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                         <th>61-90 Days</th>
                         <th>91-120 Days</th>
                         <th>Over 120 Days</th>
-                        <th>Total</th>
+                        <th>Closing</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
-    
-    // Get all visible rows from the original table
-    const rows = document.querySelectorAll('#reportTable tbody tr[data-type]');
-    let hasVisibleRows = false;
-    
-    // Add the visible rows to the print content
-    rows.forEach(row => {
-        if (row.style.display !== 'none') {
-            printContent += row.outerHTML;
-            hasVisibleRows = true;
-        }
-    });
-    
-    // Add the totals if there are visible rows
-    if (hasVisibleRows) {
-        printContent += `
+
+            // Get all visible rows from the original table
+            const rows = document.querySelectorAll('#reportTable tbody tr[data-type]');
+            let hasVisibleRows = false;
+
+            // Add the visible rows to the print content
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    printContent += row.outerHTML;
+                    hasVisibleRows = true;
+                }
+            });
+
+            // Add the totals if there are visible rows
+            if (hasVisibleRows) {
+                printContent += `
             <tr class="total-row receivable-total">
                 <td colspan="2">Total Receivables</td>
                 <td>${document.getElementById('receivable-0-30').textContent}</td>
@@ -473,26 +517,26 @@ table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                 <td>${document.getElementById('net-total').textContent}</td>
             </tr>
         `;
-    }
-    
-    // Close the HTML
-    printContent += `
+            }
+
+            // Close the HTML
+            printContent += `
                 </tbody>
             </table>
         </body>
         </html>
     `;
-    
-    // Write the content to the new window and trigger print
-    printWindow.document.open();
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    // Wait for content to load before printing
-    printWindow.onload = function() {
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
-    };
-}
+
+            // Write the content to the new window and trigger print
+            printWindow.document.open();
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+
+            // Wait for content to load before printing
+            printWindow.onload = function () {
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            };
+        }
     </script>

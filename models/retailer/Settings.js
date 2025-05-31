@@ -48,18 +48,13 @@ const SettingsSchema = new Schema({
         type: mongoose.Schema.Types.Mixed
     },
     fiscalYear: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'FiscalYear', // Reference the current fiscal year
+        type: Schema.Types.ObjectId,
+        ref: 'FiscalYear',
         required: true
-    },
-    company: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Company',
-        required: true
-    },
+    }
 });
 
-// Create a unique compound index for company
-SettingsSchema.index({ company: 1 }, { unique: true });
+// Ensure one Settings document per company
+SettingsSchema.index({ companyId: 1, fiscalYear: 1 }, { unique: true });
 
 module.exports = mongoose.model('Settings', SettingsSchema);

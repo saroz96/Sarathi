@@ -17,310 +17,6 @@ const Payment = require('../../models/retailer/Payment');
 const Receipt = require('../../models/retailer/Receipt');
 const CreditNote = require('../../models/retailer/CreditNote');
 
-// // Ageing Receivables Report (Sundry Debtors)
-// router.get('/ageing-receivables', isLoggedIn, async (req, res) => {
-//     try {
-//         const companyId = req.session.currentCompany;
-//         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
-//         const currentCompany = await Company.findById(companyId);
-//         const today = new Date();
-//         const nepaliDate = new NepaliDate(today);
-//         const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
-
-//         // Initialize currentDate based on company date format
-//         if (companyDateFormat === 'nepali') {
-//             currentDate = nepaliDate; // Get current Nepali date as object
-//         } else {
-//             currentDate = today; // Get current English date
-//         }
-
-//         // Get Sundry Debtors and Creditors groups
-//         const [debtorGroup, creditorGroup] = await Promise.all([
-//             CompanyGroup.findOne({ name: 'Sundry Debtors', company: companyId }),
-//             CompanyGroup.findOne({ name: 'Sundry Creditors', company: companyId })
-//         ]);
-
-//         if (!debtorGroup || !creditorGroup) {
-//             return res.status(400).json({ error: 'Required account groups not found.' });
-//         }
-//         // Fetch current fiscal year
-//         let currentFiscalYear = req.session.currentFiscalYear?.id
-//             ? await FiscalYear.findById(req.session.currentFiscalYear.id)
-//             : company.fiscalYear;
-
-//         if (!currentFiscalYear) {
-//             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
-//         }
-
-//         // Get all debtor and creditor accounts
-//         const [debtorAccounts, creditorAccounts] = await Promise.all([
-//             Account.find({
-//                 company: companyId,
-//                 fiscalYear: currentFiscalYear._id,
-//                 companyGroups: debtorGroup._id
-//             }),
-//             Account.find({
-//                 company: companyId,
-//                 fiscalYear: currentFiscalYear._id,
-//                 companyGroups: creditorGroup._id
-//             })
-//         ]);
-
-//         const allAccounts = [...debtorAccounts, ...creditorAccounts];
-//         const accountIds = allAccounts.map(a => a._id);
-
-//         // Instead of querying multiple collections, use the Transaction model
-//         const transactions = await Transaction.find({
-//             company: companyId,
-//             fiscalYear: currentFiscalYear._id,
-//             account: { $in: accountIds },
-//             isActive: true,
-//             $or: [
-//                 { billId: { $exists: true } }, // Sales
-//                 { salesReturnBillId: { $exists: true } }, // Sales Returns
-//                 { receiptAccountId: { $exists: true } }, // Receipts
-//                 { creditNoteId: { $exists: true } }, // Credit Notes
-//                 { purchaseBillId: { $exists: true } },// Purchase
-//                 { purchaseReturnBillId: { $exists: true } }, // Purchase Return
-//                 { paymentAccountId: { $exists: true } }, // Payments
-//                 { journalBillId: { $exists: true } }, // Journal
-//                 { debitNoteId: { $exists: true } } // Debit Notes
-//             ]
-//         })
-//             .populate('billId')
-//             .populate('purchaseBillId')
-//             .populate('purchaseReturnBillId')
-//             .populate('salesReturnBillId')
-//             .populate('paymentAccountId')
-//             .populate('receiptAccountId')
-//             .populate('journalBillId')
-//             .populate('debitNoteId')
-//             .populate('creditNoteId')
-//             .sort({ date: 'asc' }) // Sort by date for better analysis
-//             .exec();
-
-//         // Process ageing
-//         const report = [];
-//         const bucketTotals = createBucketTemplate();
-
-//         for (const account of allAccounts) {
-//             const buckets = createBucketTemplate();
-//             const accountTransactions = [];
-
-//             // Prepare all transactions for this account
-//             transactions.filter(t => t.account.equals(account._id)).forEach(txn => {
-//                 let amount = 0;
-//                 let transactionDate = txn.date;
-//                 let type = '';
-
-//                 if (txn.billId) {
-//                     // Sales Bill
-//                     amount = txn.debit;
-//                     type = 'Sale';
-//                     transactionDate = txn.billId.transactionDate || txn.date;
-//                 } else if (txn.salesReturnBillId) {
-//                     // Sales Return
-//                     amount = -txn.credit;
-//                     type = 'SlRt';
-//                     transactionDate = txn.salesReturnBillId.date || txn.date;
-//                 } else if (txn.receiptAccountId) {
-//                     // Receipt
-//                     amount = -txn.credit;
-//                     type = 'Rcpt';
-//                     transactionDate = txn.receiptAccountId.date || txn.date;
-//                 } else if (txn.creditNoteId) {
-//                     // Credit Note
-//                     if (txn.debit > 0) {
-//                         amount = txn.debit; // Positive receivable adjustment
-//                     } else {
-//                         amount = -txn.credit; // Positive payable adjustment
-//                     }
-//                     type = 'CrNt';
-//                     transactionDate = txn.creditNoteId.date || txn.date;
-//                 }
-//                 else if (txn.purchaseBillId) {
-//                     // Purchase
-//                     amount = -txn.credit;
-//                     type = 'Purc';
-//                     transactionDate = txn.purchaseBillId.date || txn.date;
-//                 }
-//                 else if (txn.purchaseReturnBillId) {
-//                     // Purchase Return
-//                     amount = txn.credit;
-//                     type = 'PrRt';
-//                     transactionDate = txn.purchaseBillId.date || txn.date;
-//                 }
-//                 else if (txn.paymentAccountId) {
-//                     // Payment
-//                     amount = txn.credit;
-//                     type = 'Pymt';
-//                     transactionDate = txn.purchaseBillId.date || txn.date;
-//                 }
-//                 else if (txn.journalBillId) {
-//                     // Journal
-//                     amount = -txn.credit;
-//                     amount = txn.debit;
-//                     type = 'Jrnl';
-//                     transactionDate = txn.purchaseBillId.date || txn.date;
-//                 }
-//                 else if (txn.debitNoteId) {
-//                     // Journal
-//                     amount = -txn.credit;
-//                     amount = txn.debit;
-//                     type = 'Jrnl';
-//                     transactionDate = txn.purchaseBillId.date || txn.date;
-//                 }
-//                 if (amount !== 0) {
-//                     accountTransactions.push({
-//                         date: transactionDate,
-//                         amount: amount,
-//                         type: type,
-//                         originalDate: transactionDate
-//                     });
-//                 }
-//             });
-
-//             // Sort transactions by date
-//             accountTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-//             // Process transactions in chronological order (FIFO)
-//             const unpaidItems = [];
-//             for (const txn of accountTransactions) {
-//                 if (txn.amount > 0) {
-//                     unpaidItems.push({
-//                         date: txn.originalDate,
-//                         amount: txn.amount
-//                     });
-//                 } else {
-//                     let remaining = Math.abs(txn.amount);
-//                     while (remaining > 0 && unpaidItems.length > 0) {
-//                         const oldest = unpaidItems[0];
-//                         if (oldest.amount <= remaining) {
-//                             remaining -= oldest.amount;
-//                             unpaidItems.shift();
-//                         } else {
-//                             oldest.amount -= remaining;
-//                             remaining = 0;
-//                         }
-//                     }
-//                 }
-//             }
-//             let transactionDate;
-//             for (const item of unpaidItems) {
-//                 let ageInDays;
-//                 if (companyDateFormat === 'nepali') {
-//                     // Validate and convert the transaction date to NepaliDate
-//                     try {
-// // Make sure the transaction date is valid before converting
-// const nepaliTransactionDate = item.date; // NepaliDate instance
-// const nepaliCurrentDate = nepaliDate; // NepaliDate instance
-
-// const nepaliTransactionDateObject = new Date(nepaliTransactionDate); // Date object from transaction.date
-// const nepaliCurrentDateObject = new Date(nepaliCurrentDate); // Convert string to Date object
-
-// // Check if both dates are valid
-// if (isNaN(nepaliTransactionDateObject) || isNaN(nepaliCurrentDateObject)) {
-//     throw new Error('Invalid date for age calculation');
-// }
-// // Debug the values
-
-// console.log('Type of nepaliTransactionDate:', typeof nepaliTransactionDate);
-// console.log('nepaliTransactionDate:', nepaliTransactionDate);
-// console.log('Type of nepaliCurrentDate:', typeof nepaliCurrentDate);
-// console.log('nepaliCurrentDate:', nepaliCurrentDate);
-
-// // Calculate the difference in days using JavaScript date difference
-// ageInDays = (nepaliCurrentDateObject - nepaliTransactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
-// console.log('Age in days:', age);
-// // Use the original Nepali date string without formatting
-// transactionDate = item.date;
-//                     } catch (error) {
-//                         console.error('Error converting Nepali date:', error);
-//                         age = 0; // Default to 0 if the date conversion fails
-//                     }
-//                 } else {
-//                     // Validate and handle English date format
-//                     try {
-//                         const transactionDateObject = new Date(item.date); // Convert to Date object
-
-//                         if (isNaN(transactionDateObject)) {
-//                             throw new Error('Invalid English date');
-//                         }
-
-//                         // Calculate age in days using the difference between today's date and the transaction date
-//                         ageInDays = (today - transactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
-
-//                         // Use the original English date string without formatting
-//                         transactionDate = item.date;
-//                     } catch (error) {
-//                         console.error('Error converting English date:', error);
-//                         age = 0; // Default to 0 if the date conversion fails
-//                     }
-//                 }
-
-//                 // Categorize into buckets
-//                 if (ageInDays <= 30) {
-//                     buckets['0-30'] += item.amount;
-//                 } else if (ageInDays <= 60) {
-//                     buckets['30-60'] += item.amount;
-//                 } else if (ageInDays <= 90) {
-//                     buckets['60-90'] += item.amount;
-//                 } else if (ageInDays <= 120) {
-//                     buckets['90-120'] += item.amount;
-//                 } else {
-//                     buckets['over-120'] += item.amount;
-//                 }
-//             }
-
-//             // Calculate totals
-//             buckets.total = Object.values(buckets).reduce((a, b) => a + b, 0);
-
-//             if (buckets.total > 0) {
-//                 report.push({
-//                     accountName: account.name,
-//                     buckets: formatBuckets(buckets)
-//                 });
-//                 updateBucketTotals(bucketTotals, buckets);
-//             }
-//         }
-
-//         res.render('retailer/outstanding/ageing-receivables', {
-//             report,
-//             bucketTotals,
-//             formatCurrency: (num) => (num || 0).toFixed(2),
-//             company,
-//             currentFiscalYear: company.fiscalYear,
-//             currentCompanyName: req.session.currentCompanyName,
-//             user: req.user,
-//             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
-//         });
-
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Server Error');
-//     }
-// });
-
-
-
-// // Helper functions
-// function createBucketTemplate() {
-//     return { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
-// }
-
-// function formatBuckets(buckets) {
-//     return Object.fromEntries(
-//         Object.entries(buckets).map(([key, val]) => [key, Math.max(0, val)])
-//     );
-// }
-
-// function updateBucketTotals(totals, buckets) {
-//     for (const key in buckets) {
-//         if (key !== 'total') totals[key] += buckets[key];
-//     }
-//     totals.total += buckets.total;
-// }
-
 // Ageing Receivables/Payables Report
 router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
     try {
@@ -349,7 +45,7 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
             return res.status(400).json({ error: 'Required account groups not found.' });
         }
 
-        // Fetch current fiscal year
+        // Fetch current fiscal year (for display purposes only)
         let currentFiscalYear = req.session.currentFiscalYear?.id
             ? await FiscalYear.findById(req.session.currentFiscalYear.id)
             : company.fiscalYear;
@@ -358,46 +54,40 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Get all debtor and creditor accounts
+        // Get the company's initial fiscal year (oldest fiscal year)
+        const initialFiscalYear = await FiscalYear.findOne({ company: companyId })
+            .sort({ startDate: 1 })
+            .limit(1);
+
+        if (!initialFiscalYear) {
+            return res.status(400).json({ error: 'No initial fiscal year found for company.' });
+        }
+
+        // Get all debtor and creditor accounts with opening balances populated
         const [debtorAccounts, creditorAccounts] = await Promise.all([
             Account.find({
                 company: companyId,
-                fiscalYear: currentFiscalYear._id,
                 companyGroups: debtorGroup._id
-            }),
+            }).populate('openingBalanceByFiscalYear.fiscalYear'),
             Account.find({
                 company: companyId,
-                fiscalYear: currentFiscalYear._id,
                 companyGroups: creditorGroup._id
-            })
+            }).populate('openingBalanceByFiscalYear.fiscalYear')
         ]);
 
         const allAccounts = [...debtorAccounts, ...creditorAccounts];
         const accountIds = allAccounts.map(a => a._id);
 
-        // Query all relevant transactions
-        const transactions = await Transaction.find({
+        // Query ALL relevant transactions (without fiscal year filter)
+        const allTransactions = await Transaction.find({
             company: companyId,
-            fiscalYear: currentFiscalYear._id,
             account: { $in: accountIds },
             isActive: true,
             $or: [
-                {
-                    billId: { $exists: true }, // Sales
-                    paymentMode: { $ne: 'cash' } // Exclude cash sales
-                },
-                {
-                    purchaseBillId: { $exists: true }, // Purchase
-                    paymentMode: { $ne: 'cash' } // Exclude cash purchases
-                },
-                {
-                    purchaseReturnBillId: { $exists: true }, // Purchase Return
-                    paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
-                },
-                {
-                    salesReturnBillId: { $exists: true }, // Sales Return
-                    paymentMode: { $ne: 'cash' } // Exclude cash sales returns
-                },
+                { billId: { $exists: true }, paymentMode: { $ne: 'cash' } },
+                { purchaseBillId: { $exists: true }, paymentMode: { $ne: 'cash' } },
+                { purchaseReturnBillId: { $exists: true }, paymentMode: { $ne: 'cash' } },
+                { salesReturnBillId: { $exists: true }, paymentMode: { $ne: 'cash' } },
                 { paymentAccountId: { $exists: true } },
                 { receiptAccountId: { $exists: true } },
                 { journalBillId: { $exists: true } },
@@ -424,20 +114,38 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
         const netTotals = createBucketTemplate();
 
         for (const account of allAccounts) {
-            const accountTransactions = transactions.filter(t => t.account.equals(account._id));
+            // Calculate opening balance from account's openingBalanceByFiscalYear
+            let openingBalance = 0;
 
-            // Calculate net balance for the account
-            const netBalance = accountTransactions.reduce((sum, txn) => {
+            // Find the opening balance entry for the initial fiscal year
+            const initialFyOpeningBalance = account.openingBalanceByFiscalYear.find(
+                ob => ob.fiscalYear && ob.fiscalYear._id.toString() === initialFiscalYear._id.toString()
+            );
+
+            if (initialFyOpeningBalance) {
+                openingBalance = initialFyOpeningBalance.type === 'Dr'
+                    ? initialFyOpeningBalance.amount
+                    : -initialFyOpeningBalance.amount;
+            }
+
+            // Get all transactions for the account
+            const accountTransactions = allTransactions.filter(t => t.account.equals(account._id));
+
+            // Calculate current net balance from ALL transactions (all fiscal years)
+            const currentNetBalance = accountTransactions.reduce((sum, txn) => {
                 return sum + (txn.debit - txn.credit);
-            }, 0);
+            }, 0); // Start with opening balance
 
-            // Skip accounts with zero balance
-            if (Math.abs(netBalance) < 0.01) continue;
+            // Skip accounts with zero balance in both opening and current
+            if (Math.abs(openingBalance) < 0.01 && Math.abs(currentNetBalance) < 0.01) continue;
 
-            const isReceivable = netBalance > 0;
+            const isReceivable = currentNetBalance+openingBalance > 0;
             const buckets = createBucketTemplate();
 
-            // Separate transactions into receivables and payables
+            // Add opening balance to the 'over-120' bucket
+            buckets['over-120'] += openingBalance;
+
+            // Separate transactions into receivables and payables (from all fiscal years)
             const receivableItems = [];
             const payableItems = [];
 
@@ -446,19 +154,21 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
                     receivableItems.push({
                         date: txn.date,
                         amount: txn.debit,
-                        originalDate: txn.date
+                        originalDate: txn.date,
+                        fiscalYear: txn.fiscalYear,
                     });
                 }
                 if (txn.credit > 0) {
                     payableItems.push({
                         date: txn.date,
                         amount: txn.credit,
-                        originalDate: txn.date
+                        originalDate: txn.date,
+                        fiscalYear: txn.fiscalYear
                     });
                 }
             }
 
-            // Process receivables (FIFO)
+            // Process receivables (FIFO) across all fiscal years
             const unpaidReceivables = [...receivableItems];
             for (const payment of accountTransactions
                 .filter(t => t.credit > 0)
@@ -477,7 +187,7 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
                 }
             }
 
-            // Process payables (FIFO)
+            // Process payables (FIFO) across all fiscal years
             const unpaidPayables = [...payableItems];
             for (const payment of accountTransactions
                 .filter(t => t.debit > 0)
@@ -504,7 +214,7 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
                         try {
                             const transactionDate = new Date(item.date);
                             const currentDateObj = new Date(nepaliDate);
-                            ageInDays = (currentDateObj - transactionDate) / (1000 * 60 * 60 * 24);
+                            ageInDays = Math.floor((currentDateObj - transactionDate) / (1000 * 60 * 60 * 24));
                         } catch (error) {
                             console.error('Error calculating Nepali date difference:', error);
                             ageInDays = 0;
@@ -555,7 +265,8 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
                 accountName: account.name,
                 buckets: formatBuckets(buckets),
                 isReceivable: isReceivable,
-                netBalance: Math.abs(buckets.total)
+                netBalance: Math.abs(buckets.total),
+                openingBalance: openingBalance
             });
         }
 
@@ -566,7 +277,8 @@ router.get('/ageing-all/accounts', isLoggedIn, async (req, res) => {
             netTotals,
             formatCurrency: (num) => (num || 0).toFixed(2),
             company,
-            currentFiscalYear: company.fiscalYear,
+            currentFiscalYear: currentFiscalYear,
+            initialFiscalYear: initialFiscalYear,
             currentCompanyName: req.session.currentCompanyName,
             user: req.user,
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
@@ -604,95 +316,6 @@ function negateBuckets(buckets) {
     return negated;
 }
 
-// // Ageing Payables Report (Sundry Creditors)
-// router.get('/ageing-payables', isLoggedIn, async (req, res) => {
-//     try {
-//         const companyId = req.session.currentCompany;
-//         const fiscalYearId = req.session.currentFiscalYear?.id;
-
-//         // Get Sundry Creditors group
-//         const creditorGroup = await CompanyGroup.findOne({
-//             name: 'Sundry Creditors',
-//             company: companyId
-//         });
-
-//         // Get all creditor accounts
-//         const creditorAccounts = await Account.find({
-//             company: companyId,
-//             fiscalYear: fiscalYearId,
-//             companyGroups: creditorGroup._id
-//         });
-
-//         // Get all purchase bills for these accounts
-//         const purchaseBills = await PurchaseBill.find({
-//             company: companyId,
-//             fiscalYear: fiscalYearId,
-//             account: { $in: creditorAccounts.map(a => a._id) },
-//             status: 'active'
-//         }).sort({ date: 1 });
-
-//         // Process ageing
-//         const report = [];
-//         const bucketTotals = createBucketTemplate();
-//         const now = new Date();
-
-//         for (const account of creditorAccounts) {
-//             const accountBills = purchaseBills.filter(b => b.account.equals(account._id));
-//             const buckets = createBucketTemplate();
-
-//             for (const bill of accountBills) {
-//                 // Calculate outstanding amount
-//                 const paidAmount = await Payment.find({
-//                     billId: bill._id,
-//                     status: 'active'
-//                 }).sum('amount');
-
-//                 const outstanding = bill.totalAmount - paidAmount;
-//                 if (outstanding <= 0) continue;
-
-//                 // Calculate ageing
-//                 const ageInDays = Math.floor((now - bill.date) / (1000 * 60 * 60 * 24));
-
-//                 if (ageInDays <= 30) buckets['0-30'] += outstanding;
-//                 else if (ageInDays <= 60) buckets['30-60'] += outstanding;
-//                 else if (ageInDays <= 90) buckets['60-90'] += outstanding;
-//                 else if (ageInDays <= 120) buckets['90-120'] += outstanding;
-//                 else buckets['over-120'] += outstanding;
-//             }
-
-//             buckets.total = Object.values(buckets).reduce((a, b) => a + b, 0);
-//             if (buckets.total > 0) {
-//                 report.push({
-//                     accountName: account.name,
-//                     buckets
-//                 });
-//                 updateBucketTotals(bucketTotals, buckets);
-//             }
-//         }
-
-//         res.render('ageing-payables', {
-//             report,
-//             bucketTotals,
-//             formatCurrency: (num) => (num || 0).toFixed(2)
-//         });
-
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Server Error');
-//     }
-// });
-
-// // Helper functions remain the same
-// function createBucketTemplate() {
-//     return { '0-30': 0, '30-60': 0, '60-90': 0, '90-120': 0, 'over-120': 0, total: 0 };
-// }
-
-// function updateBucketTotals(totals, buckets) {
-//     Object.keys(buckets).forEach(key => {
-//         if (key !== 'total') totals[key] += buckets[key];
-//     });
-//     totals.total += buckets.total;
-// }
 // Route to fetch all accounts
 router.get('/aging/accounts', isLoggedIn, ensureAuthenticated, ensureCompanySelected, async (req, res) => {
     try {
@@ -761,6 +384,269 @@ router.get('/aging/accounts', isLoggedIn, ensureAuthenticated, ensureCompanySele
 });
 
 
+// // Route to get aging report for a specific account
+// router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, checkFiscalYearDateRange, async (req, res) => {
+//     try {
+//         const { accountId } = req.params;
+//         const companyId = req.session.currentCompany;
+//         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+//         const currentCompany = await Company.findById(companyId);
+//         const today = new Date();
+//         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+//         const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english'; // Default to 'english'
+
+//         // let currentDate;
+
+//         if (companyDateFormat === 'nepali') {
+//             // Use NepaliDate if the company's date format is Nepali
+//             currentDate = nepaliDate; // Get current Nepali date
+//         } else {
+//             // Use regular Date for English date format
+//             currentDate = today;
+//         }
+
+//         // Fetch current fiscal year from session or company
+//         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+//         let currentFiscalYear = null;
+
+//         if (fiscalYear) {
+//             currentFiscalYear = await FiscalYear.findById(fiscalYear);
+//         }
+
+//         if (!currentFiscalYear && company.fiscalYear) {
+//             currentFiscalYear = company.fiscalYear;
+//             req.session.currentFiscalYear = {
+//                 id: currentFiscalYear._id.toString(),
+//                 startDate: currentFiscalYear.startDate,
+//                 endDate: currentFiscalYear.endDate,
+//                 name: currentFiscalYear.name,
+//                 dateFormat: currentFiscalYear.dateFormat,
+//                 isActive: currentFiscalYear.isActive
+//             };
+//             fiscalYear = req.session.currentFiscalYear.id;
+//         }
+
+//         if (!fiscalYear) {
+//             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+//         }
+
+//         // Fetch the account
+//         const account = await Account.findById(accountId);
+
+//         // Fetch opening balance for the current fiscal year
+//         const openingBalance = account.openingBalance && account.openingBalance.fiscalYear
+//             ? account.openingBalance
+//             : { amount: 0, type: 'Cr' }; // Default to zero if not found
+
+//         let runningBalance = openingBalance.type === 'Cr' ? openingBalance.amount : -openingBalance.amount;
+
+//         const transactions = await Transaction.find({
+//             company: companyId,
+//             account: accountId,
+//             isActive: true,
+//             $or: [
+//                 {
+//                     billId: { $exists: true }, // Sales
+//                     paymentMode: { $ne: 'cash' } // Exclude cash sales
+//                 },
+//                 {
+//                     purchaseBillId: { $exists: true }, // Purchase
+//                     paymentMode: { $ne: 'cash' } // Exclude cash purchases
+//                 },
+//                 {
+//                     purchaseReturnBillId: { $exists: true }, // Purchase Return
+//                     paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+//                 },
+//                 {
+//                     salesReturnBillId: { $exists: true }, // Sales Return
+//                     paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+//                 },
+//                 { paymentAccountId: { $exists: true } },
+//                 { receiptAccountId: { $exists: true } },
+//                 { journalBillId: { $exists: true } },
+//                 { debitNoteId: { $exists: true } },
+//                 { creditNoteId: { $exists: true } },
+//             ],
+//         }).populate('billId')
+//             .populate('purchaseBillId')
+//             .populate('purchaseReturnBillId')
+//             .populate('salesReturnBillId')
+//             .populate('paymentAccountId')
+//             .populate('receiptAccountId')
+//             .populate('journalBillId')
+//             .populate('debitNoteId')
+//             .populate('creditNoteId')
+//             .sort({ date: 'asc' }) // Sort by date for better analysis
+//             .exec();
+
+//         // Initialize data for aging analysis
+//         const agingData = {
+//             totalOutstanding: 0,
+//             oneToThirty: 0,
+//             thirtyOneToSixty: 0,
+//             sixtyOneToNinety: 0,
+//             ninetyPlus: 0,
+//             openingBalance: openingBalance.amount, // Add opening balance
+//             transactions: []
+//         };
+//         // Loop through transactions to calculate outstanding amounts and balance
+//         transactions.forEach(transaction => {
+//             // Determine debit or credit effect on totalOutstanding
+//             if (transaction.billId) {
+//                 // Sales
+//                 runningBalance -= transaction.debit; // Debit increases outstanding
+//                 agingData.totalOutstanding += transaction.debit; // Increase total outstanding for sales
+//             } else if (transaction.salesReturnBillId) {
+//                 // Sales Return
+//                 runningBalance += transaction.credit; // Credit decreases outstanding
+//                 agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for sales return
+//             } else if (transaction.purchaseBillId) {
+//                 // Purchase
+//                 runningBalance += transaction.credit; // Credit for purchases
+//                 agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for purchases
+//             } else if (transaction.purchaseReturnBillId) {
+//                 // Purchase Return
+//                 runningBalance -= transaction.debit; // Debit for purchases
+//                 agingData.totalOutstanding += transaction.debit; // Increase total outstanding for purchase returns
+//             } else if (transaction.paymentAccountId) {
+//                 if (transaction.debit > 0) {
+//                     runningBalance -= transaction.debit;
+//                     agingData.totalOutstanding += transaction.debit;
+//                 } else if (transaction.credit > 0) {
+//                     runningBalance += transaction.credit;
+//                     agingData.totalOutstanding -= transaction.credit;
+//                 }
+//             } else if (transaction.receiptAccountId) {
+//                 if (transaction.debit > 0) {
+//                     runningBalance += transaction.debit;
+//                     agingData.totalOutstanding -= transaction.debit;
+//                 } else if (transaction.credit > 0) {
+//                     runningBalance += transaction.credit;
+//                     agingData.totalOutstanding += transaction.credit;
+//                 }
+//             } else if (transaction.debitNoteId) {
+//                 // Journal Entry (can be either debit or credit)
+//                 if (transaction.debit > 0) {
+//                     runningBalance -= transaction.debit; // Debit increases outstanding
+//                     agingData.totalOutstanding += transaction.debit; // Increase total outstanding for journal debit
+//                 } else if (transaction.credit > 0) {
+//                     runningBalance += transaction.credit; // Credit decreases outstanding
+//                     agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for journal credit
+//                 }
+//             } else if (transaction.creditNoteId) {
+//                 // Journal Entry (can be either debit or credit)
+//                 if (transaction.debit > 0) {
+//                     runningBalance -= transaction.debit; // Debit increases outstanding
+//                     agingData.totalOutstanding += transaction.debit; // Increase total outstanding for journal debit
+//                 } else if (transaction.credit > 0) {
+//                     runningBalance += transaction.credit; // Credit decreases outstanding
+//                     agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for journal credit
+//                 }
+//             } else if (transaction.journalBillId) {
+//                 // Journal Entry (can be either debit or credit)
+//                 if (transaction.debit > 0) {
+//                     runningBalance -= transaction.debit; // Debit increases outstanding
+//                     agingData.totalOutstanding += transaction.debit; // Increase total outstanding for journal debit
+//                 } else if (transaction.credit > 0) {
+//                     runningBalance += transaction.credit; // Credit decreases outstanding
+//                     agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for journal credit
+//                 }
+//             }
+
+//             let transactionDate, age;
+
+//             if (companyDateFormat === 'nepali') {
+//                 // Validate and convert the transaction date to NepaliDate
+//                 try {
+//                     // Make sure the transaction date is valid before converting
+//                     const nepaliTransactionDate = transaction.date; // NepaliDate instance
+//                     const nepaliCurrentDate = nepaliDate; // NepaliDate instance
+
+//                     const nepaliTransactionDateObject = new Date(nepaliTransactionDate); // Date object from transaction.date
+//                     const nepaliCurrentDateObject = new Date(nepaliCurrentDate); // Convert string to Date object
+
+//                     // Check if both dates are valid
+//                     if (isNaN(nepaliTransactionDateObject) || isNaN(nepaliCurrentDateObject)) {
+//                         throw new Error('Invalid date for age calculation');
+//                     }
+//                     // Debug the values
+
+//                     console.log('Type of nepaliTransactionDate:', typeof nepaliTransactionDate);
+//                     console.log('nepaliTransactionDate:', nepaliTransactionDate);
+//                     console.log('Type of nepaliCurrentDate:', typeof nepaliCurrentDate);
+//                     console.log('nepaliCurrentDate:', nepaliCurrentDate);
+
+//                     // Calculate the difference in days using JavaScript date difference
+//                     age = (nepaliCurrentDateObject - nepaliTransactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
+//                     console.log('Age in days:', age);
+//                     // Use the original Nepali date string without formatting
+//                     transactionDate = transaction.date;
+//                 } catch (error) {
+//                     console.error('Error converting Nepali date:', error);
+//                     age = 0; // Default to 0 if the date conversion fails
+//                 }
+//             } else {
+//                 // Validate and handle English date format
+//                 try {
+//                     const transactionDateObject = new Date(transaction.date); // Convert to Date object
+
+//                     if (isNaN(transactionDateObject)) {
+//                         throw new Error('Invalid English date');
+//                     }
+
+//                     // Calculate age in days using the difference between today's date and the transaction date
+//                     age = (today - transactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
+
+//                     // Use the original English date string without formatting
+//                     transactionDate = transaction.date;
+//                 } catch (error) {
+//                     console.error('Error converting English date:', error);
+//                     age = 0; // Default to 0 if the date conversion fails
+//                 }
+//             }
+
+
+
+//             // Categorize the transaction into the correct aging period based on the calculated age
+//             if (age <= 30) {
+//                 agingData.oneToThirty += transaction.debit - transaction.credit; // Consider only sales in aging
+//             } else if (age <= 60) {
+//                 agingData.thirtyOneToSixty += transaction.debit - transaction.credit; // Consider only sales in aging
+//             } else if (age <= 90) {
+//                 agingData.sixtyOneToNinety += transaction.debit - transaction.credit; // Consider only sales in aging
+//             } else {
+//                 agingData.ninetyPlus += transaction.debit - transaction.credit; // Consider only sales in aging
+//             }
+
+//             // Attach the running balance to each transaction
+//             transaction.balance = runningBalance;
+//             // Add to transactions list for detailed view
+//             agingData.transactions.push(transaction);
+//         });
+
+//         // Include opening balance in the total outstanding calculation
+//         agingData.totalOutstanding = runningBalance;
+
+//         res.render('retailer/outstanding/ageing', {
+//             company,
+//             currentFiscalYear,
+//             account,
+//             agingData,
+//             currentCompany,
+//             companyDateFormat,
+//             currentCompanyName: req.session.currentCompanyName,
+//             title: 'Outstanding Analysis',
+//             body: 'retailer >> account >> aging',
+//             user: req.user,
+//             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// });
+
+
 // Route to get aging report for a specific account
 router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, checkFiscalYearDateRange, async (req, res) => {
     try {
@@ -769,16 +655,14 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
         const currentCompany = await Company.findById(companyId);
         const today = new Date();
-        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
-        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english'; // Default to 'english'
+        const nepaliDate = new NepaliDate(today);
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
 
-        // let currentDate;
-
+        // Initialize currentDate based on company date format
+        let currentDate;
         if (companyDateFormat === 'nepali') {
-            // Use NepaliDate if the company's date format is Nepali
-            currentDate = nepaliDate; // Get current Nepali date
+            currentDate = nepaliDate;
         } else {
-            // Use regular Date for English date format
             currentDate = today;
         }
 
@@ -810,13 +694,7 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
         // Fetch the account
         const account = await Account.findById(accountId);
 
-        // Fetch opening balance for the current fiscal year
-        const openingBalance = account.openingBalance && account.openingBalance.fiscalYear
-            ? account.openingBalance
-            : { amount: 0, type: 'Cr' }; // Default to zero if not found
-
-        let runningBalance = openingBalance.type === 'Cr' ? openingBalance.amount : -openingBalance.amount;
-
+        // Query all relevant transactions
         const transactions = await Transaction.find({
             company: companyId,
             account: accountId,
@@ -844,7 +722,8 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 { debitNoteId: { $exists: true } },
                 { creditNoteId: { $exists: true } },
             ],
-        }).populate('billId')
+        })
+            .populate('billId')
             .populate('purchaseBillId')
             .populate('purchaseReturnBillId')
             .populate('salesReturnBillId')
@@ -853,156 +732,134 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
             .populate('journalBillId')
             .populate('debitNoteId')
             .populate('creditNoteId')
-            .sort({ date: 'asc' }) // Sort by date for better analysis
+            .sort({ date: 'asc' })
             .exec();
 
-        // Initialize data for aging analysis
-        const agingData = {
-            totalOutstanding: 0,
-            oneToThirty: 0,
-            thirtyOneToSixty: 0,
-            sixtyOneToNinety: 0,
-            ninetyPlus: 0,
-            openingBalance: openingBalance.amount, // Add opening balance
-            transactions: []
+        // Process ageing using the same method as ageing-all/accounts
+        const buckets = createBucketTemplate();
+
+        // Separate transactions into receivables and payables
+        const receivableItems = [];
+        const payableItems = [];
+
+        for (const txn of transactions.sort((a, b) => new Date(a.date) - new Date(b.date))) {
+            if (txn.debit > 0) {
+                receivableItems.push({
+                    date: txn.date,
+                    amount: txn.debit,
+                    originalDate: txn.date
+                });
+            }
+            if (txn.credit > 0) {
+                payableItems.push({
+                    date: txn.date,
+                    amount: txn.credit,
+                    originalDate: txn.date
+                });
+            }
+        }
+
+        // Process receivables (FIFO)
+        const unpaidReceivables = [...receivableItems];
+        for (const payment of transactions
+            .filter(t => t.credit > 0)
+            .sort((a, b) => new Date(a.date) - new Date(b.date))) {
+
+            let remaining = payment.credit;
+            while (remaining > 0 && unpaidReceivables.length > 0) {
+                const oldest = unpaidReceivables[0];
+                if (oldest.amount <= remaining) {
+                    remaining -= oldest.amount;
+                    unpaidReceivables.shift();
+                } else {
+                    oldest.amount -= remaining;
+                    remaining = 0;
+                }
+            }
+        }
+
+        // Process payables (FIFO)
+        const unpaidPayables = [...payableItems];
+        for (const payment of transactions
+            .filter(t => t.debit > 0)
+            .sort((a, b) => new Date(a.date) - new Date(b.date))) {
+
+            let remaining = payment.debit;
+            while (remaining > 0 && unpaidPayables.length > 0) {
+                const oldest = unpaidPayables[0];
+                if (oldest.amount <= remaining) {
+                    remaining -= oldest.amount;
+                    unpaidPayables.shift();
+                } else {
+                    oldest.amount -= remaining;
+                    remaining = 0;
+                }
+            }
+        }
+
+        // Calculate ageing for remaining items
+        const calculateAgeing = (items, isReceivable) => {
+            for (const item of items) {
+                let ageInDays;
+                if (companyDateFormat === 'nepali') {
+                    try {
+                        const transactionDate = new Date(item.date);
+                        const currentDateObj = new Date(nepaliDate);
+                        ageInDays = (currentDateObj - transactionDate) / (1000 * 60 * 60 * 24);
+                    } catch (error) {
+                        console.error('Error calculating Nepali date difference:', error);
+                        ageInDays = 0;
+                    }
+                } else {
+                    try {
+                        const transactionDate = new Date(item.date);
+                        ageInDays = Math.floor((today - transactionDate) / (1000 * 60 * 60 * 24));
+                    } catch (error) {
+                        console.error('Error calculating English date difference:', error);
+                        ageInDays = 0;
+                    }
+                }
+
+                // Determine bucket
+                let bucketKey;
+                if (ageInDays <= 30) bucketKey = '0-30';
+                else if (ageInDays <= 60) bucketKey = '30-60';
+                else if (ageInDays <= 90) bucketKey = '60-90';
+                else if (ageInDays <= 120) bucketKey = '90-120';
+                else bucketKey = 'over-120';
+
+                // Add to appropriate bucket
+                if (isReceivable) {
+                    buckets[bucketKey] += item.amount;
+                } else {
+                    buckets[bucketKey] -= item.amount; // Negative for payables
+                }
+            }
         };
-        // Loop through transactions to calculate outstanding amounts and balance
-        transactions.forEach(transaction => {
-            // Determine debit or credit effect on totalOutstanding
-            if (transaction.billId) {
-                // Sales
-                runningBalance -= transaction.debit; // Debit increases outstanding
-                agingData.totalOutstanding += transaction.debit; // Increase total outstanding for sales
-            } else if (transaction.salesReturnBillId) {
-                // Sales Return
-                runningBalance += transaction.credit; // Credit decreases outstanding
-                agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for sales return
-            } else if (transaction.purchaseBillId) {
-                // Purchase
-                runningBalance += transaction.credit; // Credit for purchases
-                agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for purchases
-            } else if (transaction.purchaseReturnBillId) {
-                // Purchase Return
-                runningBalance -= transaction.debit; // Debit for purchases
-                agingData.totalOutstanding += transaction.debit; // Increase total outstanding for purchase returns
-            } else if (transaction.paymentAccountId) {
-                if (transaction.debit > 0) {
-                    runningBalance -= transaction.debit;
-                    agingData.totalOutstanding += transaction.debit;
-                } else if (transaction.credit > 0) {
-                    runningBalance += transaction.credit;
-                    agingData.totalOutstanding -= transaction.credit;
-                }
-            } else if (transaction.receiptAccountId) {
-                if (transaction.debit > 0) {
-                    runningBalance += transaction.debit;
-                    agingData.totalOutstanding -= transaction.debit;
-                } else if (transaction.credit > 0) {
-                    runningBalance += transaction.credit;
-                    agingData.totalOutstanding += transaction.credit;
-                }
-            } else if (transaction.debitNoteId) {
-                // Journal Entry (can be either debit or credit)
-                if (transaction.debit > 0) {
-                    runningBalance -= transaction.debit; // Debit increases outstanding
-                    agingData.totalOutstanding += transaction.debit; // Increase total outstanding for journal debit
-                } else if (transaction.credit > 0) {
-                    runningBalance += transaction.credit; // Credit decreases outstanding
-                    agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for journal credit
-                }
-            } else if (transaction.creditNoteId) {
-                // Journal Entry (can be either debit or credit)
-                if (transaction.debit > 0) {
-                    runningBalance -= transaction.debit; // Debit increases outstanding
-                    agingData.totalOutstanding += transaction.debit; // Increase total outstanding for journal debit
-                } else if (transaction.credit > 0) {
-                    runningBalance += transaction.credit; // Credit decreases outstanding
-                    agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for journal credit
-                }
-            } else if (transaction.journalBillId) {
-                // Journal Entry (can be either debit or credit)
-                if (transaction.debit > 0) {
-                    runningBalance -= transaction.debit; // Debit increases outstanding
-                    agingData.totalOutstanding += transaction.debit; // Increase total outstanding for journal debit
-                } else if (transaction.credit > 0) {
-                    runningBalance += transaction.credit; // Credit decreases outstanding
-                    agingData.totalOutstanding -= transaction.credit; // Decrease total outstanding for journal credit
-                }
-            }
 
-            let transactionDate, age;
+        calculateAgeing(unpaidReceivables, true);
+        calculateAgeing(unpaidPayables, false);
 
-            if (companyDateFormat === 'nepali') {
-                // Validate and convert the transaction date to NepaliDate
-                try {
-                    // Make sure the transaction date is valid before converting
-                    const nepaliTransactionDate = transaction.date; // NepaliDate instance
-                    const nepaliCurrentDate = nepaliDate; // NepaliDate instance
+        // Calculate account total from buckets
+        buckets.total = Object.values(buckets).reduce((a, b) => a + b, 0);
 
-                    const nepaliTransactionDateObject = new Date(nepaliTransactionDate); // Date object from transaction.date
-                    const nepaliCurrentDateObject = new Date(nepaliCurrentDate); // Convert string to Date object
+        // Determine if this is a receivable or payable
+        const isReceivable = buckets.total > 0;
 
-                    // Check if both dates are valid
-                    if (isNaN(nepaliTransactionDateObject) || isNaN(nepaliCurrentDateObject)) {
-                        throw new Error('Invalid date for age calculation');
-                    }
-                    // Debug the values
-
-                    console.log('Type of nepaliTransactionDate:', typeof nepaliTransactionDate);
-                    console.log('nepaliTransactionDate:', nepaliTransactionDate);
-                    console.log('Type of nepaliCurrentDate:', typeof nepaliCurrentDate);
-                    console.log('nepaliCurrentDate:', nepaliCurrentDate);
-
-                    // Calculate the difference in days using JavaScript date difference
-                    age = (nepaliCurrentDateObject - nepaliTransactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
-                    console.log('Age in days:', age);
-                    // Use the original Nepali date string without formatting
-                    transactionDate = transaction.date;
-                } catch (error) {
-                    console.error('Error converting Nepali date:', error);
-                    age = 0; // Default to 0 if the date conversion fails
-                }
-            } else {
-                // Validate and handle English date format
-                try {
-                    const transactionDateObject = new Date(transaction.date); // Convert to Date object
-
-                    if (isNaN(transactionDateObject)) {
-                        throw new Error('Invalid English date');
-                    }
-
-                    // Calculate age in days using the difference between today's date and the transaction date
-                    age = (today - transactionDateObject) / (1000 * 60 * 60 * 24); // Age in days
-
-                    // Use the original English date string without formatting
-                    transactionDate = transaction.date;
-                } catch (error) {
-                    console.error('Error converting English date:', error);
-                    age = 0; // Default to 0 if the date conversion fails
-                }
-            }
-
-
-
-            // Categorize the transaction into the correct aging period based on the calculated age
-            if (age <= 30) {
-                agingData.oneToThirty += transaction.debit - transaction.credit; // Consider only sales in aging
-            } else if (age <= 60) {
-                agingData.thirtyOneToSixty += transaction.debit - transaction.credit; // Consider only sales in aging
-            } else if (age <= 90) {
-                agingData.sixtyOneToNinety += transaction.debit - transaction.credit; // Consider only sales in aging
-            } else {
-                agingData.ninetyPlus += transaction.debit - transaction.credit; // Consider only sales in aging
-            }
-
-            // Attach the running balance to each transaction
-            transaction.balance = runningBalance;
-            // Add to transactions list for detailed view
-            agingData.transactions.push(transaction);
-        });
-
-        // Include opening balance in the total outstanding calculation
-        agingData.totalOutstanding = runningBalance;
+        // Prepare the aging data in the expected format
+        const agingData = {
+            totalOutstanding: Math.abs(buckets.total),
+            oneToThirty: isReceivable ? buckets['0-30'] : -buckets['0-30'],
+            thirtyOneToSixty: isReceivable ? buckets['30-60'] : -buckets['30-60'],
+            sixtyOneToNinety: isReceivable ? buckets['60-90'] : -buckets['60-90'],
+            ninetyPlus: isReceivable ? (buckets['90-120'] + buckets['over-120']) : -(buckets['90-120'] + buckets['over-120']),
+            openingBalance: account.openingBalance?.amount || 0,
+            transactions: transactions.map(txn => ({
+                ...txn.toObject(),
+                balance: 0 // This would need to be calculated if needed
+            })),
+            isReceivable
+        };
 
         res.render('retailer/outstanding/ageing', {
             company,
@@ -1015,7 +872,11 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
             title: 'Outstanding Analysis',
             body: 'retailer >> account >> aging',
             user: req.user,
-            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor',
+            // Add helper functions to the view
+            createBucketTemplate,
+            formatBuckets,
+            formatCurrency: (num) => (num || 0).toFixed(2)
         });
     } catch (error) {
         console.error(error);
@@ -1024,23 +885,17 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
 });
 
 
-// // Route to get aging report for a specific account
 // router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, checkFiscalYearDateRange, async (req, res) => {
 //     try {
 //         const { accountId } = req.params;
+//         const { fromDate, toDate } = req.query;
 //         const companyId = req.session.currentCompany;
 //         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
 //         const currentCompany = await Company.findById(companyId);
+//         const currentCompanyName = req.session.currentCompanyName;
 //         const today = new Date();
 //         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD');
 //         const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
-
-//         let currentDate;
-//         if (companyDateFormat === 'nepali') {
-//             currentDate = nepaliDate;
-//         } else {
-//             currentDate = today;
-//         }
 
 //         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
 //         let currentFiscalYear = null;
@@ -1074,47 +929,7 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
 //             ? account.openingBalance
 //             : { amount: 0, type: 'Cr' };
 
-//         let runningBalance = openingBalance.type === 'Cr' ? openingBalance.amount : -openingBalance.amount;
-
-//         // Get all transactions sorted strictly by date in ascending order
-//         const transactions = await Transaction.find({
-//             company: companyId,
-//             account: accountId,
-//             isActive: true,
-//             $or: [
-//                 { billId: { $exists: true } },
-//                 { purchaseBillId: { $exists: true } },
-//                 { purchaseReturnBillId: { $exists: true } },
-//                 { salesReturnBillId: { $exists: true } },
-//                 { paymentAccountId: { $exists: true } },
-//                 { receiptAccountId: { $exists: true } },
-//                 { journalBillId: { $exists: true } },
-//                 { debitNoteId: { $exists: true } },
-//                 { creditNoteId: { $exists: true } },
-//             ],
-//         })
-//         .populate('billId')
-//         .populate('purchaseBillId')
-//         .populate('purchaseReturnBillId')
-//         .populate('salesReturnBillId')
-//         .populate('paymentAccountId')
-//         .populate('receiptAccountId')
-//         .populate('journalBillId')
-//         .populate('debitNoteId')
-//         .populate('creditNoteId')
-//         .sort({ date: 1 }) // Strictly sort by date in ascending order
-//         .lean() // Convert to plain JavaScript objects for better performance
-//         .exec();
-
-//         // Convert dates to proper Date objects for accurate sorting
-//         transactions.forEach(t => {
-//             t.date = new Date(t.date);
-//         });
-
-//         // Re-sort to ensure proper date ordering (in case some dates were strings)
-//         transactions.sort((a, b) => a.date - b.date);
-
-//         // Initialize data for aging analysis
+//         // Initialize empty aging data
 //         const agingData = {
 //             totalOutstanding: 0,
 //             current: 0,
@@ -1126,105 +941,221 @@ router.get('/aging/:accountId', isLoggedIn, ensureAuthenticated, ensureCompanySe
 //             transactions: []
 //         };
 
-//         // Process transactions in strict date order
-//         for (const transaction of transactions) {
-//             // Calculate age in days
-//             let age;
-//             if (companyDateFormat === 'nepali') {
-//                 try {
-//                     const nepaliTransactionDate = new Date(transaction.date);
-//                     const nepaliCurrentDate = new Date(nepaliDate);
-//                     age = (nepaliCurrentDate - nepaliTransactionDate) / (1000 * 60 * 60 * 24);
-//                 } catch (error) {
-//                     age = 0;
-//                 }
-//             } else {
-//                 try {
-//                     age = (today - transaction.date) / (1000 * 60 * 60 * 24);
-//                 } catch (error) {
-//                     age = 0;
+//         // Only process transactions if both fromDate and toDate are provided
+//         if (fromDate && toDate) {
+//             // Calculate initial running balance from opening balance
+//             let initialRunningBalance = openingBalance.type === 'Cr' ? openingBalance.amount : -openingBalance.amount;
+
+//             // Get transactions before the date range to calculate correct initial balance
+//             const transactionsBeforeRange = await Transaction.find({
+//                 company: companyId,
+//                 account: accountId,
+//                 isActive: true,
+//                 date: { $lt: new Date(fromDate) },
+
+//                 $or: [
+//                     {
+//                         billId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash sales
+//                     },
+//                     {
+//                         purchaseBillId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash purchases
+//                     },
+//                     {
+//                         purchaseReturnBillId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+//                     },
+//                     {
+//                         salesReturnBillId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+//                     },
+//                     { paymentAccountId: { $exists: true } },
+//                     { receiptAccountId: { $exists: true } },
+//                     { journalBillId: { $exists: true } },
+//                     { debitNoteId: { $exists: true } },
+//                     { creditNoteId: { $exists: true } },
+//                 ],
+//             })
+//                 .sort({ date: 1 })
+//                 .lean()
+//                 .exec();
+
+//             // Calculate running balance up to the start of the date range
+//             for (const transaction of transactionsBeforeRange) {
+//                 if (transaction.billId) {
+//                     initialRunningBalance -= transaction.debit;
+//                 } else if (transaction.salesReturnBillId) {
+//                     initialRunningBalance += transaction.credit;
+//                 } else if (transaction.purchaseBillId) {
+//                     initialRunningBalance += transaction.credit;
+//                 } else if (transaction.purchaseReturnBillId) {
+//                     initialRunningBalance -= transaction.debit;
+//                 } else if (transaction.paymentAccountId) {
+//                     if (transaction.debit > 0) initialRunningBalance -= transaction.debit;
+//                     if (transaction.credit > 0) initialRunningBalance += transaction.credit;
+//                 } else if (transaction.receiptAccountId) {
+//                     if (transaction.debit > 0) initialRunningBalance -= transaction.debit;
+//                     if (transaction.credit > 0) initialRunningBalance += transaction.credit;
+//                 } else if (transaction.debitNoteId || transaction.creditNoteId || transaction.journalBillId) {
+//                     if (transaction.debit > 0) initialRunningBalance -= transaction.debit;
+//                     if (transaction.credit > 0) initialRunningBalance += transaction.credit;
 //                 }
 //             }
 
-//             // Update running balance based on transaction type
-//             if (transaction.billId) {
-//                 // Sales
-//                 runningBalance -= transaction.debit;
-//                 agingData.totalOutstanding += transaction.debit;
-//             } else if (transaction.salesReturnBillId) {
-//                 // Sales Return
-//                 runningBalance += transaction.credit;
-//                 agingData.totalOutstanding -= transaction.credit;
-//             } else if (transaction.purchaseBillId) {
-//                 // Purchase
-//                 runningBalance += transaction.credit;
-//                 agingData.totalOutstanding -= transaction.credit;
-//             } else if (transaction.purchaseReturnBillId) {
-//                 // Purchase Return
-//                 runningBalance -= transaction.debit;
-//                 agingData.totalOutstanding += transaction.debit;
-//             } else if (transaction.paymentAccountId) {
-//                 if (transaction.debit > 0) {
-//                     runningBalance -= transaction.debit;
-//                 } else if (transaction.credit > 0) {
-//                     runningBalance += transaction.credit;
+//             // Get transactions within the date range
+//             const startDate = new Date(fromDate);
+//             const endDate = new Date(toDate);
+//             endDate.setHours(23, 59, 59, 999);
+
+//             const transactions = await Transaction.find({
+//                 company: companyId,
+//                 account: accountId,
+//                 isActive: true,
+//                 date: {
+//                     $gte: startDate,
+//                     $lte: endDate
+//                 },
+//                 $or: [
+//                     {
+//                         billId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash sales
+//                     },
+//                     {
+//                         purchaseBillId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash purchases
+//                     },
+//                     {
+//                         purchaseReturnBillId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash purchase returns
+//                     },
+//                     {
+//                         salesReturnBillId: { $exists: true },
+//                         paymentMode: { $ne: 'cash' } // Exclude cash sales returns
+//                     },
+//                     { paymentAccountId: { $exists: true } },
+//                     { receiptAccountId: { $exists: true } },
+//                     { journalBillId: { $exists: true } },
+//                     { debitNoteId: { $exists: true } },
+//                     { creditNoteId: { $exists: true } },
+//                 ],
+//             })
+//                 .populate('billId')
+//                 .populate('purchaseBillId')
+//                 .populate('purchaseReturnBillId')
+//                 .populate('salesReturnBillId')
+//                 .populate('paymentAccountId')
+//                 .populate('receiptAccountId')
+//                 .populate('journalBillId')
+//                 .populate('debitNoteId')
+//                 .populate('creditNoteId')
+//                 .sort({ date: 1 })
+//                 .lean()
+//                 .exec();
+
+//             // Process transactions with the initial running balance
+//             let runningBalance = initialRunningBalance;
+//             agingData.transactions = [];
+
+//             for (const transaction of transactions) {
+//                 // Calculate age in days
+//                 let age;
+//                 if (companyDateFormat === 'nepali') {
+//                     try {
+//                         const nepaliTransactionDate = new Date(transaction.date);
+//                         const nepaliCurrentDate = new Date(nepaliDate);
+//                         age = (nepaliCurrentDate - nepaliTransactionDate) / (1000 * 60 * 60 * 24);
+//                     } catch (error) {
+//                         age = 0;
+//                     }
+//                 } else {
+//                     try {
+//                         age = (today - transaction.date) / (1000 * 60 * 60 * 24);
+//                     } catch (error) {
+//                         age = 0;
+//                     }
 //                 }
-//             } else if (transaction.receiptAccountId) {
-//                 if (transaction.debit > 0) {
+
+//                 // Update running balance based on transaction type
+//                 if (transaction.billId) {
 //                     runningBalance -= transaction.debit;
 //                     agingData.totalOutstanding += transaction.debit;
-//                 } else if (transaction.credit > 0) {
+//                 } else if (transaction.salesReturnBillId) {
 //                     runningBalance += transaction.credit;
 //                     agingData.totalOutstanding -= transaction.credit;
-//                 }
-//             } else if (transaction.debitNoteId || transaction.creditNoteId || transaction.journalBillId) {
-//                 if (transaction.debit > 0) {
+//                 } else if (transaction.purchaseBillId) {
+//                     runningBalance += transaction.credit;
+//                     agingData.totalOutstanding -= transaction.credit;
+//                 } else if (transaction.purchaseReturnBillId) {
 //                     runningBalance -= transaction.debit;
 //                     agingData.totalOutstanding += transaction.debit;
-//                 } else if (transaction.credit > 0) {
-//                     runningBalance += transaction.credit;
-//                     agingData.totalOutstanding -= transaction.credit;
+//                 } else if (transaction.paymentAccountId) {
+//                     if (transaction.debit > 0) runningBalance -= transaction.debit;
+//                     if (transaction.credit > 0) runningBalance += transaction.credit;
+//                 } else if (transaction.receiptAccountId) {
+//                     if (transaction.debit > 0) {
+//                         runningBalance -= transaction.debit;
+//                         agingData.totalOutstanding += transaction.debit;
+//                     }
+//                     if (transaction.credit > 0) {
+//                         runningBalance += transaction.credit;
+//                         agingData.totalOutstanding -= transaction.credit;
+//                     }
+//                 } else if (transaction.debitNoteId || transaction.creditNoteId || transaction.journalBillId) {
+//                     if (transaction.debit > 0) {
+//                         runningBalance -= transaction.debit;
+//                         agingData.totalOutstanding += transaction.debit;
+//                     }
+//                     if (transaction.credit > 0) {
+//                         runningBalance += transaction.credit;
+//                         agingData.totalOutstanding -= transaction.credit;
+//                     }
 //                 }
+
+//                 // Add age information
+//                 transaction.age = Math.round(age);
+//                 transaction.ageCategory = age <= 30 ? '0-30 days' :
+//                     age <= 60 ? '31-60 days' :
+//                         age <= 90 ? '61-90 days' : '90+ days';
+
+//                 // Categorize by age
+//                 if (age <= 30) {
+//                     agingData.oneToThirty += transaction.debit - transaction.credit;
+//                 } else if (age <= 60) {
+//                     agingData.thirtyOneToSixty += transaction.debit - transaction.credit;
+//                 } else if (age <= 90) {
+//                     agingData.sixtyOneToNinety += transaction.debit - transaction.credit;
+//                 } else {
+//                     agingData.ninetyPlus += transaction.debit - transaction.credit;
+//                 }
+
+//                 // Store running balance and add to transactions list
+//                 transaction.balance = runningBalance;
+//                 agingData.transactions.push(transaction);
 //             }
 
-//             // Add age information
-//             transaction.age = Math.round(age);
-//             transaction.ageCategory = age <= 30 ? '0-30 days' :
-//                 age <= 60 ? '31-60 days' :
-//                     age <= 90 ? '61-90 days' : '90+ days';
-
-//             // Categorize by age
-//             if (age <= 30) {
-//                 agingData.oneToThirty += transaction.debit - transaction.credit;
-//             } else if (age <= 60) {
-//                 agingData.thirtyOneToSixty += transaction.debit - transaction.credit;
-//             } else if (age <= 90) {
-//                 agingData.sixtyOneToNinety += transaction.debit - transaction.credit;
-//             } else {
-//                 agingData.ninetyPlus += transaction.debit - transaction.credit;
-//             }
-
-//             // Store running balance and add to transactions list
-//             transaction.balance = runningBalance;
-//             agingData.transactions.push(transaction);
+//             // Include opening balance in the total outstanding calculation
+//             agingData.totalOutstanding += agingData.openingBalance;
 //         }
 
-//         // Include opening balance in the total outstanding calculation
-//         agingData.totalOutstanding += agingData.openingBalance;
-
-//         res.render('retailer/outstanding/dayCountAgeing', {
+//         res.render('retailer/outstanding/dayCountAgeing2', {
 //             company,
 //             currentFiscalYear,
 //             account,
 //             agingData,
 //             currentCompany,
 //             companyDateFormat,
-//             currentCompanyName: req.session.currentCompanyName,
+//             nepaliDate,
+//             currentCompanyName,
+//             fromDate: fromDate || '',
+//             toDate: toDate || '',
 //             title: '',
 //             body: '',
 //             user: req.user,
-//             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+//             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor',
+//             hasDateFilter: !!fromDate && !!toDate // Add flag to indicate if date filter is applied
 //         });
+
 //     } catch (error) {
 //         console.error(error);
 //         res.status(500).send('Internal Server Error');
@@ -1298,7 +1229,6 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                 account: accountId,
                 isActive: true,
                 date: { $lt: new Date(fromDate) },
-
                 $or: [
                     {
                         billId: { $exists: true },
@@ -1399,11 +1329,81 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                 .lean()
                 .exec();
 
+            // Separate payment and receipt transactions
+            const paymentReceiptTransactions = [];
+            const otherTransactions = [];
+
+            for (const transaction of transactions) {
+                if (transaction.paymentAccountId || transaction.receiptAccountId) {
+                    paymentReceiptTransactions.push(transaction);
+                } else {
+                    otherTransactions.push(transaction);
+                }
+            }
+
             // Process transactions with the initial running balance
             let runningBalance = initialRunningBalance;
             agingData.transactions = [];
 
-            for (const transaction of transactions) {
+            // Process payment and receipt transactions first
+            for (const transaction of paymentReceiptTransactions) {
+                // Calculate age in days
+                let age;
+                if (companyDateFormat === 'nepali') {
+                    try {
+                        const nepaliTransactionDate = new Date(transaction.date);
+                        const nepaliCurrentDate = new Date(nepaliDate);
+                        age = (nepaliCurrentDate - nepaliTransactionDate) / (1000 * 60 * 60 * 24);
+                    } catch (error) {
+                        age = 0;
+                    }
+                } else {
+                    try {
+                        age = (today - transaction.date) / (1000 * 60 * 60 * 24);
+                    } catch (error) {
+                        age = 0;
+                    }
+                }
+
+                // Update running balance based on transaction type
+                if (transaction.paymentAccountId) {
+                    if (transaction.debit > 0) runningBalance -= transaction.debit;
+                    if (transaction.credit > 0) runningBalance += transaction.credit;
+                } else if (transaction.receiptAccountId) {
+                    if (transaction.debit > 0) {
+                        runningBalance -= transaction.debit;
+                        agingData.totalOutstanding += transaction.debit;
+                    }
+                    if (transaction.credit > 0) {
+                        runningBalance += transaction.credit;
+                        agingData.totalOutstanding -= transaction.credit;
+                    }
+                }
+
+                // Add age information
+                transaction.age = Math.round(age);
+                transaction.ageCategory = age <= 30 ? '0-30 days' :
+                    age <= 60 ? '31-60 days' :
+                        age <= 90 ? '61-90 days' : '90+ days';
+
+                // Categorize by age
+                if (age <= 30) {
+                    agingData.oneToThirty += transaction.debit - transaction.credit;
+                } else if (age <= 60) {
+                    agingData.thirtyOneToSixty += transaction.debit - transaction.credit;
+                } else if (age <= 90) {
+                    agingData.sixtyOneToNinety += transaction.debit - transaction.credit;
+                } else {
+                    agingData.ninetyPlus += transaction.debit - transaction.credit;
+                }
+
+                // Store running balance and add to transactions list
+                transaction.balance = runningBalance;
+                agingData.transactions.push(transaction);
+            }
+
+            // Then process other transactions
+            for (const transaction of otherTransactions) {
                 // Calculate age in days
                 let age;
                 if (companyDateFormat === 'nepali') {
@@ -1435,18 +1435,6 @@ router.get('/day-count-aging/:accountId', isLoggedIn, ensureAuthenticated, ensur
                 } else if (transaction.purchaseReturnBillId) {
                     runningBalance -= transaction.debit;
                     agingData.totalOutstanding += transaction.debit;
-                } else if (transaction.paymentAccountId) {
-                    if (transaction.debit > 0) runningBalance -= transaction.debit;
-                    if (transaction.credit > 0) runningBalance += transaction.credit;
-                } else if (transaction.receiptAccountId) {
-                    if (transaction.debit > 0) {
-                        runningBalance -= transaction.debit;
-                        agingData.totalOutstanding += transaction.debit;
-                    }
-                    if (transaction.credit > 0) {
-                        runningBalance += transaction.credit;
-                        agingData.totalOutstanding -= transaction.credit;
-                    }
                 } else if (transaction.debitNoteId || transaction.creditNoteId || transaction.journalBillId) {
                     if (transaction.debit > 0) {
                         runningBalance -= transaction.debit;

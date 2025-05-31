@@ -19,7 +19,29 @@ const openingBalanceByFiscalYearSchema = new mongoose.Schema({
         ref: 'FiscalYear',
         required: true
     }
+});
+
+const closingBalanceByFiscalYearSchema = new mongoose.Schema({
+    date: {
+        type: Date,
+        default: () => new Date().toISOString
+    },
+    amount: {
+        type: Number,
+        default: 0
+    },
+    type: {
+        type: String,
+        enum: ['Dr', 'Cr'],
+        default: 'Dr'
+    },
+    fiscalYear: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FiscalYear',
+        required: true
+    }
 })
+
 const accountSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -41,6 +63,26 @@ const accountSchema = new mongoose.Schema({
         unique: true
     }, // 4-digit unique item number
     openingBalanceByFiscalYear: [openingBalanceByFiscalYearSchema],
+    closingBalanceByFiscalYear: [closingBalanceByFiscalYearSchema],
+    initialOpeningBalance: {
+        initialFiscalYear: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FiscalYear'
+        },
+        amount: {
+            type: Number,
+            default: 0
+        },
+        type: {
+            type: String,
+            enum: ['Dr', 'Cr'],
+            default: 'Dr'
+        },
+        date: {
+            type: Date,
+            default: Date.now()
+        }
+    },
     openingBalance: {
         fiscalYear: {
             type: mongoose.Schema.Types.ObjectId,
@@ -54,6 +96,10 @@ const accountSchema = new mongoose.Schema({
             type: String,
             enum: ['Dr', 'Cr'],
             default: 'Dr'
+        },
+        date: {
+            type: Date,
+            default: Date.now()
         }
     },
     openingBalanceDate: {
@@ -79,9 +125,18 @@ const accountSchema = new mongoose.Schema({
             ref: 'Transaction'
         }
     ],
+    // fiscalYear: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'FiscalYear' // New field to reference the current fiscal year
+    // },
     fiscalYear: {
+        type: [mongoose.Schema.Types.ObjectId], // Array of ObjectIds
+        ref: 'FiscalYear',
+        required: true
+    },
+    originalFiscalYear: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'FiscalYear' // New field to reference the current fiscal year
+        ref: 'FiscalYear',
     },
     defaultCashAccount: {
         type: Boolean,
@@ -96,6 +151,29 @@ const accountSchema = new mongoose.Schema({
 
 // Index to ensure unique account names within a company
 accountSchema.index({ name: 1, company: 1, fiscalYear: 1 }, { unique: true });
+
+// Add this static method to the account schema
+accountSchema.statics.initializeOriginalFiscalYear = async function () {
+    try {
+        const migrationResult = await this.updateMany(
+            { originalFiscalYear: { $exists: false } }, // Find docs without originalFiscalYear
+            [{ $set: { originalFiscalYear: "$fiscalYear" } }] // Set to fiscalYear's value
+        );
+        //  console.log(`Migrated ${migrationResult.nModified} accounts`);
+        return migrationResult;
+    } catch (error) {
+        console.error('Original fiscal year migration failed:', error);
+        throw error;
+    }
+};
+
+// Add pre-save hook to ensure originalFiscalYear is set for new documents
+accountSchema.pre('save', function (next) {
+    if (!this.originalFiscalYear) {
+        this.originalFiscalYear = this.fiscalYear;
+    }
+    next();
+});
 
 // Pre-save hook to generate a unique 4-digit number for each account
 accountSchema.pre('save', async function (next) {

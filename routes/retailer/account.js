@@ -1,5 +1,7 @@
 const express = require('express')
-
+const router = express.Router()
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 const Account = require('../../models/retailer/Account')
 const CompanyGroup = require('../../models/retailer/CompanyGroup')
 const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth')
@@ -9,11 +11,25 @@ const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRa
 const FiscalYear = require('../../models/retailer/FiscalYear')
 const Company = require('../../models/retailer/Company')
 const Transaction = require('../../models/retailer/Transaction')
-// const switchCompany = require('../middleware/switchCompany')
-// const setCurrentCompany = require('../middleware/setCurrentCompany');
-const router = express.Router()
 
+// Modified initialization function
+async function initializeDataMigrations() {
+    try {
+        const Account = mongoose.model('Account'); // Changed from 'Item' to 'Account'
+        const result = await Account.initializeOriginalFiscalYear(); // Added await
 
+        if (result.nModified > 0) {
+            console.log(`Account migration: Set originalFiscalYear for ${result.nModified} documents`);
+        }
+
+        // Add other migrations here if needed
+    } catch (error) {
+        console.error('Data migrations failed:', error);
+        process.exit(1);
+    }
+}
+
+initializeDataMigrations();
 // Company routes to get all companies (for select options)
 router.get('/companies/get', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
@@ -76,11 +92,29 @@ router.get('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+        // Get initial fiscal year
+        const initialFiscalYear = await FiscalYear.findOne({ company: companyId })
+            .sort({ startDate: 1 })
+            .limit(1);
+
+        // Check if current fiscal year is initial
+        const isInitialFiscalYear = currentFiscalYear._id.toString() === initialFiscalYear._id.toString();
+
 
         const accounts = await Account.find({
             company: companyId,
-            fiscalYear: fiscalYear
-        }).populate('companyGroups');
+            // fiscalYear: fiscalYear
+            $or: [
+                { originalFiscalYear: fiscalYear }, // Created here
+                {
+                    fiscalYear: fiscalYear,
+                    originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                }
+            ]
+        })
+            .populate('companyGroups')
+            .populate('originalFiscalYear')
+
         const companyGroups = await CompanyGroup.find({ company: companyId });
 
         res.render('retailer/company/companies', {
@@ -91,8 +125,9 @@ router.get('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             currentCompanyName,
             currentCompany: companyId,
             currentFiscalYear,
-            title: 'Account',
-            body: 'retailer >> account',
+            isInitialFiscalYear: isInitialFiscalYear,
+            title: '',
+            body: '',
             user: req.user,
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });
@@ -109,6 +144,12 @@ router.post('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected
             // Fetch the company and populate the fiscalYear
             const company = await Company.findById(companyId).populate('fiscalYear');
 
+            // Get the initial fiscal year
+            const initialFiscalYear = await FiscalYear.findOne({ company: companyId })
+                .sort({ startDate: 1 })
+                .limit(1);
+
+            if (!initialFiscalYear) return res.status(400).json({ error: 'Initial fiscal year not found' });
             // Check if fiscal year is already in the session or available in the company
             let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             let currentFiscalYear = null;
@@ -116,6 +157,14 @@ router.post('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected
             if (fiscalYear) {
                 // Fetch the fiscal year from the database if available in the session
                 currentFiscalYear = await FiscalYear.findById(fiscalYear);
+            }
+
+            // Prevent opening balance outside initial fiscal year
+            if (currentFiscalYear._id.toString() !== initialFiscalYear._id.toString()) {
+                if (openingBalance?.amount && parseFloat(openingBalance.amount) !== 0) {
+                    req.flash('error', 'Opening balance can only be set in the initial fiscal year');
+                    return res.redirect('/companies');
+                }
             }
 
             // If no fiscal year is found in session or currentCompany, throw an error
@@ -150,6 +199,16 @@ router.post('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected
                 return res.status(400).json({ error: 'Invalid account group for this company' });
             }
 
+            // Validate opening balance only allowed in initial fiscal year
+            const isInitialYear = currentFiscalYear._id.toString() === initialFiscalYear._id.toString();
+
+            const openingBalanceAmount = isInitialYear && openingBalance?.amount
+                ? parseFloat(openingBalance.amount)
+                : 0;
+            const openingBalanceType = isInitialYear && openingBalance?.type
+                ? openingBalance.type
+                : 'Dr';
+
             // Create a new account and include the fiscal year in the openingBalance field
             const newCompany = new Account({
                 name,
@@ -160,23 +219,31 @@ router.post('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected
                 email,
                 contactperson,
                 companyGroups,
+                initialOpeningBalance: {
+                    date: currentFiscalYear.startDate,
+                    amount: openingBalanceAmount,
+                    type: openingBalanceType,
+                    initialFiscalYear: currentFiscalYear._id // Set the current fiscal year in openingBalance.fiscalYear
+
+                },
                 openingBalance: {
                     date: currentFiscalYear.startDate,
-                    amount: parseFloat(openingBalance.amount || 0),
-                    type: openingBalance.type,
+                    amount: openingBalanceAmount,
+                    type: openingBalanceType,
                     fiscalYear: fiscalYear // Record stock entry with fiscal year
                 },
                 openingBalanceByFiscalYear: [
                     {
-                        amount: parseFloat(openingBalance.amount || 0), // Ensure the amount is stored as a number
-                        type: openingBalance.type, // 'Dr' or 'Cr'
+                        amount: openingBalanceAmount, // Ensure the amount is stored as a number
+                        type: openingBalanceType, // 'Dr' or 'Cr'
                         date: currentFiscalYear.startDate,
                         fiscalYear: fiscalYear // Record stock entry with fiscal year
                     }
                 ],
                 openingBalanceDate: currentFiscalYear.startDate, // Use the date from the request
                 company: companyId,
-                fiscalYear: fiscalYear, // Associate the item with the current fiscal year
+                fiscalYear: [fiscalYear], // Associate the item with the current fiscal year
+                originalFiscalYear: currentFiscalYear,
                 createdAt: new Date()
             });
 
@@ -497,6 +564,11 @@ router.put('/companies/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelec
 
             const company = await Company.findById(companyId).populate('fiscalYear');
 
+            // Get the initial fiscal year
+            const initialFiscalYear = await FiscalYear.findOne({ company: companyId })
+                .sort({ startDate: 1 })
+                .limit(1);
+
             // Check if fiscal year is already in the session or available in the company
             let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             let currentFiscalYear = null;
@@ -504,6 +576,14 @@ router.put('/companies/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelec
             if (fiscalYear) {
                 // Fetch the fiscal year from the database if available in the session
                 currentFiscalYear = await FiscalYear.findById(fiscalYear);
+            }
+
+            // Prevent opening balance outside initial fiscal year
+            if (currentFiscalYear._id.toString() !== initialFiscalYear._id.toString()) {
+                if (openingBalance?.amount && parseFloat(openingBalance.amount) !== 0) {
+                    req.flash('error', 'Opening balance can only be set in the initial fiscal year');
+                    return res.redirect('/companies');
+                }
             }
 
             // If no fiscal year is found in session or currentCompany, throw an error
@@ -533,6 +613,16 @@ router.put('/companies/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelec
                 return res.status(400).json({ error: 'Invalid account group for this company' });
             }
 
+            // Validate opening balance only allowed in initial fiscal year
+            const isInitialYear = currentFiscalYear._id.toString() === initialFiscalYear._id.toString();
+
+            const openingBalanceAmount = isInitialYear && openingBalance?.amount
+                ? parseFloat(openingBalance.amount)
+                : 0;
+            const openingBalanceType = isInitialYear && openingBalance?.type
+                ? openingBalance.type
+                : 'Dr';
+
             await Account.findByIdAndUpdate(req.params.id, {
                 name,
                 address,
@@ -542,13 +632,27 @@ router.put('/companies/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelec
                 contactperson,
                 email,
                 companyGroups,
+                initialOpeningBalance: {
+                    date: currentFiscalYear.startDate,
+                    amount: openingBalanceAmount,
+                    type: openingBalanceType,
+                    initialFiscalYear: currentFiscalYear._id // Set the current fiscal year in openingBalance.fiscalYear
+                },
                 openingBalance: {
-                    amount: parseFloat(openingBalance.amount),
-                    type: openingBalance.type,
+                    amount: openingBalanceAmount,
+                    type: openingBalanceType,
                     fiscalYear: currentFiscalYear._id // Set the current fiscal year in openingBalance.fiscalYear
                 },
+                openingBalanceByFiscalYear: [
+                    {
+                        amount: openingBalanceAmount, // Ensure the amount is stored as a number
+                        type: openingBalanceType, // 'Dr' or 'Cr'
+                        date: currentFiscalYear.startDate,
+                        fiscalYear: currentFiscalYear._id // Record stock entry with fiscal year
+                    }
+                ],
                 company: companyId,
-                fiscalYear: currentFiscalYear._id // Set the current fiscal year in openingBalance.fiscalYear
+                fiscalYear: [currentFiscalYear._id] // Set the current fiscal year in openingBalance.fiscalYear
             });
             req.flash('success', 'Account updated successfully');
             res.redirect('/companies');

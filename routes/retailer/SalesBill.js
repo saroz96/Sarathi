@@ -4897,8 +4897,6 @@ router.get('/sales-vat-report', isLoggedIn, ensureAuthenticated, ensureCompanySe
         // Log the query parameters
         console.log('Query Parameters:', req.query);
 
-        // const fromDate = req.query.fromDate ? new Date(req.query.fromDate) : null;
-        // const toDate = req.query.toDate ? new Date(req.query.toDate) : null;
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD');
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
@@ -4970,22 +4968,6 @@ router.get('/sales-vat-report', isLoggedIn, ensureAuthenticated, ensureCompanySe
             .populate('account')
             .populate('cashAccount')
             .sort({ billNumber: 1 })
-
-        // Prepare VAT report data
-        // const salesVatReport = await Promise.all(Bills.map(async bill => {
-        //     const account = await Account.findById(bill.account);
-        //     return {
-        //         billNumber: bill.billNumber,
-        //         date: bill.date,
-        //         account: account.name,
-        //         panNumber: account.pan,
-        //         totalAmount: bill.totalAmount,
-        //         discountAmount: bill.discountAmount,
-        //         nonVatSales: bill.nonVatSales,
-        //         taxableAmount: bill.taxableAmount,
-        //         vatAmount: bill.vatAmount,
-        //     };
-        // }));
 
         const salesVatReport = await Promise.all(Bills.map(async bill => {
             // For credit sales (with account)
@@ -5087,8 +5069,15 @@ router.get('/statement', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             // Fetch accounts that belong to the current fiscal year
             const accounts = await Account.find({
                 company: companyId,
-                fiscalYear: fiscalYear,
-                isActive: true // Filter for active accounts
+                // fiscalYear: fiscalYear,
+                isActive: true, // Filter for active accounts
+                $or: [
+                    { originalFiscalYear: fiscalYear }, // Created here
+                    {
+                        fiscalYear: fiscalYear,
+                        originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                    }
+                ]
             }).sort({ name: 1 });
 
             if (!selectedCompany) {
@@ -5107,9 +5096,17 @@ router.get('/statement', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             // Fetch the selected account based on the fiscal year and company
             const account = await Account.findOne({
                 _id: selectedCompany,
+                // fiscalYear: fiscalYear,
                 company: companyId,
-                isActive: true // Filter for active accounts
-            });
+                isActive: true, // Filter for active accounts
+                $or: [
+                    { originalFiscalYear: fiscalYear }, // Created here
+                    {
+                        fiscalYear: fiscalYear,
+                        originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                    }
+                ]
+            }).populate('companyGroups', 'name'); // Add population here
 
             if (!account) {
                 return res.status(404).json({ error: 'Account not found for the current fiscal year' });
@@ -5137,20 +5134,59 @@ router.get('/statement', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
                 query.paymentMode = paymentMode;
             }
 
+            // let openingBalance = 0;
+
+            // if (paymentMode !== 'cash') {
+            //     // Fetch transactions before the 'fromDate' to calculate the opening balance
+            //     const transactionsBeforeFromDate = await Transaction.find({
+            //         ...query,
+            //         date: { $lt: fromDate }
+            //     }).sort({ date: 1 });
+
+            //     // Calculate the opening balance based on the account's opening balance
+            //     openingBalance = account.initialOpeningBalance.type === 'Dr' ? account.initialOpeningBalance.amount : -account.initialOpeningBalance.amount;
+            //     transactionsBeforeFromDate.forEach(tx => {
+            //         openingBalance += (tx.debit || 0) - (tx.credit || 0);
+            //     });
+            // }
+
+            // Define groups that use transaction-based opening balance
+            const transactionBasedGroups = [
+                'Sundry Debtors',
+                'Sundry Creditors',
+                'Cash in Hand',
+                'Bank Accounts',
+                'Bank O/D Account',
+                'Duties & Taxes'
+            ];
+
+            // Determine if account belongs to transaction-based group
+            const isTransactionBased = account.companyGroups &&
+                transactionBasedGroups.includes(account.companyGroups.name);
+
             let openingBalance = 0;
 
-            if (paymentMode !== 'cash') {
-                // Fetch transactions before the 'fromDate' to calculate the opening balance
-                const transactionsBeforeFromDate = await Transaction.find({
-                    ...query,
-                    date: { $lt: fromDate }
-                }).sort({ date: 1 });
+            if (isTransactionBased) {
+                if (paymentMode !== 'cash') {
+                    // Existing transaction-based calculation
+                    const transactionsBeforeFromDate = await Transaction.find({
+                        ...query,
+                        date: { $lt: fromDate }
+                    }).sort({ date: 1 });
 
-                // Calculate the opening balance based on the account's opening balance
-                openingBalance = account.openingBalance.type === 'Dr' ? account.openingBalance.amount : -account.openingBalance.amount;
-                transactionsBeforeFromDate.forEach(tx => {
-                    openingBalance += (tx.debit || 0) - (tx.credit || 0);
-                });
+                    openingBalance = account.initialOpeningBalance.type === 'Dr'
+                        ? account.initialOpeningBalance.amount
+                        : -account.initialOpeningBalance.amount;
+
+                    transactionsBeforeFromDate.forEach(tx => {
+                        openingBalance += (tx.debit || 0) - (tx.credit || 0);
+                    });
+                }
+            } else {
+                // For non-transaction groups, use fiscal year opening balance
+                openingBalance = account.openingBalance.type === 'Dr'
+                    ? account.openingBalance.amount
+                    : -account.openingBalance.amount;
             }
 
             if (fromDate && toDate) {
@@ -5181,7 +5217,10 @@ router.get('/statement', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
                 accountType: tx.accountType ? { name: tx.accountType.name } : 'Opening Balance'
             }));
 
-            const { statement, totalDebit, totalCredit } = prepareStatementWithOpeningBalanceAndTotals(openingBalance, cleanTransactions, fromDate);
+            const { statement, totalDebit, totalCredit } = prepareStatementWithOpeningBalanceAndTotals(openingBalance, cleanTransactions, fromDate,
+                paymentMode,
+                isTransactionBased // Add this parameter
+            );
 
             const partyName = account.name;
 
@@ -5202,8 +5241,6 @@ router.get('/statement', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
     }
 });
 
-
-
 // Function to calculate opening balance based on opening balance date
 function calculateOpeningBalance(account, transactions, fromDate) {
     const openingBalanceDate = fromDate || account.openingBalanceDate || new Date('July 17, 2023'); // Use fromDate if available
@@ -5218,7 +5255,7 @@ function calculateOpeningBalance(account, transactions, fromDate) {
     return openingBalance;
 }
 
-function prepareStatementWithOpeningBalanceAndTotals(openingBalance, transactions, fromDate, paymentMode) {
+function prepareStatementWithOpeningBalanceAndTotals(openingBalance, transactions, fromDate, paymentMode, isTransactionBased) {
     let balance = openingBalance;
     let totalDebit = paymentMode !== 'cash' && openingBalance > 0 ? openingBalance : 0;
     let totalCredit = paymentMode !== 'cash' && openingBalance < 0 ? -openingBalance : 0;
