@@ -1,366 +1,604 @@
-<div class="form-control">
-    <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
-</div>
-<div class="container mt-4 wow-form" id="mainContainer">
-    <div class="card shadow-lg p-4 animate__animated animate__fadeInUp">
-        <div class="card-body">
-            <h3 class="card-title">Journal Voucher Entry</h3>
-            <form action="/journal/new" method="POST" id="journalForm" class="wow-form"
-                onsubmit="return handleFormSubmission(event)">
-                <div class="row">
-                    <% if (companyDateFormat==='nepali' ) { %>
-                        <div class="col-md-6 mb-3">
-                            <label for="nepaliDate" class="form-label" data-bs-toggle="tooltip"
-                                title="Enter Nepali Date">Nepali Date:</label>
-                            <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                value="<%= nepaliDate || '' %>" placeholder="YYYY/MM/DD" autofocus>
-                            <div class="form-feedback"></div>
-                        </div>
-                        <div class="col-md-6 mb-3 d-none">
-                            <label for="billDate" class="form-label">English Date:</label>
-                            <input type="date" name="billDate" id="billDate" class="form-control"
-                                value="<%= new Date().toISOString().split('T')[0] %>" disabled>
-                        </div>
-                        <% } else { %>
-                            <div class="col-md-6 mb-3">
-                                <label for="billDate" class="form-label" data-bs-toggle="tooltip"
-                                    title="Select Date">English Date:</label>
-                                <input type="date" name="billDate" id="billDate" class="form-control" required
-                                    value="<%= new Date().toISOString().split('T')[0] %>" autofocus>
-                                <div class="form-feedback"></div>
-                            </div>
-                            <div class="col-md-6 mb-3 d-none">
-                                <label for="nepaliDate" class="form-label">Nepali Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control"
-                                    value="<%= nepaliDate || '' %>" disabled>
-                            </div>
-                            <% } %>
-                                <div class="col-md-6 mb-3">
-                                    <label for="billNumber" class="form-label">Voucher Number:</label>
-                                    <input type="text" name="billNumber" id="billNumber" class="form-control" required
-                                        value="<%= nextBillNumber %>" readonly>
-                                    <div class="form-feedback"></div>
-                                </div>
-                </div>
+<%- include('../layouts/boilerplate', { title: 'Journal Entry' , body: '' }) %>
+    <style>
+        .journal-form-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
 
-                <!-- Debit Section -->
-                <div class="section-header">
-                    <h4 class="mt-4">
-                        Debit Accounts
-                        <span class="badge bg-success rounded-pill">Auto-Calculate</span>
-                    </h4>
-                </div>
-                <div id="debit-accounts" class="mb-3 position-relative">
-                    <div class="card mb-2 shadow-sm animate__animated animate__fadeIn">
-                        <div class="card-body debit-account">
-                            <div class="row align-items-center">
-                                <div class="col-md-4 mb-3">
-                                    <label for="debitAccount1" class="form-label">Debit Account:</label>
-                                    <select name="debitAccounts[0][account]" id="debitAccount1" class="form-select"
-                                        required>
-                                        <option value="" disabled selected>Select a party name</option>
-                                        <% accounts.forEach(account=> { %>
-                                            <option value="<%= account._id %>">
-                                                <%= account.name %>
-                                            </option>
-                                            <% }) %>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="debitAmount1" class="form-label">Amount:</label>
-                                    <input type="number" name="debitAccounts[0][debit]" id="debitAmount1"
-                                        class="form-control" required>
-                                    <div class="form-feedback"></div>
-                                </div>
-                                <div class="col-md-4 mb-3 text-end">
-                                    <button type="button" id="add-debit-account"
-                                        class="btn btn-outline-primary animate__animated animate__pulse animate__infinite">
-                                        <i class="fas fa-plus"></i> Add Debit Account
-                                    </button>
-                                </div>
+        .entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        .entry-table th {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .entry-table td {
+            padding: 8px 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .account-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            text-align: right;
+        }
+
+        .debit-input:focus,
+        .credit-input:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+        }
+
+        .debit-input {
+            background-color: #e8f5e9;
+        }
+
+        .credit-input {
+            background-color: #fff8e1;
+        }
+
+        .totals-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .balance-row {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .show-more {
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin: 10px 0;
+            display: inline-block;
+        }
+
+        .form-section {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+    </style>
+    <div class="journal-form-container">
+        <div class="card shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+            <form action="/journal/new" method="POST" id="journalForm">
+
+                <div class="form-section">
+                    <div class="section-title">Journal Entries</div>
+                          <div class="row">
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Date:</label>
+                                <input type="text" name="nepaliDate" class="form-control" required
+                                    value="<%= nepaliDate || '' %>" placeholder="YYYY/MM/DD" autofocus>
                             </div>
-                        </div>
+                            <% } else { %>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Date:</label>
+                                    <input type="date" name="billDate" class="form-control" required
+                                        value="<%= new Date().toISOString().split('T')[0] %>" autofocus>
+                                </div>
+                                <% } %>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Voucher No:</label>
+                                        <input type="text" name="billNumber" class="form-control" required
+                                            value="<%= nextBillNumber %>" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Description:</label>
+                                        <input type="text" name="description" class="form-control"
+                                            placeholder="Enter voucher description">
+                                    </div>
+                    </div>
+                    <div class="table-container" id="journal-table-container">
+                        <table class="entry-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="45%">Account</th>
+                                    <th width="25%">Debit Amount</th>
+                                    <th width="25%">Credit Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journal-entries">
+                                <% for (let i=0; i < 20; i++) { %>
+                                    <tr class="entry-row <%= i >= 6 ? 'hidden-row' : '' %>" data-index="<%= i %>">
+                                        <td>
+                                            <%= i + 1 %>
+                                        </td>
+                                        <td>
+                                            <!-- CORRECTED: Changed name attribute to entries[i][account] -->
+                                            <input type="text" class="form-control account-input"
+                                                 data-index="<%= i %>"
+                                                autocomplete="off">
+                                            <!-- CORRECTED: Changed name to entries[i][accountId] -->
+                                            <input type="hidden" class="account-id-input"
+                                                name="entries[<%= i %>][accountId]">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="entries[<%= i %>][debit]"
+                                                class="amount-input debit-input" min="0" step="0.01" placeholder="0.00"
+                                                onkeydown="handleJournalKeydown(event, <%= i %>, 'debit')">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="entries[<%= i %>][credit]"
+                                                class="amount-input credit-input" min="0" step="0.01" placeholder="0.00"
+                                                onkeydown="handleJournalKeydown(event, <%= i %>, 'credit')">
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- MOVE TOTALS AND BALANCE OUTSIDE THE SCROLL CONTAINER -->
+                    <table class="entry-table">
+                        <tfoot>
+                            <tr class="totals-row">
+                                <td width="50%" colspan="2" style="text-align: right;">Total:</td>
+                                <td width="25%" id="total-debit">0.00</td>
+                                <td width="25%" id="total-credit">0.00</td>
+                            </tr>
+                            <tr class="balance-row">
+                                <td width="50%" colspan="2" style="text-align: right;">Balance:</td>
+                                <td width="50%" colspan="2" id="balance">0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="show-more" id="show-more" style="display: none;">
+                        ▼ Show More Rows
                     </div>
                 </div>
 
-                <!-- Credit Section -->
-                <div class="section-header">
-                    <h4 class="mt-4">
-                        Credit Accounts
-                        <span class="badge bg-warning text-dark rounded-pill">Auto-Calculate</span>
-                    </h4>
-                </div>
-                <div id="credit-accounts" class="mb-3 position-relative">
-                    <div class="card mb-2 shadow-sm animate__animated animate__fadeIn">
-                        <div class="card-body credit-account">
-                            <div class="row align-items-center">
-                                <div class="col-md-4 mb-3">
-                                    <label for="creditAccount1" class="form-label">Credit Account:</label>
-                                    <select name="creditAccounts[0][account]" id="creditAccount1" class="form-select"
-                                        required>
-                                        <option value="" disabled selected>Select a party name</option>
-                                        <% accounts.forEach(account=> { %>
-                                            <option value="<%= account._id %>">
-                                                <%= account.name %>
-                                            </option>
-                                            <% }) %>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="creditAmount1" class="form-label">Amount:</label>
-                                    <input type="number" name="creditAccounts[0][credit]" id="creditAmount1"
-                                        class="form-control" required>
-                                    <div class="form-feedback"></div>
-                                </div>
-                                <div class="col-md-4 mb-3 text-end">
-                                    <button type="button" id="add-credit-account"
-                                        class="btn btn-outline-warning animate__animated animate__pulse animate__infinite">
-                                        <i class="fas fa-plus"></i> Add Credit Account
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Description -->
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description:</label>
-                    <textarea name="description" id="description" class="form-control"
-                        placeholder="Describe your journal entry here..."></textarea>
-                    <div class="form-feedback"></div>
-                </div>
-
-                <div class="d-flex justify-content-between">
-                    <!-- Submit Button with Loading Effect -->
-                    <button type="submit" class="btn btn-success btn-lg w-50 mx-2 animate__animated animate__pulse"
-                        id="submitForm" onclick="submitBillForm(false)">
-                        <i class="fas fa-save"></i> Save Journal Voucher
+                <div class="nav-buttons" style="float: right;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
                     </button>
-
-                    <!-- Save & Print Button -->
-                    <button type="submit" class="btn btn-secondary btn-lg w-50 mx-2" onclick="submitBillForm(true)">
+                    <button type="submit" class="btn btn-secondary" name="print" value="true">
                         <i class="fas fa-print"></i> Save & Print
                     </button>
+                    <button type="button" class="btn btn-light" id="clear-form">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
-
             </form>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap Modal for account -->
+    <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountModalLabel">Select an Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Fixed Search Input -->
+                <div class="p-3 bg-white sticky-top">
+                    <input type="text" id="searchAccount" class="form-control" placeholder="Search Account"
+                        onfocus="selectValue(this)" autofocus autocomplete="off">
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Scrollable Account List -->
+                    <div class="overflow-auto" style="max-height: 400px;">
+                        <ul id="accountList" class="list-group">
+                            <!-- Accounts will be dynamically loaded here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Include Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    function handleFormSubmission(event) {
-        event.preventDefault();
+    <script>
+        // Global variables for account modal
+        let selectedIndex = 0;
+        let currentRowIndex = null;
+        let allAccounts = [];
 
-        if (!validateAmounts()) {
-            alert("The total debit and credit amounts must be equal.");
-            return false; // Prevent form submission
-        }
+        $(document).ready(function () {
+            // Account modal functionality
+            const $accountModal = $("#accountModal");
+            const $searchInput = $("#searchAccount");
+            const $accountList = $("#accountList");
+            const $modalBody = $accountList.parent();
 
-        const isSubmitButton = event.submitter &&
-            (event.submitter.id === 'submitForm' || event.submitter.classList.contains('btn-secondary'));
+            // Open modal when any account input is focused
+            $(document).on('focus', '.account-input', function () {
+                currentRowIndex = $(this).data('index');
+                $accountModal.modal("show");
+                fetchAccounts();
+            });
 
-        if (isSubmitButton) {
-            event.target.submit();
-        }
-    }
+            // Focus on search input when modal opens
+            $accountModal.on("shown.bs.modal", function () {
+                // Clear search input and reset selected index
+                $searchInput.val('').trigger('input');
+                selectedIndex = 0;
 
-    function submitBillForm(print) {
-        if (!validateAmounts()) {
-            return false; // Prevent form submission
-        }
-        shouldPrint = print;
-        const billForm = document.getElementById('journalForm');
-        const saveButton = document.getElementById('submitForm');
-        saveButton.disabled = true;
+                // Focus on search input
+                $searchInput.focus();
+            });
 
-        // const submitButton = document.getElementById('submitForm');
-        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        saveButton.disabled = true;
+            // Fetch accounts from server
+            function fetchAccounts() {
+                $.ajax({
+                    url: "/api/accounts/forJournal",
+                    method: "GET",
+                    success: function (data) {
+                        allAccounts = data;
+                        allAccounts.sort(function (a, b) {
+                            const nameA = a.name.toLowerCase();
+                            const nameB = b.name.toLowerCase();
+                            if (nameA < nameB) return -1;
+                            if (nameA > nameB) return 1;
+                            return 0;
+                        });
+                        renderAccounts();
+                    },
+                    error: function (err) {
+                        console.error("Error fetching accounts:", err);
+                        $accountList.html('<li class="list-group-item text-danger">Failed to load accounts</li>');
+                    }
+                });
+            }
 
-        if (print) {
-            const url = new URL(billForm.action);
-            url.searchParams.append('print', 'true');
-            billForm.action = url.toString();
-        }
+            // Render accounts dynamically
+            function renderAccounts(filtered = allAccounts) {
+                $accountList.empty();
 
-        // Simulate form submission (replace this with actual form submission logic)
-        setTimeout(() => {
-            billForm.submit();
-            saveButton.disabled = false;
-        }, 2000); // Simulating a delay; adjust or remove as needed
-    }
+                if (filtered.length === 0) {
+                    $accountList.html('<li class="list-group-item text-muted">No accounts found</li>');
+                    return;
+                }
 
-    function validateAmounts() {
-        let totalDebit = 0;
-        let totalCredit = 0;
+                filtered.forEach((account, index) => {
+                    const isActive = index === 0 ? "active" : "";
+                    $accountList.append(`
+                <li class="list-group-item account-item ${isActive}" 
+                    data-id="${account._id}" 
+                    data-name="${account.name}" 
+                    data-index="${index}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${account.uniqueNumber || 'N/A'} ${account.name}</strong>
+                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+                    </div>
+                </li>
+            `);
+                });
+            }
 
-        // Sum debit amounts
-        document.querySelectorAll('input[name^="debitAccounts"][name$="[debit]"]').forEach(input => {
-            const amount = parseFloat(input.value) || 0;
-            totalDebit += amount;
-        });
+            // Search accounts dynamically
+            $searchInput.on("input", function () {
+                let searchText = $(this).val().toLowerCase();
+                let filteredAccounts = allAccounts.filter(account =>
+                    account.name.toLowerCase().includes(searchText)
+                );
+                renderAccounts(filteredAccounts);
+            });
 
-        // Sum credit amounts
-        document.querySelectorAll('input[name^="creditAccounts"][name$="[credit]"]').forEach(input => {
-            const amount = parseFloat(input.value) || 0;
-            totalCredit += amount;
-        });
+            // Handle keyboard navigation & scrolling
+            $searchInput.on("keydown", function (e) {
+                let visibleItems = $(".account-item");
 
-        return totalDebit === totalCredit;
-    }
+                if (e.key === "ArrowDown") {
+                    if (selectedIndex < visibleItems.length - 1) {
+                        selectedIndex++;
+                    }
+                } else if (e.key === "ArrowUp") {
+                    if (selectedIndex > 0) {
+                        selectedIndex--;
+                    }
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (visibleItems.length > 0) {
+                        selectAccount(visibleItems.eq(selectedIndex));
+                    }
+                }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        $('select').select2({ width: '100%' });
+                // Highlight the selected item
+                visibleItems.removeClass("active");
+                let selectedItem = visibleItems.eq(selectedIndex);
+                selectedItem.addClass("active");
+                adjustScroll(selectedItem);
+            });
 
-        const journalForm = document.getElementById('journalForm');
+            // Click to select account
+            $(document).on("click", ".account-item", function () {
+                selectAccount($(this));
+            });
 
-        journalForm.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter' && event.target.type !== 'submit') {
-                event.preventDefault();
+            // Function to select account and populate fields
+            function selectAccount(element) {
+                if (currentRowIndex === null) return;
+
+                let accountId = element.data("id");
+                let accountName = element.data("name");
+
+                // Update the specific row that opened the modal
+                $(`.account-input[data-index="${currentRowIndex}"]`).val(accountName);
+                $(`.account-id-input[data-index="${currentRowIndex}"]`).val(accountId);
+                $accountModal.modal("hide");
+
+                // Move focus to the debit input of the same row
+                setTimeout(() => {
+                    $(`tr.entry-row[data-index="${currentRowIndex}"] .debit-input`).focus();
+                }, 300);
+            }
+
+            // Function to adjust scroll position
+            function adjustScroll(selectedItem) {
+                let itemTop = selectedItem.position().top;
+                let itemHeight = selectedItem.outerHeight();
+                let modalHeight = $modalBody.innerHeight();
+
+                if (itemTop + itemHeight > modalHeight) {
+                    $modalBody.scrollTop($modalBody.scrollTop() + itemHeight);
+                } else if (itemTop < 0) {
+                    $modalBody.scrollTop($modalBody.scrollTop() - itemHeight);
+                }
+            }
+
+            // Handle Enter key press in any input when journal is balanced
+            $(document).on('keydown', 'input', function (e) {
+                if (e.key === 'Enter') {
+                    const balance = parseFloat($('#balance').text());
+                    const totalDebit = parseFloat($('#total-debit').text());
+                    const totalCredit = parseFloat($('#total-credit').text());
+
+                    // Check if journal is balanced AND there are transactions entered
+                    if (balance === 0 && (totalDebit > 0 || totalCredit > 0)) {
+                        e.preventDefault();
+                        $('button[type="submit"]').first().focus();
+                    }
+                }
+            });
+
+            // Rest of the journal functionality
+            // Hide the "Show More" button since we're using scroll
+            $('#show-more').hide();
+
+            // Calculate totals when amounts change
+            $('body').on('input', '.debit-input, .credit-input', calculateTotals);
+
+            // Initial calculation
+            calculateTotals();
+
+            // Form submission validation
+            $('#journalForm').submit(function (e) {
+                const balance = parseFloat($('#balance').text());
+                if (balance !== 0) {
+                    e.preventDefault();
+                    alert('Journal entries must balance. Total debit must equal total credit.');
+                }
+            });
+
+            // Clear form
+            $('#clear-form').click(function () {
+                if (confirm('Are you sure you want to clear the form?')) {
+                    $('select').val('').trigger('change');
+                    $('input[type="number"]').val('');
+                    $('.account-input').val('');
+                    $('.account-id-input').val('');
+                    calculateTotals();
+                }
+            });
+
+            // Track which rows have been revealed
+            let lastRevealedRow = 5; // Start with 6 rows visible (0-5)
+
+            // Function to reveal the next row
+            function revealNextRow() {
+                if (lastRevealedRow < 19) {
+                    lastRevealedRow++;
+                    $(`.entry-row[data-index="${lastRevealedRow}"]`).removeClass('hidden-row');
+                    return true;
+                }
+                return false;
+            }
+
+            // Scroll event to reveal rows as user scrolls down
+            $('#journal-table-container').on('scroll', function () {
+                const container = $(this);
+                const scrollHeight = container[0].scrollHeight;
+                const scrollTop = container.scrollTop();
+                const clientHeight = container.innerHeight();
+
+                // Check if user has scrolled near the bottom
+                if (scrollTop + clientHeight >= scrollHeight - 50) {
+                    if (revealNextRow()) {
+                        // Recalculate totals after revealing row
+                        calculateTotals();
+                    }
+                }
+            });
+
+            // Initially reveal first 6 rows (index 0-5)
+            for (let i = 0; i < 6; i++) {
+                $(`.entry-row[data-index="${i}"]`).removeClass('hidden-row');
             }
         });
 
-        // Add input event listeners to recalculate totals dynamically
-        document.getElementById('debit-accounts').addEventListener('input', validateAmounts);
-        document.getElementById('credit-accounts').addEventListener('input', validateAmounts);
-    });
+        function calculateTotals() {
+            let totalDebit = 0;
+            let totalCredit = 0;
 
-    document.addEventListener("DOMContentLoaded", function () {
+            $('.entry-row').each(function () {
+                if ($(this).hasClass('hidden-row')) {
+                    return; // Skip hidden rows
+                }
 
-        // Add new debit account dynamically with fadeIn animation
-        document.getElementById('add-debit-account').addEventListener('click', function () {
-            const debitAccountsDiv = document.getElementById('debit-accounts');
-            const index = debitAccountsDiv.querySelectorAll('.debit-account').length;
-            const newDebitAccount = `
-                <div class="card mb-2 shadow-sm animate__animated animate__fadeIn">
-                    <div class="card-body debit-account">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 mb-3">
-                                <label for="debitAccount${index + 1}" class="form-label">Debit Account:</label>
-                                <select name="debitAccounts[${index}][account]" id="debitAccount${index + 1}" class="form-select" required>
-                                    <option value="" disabled selected>Select a party name</option>
-                                    <% accounts.forEach(account => { %>
-                                        <option value="<%= account._id %>"><%= account.name %></option>
-                                    <% }) %>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="debitAmount${index + 1}" class="form-label">Amount:</label>
-                                <input type="number" name="debitAccounts[${index}][debit]" id="debitAmount${index + 1}" class="form-control" required oninput="validateAmount(this)">
-                                <div class="form-feedback" id="debitFeedback${index + 1}"></div>
-                            </div>
-                            <div class="col-md-4 mb-3 text-end">
-                                <button type="button" class="btn btn-outline-danger remove-debit-account">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            debitAccountsDiv.insertAdjacentHTML('beforeend', newDebitAccount);
-            $('#debitAccount' + (index + 1)).select2({ width: '100%' });
-        });
+                const debit = parseFloat($(this).find('.debit-input').val()) || 0;
+                const credit = parseFloat($(this).find('.credit-input').val()) || 0;
 
-        // Add new credit account dynamically with fadeIn animation
-        document.getElementById('add-credit-account').addEventListener('click', function () {
-            const creditAccountsDiv = document.getElementById('credit-accounts');
-            const index = creditAccountsDiv.querySelectorAll('.credit-account').length;
-            const newCreditAccount = `
-                <div class="card mb-2 shadow-sm animate__animated animate__fadeIn">
-                    <div class="card-body credit-account">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 mb-3">
-                                <label for="creditAccount${index + 1}" class="form-label">Credit Account:</label>
-                                <select name="creditAccounts[${index}][account]" id="creditAccount${index + 1}" class="form-select" required>
-                                    <option value="" disabled selected>Select a party name</option>
-                                    <% accounts.forEach(account => { %>
-                                        <option value="<%= account._id %>"><%= account.name %></option>
-                                    <% }) %>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="creditAmount${index + 1}" class="form-label">Amount:</label>
-                                <input type="number" name="creditAccounts[${index}][credit]" id="creditAmount${index + 1}" class="form-control" required oninput="validateAmount(this)">
-                                <div class="form-feedback" id="creditFeedback${index + 1}"></div>
-                            </div>
-                            <div class="col-md-4 mb-3 text-end">
-                                <button type="button" class="btn btn-outline-danger remove-credit-account">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            creditAccountsDiv.insertAdjacentHTML('beforeend', newCreditAccount);
-            $('#creditAccount' + (index + 1)).select2({ width: '100%' });
-        });
+                totalDebit += debit;
+                totalCredit += credit;
 
-        // Remove debit account
-        $('#debit-accounts').on('click', '.remove-debit-account', function () {
-            $(this).closest('.card').fadeOut(300, function () {
-                $(this).remove();
+                // Auto-clear the other field if one is entered
+                if (debit > 0) {
+                    $(this).find('.credit-input').val('');
+                } else if (credit > 0) {
+                    $(this).find('.debit-input').val('');
+                }
             });
-        });
 
-        // Remove credit account
-        $('#credit-accounts').on('click', '.remove-credit-account', function () {
-            $(this).closest('.card').fadeOut(300, function () {
-                $(this).remove();
-            });
-        });
+            $('#total-debit').text(totalDebit.toFixed(2));
+            $('#total-credit').text(totalCredit.toFixed(2));
 
-        // Tooltip initialization
-        $('[data-bs-toggle="tooltip"]').tooltip();
-    });
-</script>
+            const balance = totalDebit - totalCredit;
+            $('#balance').text(balance.toFixed(2));
 
-
-<style>
-    .wow-form {
-        font-family: 'Arial', sans-serif;
-        background: linear-gradient(to right, #ffffff, #e0e0e0);
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .section-header {
-        border-bottom: 2px solid #007bff;
-        margin-bottom: 15px;
-    }
-
-    .form-control:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-
-    .btn {
-        transition: background-color 0.3s ease;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-        color: white;
-    }
-
-    .form-feedback {
-        color: red;
-        font-size: 0.9em;
-    }
-
-    /* Responsive styles */
-    @media (max-width: 768px) {
-        .wow-form {
-            padding: 15px;
+            // Highlight balance status
+            if (balance === 0) {
+                $('#balance').closest('tr').css('background-color', '#e8f5e9');
+            } else {
+                $('#balance').closest('tr').css('background-color', '#ffebee');
+            }
         }
-    }
-</style>
+
+        function handleJournalKeydown(event, rowIndex, type) {
+            // Tab navigation
+            if (event.key === 'Tab') {
+                event.preventDefault();
+
+                const visibleRows = $('.entry-row:not(.hidden-row)');
+                const currentRow = visibleRows.filter(`[data-index="${rowIndex}"]`);
+                const rowPosition = visibleRows.index(currentRow);
+
+                if (event.shiftKey && type === 'debit') {
+                    // Move to account in same row
+                    $(`tr.entry-row[data-index="${rowIndex}"] .account-input`).focus();
+                    return;
+                }
+
+                if (!event.shiftKey && type === 'credit') {
+                    // Move to next row's account
+                    if (rowPosition < visibleRows.length - 1) {
+                        const nextRowIndex = visibleRows.eq(rowPosition + 1).data('index');
+                        $(`tr.entry-row[data-index="${nextRowIndex}"] .account-input`).focus();
+                    } else {
+                        // Last row, move to description
+                        $('input[name="description"]').focus();
+                    }
+                    return;
+                }
+
+                // Move to next cell
+                const nextCell = currentRow.find('td').eq(type === 'debit' ? 3 : 2);
+                if (nextCell.find('input').length) {
+                    nextCell.find('input').focus();
+                }
+            }
+
+            // Navigation with arrow keys
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const visibleRows = $('.entry-row:not(.hidden-row)');
+                const currentRow = visibleRows.filter(`[data-index="${rowIndex}"]`);
+                const rowPosition = visibleRows.index(currentRow);
+                const direction = event.key === 'ArrowDown' ? 1 : -1;
+                const newRowPosition = rowPosition + direction;
+
+                if (newRowPosition >= 0 && newRowPosition < visibleRows.length) {
+                    const newRowIndex = visibleRows.eq(newRowPosition).data('index');
+                    visibleRows.eq(newRowPosition).find(`.${type}-input`).focus();
+                }
+            }
+
+            // Enter key moves to next row or save button when balanced
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const balance = parseFloat($('#balance').text());
+
+                // Focus Save button when journal is balanced
+                if (balance === 0) {
+                    $('button[type="submit"]').first().focus();
+                    return;
+                }
+
+                const visibleRows = $('.entry-row:not(.hidden-row)');
+                const currentRow = visibleRows.filter(`[data-index="${rowIndex}"]`);
+                const rowPosition = visibleRows.index(currentRow);
+
+                if (rowPosition < visibleRows.length - 1) {
+                    const nextRowIndex = visibleRows.eq(rowPosition + 1).data('index');
+                    visibleRows.eq(rowPosition + 1).find(`.${type}-input`).focus();
+                } else {
+                    $('input[name="description"]').focus();
+                }
+            }
+        }
+
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+    </script>

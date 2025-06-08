@@ -889,25 +889,31 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                 billItems.push(...itemsForBill);
             }
 
-            // Now create a single transaction for the entire bill
-            const transaction = new Transaction({
-                account: accountId,
-                billNumber: newBillNumber,
-                isType: 'Sale',
-                type: 'Sale',
-                billId: newBill._id,
-                purchaseSalesType: 'Sales',
-                debit: finalAmount,
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: previousBalance - finalAmount,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
-            await transaction.save({ session });
-            transactions.push(transaction);
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    billNumber: newBillNumber,
+                    isType: 'Sale',
+                    type: 'Sale',
+                    billId: newBill._id,
+                    purchaseSalesType: 'Sales',
+                    debit: finalAmount,
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: previousBalance - finalAmount,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
+                await transaction.save({ session });
+                transactions.push(transaction);
+            }
 
             // Flatten the bill items array (since each item may have multiple batches)
             const flattenedBillItems = billItems.flat();
@@ -1390,35 +1396,78 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                 previousBalance = accountTransaction.balance;
             }
 
+            // async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
+            //     let remainingQuantity = quantity;
+
+            //     // Find all batch entries with the specific batch number
+            //     const batchEntries = product.stockEntries.filter(entry => entry.batchNumber === batchNumber);
+
+            //     if (batchEntries.length === 0) {
+            //         throw new Error(`Batch number ${batchNumber} not found for product: ${product.name}`);
+            //     }
+
+            //     // Find the specific stock entry using uniqueUuId
+            //     const selectedBatchEntry = batchEntries.find(entry => entry.uniqueUuId === uniqueUuId);
+
+            //     if (!selectedBatchEntry) {
+            //         throw new Error(`Selected stock entry with ID ${uniqueUuId} not found for batch number ${batchNumber}`);
+            //     }
+
+            //     // Reduce stock for the selected batch entry
+            //     if (selectedBatchEntry.quantity <= remainingQuantity) {
+            //         remainingQuantity -= selectedBatchEntry.quantity;
+            //         selectedBatchEntry.quantity = 0; // All stock from this batch is used
+            //     } else {
+            //         selectedBatchEntry.quantity -= remainingQuantity;
+            //         remainingQuantity = 0; // Stock is fully reduced for this batch
+            //     }
+
+            //     if (remainingQuantity > 0) {
+            //         throw new Error(`Not enough stock in the selected stock entry for batch number ${batchNumber} of product: ${product.name}`);
+            //     }
+
+            //     // Save the product with the updated stock entries
+            //     await product.save({ session });
+            // }
+
             async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
                 let remainingQuantity = quantity;
 
                 // Find all batch entries with the specific batch number
-                const batchEntries = product.stockEntries.filter(entry => entry.batchNumber === batchNumber);
+                const batchEntries = product.stockEntries.filter(entry =>
+                    entry.batchNumber === batchNumber &&
+                    entry.uniqueUuId === uniqueUuId
+                );
 
                 if (batchEntries.length === 0) {
-                    throw new Error(`Batch number ${batchNumber} not found for product: ${product.name}`);
+                    throw new Error(`Batch number ${batchNumber} with ID ${uniqueUuId} not found for product: ${product.name}`);
                 }
 
-                // Find the specific stock entry using uniqueUuId
-                const selectedBatchEntry = batchEntries.find(entry => entry.uniqueUuId === uniqueUuId);
-
-                if (!selectedBatchEntry) {
-                    throw new Error(`Selected stock entry with ID ${uniqueUuId} not found for batch number ${batchNumber}`);
-                }
+                // Find the specific stock entry
+                const selectedBatchEntry = batchEntries[0];
 
                 // Reduce stock for the selected batch entry
                 if (selectedBatchEntry.quantity <= remainingQuantity) {
                     remainingQuantity -= selectedBatchEntry.quantity;
-                    selectedBatchEntry.quantity = 0; // All stock from this batch is used
+                    selectedBatchEntry.quantity = 0;
+
+                    // Remove the entry from stockEntries array if quantity is 0
+                    product.stockEntries = product.stockEntries.filter(entry =>
+                        !(entry.batchNumber === batchNumber &&
+                            entry.uniqueUuId === uniqueUuId &&
+                            entry.quantity === 0)
+                    );
                 } else {
                     selectedBatchEntry.quantity -= remainingQuantity;
-                    remainingQuantity = 0; // Stock is fully reduced for this batch
+                    remainingQuantity = 0;
                 }
 
                 if (remainingQuantity > 0) {
                     throw new Error(`Not enough stock in the selected stock entry for batch number ${batchNumber} of product: ${product.name}`);
                 }
+
+                // Recalculate total stock
+                product.stock = product.stockEntries.reduce((sum, entry) => sum + entry.quantity, 0);
 
                 // Save the product with the updated stock entries
                 await product.save({ session });
@@ -1462,30 +1511,36 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
             // Assuming newBill has the correct total amount already calculated
             const correctTotalAmount = newBill.totalAmount; // This should be 14125 in your example
 
-            // Create a single transaction for the entire bill
-            const transaction = new Transaction({
-                account: accountId,
-                billNumber: billNumber,
-                quantity: items.reduce((sum, item) => sum + item.quantity, 0), // Total quantity
-                price: items[0].price, // Assuming same price for all items
-                unit: items[0].unit, // Assuming same unit for all items
-                isType: 'Sale',
-                type: 'Sale',
-                billId: newBill._id,
-                purchaseSalesType: 'Sales',
-                debit: correctTotalAmount, // Use the bill's total amount directly
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: previousBalance - correctTotalAmount,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    billNumber: billNumber,
+                    quantity: items.reduce((sum, item) => sum + item.quantity, 0), // Total quantity
+                    price: items[0].price, // Assuming same price for all items
+                    unit: items[0].unit, // Assuming same unit for all items
+                    isType: 'Sale',
+                    type: 'Sale',
+                    billId: newBill._id,
+                    purchaseSalesType: 'Sales',
+                    debit: correctTotalAmount, // Use the bill's total amount directly
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: previousBalance - correctTotalAmount,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
 
-            await transaction.save({ session });
-            console.log('Transaction amount:', correctTotalAmount);
+                await transaction.save({ session });
+                console.log('Transaction amount:', correctTotalAmount);
 
+            }
             // Create a transaction for the default Sales Account
             const salesAmount = finalTaxableAmount + finalNonTaxableAmount;
             if (salesAmount > 0) {
@@ -2040,25 +2095,31 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 billItems.push(...itemsForBill);
             }
 
-            // Now create a single transaction for the entire bill
-            const transaction = new Transaction({
-                cashAccount: cashAccount,
-                billNumber: newBillNumber,
-                isType: 'Sale',
-                type: 'Sale',
-                billId: newBill._id,
-                purchaseSalesType: 'Sales',
-                debit: finalAmount,
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: previousBalance - finalAmount,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
-            await transaction.save({ session });
-            transactions.push(transaction);
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    cashAccount: cashAccount,
+                    billNumber: newBillNumber,
+                    isType: 'Sale',
+                    type: 'Sale',
+                    billId: newBill._id,
+                    purchaseSalesType: 'Sales',
+                    debit: finalAmount,
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: previousBalance - finalAmount,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
+                await transaction.save({ session });
+                transactions.push(transaction);
+            }
 
             // Flatten the bill items array (since each item may have multiple batches)
             const flattenedBillItems = billItems.flat();
@@ -2525,35 +2586,78 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                 previousBalance = accountTransaction.balance;
             }
 
+            // async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
+            //     let remainingQuantity = quantity;
+
+            //     // Find all batch entries with the specific batch number
+            //     const batchEntries = product.stockEntries.filter(entry => entry.batchNumber === batchNumber);
+
+            //     if (batchEntries.length === 0) {
+            //         throw new Error(`Batch number ${batchNumber} not found for product: ${product.name}`);
+            //     }
+
+            //     // Find the specific stock entry using uniqueUuId
+            //     const selectedBatchEntry = batchEntries.find(entry => entry.uniqueUuId === uniqueUuId);
+
+            //     if (!selectedBatchEntry) {
+            //         throw new Error(`Selected stock entry with ID ${uniqueUuId} not found for batch number ${batchNumber}`);
+            //     }
+
+            //     // Reduce stock for the selected batch entry
+            //     if (selectedBatchEntry.quantity <= remainingQuantity) {
+            //         remainingQuantity -= selectedBatchEntry.quantity;
+            //         selectedBatchEntry.quantity = 0; // All stock from this batch is used
+            //     } else {
+            //         selectedBatchEntry.quantity -= remainingQuantity;
+            //         remainingQuantity = 0; // Stock is fully reduced for this batch
+            //     }
+
+            //     if (remainingQuantity > 0) {
+            //         throw new Error(`Not enough stock in the selected stock entry for batch number ${batchNumber} of product: ${product.name}`);
+            //     }
+
+            //     // Save the product with the updated stock entries
+            //     await product.save({ session });
+            // }
+
             async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
                 let remainingQuantity = quantity;
 
                 // Find all batch entries with the specific batch number
-                const batchEntries = product.stockEntries.filter(entry => entry.batchNumber === batchNumber);
+                const batchEntries = product.stockEntries.filter(entry =>
+                    entry.batchNumber === batchNumber &&
+                    entry.uniqueUuId === uniqueUuId
+                );
 
                 if (batchEntries.length === 0) {
-                    throw new Error(`Batch number ${batchNumber} not found for product: ${product.name}`);
+                    throw new Error(`Batch number ${batchNumber} with ID ${uniqueUuId} not found for product: ${product.name}`);
                 }
 
-                // Find the specific stock entry using uniqueUuId
-                const selectedBatchEntry = batchEntries.find(entry => entry.uniqueUuId === uniqueUuId);
-
-                if (!selectedBatchEntry) {
-                    throw new Error(`Selected stock entry with ID ${uniqueUuId} not found for batch number ${batchNumber}`);
-                }
+                // Find the specific stock entry
+                const selectedBatchEntry = batchEntries[0];
 
                 // Reduce stock for the selected batch entry
                 if (selectedBatchEntry.quantity <= remainingQuantity) {
                     remainingQuantity -= selectedBatchEntry.quantity;
-                    selectedBatchEntry.quantity = 0; // All stock from this batch is used
+                    selectedBatchEntry.quantity = 0;
+
+                    // Remove the entry from stockEntries array if quantity is 0
+                    product.stockEntries = product.stockEntries.filter(entry =>
+                        !(entry.batchNumber === batchNumber &&
+                            entry.uniqueUuId === uniqueUuId &&
+                            entry.quantity === 0)
+                    );
                 } else {
                     selectedBatchEntry.quantity -= remainingQuantity;
-                    remainingQuantity = 0; // Stock is fully reduced for this batch
+                    remainingQuantity = 0;
                 }
 
                 if (remainingQuantity > 0) {
                     throw new Error(`Not enough stock in the selected stock entry for batch number ${batchNumber} of product: ${product.name}`);
                 }
+
+                // Recalculate total stock
+                product.stock = product.stockEntries.reduce((sum, entry) => sum + entry.quantity, 0);
 
                 // Save the product with the updated stock entries
                 await product.save({ session });
@@ -2597,30 +2701,35 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
             // Assuming newBill has the correct total amount already calculated
             const correctTotalAmount = newBill.totalAmount; // This should be 14125 in your example
 
-            // Create a single transaction for the entire bill
-            const transaction = new Transaction({
-                cashAccount: cashAccount,
-                billNumber: billNumber,
-                quantity: items.reduce((sum, item) => sum + item.quantity, 0), // Total quantity
-                price: items[0].price, // Assuming same price for all items
-                unit: items[0].unit, // Assuming same unit for all items
-                isType: 'Sale',
-                type: 'Sale',
-                billId: newBill._id,
-                purchaseSalesType: 'Sales',
-                debit: correctTotalAmount, // Use the bill's total amount directly
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: previousBalance - correctTotalAmount,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    cashAccount: cashAccount,
+                    billNumber: billNumber,
+                    quantity: items.reduce((sum, item) => sum + item.quantity, 0), // Total quantity
+                    price: items[0].price, // Assuming same price for all items
+                    unit: items[0].unit, // Assuming same unit for all items
+                    isType: 'Sale',
+                    type: 'Sale',
+                    billId: newBill._id,
+                    purchaseSalesType: 'Sales',
+                    debit: correctTotalAmount, // Use the bill's total amount directly
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: previousBalance - correctTotalAmount,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
 
-            await transaction.save({ session });
-            console.log('Transaction amount:', correctTotalAmount);
-
+                await transaction.save({ session });
+                console.log('Transaction amount:', correctTotalAmount);
+            }
 
             // Update bill with items
             newBill.items = billItems;
@@ -3309,25 +3418,31 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                 billItems.push(...itemsForBill);
             }
 
-            // Now create a single transaction for the entire bill
-            const transaction = new Transaction({
-                account: accountId,
-                billNumber: existingBill.billNumber,
-                isType: 'Sale',
-                type: 'Sale',
-                billId: existingBill._id,
-                purchaseSalesType: 'Sales',
-                debit: finalAmount,
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: 0,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
-            await transaction.save({ session });
-            transactions.push(transaction);
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    billNumber: existingBill.billNumber,
+                    isType: 'Sale',
+                    type: 'Sale',
+                    billId: existingBill._id,
+                    purchaseSalesType: 'Sales',
+                    debit: finalAmount,
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: 0,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
+                await transaction.save({ session });
+                transactions.push(transaction);
+            }
 
             // Flatten the bill items array (since each item may have multiple batches)
             const flattenedBillItems = billItems.flat();
@@ -3766,25 +3881,31 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                 billItems.push(...itemsForBill);
             }
 
-            // Now create a single transaction for the entire bill
-            const transaction = new Transaction({
-                cashAccount: cashAccount,
-                billNumber: existingBill.billNumber,
-                isType: 'Sale',
-                type: 'Sale',
-                billId: existingBill._id,
-                purchaseSalesType: 'Sales',
-                debit: finalAmount,
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: 0,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
-            await transaction.save({ session });
-            transactions.push(transaction);
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    cashAccount: cashAccount,
+                    billNumber: existingBill.billNumber,
+                    isType: 'Sale',
+                    type: 'Sale',
+                    billId: existingBill._id,
+                    purchaseSalesType: 'Sales',
+                    debit: finalAmount,
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: 0,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
+                await transaction.save({ session });
+                transactions.push(transaction);
+            }
 
             // Create a transaction for the default Purchase Account
             const salesAmount = finalTaxableAmount + finalNonTaxableAmount;

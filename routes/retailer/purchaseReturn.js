@@ -661,33 +661,38 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 });
             }
             const correctTotalAmount = newBill.totalAmount; // This should be 14125 in your example
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    // billNumber: billCounter.count,
+                    billNumber: billNumber,
+                    partyBillNumber: partyBillNumber,
+                    quantity: items[0].quantity,
+                    puPrice: items[0].puPrice,
+                    unit: items[0].unit,  // Include the unit field                    type: 'Sale',
+                    purchaseReturnBillId: newBill._id,  // Set billId to the new bill's ID
+                    purchaseSalesReturnType: 'Purchase Return',
+                    isType: 'PrRt',
+                    type: 'PrRt',
+                    debit: correctTotalAmount,  // Set debit to the item's total amount
+                    credit: 0,        // Credit is 0 for sales transactions
+                    paymentMode: paymentMode,
+                    balance: previousBalance - finalAmount, // Update the balance based on item total
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear,
 
-            // Create the transaction for this item
-            const transaction = new Transaction({
-                account: accountId,
-                // billNumber: billCounter.count,
-                billNumber: billNumber,
-                partyBillNumber: partyBillNumber,
-                quantity: items[0].quantity,
-                puPrice: items[0].puPrice,
-                unit: items[0].unit,  // Include the unit field                    type: 'Sale',
-                purchaseReturnBillId: newBill._id,  // Set billId to the new bill's ID
-                purchaseSalesReturnType: 'Purchase Return',
-                isType: 'PrRt',
-                type: 'PrRt',
-                debit: correctTotalAmount,  // Set debit to the item's total amount
-                credit: 0,        // Credit is 0 for sales transactions
-                paymentMode: paymentMode,
-                balance: previousBalance - finalAmount, // Update the balance based on item total
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear,
+                });
 
-            });
-
-            await transaction.save();
-            console.log('Transaction', transaction);
+                await transaction.save();
+                console.log('Transaction', transaction);
+            }
 
             // Create a transaction for the default Purchase Account
             const purchaseRtnAmount = finalTaxableAmount + finalNonTaxableAmount;
@@ -1769,32 +1774,37 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 });
             }
 
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    billNumber: existingBill.billNumber,
+                    partyBillNumber: existingBill.partyBillNumber,
+                    quantity: items[0].quantity,
+                    puPrice: items[0].puPrice,
+                    unit: items[0].unit,
+                    type: 'Sale',
+                    purchaseReturnBillId: existingBill._id,
+                    purchaseSalesReturnType: 'Purchase Return',
+                    isType: 'PrRt',
+                    type: 'PrRt',
+                    debit: finalAmount,
+                    credit: 0,
+                    paymentMode: paymentMode,
+                    balance: 0,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear,
+                });
 
-            // Create the transaction for this item
-            const transaction = new Transaction({
-                account: accountId,
-                billNumber: existingBill.billNumber,
-                partyBillNumber: existingBill.partyBillNumber,
-                quantity: items[0].quantity,
-                puPrice: items[0].puPrice,
-                unit: items[0].unit,
-                type: 'Sale',
-                purchaseReturnBillId: existingBill._id,
-                purchaseSalesReturnType: 'Purchase Return',
-                isType: 'PrRt',
-                type: 'PrRt',
-                debit: finalAmount,
-                credit: 0,
-                paymentMode: paymentMode,
-                balance: 0,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear,
-            });
-
-            await transaction.save({ session });
-            console.log('Transaction created:', transaction);
+                await transaction.save({ session });
+                console.log('Transaction created:', transaction);
+            }
 
 
             existingBill.items = billItems;

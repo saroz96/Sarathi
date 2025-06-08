@@ -68,7 +68,7 @@ router.get('/sales-return/list', isLoggedIn, ensureAuthenticated, ensureCompanyS
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const bills = await SalesReturn.find({ company: companyId })
+        const bills = await SalesReturn.find({ company: companyId, fiscalYear: fiscalYear })
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account')
             .populate('items.item')
@@ -516,8 +516,6 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesReturn')
-
             // Check validation conditions after processing all items
             if (isVatExempt !== 'all') {
                 if (isVatExemptBool && hasVatableItems) {
@@ -563,6 +561,9 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                 roundOffAmount = parseFloat(manualRoundOffAmount);
                 finalAmount = totalAmount + roundOffAmount;
             }
+
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesReturn')
+
             // Create new purchase bill
             const newBill = new SalesReturn({
                 billNumber: billNumber,
@@ -613,6 +614,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                     mrp: price,
                     uniqueUuId: uniqueId,
                     salesReturnBillId: newBill._id,
+                    fiscalYear: currentFiscalYear,
                 });
 
                 // Ensure stock is incremented correctly as a number
@@ -649,32 +651,39 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                     // currency: item.currency,
                     unit: item.unit,
                     vatStatus: product.vatStatus,
-                    uniqueUuId: uniqueId
+                    uniqueUuId: uniqueId,
+                    fiscalYear: currentFiscalYear,
                 });
             }
 
-            // Create the transaction for this item
-            const transaction = new Transaction({
-                account: accountId,
-                billNumber: billNumber,
-                purchaseSalesReturnType: 'Sales Return',
-                quantity: items[0].quantity,
-                price: items[0].price,
-                isType: 'SlRt',
-                type: 'SlRt',
-                salesReturnBillId: newBill._id,  // Set billId to the new bill's ID
-                debit: 0,             // Debit is 0 for purchase transactions
-                credit: newBill.totalAmount,    // Set credit to the item's total amount
-                paymentMode: paymentMode,
-                balance: previousBalance + newBill.totalAmount, // Update the balance based on item total
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                fiscalYear: currentFiscalYear,
-                company: companyId,
-                user: userId
-            });
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    billNumber: billNumber,
+                    purchaseSalesReturnType: 'Sales Return',
+                    quantity: items[0].quantity,
+                    price: items[0].price,
+                    isType: 'SlRt',
+                    type: 'SlRt',
+                    salesReturnBillId: newBill._id,  // Set billId to the new bill's ID
+                    debit: 0,             // Debit is 0 for purchase transactions
+                    credit: newBill.totalAmount,    // Set credit to the item's total amount
+                    paymentMode: paymentMode,
+                    balance: previousBalance + newBill.totalAmount, // Update the balance based on item total
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    fiscalYear: currentFiscalYear,
+                    company: companyId,
+                    user: userId
+                });
 
-            await transaction.save();
-            console.log('Transaction', transaction);
+                await transaction.save();
+                console.log('Transaction', transaction);
+            }
 
             // Create a transaction for the default Sales Account
             const salesRtnAmount = finalTaxableAmount + finalNonTaxableAmount;
@@ -989,8 +998,6 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesReturn')
-
             // Check validation conditions after processing all items
             if (isVatExempt !== 'all') {
                 if (isVatExemptBool && hasVatableItems) {
@@ -1036,6 +1043,9 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                 roundOffAmount = parseFloat(manualRoundOffAmount);
                 finalAmount = totalAmount + roundOffAmount;
             }
+
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesReturn')
+
             // Create new purchase bill
             const newBill = new SalesReturn({
                 billNumber: billNumber,
@@ -1090,6 +1100,8 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                     mrp: price,
                     uniqueUuId: uniqueId,
                     salesReturnBillId: newBill._id,
+                    fiscalYear: currentFiscalYear,
+
                 });
 
                 // Ensure stock is incremented correctly as a number
@@ -1112,7 +1124,8 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
 
                 // Update stock for each item (batch-level tracking)
                 await addStock(
-                    product, item.quantity, item.price, item.batchNumber, item.expiryDate, uniqueId
+                    product, item.quantity, item.price, item.batchNumber, item.expiryDate, uniqueId,
+
                 );
 
                 billItems.push({
@@ -1126,32 +1139,40 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                     // currency: item.currency,
                     unit: item.unit,
                     vatStatus: product.vatStatus,
-                    uniqueUuId: uniqueId
+                    uniqueUuId: uniqueId,
+                    fiscalYear: currentFiscalYear,
+
                 });
             }
 
-            // Create the transaction for this item
-            const transaction = new Transaction({
-                cashAccount: cashAccount,
-                billNumber: billNumber,
-                purchaseSalesReturnType: 'Sales Return',
-                quantity: items[0].quantity,
-                price: items[0].price,
-                isType: 'SlRt',
-                type: 'SlRt',
-                salesReturnBillId: newBill._id,  // Set billId to the new bill's ID
-                debit: 0,             // Debit is 0 for purchase transactions
-                credit: newBill.totalAmount,    // Set credit to the item's total amount
-                paymentMode: paymentMode,
-                balance: previousBalance + newBill.totalAmount, // Update the balance based on item total
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                fiscalYear: currentFiscalYear,
-                company: companyId,
-                user: userId
-            });
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    cashAccount: cashAccount,
+                    billNumber: billNumber,
+                    purchaseSalesReturnType: 'Sales Return',
+                    quantity: items[0].quantity,
+                    price: items[0].price,
+                    isType: 'SlRt',
+                    type: 'SlRt',
+                    salesReturnBillId: newBill._id,  // Set billId to the new bill's ID
+                    debit: 0,             // Debit is 0 for purchase transactions
+                    credit: newBill.totalAmount,    // Set credit to the item's total amount
+                    paymentMode: paymentMode,
+                    balance: previousBalance + newBill.totalAmount, // Update the balance based on item total
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    fiscalYear: currentFiscalYear,
+                    company: companyId,
+                    user: userId
+                });
 
-            await transaction.save();
-            console.log('Transaction', transaction);
+                await transaction.save();
+                console.log('Transaction', transaction);
+            }
 
             // Create a transaction for the default Sales Account
             const salesRtnAmount = finalTaxableAmount + finalNonTaxableAmount;
@@ -1778,6 +1799,7 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                     price: priceNumber,
                     uniqueUuId: uniqueUuId,
                     salesReturnBillId: existingBill._id,
+                    fiscalYear: currentFiscalYear,
                 };
 
                 if (isUpdate) {
@@ -1799,6 +1821,7 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                             price: price !== undefined ? price : existingStockEntry.price,
                             salesReturnBillId: existingBill._id,
                             uniqueUuId: updatedUniqueUuId,
+                            fiscalYear: currentFiscalYear,
                         };
                     } else {
                         product.stockEntries.push(stockEntry);
@@ -1853,6 +1876,7 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                         unit: item.unit,
                         vatStatus: product.vatStatus,
                         uniqueUuId: newUniqueId,
+                        fiscalYear: currentFiscalYear,
                     });
                     // Use the same uniqueUuId for the stock entry
                     item.uniqueUuId = newUniqueId;
@@ -1875,25 +1899,31 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
 
                     await existingTransaction.save({ session });
                 } else {
-                    // If no existing transaction, create a new one
-                    const transaction = new Transaction({
-                        account: accountId,
-                        billNumber: existingBill.billNumber,
-                        isType: 'SlRt',
-                        type: 'SlRt',
-                        salesReturnBillId: existingBill._id,
-                        purchaseSalesType: 'Sales Return',
-                        debit: 0,
-                        credit: finalAmount,
-                        paymentMode: paymentMode,
-                        balance: 0,
-                        date: nepaliDate ? nepaliDate : new Date(billDate),
-                        company: companyId,
-                        user: userId,
-                        fiscalYear: currentFiscalYear
-                    });
+                    // Validate each item before processing
+                    for (let i = 0; i < items.length; i++) {
+                        const item = items[i];
+                        const product = await Item.findById(item.item);
+                        // Now create a single transaction for the entire bill
+                        const transaction = new Transaction({
+                            item: product,
+                            account: accountId,
+                            billNumber: existingBill.billNumber,
+                            isType: 'SlRt',
+                            type: 'SlRt',
+                            salesReturnBillId: existingBill._id,
+                            purchaseSalesType: 'Sales Return',
+                            debit: 0,
+                            credit: finalAmount,
+                            paymentMode: paymentMode,
+                            balance: 0,
+                            date: nepaliDate ? nepaliDate : new Date(billDate),
+                            company: companyId,
+                            user: userId,
+                            fiscalYear: currentFiscalYear
+                        });
 
-                    await transaction.save({ session });
+                        await transaction.save({ session });
+                    }
                 }
                 // Increment stock quantity using FIFO
                 await addStock(
@@ -1903,7 +1933,7 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                     item.quantity,
                     item.price,
                     item.uniqueUuId, // Use the same uniqueUuId for stock entry
-                    existingBillItemIndex !== -1 // isUpdate flag
+                    existingBillItemIndex !== -1, // isUpdate flag
                 );
 
                 // Create accounting transactions
@@ -2345,6 +2375,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                     price: priceNumber,
                     uniqueUuId: uniqueUuId,
                     salesReturnBillId: existingBill._id,
+                    fiscalYear: currentFiscalYear,
                 };
 
                 if (isUpdate) {
@@ -2366,6 +2397,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                             price: price !== undefined ? price : existingStockEntry.price,
                             salesReturnBillId: existingBill._id,
                             uniqueUuId: updatedUniqueUuId,
+                            fiscalYear: currentFiscalYear,
                         };
                     } else {
                         product.stockEntries.push(stockEntry);
@@ -2420,6 +2452,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                         unit: item.unit,
                         vatStatus: product.vatStatus,
                         uniqueUuId: newUniqueId,
+                        fiscalYear: currentFiscalYear,
                     });
                     // Use the same uniqueUuId for the stock entry
                     item.uniqueUuId = newUniqueId;
@@ -2442,25 +2475,31 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
 
                     await existingTransaction.save({ session });
                 } else {
-                    // If no existing transaction, create a new one
-                    const transaction = new Transaction({
-                        cashAccount: cashAccount,
-                        billNumber: existingBill.billNumber,
-                        isType: 'SlRt',
-                        type: 'SlRt',
-                        salesReturnBillId: existingBill._id,
-                        purchaseSalesType: 'Sales Return',
-                        debit: 0,
-                        credit: finalAmount,
-                        paymentMode: paymentMode,
-                        balance: 0,
-                        date: nepaliDate ? nepaliDate : new Date(billDate),
-                        company: companyId,
-                        user: userId,
-                        fiscalYear: currentFiscalYear
-                    });
+                    // Validate each item before processing
+                    for (let i = 0; i < items.length; i++) {
+                        const item = items[i];
+                        const product = await Item.findById(item.item);
+                        // Now create a single transaction for the entire bill
+                        const transaction = new Transaction({
+                            item: product,
+                            cashAccount: cashAccount,
+                            billNumber: existingBill.billNumber,
+                            isType: 'SlRt',
+                            type: 'SlRt',
+                            salesReturnBillId: existingBill._id,
+                            purchaseSalesType: 'Sales Return',
+                            debit: 0,
+                            credit: finalAmount,
+                            paymentMode: paymentMode,
+                            balance: 0,
+                            date: nepaliDate ? nepaliDate : new Date(billDate),
+                            company: companyId,
+                            user: userId,
+                            fiscalYear: currentFiscalYear
+                        });
 
-                    await transaction.save({ session });
+                        await transaction.save({ session });
+                    }
                 }
                 // Increment stock quantity using FIFO
                 await addStock(

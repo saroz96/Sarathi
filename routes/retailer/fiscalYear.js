@@ -1095,11 +1095,11 @@ router.get('/change-fiscal-year-stream', ensureAuthenticated, ensureCompanySelec
                 });
 
                 // Clear old stock entries and update fiscal year references
-                item.stockEntries = item.stockEntries.map(entry => ({
-                    ...entry.toObject(),
-                    fiscalYear: newFiscalYear._id,
-                    _id: new mongoose.Types.ObjectId() // Generate new IDs for stock entries
-                }));
+                // item.stockEntries = item.stockEntries.map(entry => ({
+                //     ...entry.toObject(),
+                //     fiscalYear: newFiscalYear._id,
+                //     _id: new mongoose.Types.ObjectId() // Generate new IDs for stock entries
+                // }));
 
                 // Reset current stock values
                 item.stock = openingStock;
@@ -1480,6 +1480,7 @@ router.get('/progress', (req, res) => {
 //     }
 // });
 
+//------------------------------------------------------------------------------------------old routes
 
 router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelected, async (req, res) => {
     const fiscalYearId = req.params.id;
@@ -1507,6 +1508,18 @@ router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelec
         const fiscalYearCount = await FiscalYear.countDocuments({ company: companyId });
         if (fiscalYearCount === 1) {
             return res.status(400).json({ error: 'Cannot delete the only fiscal year.' });
+        }
+
+        // 4. Check if any transactions exist for this fiscal year
+        const transactionExists = await Transaction.exists({
+            company: companyId,
+            fiscalYear: fiscalYearId
+        });
+
+        if (transactionExists) {
+            return res.status(400).json({
+                error: 'Cannot delete this fiscal year because it has transactions.'
+            });
         }
 
         // 4. Delete items originally created in this fiscal year
@@ -1621,5 +1634,7 @@ router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelec
         res.status(500).json({ error: 'Failed to delete fiscal year' });
     }
 });
+
+//----------------------------------------------------------------------------------------------------------
 
 module.exports = router;

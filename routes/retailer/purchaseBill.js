@@ -654,7 +654,8 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     purchaseBillId: newBill._id,
                     store: store,
                     rack: rack,
-                    uniqueUuId: uniqueId
+                    uniqueUuId: uniqueId,
+                    fiscalYear: currentFiscalYear,
                 };
 
                 product.stockEntries.push(stockEntry);
@@ -720,27 +721,32 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 });
             }
 
-            // Get the total amount from the bill (not by calculating from items)
-            // Assuming newBill has the correct total amount already calculated
-            const transaction = new Transaction({
-                account: accountId,
-                billNumber: billNumber,
-                partyBillNumber,
-                purchaseSalesType: 'Purchase',
-                isType: 'Purc',
-                type: 'Purc',
-                purchaseBillId: newBill._id,
-                debit: 0,
-                credit: newBill.totalAmount, // Use the bill's total amount directly
-                paymentMode: paymentMode,
-                balance: previousBalance + newBill.totalAmount,
-                date: nepaliDate ? nepaliDate : new Date(billDate),
-                company: companyId,
-                user: userId,
-                fiscalYear: currentFiscalYear
-            });
+            // Validate each item before processing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const product = await Item.findById(item.item).session(session);
+                // Now create a single transaction for the entire bill
+                const transaction = new Transaction({
+                    item: product,
+                    account: accountId,
+                    billNumber: billNumber,
+                    partyBillNumber,
+                    purchaseSalesType: 'Purchase',
+                    isType: 'Purc',
+                    type: 'Purc',
+                    purchaseBillId: newBill._id,
+                    debit: 0,
+                    credit: newBill.totalAmount, // Use the bill's total amount directly
+                    paymentMode: paymentMode,
+                    balance: previousBalance + newBill.totalAmount,
+                    date: nepaliDate ? nepaliDate : new Date(billDate),
+                    company: companyId,
+                    user: userId,
+                    fiscalYear: currentFiscalYear
+                });
 
-            await transaction.save();
+                await transaction.save();
+            }
             // Create a transaction for the default Purchase Account
             const purchaseAmount = finalTaxableAmount + finalNonTaxableAmount;
             if (purchaseAmount > 0) {
@@ -970,10 +976,11 @@ router.get('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
             const purchaseInvoice = await PurchaseBill.findOne({
                 _id: billId,
                 company: companyId,
-                fiscalYear: currentFiscalYear._id,
-            }).populate('items.item')
+                fiscalYear: fiscalYear
+            }).populate({ path: 'items.item' })
                 .populate('items.unit')
-                .populate('account');
+                .populate('account')
+                .exec();
 
             if (!purchaseInvoice) {
                 req.flash('error', 'Purchase invoice not found or does not belong to the selected company');
@@ -1019,10 +1026,11 @@ router.get('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                 billNumber: purchaseInvoice.billNumber,
                 paymentMode: purchaseInvoice.paymentMode,
                 isVatExempt: purchaseInvoice.isVatExempt,
-                selectedAccountId,
+                // selectedAccountId,
+                selectedAccountId: accounts,
                 accounts,
-                selectedAccountAddress: purchaseInvoice.account?.address || '',
-                selectedAccountPan: purchaseInvoice.account?.pan || '',
+                // selectedAccountAddress: purchaseInvoice.account?.address || '',
+                // selectedAccountPan: purchaseInvoice.account?.pan || '',
                 address: purchaseInvoice.address,
                 subTotal: purchaseInvoice.subTotal,
                 totalAmount: purchaseInvoice.totalAmount,
@@ -1179,7 +1187,7 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     }
 
                     // Update total stock (quantity + bonus)
-                    product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity + entry.bonus, 0);
+                    // product.stock = product.stockEntries.reduce((total, entry) => total + entry.quantity + entry.bonus, 0);
                     await product.save({ session });
                 }
             }
@@ -1362,6 +1370,7 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     currency: currency,
                     purchaseBillId: existingBill._id,
                     uniqueUuId: uniqueUuId,
+                    fiscalYear: currentFiscalYear,
                 };
 
                 console.log("Stock Entry:", stockEntry);

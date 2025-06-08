@@ -277,7 +277,9 @@
                                                 <td>
                                                     <a href="/items/<%= item._id %>"><button class="btn-sm btn-info"><i
                                                                 class="fas fa-eye"></i></button></a>
+                                                                
                                                     <button class="btn btn-sm btn-warning" onclick="editItem('<%= item._id %>', '<%= item.name %>','<%= item.hscode %>', '<%= item.category._id %>', 
+                                                    '<%= item.itemsCompany._id %>',
                                                     '<%= item.composition ? item.composition.map(c => c.name).join(", ") : "" %>',
         '<%= item.composition ? item.composition.map(c => c._id).join(",") : "" %>',
                                     '<%=item.mainUnit._id%>','<%=item.WSUnit%>','<%= item.unit._id %>','<%= item.vatStatus %>','<%= item.reorderLevel %>', '<%= item.price %>','<%= item.puPrice %>',
@@ -290,11 +292,23 @@
                                                     </form>
 
                                                     <!-- Add the Select button -->
-                                                    <button class="btn btn-sm btn-success" onclick="selectItem('<%= item.name %>', '<%= item.hscode %>', '<%= item.category._id %>',
-                                                    '<%= item.composition ? item.composition.map(c => c.name).join(", ") : "" %>',
-        '<%= item.composition ? item.composition.map(c => c._id).join(",") : "" %>', 
-        '<%=item.mainUnit._id%>','<%=item.WSUnit%>','<%= item.unit._id %>','<%= item.vatStatus %>','<%= item.reorderLevel %>', '<%= item.price %>','<%= item.puPrice %>',
-        '<%= item.openingStock %>','<%= item.openingStockBalance %>')"><i class="fas fa-check"></i></button>
+                                                    <button class="btn btn-sm btn-success" onclick="selectItem(
+                                                        '<%= item.name %>',
+                                                        '<%= item.hscode %>', 
+                                                        '<%= item.category._id %>',
+                                                        '<%= item.itemsCompany._id %>',
+                                                        '<%= item.composition ? item.composition.map(c => c.name).join(", ") : "" %>',
+                                                        '<%= item.composition ? item.composition.map(c => c._id).join(",") : "" %>', 
+                                                        '<%= item.mainUnit._id%>',
+                                                        '<%= item.WSUnit%>',
+                                                        '<%= item.unit._id %>',
+                                                        '<%= item.vatStatus %>',
+                                                        '<%= item.reorderLevel %>', 
+                                                        '<%= item.price %>',
+                                                        '<%= item.puPrice %>',
+                                                        '<%= item.openingStock %>',
+                                                        '<%= item.openingStockBalance %>',
+                                                        )"><i class="fas fa-check"></i></button>
                                                 </td>
                                             </tr>
                                             <% }); %>
@@ -334,6 +348,21 @@
                                         <label for="editHscode">HSN</label>
                                         <input type="number" class="form-control" id="editHscode" name="hscode"
                                             autofocus autocomplete="off" onfocus="selectValue(this)">
+                                    </div>
+                                    <div class="col">
+                                        <label for="editItemsCompany">Company<i style="color: red;">*</i></label>
+                                        <select class="form-control" id="editItemsCompany" name="itemsCompany"
+                                            onfocus="selectValue(this)" required>
+                                            <% if (itemsCompanies && itemsCompanies.length> 0) { %>
+                                                <% itemsCompanies.forEach(itemsCompany=> { %>
+                                                    <option value="<%= itemsCompany._id %>">
+                                                        <%= itemsCompany.name %>
+                                                    </option>
+                                                    <% }); %>
+                                                        <% } else { %>
+                                                            <option disabled>No companies available</option>
+                                                            <% } %>
+                                        </select>
                                     </div>
                                     <div class="col">
                                         <label for="editCategory">Category<i style="color: red;">*</i></label>
@@ -622,11 +651,12 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        function selectItem(name, hscode, categoryId,compositionNames, compositionIds, mainUnitId, WSUnit, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
+        function selectItem(name, hscode, categoryId,itemsCompany, compositionNames, compositionIds, mainUnitId, WSUnit, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
             // Populate the form fields with the selected item data
             document.getElementById('searchValue').value = name;
             document.getElementById('hscode').value = hscode;
             document.getElementById('category').value = categoryId;
+            document.getElementById('itemsCompany').value = itemsCompany;
             // Set composition values
     document.getElementById('editComposition').value = compositionNames;
     document.getElementById('compositionIds').value = compositionIds;
@@ -686,12 +716,13 @@
             input.select(); // Select the value of the input field when it is focused
         }
 
-        function editItem(id, name, hscode, categoryId,compositionNames, compositionIds, mainUnitId, WSUnitId, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
+        function editItem(id, name, hscode, categoryId,itemsCompany,compositionNames, compositionIds, mainUnitId, WSUnitId, unitId, vatStatus, reorderLevel, price, puPrice, openingStock, openingStockBalance) {
             $('#editItemModal').modal('show');
             $('#editItemForm').attr('action', '/items/' + id + '?_method=PUT');
             $('#editName').val(name);
             $('#editHscode').val(hscode);
             $('#editCategory').val(categoryId);
+            $('#editItemsCompany').val(itemsCompany);
             // Set composition values
     $('#editComposition').val(compositionNames);
     $('#editCompositionIds').val(compositionIds);

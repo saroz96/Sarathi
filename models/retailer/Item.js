@@ -69,6 +69,11 @@ const stockEntrySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Rack',
     },
+    sourceTransfer: {
+        fromStore: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' },
+        originalEntryId: { type: mongoose.Schema.Types.ObjectId },
+        transferDate: { type: Date }
+    },
 });
 
 
@@ -108,7 +113,6 @@ const itemSchema = new mongoose.Schema({
     },
     itemsCompany: {
         type: mongoose.Schema.Types.ObjectId, ref: 'itemsCompany',
-        required: true
     },
     price: Number,
     puPrice: Number,
@@ -138,10 +142,10 @@ const itemSchema = new mongoose.Schema({
         required: true,
         enum: ['all', 'vatable', 'vatExempt']
     },
-    stock: {
-        type: Number,
-        default: 0,
-    }, // Total stock
+    // stock: {
+    //     type: Number,
+    //     default: 0,
+    // }, // Total stock
     openingStock: {
         type: Number,
         default: 0

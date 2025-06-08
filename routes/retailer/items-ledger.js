@@ -408,7 +408,8 @@ function createPurchaseReturnEntry(purchaseReturn, itemEntry) {
 function createSalesEntry(salesBill, itemEntry) {
     return {
         date: salesBill.date,
-        partyName: salesBill.account ? salesBill.account.name : salesBill.cashAccount || 'N/A', billNumber: salesBill.billNumber,
+        partyName: salesBill.account ? salesBill.account.name : salesBill.cashAccount || 'N/A',
+        billNumber: salesBill.billNumber,
         type: 'Sale',
         qtyIn: 0,
         qtyOut: itemEntry.quantity,
@@ -423,7 +424,7 @@ function createSalesEntry(salesBill, itemEntry) {
 function createSalesReturnEntry(salesReturn, itemEntry) {
     return {
         date: salesReturn.date,
-        partyName: salesReturn.account ? salesReturn.account.name : 'N/A',
+        partyName: salesReturn.account ? salesReturn.account.name : salesReturn.cashAccount || 'N/A',
         billNumber: salesReturn.billNumber,
         type: 'SlRt',
         qtyIn: itemEntry.quantity,

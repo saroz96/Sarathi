@@ -116,6 +116,7 @@ async function showAllItems(input) {
     <div><strong>#</strong></div>
     <div><strong>HSN</strong></div>
     <div><strong>Description Of Goods</strong></div>
+    <div><strong>Category</strong></div>
     <div><strong>Quantity</strong></div>
     <div><strong>Unit</strong></div>
     <div><strong>Rate</strong></div>
@@ -145,6 +146,7 @@ async function showAllItems(input) {
         <div>${item.uniqueNumber || 'N/A'}</div>
         <div>${item.hscode || 'N/A'}</div>
         <div class="dropdown-items-name">${item.name}</div>
+        <div>${item.category ? item.category.name : 'No Category'}</div>
         <div>${totalStock}</div>
         <div>${item.unit ? item.unit.name : ''}</div>
         <div>Rs.${Math.round(puPrice * 100) / 100}</div>
@@ -206,6 +208,21 @@ document.getElementById('itemSearch').addEventListener('input', function () {
             dropdownMenu.appendChild(noItemsMessage);
             dropdownMenu.classList.add('show');
         } else {
+            // Add header row
+            const headerRow = document.createElement('div');
+            headerRow.classList.add('dropdown-header');
+            headerRow.innerHTML = `
+                <div><strong>#</strong></div>
+                <div><strong>HSN</strong></div>
+                <div><strong>Description Of Goods</strong></div>
+                <div><strong>Category</strong></div>
+                <div><strong>Quantity</strong></div>
+                <div><strong>Unit</strong></div>
+                <div><strong>Rate</strong></div>
+            `;
+            headerRow.style.backgroundColor = '#f0f0f0';
+            headerRow.style.fontWeight = 'bold';
+            dropdownMenu.appendChild(headerRow);
             items.forEach(item => {
                 const dropdownItem = document.createElement('div');
                 dropdownItem.classList.add('dropdown-item');
@@ -326,9 +343,11 @@ function addItemToBill(item, dropdownMenu) {
     <input type="number" name="items[${itemIndex}][puPrice]" value="${Math.round(batchpuPrice * 100) / 100}" class="form-control item-puPrice" id="puPrice-${itemIndex}" step="any" onkeydown="handlePriceKeydown(event, ${itemIndex})" oninput="updateItemTotal(this)" onfocus="selectValue(this)">
 </td>
 <td class="item-amount">0.00</td>
-<td>
-    <button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close" onclick="removeItem(this)">
-        <span aria-hidden="true">&times;</span>
+  <td class="align-middle">
+    <button type="button" class="btn btn-sm btn-danger" 
+            data-bs-toggle="tooltip" title="Remove item"
+            onclick="removeItem(this)">
+        <i class="bi bi-trash"></i>
     </button>
 </td>
 <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
@@ -986,7 +1005,7 @@ function handleStoreKeydown(event) {
     }
 }
 function handleRackKeydown(event) {
-     if (event.key === 'Enter') {
+    if (event.key === 'Enter') {
         const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
         quantityInput.focus();
         quantityInput.select();

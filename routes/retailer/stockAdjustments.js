@@ -594,7 +594,8 @@ router.post('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected,
                                 puPrice,
                                 mrp,
                                 marginPercentage,
-                                uniqueUuId: uniqueId
+                                uniqueUuId: uniqueId,
+                                fiscalYear: currentFiscalYear
                             });
                         }
                     }

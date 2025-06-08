@@ -21,6 +21,7 @@
         }
 
         @media print {
+
             th,
             td {
                 border: 1px solid black;
@@ -151,7 +152,7 @@
                                         <div class="form-group">
                                             <label for="paymentMode">Payment Mode</label>
                                             <select name="paymentMode" id="paymentMode" class="form-control">
-                                                 <option value="all" <%=paymentMode==='all' ? 'selected' : '' %>>All
+                                                <option value="all" <%=paymentMode==='all' ? 'selected' : '' %>>All
                                                     (Include
                                                     Cash)</option>
                                                 <option value="exclude-cash" <%=paymentMode==='exclude-cash'
@@ -353,6 +354,20 @@
     <script>
 
         function printStatement() {
+            const partyElement = document.querySelector('.statement-container h4');
+            let partyName = 'AccountLedger';
+            if (partyElement) {
+                // Extract just the party name (remove "Account: " prefix)
+                const match = partyElement.textContent.match(/Account:\s*(.+)/);
+                if (match && match[1]) {
+                    partyName = match[1];
+                }
+            }
+
+            // Clean up the party name for filename
+            const cleanPartyName = partyName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const title = `AccountLedger_${cleanPartyName}`;
+
             const printContent = document.querySelector('.statement-container').outerHTML;
             const styles = Array.from(document.querySelectorAll('style'))
                 .map(style => style.outerHTML)
@@ -363,7 +378,7 @@
             printWindow.document.write(`
         <html>
             <head>
-                <title>Print Statement</title>
+                <title>${title}</title>
                 ${styles}
                 <style>
 

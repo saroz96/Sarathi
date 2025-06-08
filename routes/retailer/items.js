@@ -487,56 +487,117 @@ router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelecte
 });
 
 
+// router.get('/items/search', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+//     if (req.tradeType === 'retailer') {
+//         try {
+//             const companyId = req.session.currentCompany;
+//             const searchQuery = req.query.q;
+//             const vatExempt = req.query.isVatExempt; // Query parameter for VAT selection
+//             const excludeIds = req.query.exclude ? req.query.exclude.split(',') : []; // Exclude these item IDs
+
+//             console.log('Company ID:', companyId);
+//             console.log('Search Query:', searchQuery);
+//             console.log('VAT Exempt:', vatExempt);
+//             console.log('Exclude IDs:', excludeIds);
+//             // Fetch the current fiscal year from the session
+//             const fiscalYear = req.session.currentFiscalYear.id;
+
+//             // Initialize the search conditions
+//             let searchConditions = {
+//                 company: companyId,
+//                 // fiscalYear: fiscalYear,
+//                 status: 'active',
+//                 _id: { $nin: excludeIds }, // Exclude items that are already in the table
+//                 $or: [
+//                     { name: { $regex: new RegExp(searchQuery, 'i') } }, // Search by name
+//                     { uniqueNumber: parseInt(searchQuery, 10) || null } // Search by uniqueNumber
+//                 ],
+//                 $or: [
+//                     { originalFiscalYear: fiscalYear }, // Created here
+//                     {
+//                         fiscalYear: fiscalYear,
+//                         originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+//                     }
+//                 ]
+//             };
+
+//             // Modify the search conditions based on VAT selection
+//             if (vatExempt === 'true') {
+//                 searchConditions.vatStatus = 'vatExempt';
+//             } else if (vatExempt === 'false') {
+//                 searchConditions.vatStatus = 'vatable';
+//             } else if (vatExempt === 'all') {
+//                 // If 'all' is selected, don't add any specific vatStatus condition
+//                 delete searchConditions.vatStatus;
+//             }
+
+//             console.log('Search Conditions:', searchConditions);
+
+//             const items = await Item.find(searchConditions).populate('category').populate('unit').populate('itemsCompany');
+
+//             console.log('Items found:', items);
+
+//             res.json(items);
+//         } catch (error) {
+//             console.error('Error searching items:', error);
+//             res.status(500).json({ message: 'Internal server error' });
+//         }
+//     }
+// });
+
 router.get('/items/search', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const companyId = req.session.currentCompany;
-            const searchQuery = req.query.q;
-            const vatExempt = req.query.isVatExempt; // Query parameter for VAT selection
-            const excludeIds = req.query.exclude ? req.query.exclude.split(',') : []; // Exclude these item IDs
-
-            console.log('Company ID:', companyId);
-            console.log('Search Query:', searchQuery);
-            console.log('VAT Exempt:', vatExempt);
-            console.log('Exclude IDs:', excludeIds);
-            // Fetch the current fiscal year from the session
+            const searchQuery = req.query.q || '';
+            const vatExempt = req.query.isVatExempt;
+            const excludeIds = req.query.exclude ? req.query.exclude.split(',') : [];
             const fiscalYear = req.session.currentFiscalYear.id;
 
-            // Initialize the search conditions
-            let searchConditions = {
+            // Build base search conditions
+            const searchConditions = {
                 company: companyId,
-                // fiscalYear: fiscalYear,
                 status: 'active',
-                _id: { $nin: excludeIds }, // Exclude items that are already in the table
+                _id: { $nin: excludeIds },
                 $or: [
-                    { name: { $regex: new RegExp(searchQuery, 'i') } }, // Search by name
-                    { uniqueNumber: parseInt(searchQuery, 10) || null } // Search by uniqueNumber
-                ],
-                $or: [
-                    { originalFiscalYear: fiscalYear }, // Created here
+                    { originalFiscalYear: fiscalYear },
                     {
                         fiscalYear: fiscalYear,
-                        originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                        originalFiscalYear: { $lt: fiscalYear }
                     }
                 ]
             };
 
-            // Modify the search conditions based on VAT selection
+            // Add VAT condition
             if (vatExempt === 'true') {
                 searchConditions.vatStatus = 'vatExempt';
             } else if (vatExempt === 'false') {
                 searchConditions.vatStatus = 'vatable';
-            } else if (vatExempt === 'all') {
-                // If 'all' is selected, don't add any specific vatStatus condition
-                delete searchConditions.vatStatus;
             }
 
-            console.log('Search Conditions:', searchConditions);
+            // Add search query conditions if exists
+            if (searchQuery) {
+                // Try to parse as number for uniqueNumber search
+                const numericQuery = parseInt(searchQuery);
 
-            const items = await Item.find(searchConditions).populate('category').populate('unit');
+                // Create search condition
+                const searchCondition = {
+                    $or: [
+                        { name: { $regex: searchQuery, $options: 'i' } }
+                    ]
+                };
 
-            console.log('Items found:', items);
+                // Add numeric search only if it's a valid number
+                if (!isNaN(numericQuery)) {
+                    searchCondition.$or.push({ uniqueNumber: numericQuery });
+                }
 
+                // Combine with existing conditions
+                searchConditions.$and = [searchCondition];
+            }
+
+            console.log('Final Search Conditions:', searchConditions);
+            const items = await Item.find(searchConditions).populate('category').populate('unit').populate('itemsCompany');
             res.json(items);
         } catch (error) {
             console.error('Error searching items:', error);
@@ -682,6 +743,10 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
                 .populate('composition')  // This is crucial!
                 .populate('originalFiscalYear')
 
+            // Add hasTransactions flag to each item
+            for (const item of items) {
+                item.hasTransactions = (await Transaction.exists({ item: item._id })) ? 'true' : 'false';
+            }
 
             // Extract openingStock and openingStockBalance if they exist for the current fiscal year
             const itemsWithOpeningStock = items.map(item => {
@@ -1201,6 +1266,13 @@ router.post('/create-items', ensureAuthenticated, ensureCompanySelected, ensureT
             company: companyId,
             reorderLevel,
             maxStock: reorderLevel,
+            initialOpeningStock: {
+                initialFiscalYear: fiscalYear,
+                openingStock: openingStock,
+                openingStockBalance: openingStockBalance,
+                purchasePrice: puPrice,
+                salesPrice: price,
+            },
             openingStockByFiscalYear: [{
                 fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
                 salesPrice: price,
@@ -1471,7 +1543,7 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
 router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
-            const { name, hscode, category, compositionIds, price, puPrice, vatStatus, openingStock, reorderLevel, mainUnit, WSUnit, unit, openingStockBalance } = req.body;
+            const { name, hscode, category, itemsCompany, compositionIds, price, puPrice, vatStatus, openingStock, reorderLevel, mainUnit, WSUnit, unit, openingStockBalance } = req.body;
             const companyId = req.session.currentCompany;
 
             // Process composition IDs
@@ -1537,57 +1609,96 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
             if (!item) {
                 return res.status(404).json({ error: 'Item not found' });
             }
+            // Check if item has transactions
+            const hasTransactions = await Transaction.exists({ item: req.params.id });
 
-            // Ensure all variables are valid numbers
-            const itemStock = Number(item.stock) || 0;
-            const oldOpeningStock = Number(item.openingStock) || 0;
-            const newOpeningStock = Number(openingStock) || 0;
-            const openingStockBal = Number(openingStockBalance) || 0;
+            // Only update stock if no transactions exist
+            let updatedStock = item.stock;
+            let updatedStockEntries = item.stockEntries;
+            let updatedOpeningStock = item.openingStock;
+            let updatedOpeningStockBalance = item.openingStockBalance;
 
-            // Debugging: Log the values to check for NaN or undefined
-            console.log('itemStock:', itemStock);
-            console.log('oldOpeningStock:', oldOpeningStock);
-            console.log('newOpeningStock:', newOpeningStock);
+            if (!hasTransactions) {
+                // Ensure all variables are valid numbers
+                const itemStock = Number(item.stock) || 0;
+                const oldOpeningStock = Number(item.openingStock) || 0;
+                const newOpeningStock = Number(openingStock) || 0;
+                const openingStockBal = Number(openingStockBalance) || 0;
 
-            // Calculate the updated stock by adjusting opening stock
-            const currentStock = itemStock - oldOpeningStock + newOpeningStock;
-            // Generate a unique ID for the stock entry
-            const newUniqueId = uuidv4();
-            // Update the item details, including the fiscal year data for stock entries
-            await Item.findByIdAndUpdate(req.params.id, {
+                updatedStock = itemStock - oldOpeningStock + newOpeningStock;
+                updatedOpeningStock = newOpeningStock;
+                updatedOpeningStockBalance = openingStockBal;
+
+                // Debugging: Log the values to check for NaN or undefined
+                console.log('itemStock:', itemStock);
+                console.log('oldOpeningStock:', oldOpeningStock);
+                console.log('newOpeningStock:', newOpeningStock);
+
+                // Calculate the updated stock by adjusting opening stock
+                // const currentStock = itemStock - oldOpeningStock + newOpeningStock;
+                // Generate a unique ID for the stock entry
+                // const newUniqueId = uuidv4();
+                // Generate new stock entry only if opening stock changed
+
+                if (newOpeningStock > 0) {
+                    const newUniqueId = uuidv4();
+                    updatedStockEntries = [{
+                        quantity: updatedStock,
+                        price: price,
+                        puPrice: puPrice,
+                        date: new Date(),
+                        fiscalYear: fiscalYear,
+                        uniqueUuId: newUniqueId
+                    }];
+                }
+            }
+
+            // Build update object
+            const updateData = {
                 name,
                 hscode,
                 category,
-                composition: compositions, // Add compositions array
+                itemsCompany,
+                composition: compositions,
                 mainUnit,
                 WSUnit,
                 unit,
                 price,
                 puPrice,
                 vatStatus,
-                openingStock: newOpeningStock,
-                stock: currentStock,
                 reorderLevel,
                 maxStock: reorderLevel,
-                openingStockBalance: openingStockBal,
-                stockEntries: newOpeningStock > 0 ? [{
-                    quantity: currentStock,
-                    price: price,
-                    puPrice: puPrice,
-                    date: new Date(),
-                    fiscalYear: fiscalYear, // Record stock entry with fiscal year
-                    uniqueUuId: newUniqueId
-                }] : [],
+                stock: updatedStock,
+                openingStock: updatedOpeningStock,
+                openingStockBalance: updatedOpeningStockBalance,
+                stockEntries: updatedStockEntries,
                 company: companyId,
-                openingStockByFiscalYear: [{
+                fiscalYear: [fiscalYear],
+            };
+
+            // Only add openingStockByFiscalYear if no transactions
+            if (!hasTransactions) {
+                updateData.openingStockByFiscalYear = [{
                     fiscalYear: fiscalYear,
                     salesPrice: price,
                     purchasePrice: puPrice,
-                    openingStock: newOpeningStock,
-                    openingStockBalance: openingStockBal
-                }],
-                fiscalYear: [fiscalYear], // Associate the item with the current fiscal year
-            });
+                    openingStock: updatedOpeningStock,
+                    openingStockBalance: updatedOpeningStockBalance
+                }];
+            }
+            if (!hasTransactions) {
+                updateData.initialOpeningStock = {
+                    fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
+                    salesPrice: price,
+                    purchasePrice: puPrice,
+                    openingStock: openingStock,
+                    openingStockBalance: openingStockBalance,
+                    date: currentFiscalYear.startDate,
+                }
+            }
+
+            // Update the item
+            await Item.findByIdAndUpdate(req.params.id, updateData);
 
             req.flash('success', 'Item updated successfully');
             res.redirect('/items');
