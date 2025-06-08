@@ -113,6 +113,7 @@ const itemSchema = new mongoose.Schema({
     },
     itemsCompany: {
         type: mongoose.Schema.Types.ObjectId, ref: 'itemsCompany',
+        required: true,
     },
     price: Number,
     puPrice: Number,

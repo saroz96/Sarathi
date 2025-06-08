@@ -242,7 +242,8 @@ router.post('/import', upload.single('excelFile'), async (req, res) => {
 
             try {
                 // Resolve relational references with exact match
-                const [category, mainUnit, unit, company] = await Promise.all([
+                const [itemscompany, category, mainunit, unit, company] = await Promise.all([
+                    mongoose.model('itemsCompany').findOne({ name: new RegExp(`^${rowData.itemscompany}$`, 'i') }),
                     mongoose.model('Category').findOne({ name: new RegExp(`^${rowData.category}$`, 'i') }),
                     mongoose.model('MainUnit').findOne({ name: new RegExp(`^${rowData.mainunit}$`, 'i') }),
                     mongoose.model('Unit').findOne({ name: new RegExp(`^${rowData.unit}$`, 'i') }),
@@ -250,6 +251,7 @@ router.post('/import', upload.single('excelFile'), async (req, res) => {
                 ]);
 
                 // Validate references
+                if (!itemscompany) throw new Error(`Company of item not found:${rowData.itemscompany}`);
                 if (!category) throw new Error(`Category not found: ${rowData.category}`);
                 if (!mainUnit) throw new Error(`MainUnit not found: ${rowData.mainUnit}`);
                 if (!unit) throw new Error(`Unit not found: ${rowData.unit}`);
@@ -260,8 +262,9 @@ router.post('/import', upload.single('excelFile'), async (req, res) => {
                 const itemData = {
                     name: rowData.name,
                     hscode: rowData.hscode,
+                    itemsCompany: itemscompany._id,
                     category: category._id,
-                    mainUnit: mainUnit._id,
+                    mainUnit: mainunit._id,
                     unit: unit._id,
                     vatStatus: rowData.vatstatus,
                     fiscalYear: fiscalYearId,
