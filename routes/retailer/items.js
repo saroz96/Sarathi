@@ -135,6 +135,10 @@ router.get('/generate-missing-barcodes', async (req, res) => {
     }
 });
 
+Item.assignGeneralItemsCompany()
+    .then(result => console.log(`Updated ${result.nModified} items`))
+    .catch(console.error);
+
 // Import items page
 router.get('/import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {

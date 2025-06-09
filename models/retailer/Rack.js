@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const rackSchema = new mongoose.Schema(
     {
         /** Visible label on the shelf, e.g. “A‑01” */
-        name: { type: String, required: true, unique: true, trim: true },
+        name: { type: String, required: true, trim: true },
 
         /** Optional free‑text location info */
         description: { type: String },
@@ -24,4 +24,5 @@ const rackSchema = new mongoose.Schema(
 
 // Ensure unique rack names within a company
 rackSchema.index({ name: 1, company: 1 }, { unique: true });
+
 export default mongoose.model("Rack", rackSchema);

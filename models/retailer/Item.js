@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const itemsCompany = require('./itemsCompany');
 
 const getDefaultExpiryDate = () => {
     const currentDate = new Date();
@@ -542,6 +543,45 @@ itemSchema.statics.initializeItemStatus = async function () {
         console.error('Error initializing item statuses:', error);
         throw error;
     }
+};
+
+// Add this static method to the itemSchema
+itemSchema.statics.assignGeneralItemsCompany = async function () {
+    const itemsCompany = mongoose.model('itemsCompany');
+    let generalCompany = await itemsCompany.findOne({ name: "General" });
+
+    if (!generalCompany) {
+        generalCompany = new itemsCompany({ name: "General" });
+        await generalCompany.save();
+    }
+
+    // Find all items that might need updating
+    const allItems = await this.find({});
+
+    // Filter items with invalid itemsCompany values
+    const itemsToUpdate = allItems.filter(item => {
+        const companyVal = item.itemsCompany;
+
+        // Handle null/undefined/empty string
+        if (!companyVal || companyVal === '') return true;
+
+        // Handle invalid ObjectId strings
+        if (typeof companyVal === 'string') {
+            return !mongoose.Types.ObjectId.isValid(companyVal);
+        }
+
+        // Handle non-ObjectId values
+        return !(companyVal instanceof mongoose.Types.ObjectId);
+    });
+
+    // Update each item individually
+    const updatePromises = itemsToUpdate.map(item => {
+        item.itemsCompany = generalCompany._id;
+        return item.save();
+    });
+
+    await Promise.all(updatePromises);
+    return { nModified: updatePromises.length };
 };
 
 module.exports = mongoose.model('Item', itemSchema);
