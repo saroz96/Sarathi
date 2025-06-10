@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const rackSchema = new mongoose.Schema(
     {
         /** Visible label on the shelf, e.g. “A‑01” */
-        name: { type: String, required: true, trim: true },
+        name: { type: String, required: true },
 
         /** Optional free‑text location info */
         description: { type: String },

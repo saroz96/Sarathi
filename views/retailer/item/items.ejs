@@ -1,10 +1,10 @@
 <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script>
-        const allItems = <%- JSON.stringify(items) %>;
-        const allCategories = <%- JSON.stringify(categories) %>;
-        const allitemsCompanies= <%- JSON.stringify(itemsCompanies) %>;
-    </script>
+<script>
+    const allItems = <%- typeof items !== 'undefined' ? JSON.stringify(items) : '[]' %>;
+    const allCategories = <%- typeof categories !== 'undefined' ? JSON.stringify(categories) : '[]' %>;
+    const allitemsCompanies = <%- typeof itemsCompanies !== 'undefined' ? JSON.stringify(itemsCompanies) : '[]' %>;
+</script>
     <style>
         #compositionModal .modal-body {
             min-height: 400px;
@@ -1160,6 +1160,7 @@
     // Modified printItems function with filtering
     function printItems(option = 'all', id = null) {
         // Filter items based on selected option
+        const allCompanies = allitemsCompanies || [];
         let itemsToPrint = [...allItems]; // Clone the array
         
         switch(option) {
@@ -1281,6 +1282,8 @@
         // Restore the original content after printing
         document.body.innerHTML = originalContent;
         window.location.reload();  // Reload the page to restore event listeners
+
+        const company = allCompanies.find(c => c._id === id);
     }
 </script>
 

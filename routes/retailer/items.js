@@ -257,7 +257,7 @@ router.post('/import', upload.single('excelFile'), async (req, res) => {
                 // Validate references
                 if (!itemscompany) throw new Error(`Company of item not found:${rowData.itemscompany}`);
                 if (!category) throw new Error(`Category not found: ${rowData.category}`);
-                if (!mainUnit) throw new Error(`MainUnit not found: ${rowData.mainUnit}`);
+                if (!mainunit) throw new Error(`MainUnit not found: ${rowData.mainunit}`);
                 if (!unit) throw new Error(`Unit not found: ${rowData.unit}`);
                 // if (!fiscalYear) throw new Error(`FiscalYear not found: ${rowData.fiscalyear}`);
                 if (!company) throw new Error(`Company not found: ${rowData.company}`);
