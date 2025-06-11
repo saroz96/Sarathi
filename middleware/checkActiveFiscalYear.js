@@ -1,4 +1,4 @@
-const Company = require('../models/retailer/Company');
+const Company = require('../models/Company');
 const FiscalYear = require('../models/retailer/FiscalYear');
 
 async function ensureFiscalYear(req, res, next) {

@@ -8,7 +8,7 @@ const NepaliDate = require('nepali-date');
 
 const { default: Rack } = require('../../models/retailer/Rack');
 const { default: Store } = require('../../models/retailer/Store');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 const FiscalYear = require('../../models/retailer/FiscalYear');
 const ObjectId = mongoose.Types.ObjectId;
 

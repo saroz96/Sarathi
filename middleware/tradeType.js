@@ -1,4 +1,4 @@
-const Company = require('../models/retailer/Company');
+const Company = require('../models/Company');
 
 async function ensureTradeType(req, res, next) {
     try {

@@ -41,6 +41,10 @@ const companySchema = new mongoose.Schema({
         type: Boolean,
         default: false // Default is VAT disabled
     },
+//     storeManagement: {
+//     type: Boolean,
+//     default: false // Default to disabled
+//   },
     notificationEmails: {
         type: [String],
         validate: {

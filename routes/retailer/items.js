@@ -17,7 +17,7 @@ const { ensureTradeType } = require('../../middleware/tradeType');
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
 const FiscalYear = require('../../models/retailer/FiscalYear');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 const NepaliDate = require('nepali-date');
 const SalesBill = require('../../models/retailer/SalesBill');
 const SalesReturn = require('../../models/retailer/SalesReturn');
@@ -1202,11 +1202,20 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
 router.post('/create-items', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
 
-        const { name, hscode, category, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
+        const { name, hscode, itemsCompany,compositionIds, category,mainUnit, WSUnit,unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
         const companyId = req.session.currentCompany;
 
         if (!companyId) {
             return res.status(400).json({ error: 'Company ID is required' });
+        }
+
+        // Process composition IDs - convert string to array of ObjectIds
+        let compositions = [];
+        if (compositionIds) {
+            compositions = compositionIds.split(',')
+                .map(id => id.trim())
+                .filter(id => mongoose.Types.ObjectId.isValid(id))
+                .map(id => new mongoose.Types.ObjectId(id));
         }
 
         // Fetch the company and populate the fiscalYear
@@ -1265,20 +1274,26 @@ router.post('/create-items', ensureAuthenticated, ensureCompanySelected, ensureT
             name,
             hscode,
             category,
+            itemsCompany,
+            composition: compositions, // Array of composition IDs
+            mainUnit,
+            WSUnit,
             unit,
             price,
             puPrice,
             vatStatus,
+            openingStock: openingStock,
             stock: openingStock, // Set total stock to opening stock initially
             company: companyId,
             reorderLevel,
             maxStock: reorderLevel,
             initialOpeningStock: {
-                initialFiscalYear: fiscalYear,
+                fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
+                salesPrice: price,
+                purchasePrice: puPrice,
                 openingStock: openingStock,
                 openingStockBalance: openingStockBalance,
-                purchasePrice: puPrice,
-                salesPrice: price,
+                date: currentFiscalYear.startDate,
             },
             openingStockByFiscalYear: [{
                 fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
@@ -1292,9 +1307,12 @@ router.post('/create-items', ensureAuthenticated, ensureCompanySelected, ensureT
                 price: price,
                 puPrice: puPrice,
                 date: new Date(),
+                uniqueUuId: uniqueId,
                 fiscalYear: fiscalYear // Record stock entry with fiscal year
             }] : [],
-            fiscalYear: fiscalYear, // Associate the item with the current fiscal year
+            fiscalYear: [fiscalYear], // Associate the item with the current fiscal year
+            originalFiscalYear: currentFiscalYear,
+            createdAt: currentFiscalYear.startDate,
         });
 
         // Save the new item

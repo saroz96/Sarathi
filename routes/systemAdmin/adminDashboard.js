@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { ensureAuthenticated, isLoggedIn } = require('../../middleware/auth');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 const router = express.Router();
 const NepaliDate = require('nepali-date'); // Adjust if using a different library
 

@@ -428,16 +428,34 @@
                     <form id="createAccountForm" method="post" action="/create-items">
                         <div class="form-group row">
                             <div class="col">
-                                <label for="name">Item Name <i style="color: red;">*</i></label>
+                                <label for="name">Name <i style="color: red;">*</i></label>
                                 <input type="text" class="form-control" id="name" name="name"
                                     placeholder="Enter item name" autocomplete="off" required>
                             </div>
                             <div class="col">
-                                <label for="hscode">Item H.S. Code</label>
+                                <label for="hscode">HSN</label>
                                 <input type="number" class="form-control" id="hscode" name="hscode"
                                     placeholder="Enter item H.S code" autocomplete="off">
                             </div>
-                            <div class="col">
+                            <div class="col-3">
+                                <label for="itemsCompany">Company <i style="color: red;">*</i></label>
+                                <select class="form-control" id="itemsCompany" name="itemsCompany" required
+                                    onfocus="selectValue(this)">
+                                    <% if (itemsCompanies && itemsCompanies.length> 0) { %>
+                                        <option value="" disabled selected>Select company</option>
+                                        <% itemsCompanies.forEach(company=> { %>
+                                            <option value="<%= company._id %>">
+                                                <%= company.name %>
+                                            </option>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <option disabled>No company available</option>
+                                                    <% } %>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-3">
                                 <label for="category">Category <i style="color: red;">*</i></label>
                                 <select class="form-control" id="category" name="category" required>
                                     <% if (categories && categories.length> 0) { %>
@@ -452,10 +470,36 @@
                                                     <% } %>
                                 </select>
                             </div>
-
+                            <div class="col-9">
+                                <label for="composition" class="form-label">Composition</label>
+                                <textarea class="form-control" id="composition" name="composition" rows="1"
+                                    placeholder="Press F6 to add compositions"
+                                    onkeydown="handleCompositionInputKeydown(event)"></textarea>
+                                <input type="hidden" id="compositionIds" name="compositionIds">
+                            </div>
 
                         </div>
                         <div class="form-group row">
+                            <div class="col">
+                                <label for="mainUnit">Main Unit <i style="color: red;">*</i></label>
+                                <select class="form-control" id="mainUnit" name="mainUnit" onfocus="selectValue(this)"
+                                    required>
+                                    <% if (mainUnits && mainUnits.length> 0) { %>
+                                        <option value="" disabled selected>Select Main Unit</option>
+                                        <% mainUnits.forEach(mainUnit=> { %>
+                                            <option value="<%= mainUnit._id %>">
+                                                <%= mainUnit.name %>
+                                            </option>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <option disabled>No units available</option>
+                                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label for="WSUnit">WS Unit</label>
+                                <input type="number" id="WSUnit" name="WSUnit" class="form-control">
+                            </div>
                             <div class="col">
                                 <label for="unit">Unit <i style="color: red;">*</i></label>
                                 <select class="form-control" id="unit" name="unit" required>
@@ -471,9 +515,10 @@
                                                     <% } %>
                                 </select>
                             </div>
-
+                        </div>
+                        <div class="form-group row">
                             <div class="col">
-                                <label for="vatStatus">VAT Status <i style="color: red;">*</i></label>
+                                <label for="vatStatus">VAT<i style="color: red;">*</i></label>
                                 <select class="form-control" id="vatStatus" name="vatStatus" required>
                                     <option value="" disabled selected>Select Vat Status</option>
                                     <% if (vatEnabled) {%>
@@ -483,29 +528,29 @@
                                 </select>
                             </div>
                             <div class="col">
-                                <label for="reorderLevel">Re-Order Level(Qty)</label>
+                                <label for="reorderLevel">Re-Order(Qty)</label>
                                 <input type="number" class="form-control" id="reorderLevel" name="reorderLevel"
                                     value="10" aria-selected="true">
                             </div>
-                        </div>
-                        <div class="form-group row">
                             <div class="col">
                                 <label for="price">Sales Price</label>
                                 <input type="number" class="form-control" id="price" name="price" step="0.01"
                                     value="0.00">
                             </div>
+                        </div>
+                        <div class="form-group row">
                             <div class="col">
                                 <label for="puPrice">Purchase Price</label>
                                 <input type="number" class="form-control" id="puPrice" name="puPrice" step="0.01"
                                     oninput="calculateTotalOpeningStockBalance()" value="0.00">
                             </div>
                             <div class="col">
-                                <label for="openingStock">Opening Stock</label>
+                                <label for="openingStock">Op. Stock</label>
                                 <input type="number" class="form-control" id="openingStock" name="openingStock"
                                     oninput="calculateTotalOpeningStockBalance()" value="0.00">
                             </div>
                             <div class="col">
-                                <label for="openingStockBalance">Opening Stock Balance</label>
+                                <label for="openingStockBalance">Op. Stock Value</label>
                                 <input type="number" class="form-control" id="openingStockBalance"
                                     name="openingStockBalance" value="0.00">
                             </div>

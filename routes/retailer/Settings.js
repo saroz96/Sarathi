@@ -4,7 +4,7 @@ const Settings = require('../../models/retailer/Settings');
 const { ensureAuthenticated, ensureCompanySelected } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const FiscalYear = require('../../models/retailer/FiscalYear');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 
 // Fetch settings and render the settings page
 router.get('/', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {

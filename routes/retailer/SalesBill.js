@@ -15,7 +15,7 @@ const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../.
 const BillCounter = require('../../models/retailer/billCounter');
 const Account = require('../../models/retailer/Account');
 const Settings = require('../../models/retailer/Settings');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 const NepaliDate = require('nepali-date');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
@@ -25,6 +25,9 @@ const checkDemoPeriod = require('../../middleware/checkDemoPeriod');
 const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
 const CompanyGroup = require('../../models/retailer/CompanyGroup');
 const Category = require('../../models/retailer/Category');
+const itemsCompany = require('../../models/retailer/itemsCompany');
+const Composition = require('../../models/retailer/Composition');
+const MainUnit = require('../../models/retailer/MainUnit');
 
 
 // Fetch all sales bills
@@ -302,6 +305,9 @@ router.get('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
         })
             .populate('category')
             .populate('unit')
+            .populate('itemsCompany')
+            .populate('mainUnit')
+            .populate('composition')
             .populate({
                 path: 'stockEntries',
                 match: { quantity: { $gt: 0 } }, // Only fetch stock entries with remaining quantity
@@ -310,33 +316,6 @@ router.get('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
 
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear }).populate('companyGroups');
         const companyGroups = await CompanyGroup.find({ company: companyId });
-
-        // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        // let billCounter;
-        // try {
-        //     billCounter = await BillCounter.findOne({
-        //         company: companyId,
-        //         fiscalYear: fiscalYear,
-        //         transactionType: 'Sales' // Specify the transaction type for sales bill
-        //     });
-        // } catch (error) {
-        //     console.error('Error fetching bill counter:', error);
-        //     return res.status(500).json({ error: 'An error occurred while fetching the bill counter.' });
-        // }
-
-        // let nextBillNumber;
-        // if (billCounter) {
-        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        // } else {
-        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        // }
-
-        // Get formatted bill number
-        // const nextBillNumber = await getNextBillNumber(
-        //     companyId,     // First parameter
-        //     fiscalYear,     // Second parameter
-        //     'Sales'         // Third parameter
-        // );
 
         // Get last counter without incrementing
         const lastCounter = await BillCounter.findOne({
@@ -353,6 +332,9 @@ router.get('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
         // Fetch categories and units for item creation
         const categories = await Category.find({ company: companyId });
         const units = await Unit.find({ company: companyId });
+        const itemsCompanies = await itemsCompany.find({ company: companyId });
+        const composition = await Composition.find({ company: companyId });
+        const mainUnits = await MainUnit.find({ company: companyId });
 
         res.render('retailer/sales-bills/bills', {
             company: company,
@@ -362,6 +344,9 @@ router.get('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
             items: items,
             categories,
             units,
+            itemsCompanies,
+            composition,
+            mainUnits,
             bills: bills,
             nextBillNumber: nextBillNumber, // Pass the next bill number to the view
             nepaliDate: nepaliDate,

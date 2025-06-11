@@ -49,7 +49,7 @@ const path = require('path');
 const ejsMate = require('ejs-mate');
 const setNoCache = require('./middleware/setNoCache');
 const AppError = require('./middleware/AppError');
-const Company = require('./models/retailer/Company');
+const Company = require('./models/Company');
 
 const app = express();
 
@@ -69,8 +69,8 @@ initializePassport(passport);
 // });
 
 // Connect with database
-// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
-mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
+mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
+// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
 // mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi?retryWrites=true&w=majority&appName=Cluster0')
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));

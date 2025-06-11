@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Company = require('../models/retailer/Company');
+const Company = require('../models/Company');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const AccountGroup = require('../models/retailer/CompanyGroup');

@@ -9,7 +9,7 @@ const { ensureTradeType } = require('../../middleware/tradeType')
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear')
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange')
 const FiscalYear = require('../../models/retailer/FiscalYear')
-const Company = require('../../models/retailer/Company')
+const Company = require('../../models/Company')
 const Transaction = require('../../models/retailer/Transaction')
 
 // Modified initialization function

@@ -8,7 +8,7 @@ const PurchaseBill = require('../../models/retailer/PurchaseBill')
 const PurchaseReturn = require('../../models/retailer/PurchaseReturns');
 const SalesBill = require('../../models/retailer/SalesBill');
 const SalesReturn = require('../../models/retailer/SalesReturn');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 const FiscalYear = require('../../models/retailer/FiscalYear');
 const { isLoggedIn } = require('../../middleware/auth');
 

@@ -12,7 +12,7 @@ const PurchaseBill = require('../../models/retailer/PurchaseBill');
 
 
 const NepaliDate = require('nepali-date');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 
 const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');

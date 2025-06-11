@@ -11,7 +11,7 @@ const SalesReturnBill = require('../../models/retailer/SalesReturn');
 const PurchaseBill = require('../../models/retailer/PurchaseBill');
 const PurchaseReturnBill = require('../../models/retailer/PurchaseReturns');
 const FiscalYear = require('../../models/retailer/FiscalYear');
-const Company = require('../../models/retailer/Company');
+const Company = require('../../models/Company');
 const NepaliDate = require('nepali-date');
 const moment = require('moment');
 

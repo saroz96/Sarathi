@@ -3,7 +3,7 @@ const ObjectId = mongoose.Types.ObjectId;
 
 const FiscalYear = require('../models/retailer/FiscalYear');
 const Account = require('../models/retailer/Account');
-const Company = require('../models/retailer/Company');
+const Company = require('../models/Company');
 const Transaction = require('../models/retailer/Transaction');
 const Item = require('../models/retailer/Item');
 

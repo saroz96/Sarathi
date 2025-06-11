@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const storeSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true },
+        name: { type: String, required: true, trim: true },
 
         /** Optional free‑text location info */
         description: { type: String },
