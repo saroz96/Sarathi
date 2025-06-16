@@ -68,14 +68,14 @@
                                 <label for="nepaliDate">Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
                                     value="<%= nepaliDate || '' %>" onfocus="selectValue(this)"
-                                    onkeydown="handleDateKeydown(event)" autofocus>
+                                    onkeydown="handleDateKeydown(event)" autocomplete="off" autofocus>
                             </div>
                             <% } else { %>
                                 <div class="col">
                                     <label for="billDate">Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
                                         value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onfocus="selectValue(this)" onkeydown="handleDateKeydown(event)" autofocus>
+                                        onfocus="selectValue(this)" onkeydown="handleDateKeydown(event)" autocomplete="off" autofocus>
                                 </div>
                                 <% } %>
                                     <div class="col">
@@ -83,14 +83,14 @@
                                         <input type="text" name="billNumber" id="billNumber" class="form-control"
                                             value="<%= nextBillNumber %>" required
                                             oninput="this.value='<%=nextBillNumber%>'" onfocus="selectValue(this)"
-                                            onkeydown="handleBillNumberKeydown(event)">
+                                            onkeydown="handleBillNumberKeydown(event)" autocomplete="off">
                                     </div>
 
                                     <div class="col">
                                         <label for="accountType">A/c Type:</label>
                                         <input type="text" name="accountType" id="accountType" class="form-control"
                                             value="Payment" oninput="this.value='Payment'"
-                                            onkeydown="handleAccountTypeKeydown(event)">
+                                            onkeydown="handleAccountTypeKeydown(event)" autocomplete="off">
                                     </div>
                     </div>
 
@@ -131,7 +131,7 @@
                             <div class="col-md-2 col-6"> <!-- Adjusted column sizes -->
                                 <label for="debit" class="form-label">Amount:</label>
                                 <input type="number" name="debit" id="debit" class="form-control"
-                                    placeholder="Debit Amount" onkeydown="handleDebitAmountKeydown(event)" required>
+                                    placeholder="Debit Amount" onkeydown="handleDebitAmountKeydown(event)" autocomplete="off" required>
                             </div>
 
                             <!-- Institution Type and Number -->

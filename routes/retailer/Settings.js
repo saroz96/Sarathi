@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const Settings = require('../../models/retailer/Settings');
-const { ensureAuthenticated, ensureCompanySelected } = require('../../middleware/auth');
+const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const Company = require('../../models/Company');
 
 // Fetch settings and render the settings page
-router.get('/', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.get('/', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const userId = req.user._id;
@@ -48,8 +48,9 @@ router.get('/', ensureAuthenticated, ensureCompanySelected, ensureTradeType, asy
 
 
             let settings = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+
             if (!settings) {
-                settings = { roundOffSales: false, roundOffPurchase: false, displayTransactions: false }; // Provide default settings
+                settings = { roundOffSales: false, roundOffPurchase: false, displayTransactions: false, storeManagement: false }; // Provide default settings
             }
             res.render('retailer/settings/settings', {
                 company,
@@ -127,6 +128,7 @@ router.post('/roundoff-sales', ensureAuthenticated, ensureCompanySelected, ensur
         }
     }
 });
+
 // Fetch settings and render the settings page
 router.get('/roundoff-sales-return', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
@@ -875,5 +877,109 @@ router.post('/PurchaseReturnTransactionDisplayUpdate', ensureAuthenticated, ensu
     }
 });
 
+// Fetch settings and render the settings page
+router.get('/storemanagement', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        try {
+            const userId = req.user._id;
+            const companyId = req.session.currentCompany;
+            const currentCompanyName = req.session.currentCompanyName;
 
+            const company = await Company.findById(companyId).populate('fiscalYear');
+
+            // Check if fiscal year is already in the session or available in the company
+            let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+            let currentFiscalYear = null;
+
+            if (fiscalYear) {
+                // Fetch the fiscal year from the database if available in the session
+                currentFiscalYear = await FiscalYear.findById(fiscalYear);
+            }
+
+            // If no fiscal year is found in session or currentCompany, throw an error
+            if (!currentFiscalYear && company.fiscalYear) {
+                currentFiscalYear = company.fiscalYear;
+
+                // Set the fiscal year in the session for future requests
+                req.session.currentFiscalYear = {
+                    id: currentFiscalYear._id.toString(),
+                    startDate: currentFiscalYear.startDate,
+                    endDate: currentFiscalYear.endDate,
+                    name: currentFiscalYear.name,
+                    dateFormat: currentFiscalYear.dateFormat,
+                    isActive: currentFiscalYear.isActive
+                };
+
+                // Assign fiscal year ID for use
+                fiscalYear = req.session.currentFiscalYear.id;
+            }
+
+            if (!fiscalYear) {
+                return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+            }
+
+            let settings = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            if (!settings) {
+                settings = {
+                    storeManagement: false,
+                }; // Provide default settings
+            }
+            res.render('retailer/settings/settings', {
+                settings,
+                currentCompanyName,
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+            req.flash('error', 'Error fetching settings');
+            res.redirect('/');
+        }
+    }
+});
+
+
+// POST update store management setting
+router.post('/storemanagement', async (req, res) => {
+    try {
+        const companyId = req.session.currentCompany;
+        const fiscalYearId = req.session.currentFiscalYear?.id;
+
+        if (!companyId || !fiscalYearId) {
+            return res.status(400).json({ error: 'Company or fiscal year not selected' });
+        }
+
+        // Convert checkbox value to boolean
+        const storeManagement = req.body.storeManagement === 'on';
+
+        // Update settings
+        const settings = await Settings.findOneAndUpdate(
+            { companyId, fiscalYear: fiscalYearId },
+            { storeManagement },
+            { new: true, upsert: true }
+        );
+
+        // Update session
+        req.session.storeManagementEnabled = settings.storeManagement;
+
+        // 2. Update Company document
+        await Company.findByIdAndUpdate(
+            companyId,
+            { storeManagement }, // Update the new field in Company
+            { new: true }
+        );
+
+        // 3. Update session
+        req.session.storeManagementEnabled = storeManagement;
+
+        req.flash('success', 'Store management setting updated successfully');
+        res.redirect('/settings');
+    } catch (err) {
+        console.error('Error updating store management:', err);
+        req.flash('error', 'Failed to update settings');
+        res.redirect('/settings');
+    }
+});
 module.exports = router;

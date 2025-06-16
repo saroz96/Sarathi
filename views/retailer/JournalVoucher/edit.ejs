@@ -80,7 +80,7 @@
                                 title="Enter Nepali Date">Nepali Date:</label>
                             <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
                                 value="<%= journals.date ? journals.date.toISOString().split('T')[0] : '' %>"
-                                placeholder="YYYY/MM/DD" autofocus <%=journals.status==='canceled' ? 'disabled' : '' %>>
+                                placeholder="YYYY/MM/DD" autocomplete="off" autofocus <%=journals.status==='canceled' ? 'disabled' : '' %>>
                             <div class="form-feedback"></div>
                         </div>
                         <% } else { %>
@@ -89,14 +89,14 @@
                                     title="Select Date">English Date:</label>
                                 <input type="date" name="billDate" id="billDate" class="form-control" required
                                     value="<%= journals.date ? journals.date.toISOString().split('T')[0] : '' %>"
-                                    autofocus <%=journals.status==='canceled' ? 'disabled' : '' %>>
+                                    autofocus autocomplete="off" <%=journals.status==='canceled' ? 'disabled' : '' %>>
                                 <div class="form-feedback"></div>
                             </div>
                             <% } %>
                                 <div class="col">
                                     <label for="billNumber">Voucher Number:</label>
                                     <input type="text" name="billNumber" id="billNumber" class="form-control"
-                                        value="<%= journals.billNumber %>" required readonly>
+                                        value="<%= journals.billNumber %>" autocomplete="off" required readonly>
                                 </div>
                 </div>
 

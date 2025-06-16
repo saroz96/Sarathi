@@ -2,20 +2,20 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
-const { switchFiscalYear } = require('../../services/fiscalYearService');
-const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../../middleware/auth');
-const { ensureTradeType } = require('../../middleware/tradeType');
-const Company = require('../../models/Company');
+const { switchFiscalYear } = require('../services/fiscalYearService');
+const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../middleware/auth');
+const { ensureTradeType } = require('../middleware/tradeType');
+const Company = require('../models/Company');
 const NepaliDate = require('nepali-date');
-const FiscalYear = require('../../models/retailer/FiscalYear');
-const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
-const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
-const Item = require('../../models/retailer/Item');
-const Transaction = require('../../models/retailer/Transaction');
-const Account = require('../../models/retailer/Account');
-const BillCounter = require('../../models/retailer/billCounter');
-const CompanyGroup = require('../../models/retailer/CompanyGroup');
-const Settings = require('../../models/retailer/Settings');
+const FiscalYear = require('../models/FiscalYear');
+const ensureFiscalYear = require('../middleware/checkActiveFiscalYear');
+const checkFiscalYearDateRange = require('../middleware/checkFiscalYearDateRange');
+const Item = require('../models/retailer/Item');
+const Transaction = require('../models/retailer/Transaction');
+const Account = require('../models/retailer/Account');
+const BillCounter = require('../models/retailer/billCounter');
+const CompanyGroup = require('../models/retailer/CompanyGroup');
+const Settings = require('../models/retailer/Settings');
 
 let progress = 0; // 0 to 100
 
@@ -1596,10 +1596,10 @@ router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelec
             fiscalYear: fiscalYearId
         });
 
-        await Settings.deleteMany({
-            companyId: companyId,
-            fiscalYear: fiscalYearId
-        });
+        // await Settings.deleteMany({
+        //     companyId: companyId,
+        //     fiscalYear: fiscalYearId
+        // });
 
         // 8. Delete the fiscal year
         await FiscalYear.findByIdAndDelete(fiscalYearId);

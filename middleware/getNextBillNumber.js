@@ -1,10 +1,10 @@
 const BillCounter = require('../models/retailer/billCounter'); // Assuming the schema is saved in models/BillCounter
-const FiscalYear = require('../models/retailer/FiscalYear');
+const FiscalYear = require('../models/FiscalYear');
 
 async function getNextBillNumber(companyId, fiscalYearId, transactionType) {
     try {
         // Validate transaction types
-        const validTypes = ['sales', 'salesReturn', 'purchase', 'purchaseReturn',
+        const validTypes = ['sales','salesQuotation', 'salesReturn', 'purchase', 'purchaseReturn',
             'payment', 'receipt', 'stockAdjustment', 'debitNote', 'creditNote', 'journalVoucher'];
         if (!validTypes.includes(transactionType)) {
             throw new Error(`Invalid transaction type: ${transactionType}`);

@@ -135,15 +135,15 @@
                                 <div class="col">
                                     <div class="form-group">
                                         <label for="fromDate">From</label>
-                                        <input type="text" name="fromDate" id="fromDate" class="form-control"
+                                        <input type="date" name="fromDate" id="fromDate" class="form-control"
                                             value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
                                     </div>
                                 </div>
                                 <div class="col">
                                     <div class="form-group">
                                         <label for="toDate">To</label>
-                                        <input type="text" name="toDate" id="toDate" class="form-control"
-                                            value="<%= nepaliDate %>">
+                                        <input type="date" name="toDate" id="toDate" class="form-control"
+                                            value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
                                     </div>
                                 </div>
                                 <% } %>

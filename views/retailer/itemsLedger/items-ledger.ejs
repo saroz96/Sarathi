@@ -341,27 +341,28 @@
                                 <% if (companyDateFormat==='english' ) { %>
                                     <div class="filter-group">
                                         <label for="fromDate">From Date</label>
-                                        <input type="text" name="fromDate" id="fromDate" class="form-control datepicker"
+                                        <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
                                             value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
-                                            autofocus>
+                                            autofocus autocomplete="off">
                                     </div>
                                     <div class="filter-group">
                                         <label for="toDate">To Date</label>
-                                        <input type="text" name="toDate" id="toDate" class="form-control datepicker"
-                                            value="<%= new Date().toISOString().split('T')[0] %>">
+                                        <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                                            value="<%= new Date().toISOString().split('T')[0] %>" autocomplete="off">
                                     </div>
                                     <% } else { %>
                                         <div class="filter-group">
                                             <label for="fromDate">From Date</label>
-                                            <input type="text" name="fromDate" id="fromDate"
+                                            <input type="date" name="fromDate" id="fromDate"
                                                 class="form-control datepicker"
                                                 value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
-                                                autofocus>
+                                                autofocus autocomplete="off">
                                         </div>
                                         <div class="filter-group">
                                             <label for="toDate">To Date</label>
-                                            <input type="text" name="toDate" id="toDate" class="form-control datepicker"
-                                                value="<%= nepaliDate %>">
+                                            <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                                            value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                            autocomplete="off">
                                         </div>
                                         <% } %>
 
@@ -382,7 +383,7 @@
                                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 </div>
                                 <input type="text" class="form-control" id="searchInput"
-                                    placeholder="Search by party name...">
+                                    placeholder="Search by party name..." autocomplete="off">
                             </div>
                         </div>
 

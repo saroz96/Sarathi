@@ -27,14 +27,14 @@
                                 <input type="text" name="transactionDateNepali" id="transactionDateNepali"
                                     class="form-control"
                                     value="<%= purchaseInvoice.transactionDate ? purchaseInvoice.transactionDate.toISOString().split('T')[0]: '' %>"
-                                    onfocus="selectValue(this)" autofocus required />
+                                    onfocus="selectValue(this)" autofocus required autocomplete="off"/>
 
                             </div>
                             <div class="col">
                                 <label for="nepaliDate">Invoice Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
                                     value="<%= purchaseInvoice.date ? purchaseInvoice.date.toISOString().split('T')[0] : '' %>"
-                                    onfocus="selectValue(this)" autofocus />
+                                    onfocus="selectValue(this)" autocomplete="off" autofocus />
 
                             </div>
 
@@ -45,7 +45,7 @@
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
                                         class="form-control"
                                         value="<%= purchaseInvoice.transactionDate ? purchaseInvoice.transactionDate.toISOString().split('T')[0]: '' %>"
-                                        onfocus="selectValue(this)" autofocus required onblur="validateDate(this)">
+                                        onfocus="selectValue(this)" autofocus required onblur="validateDate(this)" autocomplete="off">
                                     <span class="error-message" style="color: red; display: none;"></span>
 
                                 </div>
@@ -54,7 +54,7 @@
                                     <input type="date" name="purchaseInvoiceDate" id="purchaseInvoiceDate"
                                         class="form-control" required
                                         value="<%= purchaseInvoice.date ? purchaseInvoice.date.toISOString().split('T')[0] : '' %>"
-                                        onfocus="selectValue(this)" onblur="validateDate(this)">
+                                        onfocus="selectValue(this)" onblur="validateDate(this)" autocomplete="off">
                                     <span class="error-message" style="color: red; display: none;"></span>
 
                                 </div>
@@ -64,14 +64,8 @@
                                         <input type="text" name="billNumber" id="billNumber" class="form-control"
                                             value="<%= purchaseInvoice.billNumber %>"
                                             oninput="this.value='<%=purchaseInvoice.billNumber%>'"
-                                            onfocus="selectValue(this)">
+                                            onfocus="selectValue(this)" autocomplete="off">
                                     </div>
-                                    <!-- <div class="col">
-                                        <label for="paymentMode">Payment Mode:</label>
-                                        <input type="text" class="form-control" id="paymentMode" name="paymentMode"
-                                            placeholder="" autocomplete="off" value="<%=purchaseInvoice.paymentMode%>">
-                                    </div> -->
-
                                     <div class="col">
                                         <label for="paymentMode">Payment Mode:</label>
                                         <select class="form-control" id="paymentMode" name="paymentMode"
@@ -87,7 +81,7 @@
                                         <label for="partyBillNumber">Suppliers Inv. No:</label>
                                         <input type="text" class="form-control" name="partyBillNumber"
                                             id="partyBillNumber" value="<%=purchaseInvoice.partyBillNumber%>"
-                                            autocomplete="off" onfocus="selectValue(this)">
+                                            autocomplete="off" onfocus="selectValue(this)" autocomplete="off">
                                     </div>
 
                                     <div class="col">
@@ -121,7 +115,7 @@
                             <!-- Account Selection Input -->
                             <label for="account">Party Name:</label>
                             <input type="text" id="account" name="account" class="form-control"
-                                value="<%=purchaseInvoice.account.name%>" required>
+                                value="<%=purchaseInvoice.account.name%>" autocomplete="off" required>
                             <!-- <input type="hidden" id="accountId" name="accountId"> -->
                             <input type="hidden" id="accountId" name="accountId"
                                 value="<%= purchaseInvoice.account._id %>">
@@ -130,13 +124,13 @@
                             <!-- New field for the address -->
                             <label for="address">Party Address:</label>
                             <input type="text" id="address" name="address" class="form-control"
-                                value="<%=purchaseInvoice.account.address%>" onfocus="selectValue(this)">
+                                value="<%=purchaseInvoice.account.address%>" autocomplete="off" onfocus="selectValue(this)">
                         </div>
                         <div class="col">
                             <!-- New field for the address -->
                             <label for="pan">Vat No:</label>
                             <input type="text" id="pan" name="pan" class="form-control"
-                                value="<%=purchaseInvoice.account.pan%>" onfocus="selectValue(this)">
+                                value="<%=purchaseInvoice.account.pan%>" autocomplete="off" onfocus="selectValue(this)">
                         </div>
                     </div>
                     <hr style="border: 1px solid gray;">
@@ -182,7 +176,7 @@
                                         <td>
                                             <input type="number" name="items[<%=index%>][WSUnit]"
                                                 value="<%=item.item.WSUnit%>" class="form-control item-WSUnit"
-                                                id="WSUnit-<%=index%>" step="any" onfocus="selectValue(this)">
+                                                id="WSUnit-<%=index%>" step="any" autocomplete="off" onfocus="selectValue(this)">
                                         </td>
                                         <td>
                                             <input type="text" name="items[<%= index %>][batchNumber]"
@@ -196,21 +190,21 @@
                                                 value="<%= item.expiryDate ? item.expiryDate.toISOString().split('T')[0] : '' %>"
                                                 class="form-control item-expiryDate" id="expiryDate-<%= index %>"
                                                 onkeydown="handleExpDateKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
+                                                onfocus="selectValue(this)" autocomplete="off">
                                         </td>
                                         <td>
                                             <input type="number" name="items[<%= index %>][quantity]"
                                                 value="<%= item.quantity %>" class="form-control item-quantity"
                                                 id="quantity-<%= index %>" step="any" oninput="updateItemTotal(this)"
                                                 onkeydown="handleQuantityKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
+                                                onfocus="selectValue(this)" autocomplete="off">
                                         </td>
                                         <td>
                                             <input type="number" name="items[<%= index %>][bonus]"
                                                 value="<%= item.bonus %>" class="form-control item-bonus"
                                                 id="bonus-<%= index %>" step="any" oninput="updateItemTotal(this)"
                                                 onkeydown="handleQuantityKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
+                                                onfocus="selectValue(this)" autocomplete="off">
                                         </td>
                                         <td>
                                             <%= item.unit.name %>
@@ -222,7 +216,7 @@
                                                 value="<%= item.puPrice || 0 %>" class="form-control item-puPrice"
                                                 id="puPrice-<%= index %>" step="any" oninput="updateItemTotal(this)"
                                                 onkeydown="handlePriceKeydown(event, <%= index %>)"
-                                                onfocus="selectValue(this)">
+                                                onfocus="selectValue(this)" autocomplete="off">
                                         </td>
                                         <td class="item-amount">
                                             <%= (item.quantity * item.puPrice).toFixed(2) %>
@@ -287,13 +281,13 @@
                                         <input type="number" step="any" name="discountPercentage"
                                             id="discountPercentage" class="form-control"
                                             value="<%= purchaseInvoice.discountPercentage.toFixed(2) %>"
-                                            oninput="calculateTotal()" onfocus="selectValue(this)">
+                                            oninput="calculateTotal()" onfocus="selectValue(this)" autocomplete="off">
                                     </td>
                                     <td><label for="discountAmount">Discount (Rs.):</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountAmount" id="discountAmount"
                                             value="<%= purchaseInvoice.discountAmount.toFixed(2) %>"
-                                            class="form-control" oninput="calculateTotal()" onfocus="selectValue(this)">
+                                            class="form-control" oninput="calculateTotal()" onfocus="selectValue(this)" autocomplete="off">
                                     </td>
                                 </tr>
 
@@ -325,7 +319,7 @@
                                         <input type="number" class="form-control" step="any" id="roundOffAmount"
                                             name="roundOffAmount"
                                             value="<%= purchaseInvoice.roundOffAmount.toFixed(2) %>"
-                                            oninput="calculateTotal()" onfocus="selectValue(this)">
+                                            oninput="calculateTotal()" onfocus="selectValue(this)" autocomplete="off">
                                     </td>
                                     <td><label for="totalAmount">Total Amount:</label></td>
                                     <td>
@@ -431,12 +425,12 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="puPrice" class="form-label">Purchase Price</label>
-                        <input type="number" class="form-control" id="puPrice" step="any" readonly>
+                        <input type="number" class="form-control" id="puPrice" step="any" autocomplete="off" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="marginPercentage" class="form-label">Margin Percentage (%)</label>
                         <input type="number" class="form-control" id="marginPercentage" min="0" step="any"
-                            placeholder="Enter margin percentage" onfocus="selectValue(this)">
+                            placeholder="Enter margin percentage" onfocus="selectValue(this)" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="currency" class="form-label">Currency</label>
@@ -448,11 +442,11 @@
                     <div class="mb-3">
                         <label for="mrp" class="form-label">MRP</label>
                         <input type="number" class="form-control" id="mrp" step="any" placeholder="Enter MRP"
-                            onfocus="selectValue(this)">
+                            onfocus="selectValue(this)" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="salesPrice" class="form-label">Sales Price</label>
-                        <input type="number" class="form-control" id="salesPrice" step="any" onfocus="selectValue(this)"
+                        <input type="number" class="form-control" id="salesPrice" step="any" autocomplete="off" onfocus="selectValue(this)"
                             required>
                     </div>
                 </div>

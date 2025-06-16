@@ -3,6 +3,15 @@ let itemIndex = 0;
 let currentFocus = 0;
 let isFirstLoad = true;
 
+// Add this at the top of your purchaseEntry.js
+if (typeof serverStores === 'undefined') {
+    const serverStores = [];
+}
+
+if (typeof serverRacksByStore === 'undefined') {
+    const serverRacksByStore = {};
+}
+
 async function fetchItems(query, vatStatus, existingItemIds) {
     try {
         const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
@@ -297,6 +306,29 @@ function addItemToBill(item, dropdownMenu) {
     const batchpuPrice = lastStockEntry.mainUnitPuPrice || 0;
 
     // Use the current itemIndex value in the name attributes
+
+    let storeDropdown = '';
+    let rackDropdown = '';
+    if (storeManagementEnabled) {
+        storeDropdown = `
+        <td>
+            <select name="items[${itemIndex}][store]" class="form-control item-store" id="store-${itemIndex}" onchange="updateRacks(${itemIndex})" onkeydown="handleStoreKeydown(event, ${itemIndex})" required>
+                ${serverStores.map(s => `
+                    <option value="${s._id}">${s.name}</option>
+                `).join('')}
+            </select>
+        </td>
+        `;
+
+        rackDropdown = `
+        <td>
+            <select name="items[${itemIndex}][rack]" class="form-control item-rack" id="rack-${itemIndex}" onkeydown="handleRackKeydown(event, ${itemIndex})" required>
+                <!-- Options will be populated dynamically -->
+            </select>
+        </td>
+        `;
+    }
+
     tr.innerHTML = `
 <td>${serialNumber}</td>
 <td>${item.uniqueNumber}</td>
@@ -317,18 +349,8 @@ function addItemToBill(item, dropdownMenu) {
 <td>
     <input type="date" name="items[${itemIndex}][expiryDate]" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})" onfocus="selectValue(this)" value="${getDefaultExpiryDate()}" required>
 </td>
-<td>
-    <select name="items[${itemIndex}][store]" class="form-control item-store" id="store-${itemIndex}" onkeydown="handleStoreKeydown(event, ${itemIndex})" required>
-        ${serverStores.map(s => `
-            <option value="${s._id}">${s.name}</option>
-        `).join('')}
-    </select>
-</td>
-<td>
-    <select name="items[${itemIndex}][rack]" class="form-control item-rack" id="rack-${itemIndex}" onkeydown="handleRackKeydown(event, ${itemIndex})" required>
-            <!-- Options populated dynamically -->
-    </select>
-</td>
+${storeDropdown}
+${rackDropdown}
 <td>
     <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event,${itemIndex})" onfocus="selectValue(this)" required>
 </td>
@@ -356,6 +378,14 @@ function addItemToBill(item, dropdownMenu) {
     tbody.appendChild(tr);
     // Increment itemIndex after adding the new item
     itemIndex++;
+
+    if (storeManagementEnabled) {
+        const storeSelect = document.getElementById(`store-${itemIndex}`);
+        if (storeSelect && storeSelect.options.length > 0) {
+            updateRacks(itemIndex);
+        }
+    }
+
     calculateTotal();
 
     // Fetch and display last transactions for the added item
@@ -491,6 +521,27 @@ function addItemToBill(item, dropdownMenu) {
     updateRackOptions(); // Initial population
 
 }
+
+// Function to update racks based on selected store
+function updateRacks(itemIndex) {
+    const storeSelect = document.getElementById(`store-${itemIndex}`);
+    const rackSelect = document.getElementById(`rack-${itemIndex}`);
+
+    if (!storeSelect || !rackSelect) return;
+
+    const storeId = storeSelect.value;
+    rackSelect.innerHTML = ''; // Clear existing options
+
+    if (serverRacksByStore[storeId]) {
+        serverRacksByStore[storeId].forEach(rack => {
+            const option = document.createElement('option');
+            option.value = rack._id;
+            option.textContent = rack.name;
+            rackSelect.appendChild(option);
+        });
+    }
+}
+
 
 // Function to fetch last transactions for the selected item
 async function fetchLastItemsData(itemId) {
@@ -965,6 +1016,48 @@ function handleWSUnitKeydown(event) {
     }
 }
 
+function handleBatchKeydown(event) {
+    if (event.key === 'Enter') {
+        const expDateInput = document.getElementById(`expiryDate-${itemIndex - 1}`);
+        expDateInput.focus();
+        expDateInput.select();
+    }
+}
+
+function handleExpDateKeydown(event) {
+    if (event.key === 'Enter') {
+        // const storeInput = document.getElementById(`store-${itemIndex - 1}`);
+        // storeInput.focus();
+        // storeInput.select();
+        if (storeManagementEnabled) {
+            const storeInput = document.getElementById(`store-${itemIndex - 1}`)
+            storeInput.focus();
+            storeInput.select();
+        } else {
+            // Skip store and rack when management is disabled
+            const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`)
+            quantityInput.focus();
+            quantityInput.select();
+        }
+    }
+}
+
+
+function handleStoreKeydown(event) {
+    if (event.key === 'Enter') {
+        const rackInput = document.getElementById(`rack-${itemIndex - 1}`);
+        rackInput.focus();
+        rackInput.select();
+    }
+}
+function handleRackKeydown(event) {
+    if (event.key === 'Enter') {
+        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
+        quantityInput.focus();
+        quantityInput.select();
+    }
+}
+
 function handleQuantityKeydown(event) {
     if (event.key === 'Enter') {
         const bonusInput = document.getElementById(`bonus-${itemIndex - 1}`);
@@ -979,36 +1072,6 @@ function handleBonusKeydown(event) {
         priceInput.focus();
         priceInput.select();
 
-    }
-}
-function handleBatchKeydown(event) {
-    if (event.key === 'Enter') {
-        const expDateInput = document.getElementById(`expiryDate-${itemIndex - 1}`);
-        expDateInput.focus();
-        expDateInput.select();
-    }
-}
-
-function handleExpDateKeydown(event) {
-    if (event.key === 'Enter') {
-        const storeInput = document.getElementById(`store-${itemIndex - 1}`);
-        storeInput.focus();
-        storeInput.select();
-    }
-}
-
-function handleStoreKeydown(event) {
-    if (event.key === 'Enter') {
-        const rackInput = document.getElementById(`rack-${itemIndex - 1}`);
-        rackInput.focus();
-        rackInput.select();
-    }
-}
-function handleRackKeydown(event) {
-    if (event.key === 'Enter') {
-        const quantityInput = document.getElementById(`quantity-${itemIndex - 1}`);
-        quantityInput.focus();
-        quantityInput.select();
     }
 }
 

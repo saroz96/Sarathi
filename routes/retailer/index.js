@@ -13,7 +13,7 @@ const companyGroup = require('../../models/retailer/CompanyGroup');
 const Transaction = require('../../models/retailer/Transaction');
 const Account = require('../../models/retailer/Account');
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const SalesReturn = require('../../models/retailer/SalesReturn');
 const PurchaseReturns = require('../../models/retailer/PurchaseReturns');
 

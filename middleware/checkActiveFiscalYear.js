@@ -1,5 +1,5 @@
 const Company = require('../models/Company');
-const FiscalYear = require('../models/retailer/FiscalYear');
+const FiscalYear = require('../models/FiscalYear');
 
 async function ensureFiscalYear(req, res, next) {
     if (!req.session.currentFiscalYear) {

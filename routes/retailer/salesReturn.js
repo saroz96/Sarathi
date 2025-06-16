@@ -19,7 +19,7 @@ const Company = require('../../models/Company');
 const NepaliDate = require('nepali-date');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const SalesBill = require('../../models/retailer/SalesBill');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
 const BillCounter = require('../../models/retailer/billCounter');
@@ -226,10 +226,21 @@ router.get('/sales-return/finds', isLoggedIn, ensureAuthenticated, ensureCompany
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+             // Fetch the latest saved bill number (without modifying it)
+        const latestBill = await SalesReturn.findOne({ 
+            company: companyId,
+            fiscalYear: fiscalYear,
+            cashAccount: { $exists: false }
+        })
+        .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+        .select('billNumber date')
+        .lean();
+
         res.render('retailer/salesReturn/billNumberForm', {
             company,
             currentFiscalYear,
             currentCompanyName: req.session.currentCompanyName,
+            latestBillNumber: latestBill ? latestBill.billNumber : '',
             date: new Date().toISOString().split('T')[0], // Today's date in ISO format
             title: '',
             body: '',
@@ -2734,13 +2745,6 @@ router.get('/sales-return/:id/print', isLoggedIn, ensureAuthenticated, ensureCom
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid invoice date provided');
-        }
-        if (!transactionDateNepali || isNaN(new Date(transactionDateNepali).getTime())) {
-            throw new Error('Invalid transaction date provided ')
-        }
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
             console.log("Current Company:", currentCompany); // Debugging line
@@ -2876,13 +2880,6 @@ router.get('/sales-return/:id/direct-print', isLoggedIn, ensureAuthenticated, en
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid invoice date provided');
-        }
-        if (!transactionDateNepali || isNaN(new Date(transactionDateNepali).getTime())) {
-            throw new Error('Invalid transaction date provided ')
-        }
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
             console.log("Current Company:", currentCompany); // Debugging line
@@ -3018,13 +3015,6 @@ router.get('/sales-return/:id/cash/direct-print', isLoggedIn, ensureAuthenticate
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid invoice date provided');
-        }
-        if (!transactionDateNepali || isNaN(new Date(transactionDateNepali).getTime())) {
-            throw new Error('Invalid transaction date provided ')
-        }
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
             console.log("Current Company:", currentCompany); // Debugging line
@@ -3160,13 +3150,6 @@ router.get('/sales-return/:id/edit/direct-print', isLoggedIn, ensureAuthenticate
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid invoice date provided');
-        }
-        if (!transactionDateNepali || isNaN(new Date(transactionDateNepali).getTime())) {
-            throw new Error('Invalid transaction date provided ')
-        }
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
             console.log("Current Company:", currentCompany); // Debugging line

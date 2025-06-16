@@ -1,173 +1,208 @@
-<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
-
-
+<%- include('../../layouts/boilerplate', { title: '' , body: '' }) %>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-    <link rel="stylesheet" href="/stylesheet/purchase/purchaseEntry.css">
+    <link rel="stylesheet" href="/stylesheet/sales/quotation/edit.css">
 
     <!-- Nepali Datepicker -->
     <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
         rel="stylesheet" type="text/css" />
 
-    <style>
-        #accountModal .modal-body {
-            min-height: 400px;
-            /* Ensures modal stays the same size */
-            max-height: 500px;
-            /* Limits height */
-            overflow-y: auto;
-            /* Allows scrolling */
-        }
-
-
-        #bill-details-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-
-        #items {
-            table-layout: fixed;
-            width: 100%;
-        }
-    </style>
-
-    <div class="container wow-form expanded-container">
-        <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+    <div class="container mt-4 wow-form expanded-container">
+        <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
             <div class="card-header">
-                Purchase Entry<span id="customAlertForBillNumber" style="color: red; display: none;">Invoice is
-                    required!</span>
+                Update Sales Quotation
+
+                <span id="customAlertForBillNumber" style="color: red; display: none;">Quotation no. is required!</span>
                 <span id="transactionDateError" style="color: red; display: none;">Invalid date!</span>
                 <span id="nepaliDateError" style="color: red; display: none;">Invalid date!</span>
             </div>
             <div class="card-body">
-                <form action="/purchase-bills" method="post" id="billForm" class="needs-validation" novalidate>
+                <form action="/retailer/sales-quotation/edit/<%=salesQuotation._id%>?_method=PUT" method="post" id="billForm" class="wow-form">
                     <div class="form-group row">
+
                         <% if (companyDateFormat==='nepali' ) { %>
+                            <!-- Nepali Date Fields -->
                             <div class="col">
                                 <label for="transactionDateNepali">Transaction Date:</label>
                                 <input type="text" name="transactionDateNepali" id="transactionDateNepali"
-                                    class="form-control" value="<%= transactionDateNepali ||'' %>" autofocus required>
+                                    class="form-control"
+                                    value="<%= salesQuotation.transactionDate ? salesQuotation.transactionDate.toISOString().split('T')[0]: '' %>"
+                                    onfocus="selectValue(this)" autofocus required />
+
                             </div>
+
                             <div class="col">
-                                <label for="nepaliDate">Invoice Date:</label>
+                                <label for="nepaliDate">Quotation Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" autofocus>
+                                    value="<%= salesQuotation.date ? salesQuotation.date.toISOString().split('T')[0] : '' %>"
+                                    onfocus="selectValue(this)" autofocus />
+
                             </div>
+
                             <% } else { %>
                                 <div class="col">
                                     <label for="transactionDateRoman">Transaction Date:</label>
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
-                                        class="form-control" value="<%= new Date().toISOString().split('T')[0]%>"
-                                        onblur="validateDate(this)" autocomplete="off" autofocus required>
+                                        class="form-control"
+                                        value="<%= salesQuotation.transactionDate ? salesQuotation.transactionDate.toISOString().split('T')[0]: '' %>"
+                                        onfocus="selectValue(this)" autofocus required onblur="validateDate(this)">
                                     <span class="error-message" style="color: red; display: none;"></span>
+
                                 </div>
                                 <div class="col">
-                                    <label for="billDate">Invoice Date:</label>
+                                    <label for="billDate">Quotation Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
-                                        value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onblur="validateDate(this)" autocomplete="off" autofocus>
+                                        value="<%= salesQuotation.date ? salesQuotation.date.toISOString().split('T')[0] : '' %>"
+                                        onfocus="selectValue(this)" onblur="validateDate(this)">
                                     <span class="error-message" style="color: red; display: none;"></span>
                                 </div>
                                 <% } %>
                                     <div class="col">
-                                        <label for="billNumber">Vch. No:</label>
+                                        <label for="billNumber">Inv. No:</label>
                                         <input type="text" name="billNumber" id="billNumber" class="form-control"
-                                            value="<%=nextPurchaseBillNumber %>"
-                                            oninput="this.value='<%=nextPurchaseBillNumber%>'"
-                                            onfocus="selectValue(this)" autocomplete="off">
+                                            value="<%= salesQuotation.billNumber %>" oninput="this.value='<%=salesQuotation.billNumber%>'"
+                                            onfocus="selectValue(this)">
                                     </div>
-
                                     <div class="col">
                                         <label for="paymentMode">Payment Mode:</label>
-                                        <select class="form-control" name="paymentMode" id="paymentMode"
+                                        <select class="form-control" id="paymentMode" name="paymentMode"
                                             autocomplete="off">
-                                            <option value="credit">credit</option>
-                                            <option value="cash">cash</option>
+                                            <option value="credit" <%=salesQuotation.paymentMode==='credit' ? 'selected' : '' %>
+                                                >credit</option>
+                                            <option value="cash" <%=salesQuotation.paymentMode==='cash' ? 'selected' : '' %>>cash
+                                            </option>
                                         </select>
                                     </div>
-
                                     <div class="col">
-                                        <label for="partyBillNumber" class="form-label">Suppliers Inv. No:</label>
-                                        <input type="text" class="form-control" id="partyBillNumber"
-                                            name="partyBillNumber" autocomplete="off" onfocus="selectValue(this)"
-                                            required>
-                                    </div>
-                                    <div class="col">
-                                        <label for="isVatExempt">VAT:</label>
-                                        <select class="form-control" name="isVatExempt" id="isVatExempt"
+                                        <label for="isVatExempt">VAT</label>
+                                        <select name="isVatExempt" id="isVatExempt" class="form-control"
                                             onchange="toggleVatInputs()" autocomplete="off">
                                             <% if (vatEnabled) {%>
-                                                <option value="all">All</option>
-                                                <option value="false">13%</option>
+                                                <option value="all" <%=salesQuotation.isVatExempt===false&&salesQuotation.isVatAll==='true'
+                                                    ? 'selected' :'' %>>All</option>
+                                                <option value="false"
+                                                    <%=salesQuotation.isVatExempt===false&&salesQuotation.isVatAll==='false' ? 'selected'
+                                                    : '' %>>13%
+                                                </option>
                                                 <%}%>
-                                                    <option value="true">Exempt</option>
+                                                    <option value="true"
+                                                        <%=salesQuotation.isVatExempt===true&&salesQuotation.isVatAll==='false' ? 'selected'
+                                                        : '' %>>Exempt
+                                                    </option>
                                         </select>
                                     </div>
                     </div>
                     <div class="form-group row">
                         <div class="col hidden">
-                            <label for="purchaseSalesType">Type</label>
+                            <label for="purchaseSalesType">Type:</label>
                             <select id="purchaseSalesType" name="purchaseSalesType" class="form-control" disabled>
-                                <option value="Purchase">Purchase</option>
+                                <option value="Sales">Sales</option>
                             </select>
                         </div>
 
                         <div class="col-6">
                             <!-- Account Selection Input -->
                             <label for="account">Party Name:</label>
-                            <input type="text" id="account" name="account" class="form-control" placeholder=""
-                                autocomplete="off" required>
-                            <input type="hidden" id="accountId" name="accountId">
+                            <input type="text" id="account" name="account" class="form-control"
+                                value="<%=salesQuotation.account.name%>" required>
+                            <!-- <input type="hidden" id="accountId" name="accountId"> -->
+                            <input type="hidden" id="accountId" name="accountId" value="<%= salesQuotation.account._id %>">
                         </div>
+
                         <div class="col">
+                            <!-- New field for the address -->
                             <label for="address">Party Address:</label>
-                            <input type="text" id="address" class="form-control" placeholder="" autocomplete="off"
-                                onfocus="selectValue(this)">
+                            <input type="text" id="address" name="address" class="form-control"
+                                value="<%=salesQuotation.account.address%>" onfocus="selectValue(this)">
                         </div>
                         <div class="col">
+                            <!-- New field for the address -->
                             <label for="pan">Vat No:</label>
-                            <input type="text" id="pan" name="pan" class="form-control" autocomplete="off"
+                            <input type="text" id="pan" name="pan" class="form-control" value="<%=salesQuotation.account.pan%>"
                                 onfocus="selectValue(this)">
                         </div>
                     </div>
                     <hr style="border: 1px solid gray;">
 
-                    <div id="bill-details-container">
-                        <table class="table table-bordered compact-table" id="itemsTable">
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>#</th>
-                                    <th>HSN</th>
-                                    <th>Description of Goods</th>
-                                    <th>WS Unit</th>
-                                    <th>Batch</th>
-                                    <th>Expiry</th>
-                                    <% if (storeManagementEnabled) { %>
-                                        <th>Store</th>
-                                        <th>Rack</th>
+                    <table class="table table-bordered compact-table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>S.N.</th>
+                                <th>#</th>
+                                <th>HSN</th>
+                                <th>Description of Goods</th>
+                                <th>Qty</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items">
+                            <!-- Item rows will be dynamically added here -->
+                            <% if (items && items.length> 0) { %>
+                                <% items.forEach((item, index)=> { %>
+                                    <tr class="item <%= item.vatStatus ? 'vatable-item' : 'non-vatable-item' %>">
+                                        <td>
+                                            <%= index + 1 %>
+                                        </td>
+                                        <td>
+                                            <%= item.item.uniqueNumber || 'N/A' %>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="items[<%= index %>][hscode]"
+                                                value="<%= item.item.hscode || 'N/A' %>">
+                                            <%= item.item.hscode || 'N/A' %>
+                                        </td>
+                                        <td class="col-3">
+                                            <input type="hidden" name="items[<%= index %>][item]"
+                                                value="<%= item.item._id %>">
+                                            <%= item.item.name || 'N/A' %>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[<%= index %>][quantity]"
+                                                value="<%= item.quantity %>" class="form-control item-quantity"
+                                                id="quantity-<%= index %>" min="1" step="any"
+                                                oninput="updateItemTotal(this)"
+                                                onkeydown="handleQuantityKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)">
+                                        </td>
+                                        <td>
+                                            <%= item.unit.name %>
+                                                <input type="hidden" name="items[<%= index %>][unit]"
+                                                    value="<%= item.unit._id %>">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[<%= index %>][price]"
+                                                value="<%= item.price || 0 %>" class="form-control item-price"
+                                                id="price-<%= index %>" step="any" oninput="updateItemTotal(this)"
+                                                onkeydown="handlePriceKeydown(event, <%= index %>)"
+                                                onfocus="selectValue(this)">
+                                        </td>
+                                        <td class="item-amount">
+                                            <%= (item.quantity * item.price).toFixed(2) %>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger" onclick="removeItem(this)">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </td>
+                                        <input type="hidden" name="items[<%= index %>][vatStatus]"
+                                            value="<%= item.vatStatus %>">
+                                    </tr>
+                                    <% }); %>
                                         <% } %>
-                                            <th>Qty</th>
-                                            <th>Bonus</th>
-                                            <th>Unit</th>
-                                            <th>Rate</th>
-                                            <th>Amount</th>
-                                            <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="items">
-                                <!-- Item rows will be dynamically added here -->
-                            </tbody>
-                        </table>
-                    </div>
+
+                        </tbody>
+                    </table>
+
+                    <hr style="border: 1px solid gray;">
 
                     <div class="form-group row">
                         <div class="col">
                             <label for="itemSearch">Search Item</label>
                             <input type="text" id="itemSearch" class="form-control" placeholder="Search for an item"
-                                autocomplete="off" onkeydown="handleItemSearchKeydown(event)" autocomplete="off">
+                                oninput="filterItems(this)" autocomplete="off"
+                                onkeydown="handleItemSearchKeydown(event)">
                             <div id="dropdownMenu" class="dropdown-menu"></div>
                         </div>
                     </div>
@@ -182,63 +217,79 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Sub Total, Discount % and Discount Amount in the same row -->
+                                <!-- Sub Total Row -->
                                 <tr>
                                     <td><label for="subTotal">Sub Total:</label></td>
                                     <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="subTotal">0.00</span></p>
+                                        <p class="form-control-plaintext">Rs. <span id="subTotal">
+                                                <%= salesQuotation.subTotal.toFixed(2) %>
+                                            </span></p>
                                     </td>
+
+                                    <!-- Discount Row -->
                                     <td><label for="discountPercentage">Discount %:</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountPercentage"
-                                            id="discountPercentage" class="form-control" value="0.00"
-                                            oninput="calculateTotal()" onfocus="selectValue(this)" autocomplete="off">
+                                            id="discountPercentage" class="form-control"
+                                            value="<%= salesQuotation.discountPercentage.toFixed(2) %>" oninput="calculateTotal()"
+                                            onfocus="selectValue(this)">
                                     </td>
                                     <td><label for="discountAmount">Discount (Rs.):</label></td>
                                     <td>
                                         <input type="number" step="any" name="discountAmount" id="discountAmount"
-                                            value="0.00" class="form-control" oninput="calculateTotal()"
-                                            onfocus="selectValue(this)" autocomplete="off">
+                                            value="<%= salesQuotation.discountAmount.toFixed(2) %>" class="form-control"
+                                            oninput="calculateTotal()" onfocus="selectValue(this)">
                                     </td>
                                 </tr>
 
-                                <!-- Taxable Amount, VAT % and VAT Amount in the same row -->
+                                <!-- VAT Rows (Initially visible) -->
                                 <tr id="taxableAmountRow">
                                     <td><label for="taxableAmount">Taxable Amount:</label></td>
                                     <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span></p>
+                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">
+                                                <%= salesQuotation.taxableAmount.toFixed(2) %>
+                                            </span>
+                                        </p>
                                     </td>
+
                                     <td><label for="vatPercentage">VAT (13%):</label></td>
                                     <td>
                                         <input type="number" name="vatPercentage" id="vatPercentage"
-                                            class="form-control" value="13.00" readonly onfocus="selectValue(this)">
+                                            class="form-control" value="13.00" readonly>
                                     </td>
                                     <td><label for="vatAmount">VAT Amount:</label></td>
                                     <td class="text-right">
-                                        <p class="form-control-plaintext">Rs. <span id="vatAmount">0.00</span></p>
+                                        <p class="form-control-plaintext">Rs. <span id="vatAmount">
+                                                <%= salesQuotation.vatAmount.toFixed(2) %>
+                                            </span></p>
                                     </td>
                                 </tr>
 
-                                <!-- Round Off and Total Amount in the same row -->
+                                <!-- Round Off & Total Row -->
                                 <tr>
                                     <td><label for="roundOffAmount">Round Off:</label></td>
                                     <td>
                                         <input type="number" class="form-control" step="any" id="roundOffAmount"
-                                            name="roundOffAmount" value="0.00" oninput="calculateTotal()"
-                                            onfocus="selectValue(this)" autocomplete="off">
+                                            name="roundOffAmount" value="<%= salesQuotation.roundOffAmount.toFixed(2) %>"
+                                            oninput="calculateTotal()" onfocus="selectValue(this)">
                                     </td>
+
+                                    <!-- Total Amount & In Words Row -->
                                     <td><label for="totalAmount">Total Amount:</label></td>
                                     <td>
-                                        <p class="form-control-plaintext">Rs. <span id="totalAmount">0.00</span></p>
+                                        <p class="form-control-plaintext">Rs. <span id="totalAmount">
+                                                <%= salesQuotation.totalAmount.toFixed(2) %>
+                                            </span></p>
                                     </td>
                                     <td><label for="amountInWords">In Words:</label></td>
-                                    <td class="col-3 text-right">
+                                    <td class="text-right">
                                         <p class="form-control-plaintext" id="amountInWords">Zero Only.</p>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end mt-4">
                         <button type="button" class="btn btn-primary mr-2 p-3" id="saveBill"
@@ -254,6 +305,17 @@
         </div>
     </div>
 
+    <style>
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+    </style>
+
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -265,7 +327,7 @@
                 <!-- Fixed Search Input -->
                 <div class="p-3 bg-white sticky-top">
                     <input type="text" id="searchAccount" class="form-control" placeholder="Search Account"
-                        onfocus="selectValue(this)" autocomplete="off" autocomplete="off">
+                        onfocus="selectValue(this)" autocomplete="off">
                 </div>
                 <div class="modal-body p-0">
 
@@ -287,7 +349,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="transactionModalLabel">Last Transactions</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -297,71 +359,54 @@
                     </ul>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeModalButton"
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeModalButton"
                         onkeydown="handleCloseButtonKeydown(event)">Close</button>
-
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sales Price Modal -->
-    <div class="modal fade" id="setSalesPriceModal" tabindex="-1" aria-labelledby="setSalesPriceModalLabel"
-        aria-hidden="true">
+    <!-- Batch and Expiry Modal -->
+    <div class="modal fade" id="batchModal" tabindex="-1" aria-labelledby="batchModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="setSalesPriceModalLabel">Set Sales Price for New Batch</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="batchModalLabel">Batch Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+
+                    </button>
+
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="puPrice" class="form-label">Purchase Price</label>
-                        <input type="number" class="form-control" id="puPrice" step="any" autocomplete="off" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="marginPercentage" class="form-label">Margin Percentage (%)</label>
-                        <input type="number" class="form-control" id="marginPercentage" min="0" step="any"
-                            onfocus="selectValue(this)" placeholder="Enter margin percentage" autocomplete="off">
-                    </div>
-                    <div class="mb-3">
-                        <label for="currency" class="form-label">Currency</label>
-                        <select class="form-select" id="currency" onfocus="selectValue(this)">
-                            <option value="NPR">NPR</option>
-                            <option value="INR">INR</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="mrp" class="form-label">MRP</label>
-                        <input type="number" class="form-control" id="mrp" step="any" placeholder="Enter MRP"
-                            onfocus="selectValue(this)" autocomplete="off">
-                    </div>
-                    <div class="mb-3">
-                        <label for="salesPrice" class="form-label">Sales Price</label>
-                        <input type="number" class="form-control" id="salesPrice" step="any" onfocus="selectValue(this)"
-                            autocomplete="off" required>
-                    </div>
+                <div class="modal-body" id="batchModalBody">
+                    <!-- Batch information will be populated here dynamically -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveSalesPrice">Save Sales Price</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/javascript/sales/edit.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-      <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
-        type="text/javascript"></script>
 
 
     <script>
+        function selectValue(input) {
+            input.select(); // Select the value of the input field when it is focused
+        }
+    </script>
+
+
+    <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
+        type="text/javascript"></script>
+
+
+    <script type="text/javascript">
 
         //for account
         $(document).ready(function () {
-
             let selectedIndex = 0;
             let allAccounts = [];
 
@@ -390,22 +435,7 @@
                     method: "GET",
                     success: function (data) {
                         allAccounts = data;
-
-                        // Sort the accounts alphabetically by name (assuming `name` is the field you want to sort by)
-                        allAccounts.sort(function (a, b) {
-                            const nameA = a.name.toLowerCase(); // Convert to lowercase to handle case-insensitive comparison
-                            const nameB = b.name.toLowerCase();
-
-                            if (nameA < nameB) {
-                                return -1; // a should come before b
-                            }
-                            if (nameA > nameB) {
-                                return 1; // b should come before a
-                            }
-                            return 0; // a and b are equal
-                        });
-
-                        renderAccounts(); // Now render the accounts after sorting
+                        renderAccounts();
                     },
                     error: function (err) {
                         console.error("Error fetching accounts:", err);
@@ -426,19 +456,18 @@
                 filtered.forEach((account, index) => {
                     const isActive = index === 0 ? "active" : "";
                     $accountList.append(`
-                <li class="list-group-item account-item ${isActive}" 
-                    data-uniqueNumber="${account.uniqueNumber || 'N/A'}"
-                    data-id="${account._id}" 
-                    data-name="${account.name}" 
-                    data-address="${account.address || 'N/A'}" 
-                    data-pan="${account.pan || 'N/A'}"
-                    data-index="${index}">
-                    <div class="d-flex justify-content-between">
-                        <strong> ${account.uniqueNumber || 'N/A'} ${account.name}</strong>
-                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
-                    </div>
-                </li>
-            `);
+        <li class="list-group-item account-item ${isActive}" 
+            data-id="${account._id}" 
+            data-name="${account.name}" 
+            data-address="${account.address || 'N/A'}" 
+            data-pan="${account.pan || 'N/A'}"
+            data-index="${index}">
+            <div class="d-flex justify-content-between">
+                <strong>${account.name}</strong>
+                <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+            </div>
+        </li>
+    `);
                 });
 
                 selectedIndex = 0;
@@ -519,17 +548,8 @@
             }
         });
 
-    </script>
 
-    <script>
-        function selectValue(input) {
-            input.select(); // Select the value of the input field when it is focused
-        }
-    </script>
-
-    <script type="text/javascript">
-
- window.onload = function () {
+        window.onload = function () {
             var transactionDateNepali = document.getElementById("transactionDateNepali");
             var nepaliDate = document.getElementById("nepaliDate");
 
@@ -626,6 +646,12 @@
             }
         }
 
+        function selectValue(input) {
+            input.select(); // Select the value of the input field when it is focused
+        }
+
+        //-----------------------------------------------------------------------------------------
+
         // Add an event listener to the paymentMode select element
         document.getElementById('paymentMode').addEventListener('keydown', function (event) {
             // Check if the Enter key is pressed (key code 13)
@@ -634,7 +660,7 @@
                 event.preventDefault();
 
                 // Move focus to the next input field
-                document.getElementById('partyBillNumber').focus();
+                document.getElementById('isVatExempt').focus();
             }
         });
 
@@ -649,17 +675,3 @@
             }
         });
     </script>
-
-    <!-- <script>
-        // Server data first
-        const storeManagementEnabled = <% - JSON.stringify(storeManagementEnabled) %>;
-        const serverStores = <% - JSON.stringify(stores || []) %>;
-        const serverRacksByStore = <% - JSON.stringify(racksByStore || {}) %>;
-    </script> -->
-    <script>
-        // Server data first - FIXED SYNTAX
-        window.storeManagementEnabled = <%- JSON.stringify(storeManagementEnabled) %>;
-        window.serverStores = <%- JSON.stringify(stores || []) %>;
-        window.serverRacksByStore = <%- JSON.stringify(racksByStore || {}) %>;
-    </script>
-    <script src="/javascript/purchase/purchaseEntry.js"></script>

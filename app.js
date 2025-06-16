@@ -32,7 +32,7 @@ const salesReturnRoutes = require('./routes/retailer/salesReturn');
 const purchaseReturnRoutes = require('./routes/retailer/purchaseReturn');
 const debitNoteRoutes = require('./routes/retailer/debitNote');
 const creditNoteRoutes = require('./routes/retailer/creditNote');
-const fiscalYearRoutes = require('./routes/retailer/fiscalYear');
+const fiscalYearRoutes = require('./routes/fiscalYear');
 const ageingReportRoutes = require('./routes/retailer/ageingReport');
 const stockStatusRoutes = require('./routes/retailer/stockStatus');
 const profitAnalysisRoutes = require('./routes/retailer/profitAnalysis');
@@ -41,7 +41,7 @@ const compositionRoutes = require('./routes/retailer/composition');
 const rackRoutes = require('./routes/retailer/rack');
 const storeRoutes = require('./routes/retailer/store');
 const itemsCompanyRoutes = require('./routes/retailer/itemsCompany');
-
+const salesQuotationRoutes = require('./routes/retailer/salesQuotation');
 //Admin Panel
 const systemAdminDashboardRoutes = require('./routes/systemAdmin/adminDashboard');
 
@@ -69,8 +69,8 @@ initializePassport(passport);
 // });
 
 // Connect with database
-mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
-// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
+// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
+mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
 // mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi?retryWrites=true&w=majority&appName=Cluster0')
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -148,6 +148,7 @@ app.use('/', compositionRoutes);
 app.use('/retailer', rackRoutes);
 app.use('/retailer', storeRoutes);
 app.use('/retailer', itemsCompanyRoutes);
+app.use('/retailer', salesQuotationRoutes);
 
 //Admin Panel
 app.use('/', systemAdminDashboardRoutes);

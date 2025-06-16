@@ -18,7 +18,7 @@ const Company = require('../../models/Company');
 const NepaliDate = require('nepali-date');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const PurchaseBill = require('../../models/retailer/PurchaseBill');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const BillCounter = require('../../models/retailer/billCounter');
 const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
@@ -290,10 +290,21 @@ router.get('/purchase-return/finds', isLoggedIn, ensureAuthenticated, ensureComp
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+        // Fetch the latest saved bill number (without modifying it)
+        const latestBill = await PurchaseReturns.findOne({
+            company: companyId,
+            fiscalYear: fiscalYear
+        })
+            .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+            .select('billNumber date')
+            .lean();
+
+
         res.render('retailer/purchaseReturn/billNumberForm', {
             company,
             currentFiscalYear,
             currentCompanyName: req.session.currentCompanyName,
+            latestBillNumber: latestBill ? latestBill.billNumber : '',
             date: new Date().toISOString().split('T')[0], // Today's date in ISO format
             title: '',
             body: '',
@@ -2022,10 +2033,6 @@ router.get('/purchase-return/:id/print', isLoggedIn, ensureAuthenticated, ensure
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
@@ -2164,10 +2171,6 @@ router.get('/purchase-return/:id/direct-print', isLoggedIn, ensureAuthenticated,
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
@@ -2305,10 +2308,6 @@ router.get('/purchase-return/:id/edit/direct-print', isLoggedIn, ensureAuthentic
 
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
-        }
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
         }
 
         try {

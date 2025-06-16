@@ -136,7 +136,7 @@
                                 </div>
                                 <div class="col">
                                     <label for="WSUnit">WS Unit</label>
-                                    <input type="number" id="WSUnit" name="WSUnit" class="form-control">
+                                    <input type="number" id="WSUnit" name="WSUnit" class="form-control" autocomplete="off">
                                 </div>
                                 <div class="col">
                                     <label for="unit">Unit <i style="color: red;">*</i></label>
@@ -170,28 +170,28 @@
                                 <div class="col">
                                     <label for="reorderLevel">Re-Order(Qty)</label>
                                     <input type="number" class="form-control" id="reorderLevel" name="reorderLevel"
-                                        value="10" aria-selected="true" onfocus="selectValue(this)">
+                                        value="10" aria-selected="true" onfocus="selectValue(this)" autocomplete="off">
                                 </div>
                                 <div class="col">
                                     <label for="price">Sales Price</label>
-                                    <input type="number" class="form-control" id="price" name="price" step="0.01">
+                                    <input type="number" class="form-control" id="price" name="price" step="0.01" autocomplete="off">
                                 </div>
                                 </div>
                                 <div class="form-group row">
                                 <div class="col">
                                     <label for="puPrice">Purchase Price</label>
                                     <input type="number" class="form-control" id="puPrice" name="puPrice" step="any"
-                                        oninput="calculateTotalOpeningStockBalance()">
+                                        oninput="calculateTotalOpeningStockBalance()" autocomplete="off">
                                 </div>
                                 <div class="col">
                                     <label for="openingStock">Op. Stock</label>
                                     <input type="number" class="form-control" id="openingStock" name="openingStock"
-                                        oninput="calculateTotalOpeningStockBalance()">
+                                        oninput="calculateTotalOpeningStockBalance()" autocomplete="off">
                                 </div>
                                 <div class="col">
                                     <label for="openingStockBalance">Op. Stock Value</label>
                                     <input type="number" class="form-control" id="openingStockBalance"
-                                        name="openingStockBalance" value="0.00" step="any" onfocus="selectValue(this)">
+                                        name="openingStockBalance" value="0.00" step="any" onfocus="selectValue(this)" autocomplete="off">
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary" id="saveItem">Add Item</button>
@@ -435,7 +435,7 @@
                                     <div class="col">
                                         <label for="editReorderLevel">Re-Order(Qty)</label>
                                         <input type="number" class="form-control" id="editReorderLevel"
-                                            name="reorderLevel" onfocus="selectValue(this)">
+                                            name="reorderLevel" onfocus="selectValue(this)" autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -443,13 +443,13 @@
                                     <div class="col">
                                         <label for="editPrice">Sales Price</label>
                                         <input type="number" class="form-control" id="editPrice" name="price"
-                                            value="0.00" step="any" onfocus="selectValue(this)">
+                                            value="0.00" step="any" onfocus="selectValue(this)" autocomplete="off">
                                     </div>
                                     <div class="col">
                                         <label for="editpuPrice">Purchase Price</label>
                                         <input type="number" class="form-control" id="editpuPrice" name="puPrice"
                                             oninput="calculateTotalOpeningStockBalanceInEditForm()" value="0.00"
-                                            step="any" onfocus="selectValue(this)">
+                                            step="any" onfocus="selectValue(this)" autocomplete="off">
                                     </div>
 
                                     <div class="col">
@@ -457,13 +457,13 @@
                                         <input type="number" class="form-control" id="editOpeningStock"
                                             name="openingStock" value="0.00"
                                             oninput="calculateTotalOpeningStockBalanceInEditForm()"
-                                            onfocus="selectValue(this)">
+                                            onfocus="selectValue(this)" autocomplete="off">
                                     </div>
                                     <div class="col">
                                         <label for="editOpeningStockBalance">Op. Stock Value</label>
                                         <input type="number" class="form-control" id="editOpeningStockBalance"
                                             name="openingStockBalance" value="0.00" step="any"
-                                            onfocus="selectValue(this)">
+                                            onfocus="selectValue(this)" autocomplete="off">
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Save changes</button>

@@ -1,6 +1,6 @@
-<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+<%- include('../../layouts/boilerplate', { title: '' , body: '' }) %>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/stylesheet/sales/bills.css">
+    <link rel="stylesheet" href="/stylesheet/sales/quotation/addQuotation.css">
 
 
     <!-- Nepali Datepicker -->
@@ -13,30 +13,16 @@
             <div class="card-header">
                 <div class="row">
                     <div class="col-md-8 col-12">
-                        Sales Entry
+                        Sales Quotation
                         <span id="customAlertForBillNumber" style="color: red; display: none;">Invoice is
                             required!</span>
                         <span id="transactionDateError" style="color: red; display: none;">Invalid date!</span>
                         <span id="nepaliDateError" style="color: red; display: none;">Invalid date!</span>
                     </div>
-                    <div class="col-md-4 col-12 d-flex justify-content-between">
-                        <!-- Add Account Button -->
-                        <button type="button" class="btn btn-success" data-toggle="modal"
-                            data-target="#createAccountModal" data-toggle="tooltip"
-                            title="Create a new account for a customer or supplier">
-                            <i class="fas fa-plus-circle"></i> Add Account
-                        </button>
-
-                        <!-- Add Item Button -->
-                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createItemModal"
-                            data-toggle="tooltip" title="Add a new item to your inventory">
-                            <i class="fas fa-box"></i> Add Item
-                        </button>
-                    </div>
                 </div>
             </div>
             <div class="card-body">
-                <form action="/bills" method="post" id="billForm" class="wow-form">
+                <form action="/retailer/sales-quotation" method="post" id="billForm" class="wow-form">
                     <div class="form-group row">
 
                         <% if (companyDateFormat==='nepali' ) { %>
@@ -44,26 +30,26 @@
                                 <label for="transactionDateNepali">Transaction Date:</label>
                                 <input type="text" name="transactionDateNepali" id="transactionDateNepali"
                                     class="form-control" value="<%= transactionDateNepali ||'' %>" autofocus required
-                                    onfocus="selectValue(this)">
+                                    onfocus="selectValue(this)" autocomplete="off">
                             </div>
                             <div class="col">
-                                <label for="nepaliDate">Invoice Date:</label>
+                                <label for="nepaliDate">Quotation Date:</label>
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)" autofocus>
+                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)" autocomplete="off" autofocus>
                             </div>
                             <% } else { %>
                                 <!-- English Date Fields -->
                                 <div class="col">
                                     <label for="transactionDateRoman">Transaction Date:</label>
-                                    <input type="text" name="transactionDateRoman" id="transactionDateRoman"
+                                    <input type="date" name="transactionDateRoman" id="transactionDateRoman"
                                         class="form-control" value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onfocus="selectValue(this)" autocomplete="off" autofocus required>
+                                        onfocus="selectValue(this)" autofocus required>
                                 </div>
                                 <div class="col">
-                                    <label for="billDate">Invoice Date:</label>
-                                    <input type="text" name="billDate" id="billDate" class="form-control" required
+                                    <label for="billDate">Quotation Date:</label>
+                                    <input type="date" name="billDate" id="billDate" class="form-control" required
                                         value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onfocus="selectValue(this)" autocomplete="off">
+                                        onfocus="selectValue(this)">
                                 </div>
 
                                 <% } %>
@@ -98,7 +84,7 @@
                         <div class="col hidden">
                             <label for="purchaseSalesType">Type:</label>
                             <select id="purchaseSalesType" name="purchaseSalesType" class="form-control" disabled>
-                                <option value="Sales">Sales</option>
+                                <option value="SalesQuotation">SalesQuotation</option>
                             </select>
                         </div>
                         <div class="col-6">
@@ -124,12 +110,10 @@
                         <table class="table table-bordered compact-table" id="itemsTable">
                             <thead>
                                 <tr>
-                                    <th>S.No.</th>
+                                    <th>S.N.</th>
                                     <th>#</th>
                                     <th>HSN</th>
                                     <th>Description of Goods</th>
-                                    <th>Batch</th>
-                                    <th>Expiry</th>
                                     <th>Qty</th>
                                     <th>Unit</th>
                                     <th>Rate</th>
@@ -326,241 +310,6 @@
         </div>
     </div>
 
-
-    <!-- Modal for Creating New Account -->
-    <div class="modal fade" id="createAccountModal" tabindex="-1" role="dialog"
-        aria-labelledby="createAccountModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createAccountModalLabel">Create New Account</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="createAccountForm" method="post" action="/create-account">
-                        <div class="form-group row">
-                            <div class="form-group col-md-4">
-                                <label for="name">Account Name <i style="color: red;">*</i></label>
-                                <input type="text" class="form-control" id="name" name="name"
-                                    placeholder="Enter account name" required autofocus autocomplete="off">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="companyGroup">Account Group <i style="color: red;">*</i></label>
-                                <select class="form-control w-100" id="companyGroup" name="companyGroups" required>
-                                    <% if (companyGroups && companyGroups.length> 0) { %>
-                                        <option value="" disabled selected>Select a Group</option>
-                                        <% companyGroups.forEach(companyGroup=> { %>
-                                            <option value="<%= companyGroup._id %>">
-                                                <%= companyGroup.name %>
-                                            </option>
-                                            <% }); %>
-                                                <% } else { %>
-                                                    <option disabled>No companies groups available</option>
-                                                    <% } %>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="openingBalance">Opening Balance</label>
-                                <input type="number" id="openingBalance" name="openingBalance[amount]"
-                                    class="form-control" value="0">
-                                <select id="balanceType" name="openingBalance[type]" class="form-control">
-                                    <option value="Dr">Dr.</option>
-                                    <option value="Cr">Cr.</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="pan">Pan No.:</label>
-                                <input type="text" class="form-control" id="pan" name="pan" minlength="9" maxlength="9"
-                                    placeholder="Enter pan/vat number" autocomplete="off">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="address">Address</label>
-                                <input type="text" class="form-control" id="address" name="address"
-                                    placeholder="Enter account address" autocomplete="off">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="ward">Ward No.:</label>
-                                <input type="number" class="form-control" id="ward" name="ward"
-                                    placeholder="Enter ward number" autocomplete="off">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label for="phone">Phone</label>
-                                <input type="text" class="form-control" id="phone" name="phone"
-                                    placeholder="Enter account phone" autocomplete="off">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="email">Email</label>
-                                <input type="email" class="form-control" id="email" name="email"
-                                    placeholder="Enter email" autocomplete="off" style="text-transform: lowercase;">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="contactperson">Contact Person</label>
-                                <input type="text" class="form-control" id="contactperson" name="contactperson"
-                                    placeholder="Enter contact person" autocomplete="off">
-                            </div>
-                        </div>
-                        <!-- <input type="hidden" name="companyId" value="<%= companyId %>"> -->
-                        <button type="submit" class="btn btn-primary">Add A/c</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Creating New Item -->
-    <div class="modal fade" id="createItemModal" tabindex="-1" role="dialog" aria-labelledby="createItemModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createItemModalLabel">Create New Item</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="createAccountForm" method="post" action="/create-items">
-                        <div class="form-group row">
-                            <div class="col">
-                                <label for="name">Name <i style="color: red;">*</i></label>
-                                <input type="text" class="form-control" id="name" name="name"
-                                    placeholder="Enter item name" autocomplete="off" required>
-                            </div>
-                            <div class="col">
-                                <label for="hscode">HSN</label>
-                                <input type="number" class="form-control" id="hscode" name="hscode"
-                                    placeholder="Enter item H.S code" autocomplete="off">
-                            </div>
-                            <div class="col-3">
-                                <label for="itemsCompany">Company <i style="color: red;">*</i></label>
-                                <select class="form-control" id="itemsCompany" name="itemsCompany" required
-                                    onfocus="selectValue(this)">
-                                    <% if (itemsCompanies && itemsCompanies.length> 0) { %>
-                                        <option value="" disabled selected>Select company</option>
-                                        <% itemsCompanies.forEach(company=> { %>
-                                            <option value="<%= company._id %>">
-                                                <%= company.name %>
-                                            </option>
-                                            <% }); %>
-                                                <% } else { %>
-                                                    <option disabled>No company available</option>
-                                                    <% } %>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <div class="col-3">
-                                <label for="category">Category <i style="color: red;">*</i></label>
-                                <select class="form-control" id="category" name="category" required>
-                                    <% if (categories && categories.length> 0) { %>
-                                        <option value="" disabled selected>Select a category</option>
-                                        <% categories.forEach(category=> { %>
-                                            <option value="<%= category._id %>">
-                                                <%= category.name %>
-                                            </option>
-                                            <% }); %>
-                                                <% } else { %>
-                                                    <option disabled>No categories available</option>
-                                                    <% } %>
-                                </select>
-                            </div>
-                            <div class="col-9">
-                                <label for="composition" class="form-label">Composition</label>
-                                <textarea class="form-control" id="composition" name="composition" rows="1"
-                                    placeholder="Press F6 to add compositions"
-                                    onkeydown="handleCompositionInputKeydown(event)"></textarea>
-                                <input type="hidden" id="compositionIds" name="compositionIds">
-                            </div>
-
-                        </div>
-                        <div class="form-group row">
-                            <div class="col">
-                                <label for="mainUnit">Main Unit <i style="color: red;">*</i></label>
-                                <select class="form-control" id="mainUnit" name="mainUnit" onfocus="selectValue(this)"
-                                    required>
-                                    <% if (mainUnits && mainUnits.length> 0) { %>
-                                        <option value="" disabled selected>Select Main Unit</option>
-                                        <% mainUnits.forEach(mainUnit=> { %>
-                                            <option value="<%= mainUnit._id %>">
-                                                <%= mainUnit.name %>
-                                            </option>
-                                            <% }); %>
-                                                <% } else { %>
-                                                    <option disabled>No units available</option>
-                                                    <% } %>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <label for="WSUnit">WS Unit</label>
-                                <input type="number" id="WSUnit" name="WSUnit" class="form-control">
-                            </div>
-                            <div class="col">
-                                <label for="unit">Unit <i style="color: red;">*</i></label>
-                                <select class="form-control" id="unit" name="unit" required>
-                                    <% if (units && units.length> 0) { %>
-                                        <option value="" disabled selected>Select a Unit</option>
-                                        <% units.forEach(unit=> { %>
-                                            <option value="<%= unit._id %>">
-                                                <%= unit.name %>
-                                            </option>
-                                            <% }); %>
-                                                <% } else { %>
-                                                    <option disabled>No units available</option>
-                                                    <% } %>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <div class="col">
-                                <label for="vatStatus">VAT<i style="color: red;">*</i></label>
-                                <select class="form-control" id="vatStatus" name="vatStatus" required>
-                                    <option value="" disabled selected>Select Vat Status</option>
-                                    <% if (vatEnabled) {%>
-                                        <option value="vatable">Vatable</option>
-                                        <%}%>
-                                            <option value="vatExempt">VAT Exempt</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <label for="reorderLevel">Re-Order(Qty)</label>
-                                <input type="number" class="form-control" id="reorderLevel" name="reorderLevel"
-                                    value="10" aria-selected="true">
-                            </div>
-                            <div class="col">
-                                <label for="price">Sales Price</label>
-                                <input type="number" class="form-control" id="price" name="price" step="0.01"
-                                    value="0.00">
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <div class="col">
-                                <label for="puPrice">Purchase Price</label>
-                                <input type="number" class="form-control" id="puPrice" name="puPrice" step="0.01"
-                                    oninput="calculateTotalOpeningStockBalance()" value="0.00">
-                            </div>
-                            <div class="col">
-                                <label for="openingStock">Op. Stock</label>
-                                <input type="number" class="form-control" id="openingStock" name="openingStock"
-                                    oninput="calculateTotalOpeningStockBalance()" value="0.00">
-                            </div>
-                            <div class="col">
-                                <label for="openingStockBalance">Op. Stock Value</label>
-                                <input type="number" class="form-control" id="openingStockBalance"
-                                    name="openingStockBalance" value="0.00">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="saveItem">Add Item</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
     <style>
         #bill-details-container {
             max-height: 400px;
@@ -575,7 +324,7 @@
         }
     </style>
 
-    <script src="/javascript/sales/bills.js"></script>
+    <script src="/javascript/sales/quotation/addQuotation.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
@@ -711,7 +460,7 @@
             // Fetch accounts from server
             function fetchAccounts() {
                 $.ajax({
-                    url: "/api/accounts",
+                    url: "/retailer/api/accounts/cashInHand",
                     method: "GET",
                     success: function (data) {
                         allAccounts = data;

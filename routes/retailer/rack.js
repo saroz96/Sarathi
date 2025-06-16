@@ -9,7 +9,7 @@ const NepaliDate = require('nepali-date');
 const { default: Rack } = require('../../models/retailer/Rack');
 const { default: Store } = require('../../models/retailer/Store');
 const Company = require('../../models/Company');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const ObjectId = mongoose.Types.ObjectId;
 
 router.get('/rack/management', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {

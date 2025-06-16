@@ -46,11 +46,11 @@
                             <div class="col">
                                 <label for="transactionDateNepali">Transaction Date:</label>
                                 <input type="text" name="transactionDateNepali" id="transactionDateNepali"
-                                    class="form-control" value="<%= transactionDateNepali ||'' %>" required autofocus />
+                                    class="form-control" value="<%= transactionDateNepali ||'' %>" autocomplete="off" required autofocus />
                             </div>
                             <div class="col">
                                 <label for="nepaliDate">Invoice Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
+                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" autocomplete="off" required
                                     value="<%= nepaliDate || '' %>">
                             </div>
                             <% } else { %>
@@ -58,14 +58,14 @@
                                     <label for="transactionDateRoman">Transaction Date:</label>
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
                                         class="form-control" value="<%= new Date().toISOString().split('T')[0]%>"
-                                        onblur="validateDate(this)" autofocus required>
+                                        onblur="validateDate(this)" autofocus autocomplete="off" required>
                                     <span class="error-message" style="color: red; display: none;"></span>
                                 </div>
                                 <div class="col">
                                     <label for="billDate">Invoice Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
                                         value="<%= new Date().toISOString().split('T')[0] %>"
-                                        onblur="validateDate(this)" autofocus>
+                                        onblur="validateDate(this)" autocomplete="off" autofocus>
                                     <span class="error-message" style="color: red; display: none;"></span>
                                 </div>
 

@@ -42,6 +42,11 @@ const fiscalYearSchema = new mongoose.Schema({
             uppercase: true,
             validate: [prefixValidator, 'Invalid 4-letter uppercase code']
         },
+        salesQuotation: {
+            type: String,
+            uppercase: true,
+            validate: [prefixValidator, 'Invalid 4-letter uppercase code']
+        },
         salesReturn: {  // camelCase
             type: String,
             uppercase: true,
@@ -98,7 +103,7 @@ fiscalYearSchema.pre('save', function (next) {  // Remove async
 
 
     // Define transaction types requiring prefixes
-    const transactionTypes = ['sales', 'salesReturn', 'purchase', 'purchaseReturn',
+    const transactionTypes = ['sales', 'salesQuotation', 'salesReturn', 'purchase', 'purchaseReturn',
         'payment', 'receipt', 'stockAdjustment', 'debitNote', 'creditNote', 'journalVoucher'];
     const generatedPrefixes = new Set();
 

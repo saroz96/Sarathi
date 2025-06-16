@@ -25,7 +25,7 @@
                           <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                           <input type="text" name="fromDate" id="fromDate" class="form-control datepicker text-center"
                             value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
-                            autofocus>
+                            autofocus autocomplete="off">
                         </div>
                       </div>
                     </div>
@@ -35,7 +35,7 @@
                         <div class="input-group">
                           <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                           <input type="text" name="toDate" id="toDate" class="form-control datepicker text-center"
-                            value="<%= new Date().toISOString().split('T')[0] %>">
+                            value="<%= new Date().toISOString().split('T')[0] %>" autocomplete="off">
                         </div>
                       </div>
                     </div>
@@ -47,7 +47,7 @@
                             <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                             <input type="text" name="fromDate" id="fromDate" class="form-control datepicker text-center"
                               value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
-                              autofocus>
+                              autofocus autocomplete="off">
                           </div>
                         </div>
                       </div>
@@ -57,7 +57,7 @@
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                             <input type="text" name="toDate" id="toDate" class="form-control datepicker text-center"
-                              value="<%= nepaliDate %>">
+                              value="<%= nepaliDate %>" autocomplete="off">
                           </div>
                         </div>
                       </div>

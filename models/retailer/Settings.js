@@ -44,6 +44,10 @@ const SettingsSchema = new Schema({
         type: Boolean,
         default: false
     },
+    storeManagement: {
+        type: Boolean,
+        default: false // Default to disabled
+    },
     value: {
         type: mongoose.Schema.Types.Mixed
     },

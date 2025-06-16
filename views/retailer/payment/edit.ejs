@@ -98,14 +98,14 @@
                                 <input type="text" name="nepaliDate" id="nepaliDate" class="form-control"
                                     onkeydown="handleDateKeydown(event)" autofocus required
                                     value="<%= payments.date ? payments.date.toISOString().split('T')[0] : '' %>"
-                                    autofocus <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                                     autocomplete="off" <%=payments.status==='canceled' ? 'disabled' : '' %>>
                             </div>
                             <% } else { %>
                                 <div class="col">
                                     <label for="billDate">Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control"
-                                        onkeydown="handleDateKeydown(event)" autofocus required
-                                        value="<%= payments.date.toISOString().split('T')[0] %>" autofocus
+                                        onkeydown="handleDateKeydown(event)" autofocus required autocomplete="off"
+                                        value="<%= payments.date.toISOString().split('T')[0] %>"
                                         <%=payments.status==='canceled' ? 'disabled' : '' %>>
                                 </div>
                                 <% } %>
@@ -114,13 +114,13 @@
                                         <input type="text" name="billNumber" id="billNumber" class="form-control"
                                             value="<%= payments.billNumber %>"
                                             oninput="this.value='<%=payments.billNumber%>'"
-                                            onkeydown="handleBillNumberKeydown(event)" required
+                                            onkeydown="handleBillNumberKeydown(event)" autocomplete="off" required
                                             <%=payments.status==='canceled' ? 'disabled' : '' %>>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="accountType">Account Type:</label>
                                         <input type="text" name="accountType" id="accountType" class="form-control"
-                                            value="Payment" oninput="this.value='Payment'"
+                                            value="Payment" oninput="this.value='Payment'" autocomplete="off"
                                             onkeydown="handleAccountTypeKeydown(event)" <%=payments.status==='canceled'
                                             ? 'disabled' : '' %>>
                                     </div>
@@ -163,13 +163,13 @@
                                     value="<%= payments.account ? payments.account.name : '' %>" autocomplete="off"
                                     required <%=payments.status==='canceled' ? 'disabled' : '' %>>
                                 <input type="hidden" id="accountId" name="accountId"
-                                    value="<%= payments.account ? payments.account._id : '' %>">
+                                    value="<%= payments.account ? payments.account._id : '' %>" autocomplete="off">
                             </div>
                             <div class="col-md-2 col-6">
                                 <label for="debit">Amount:</label>
                                 <input type="number" name="debit" id="debit" class="form-control"
                                     value="<%= payments.debit %>" placeholder="debit-amount"
-                                    onkeydown="handleDebitAmountKeydown(event)" required <%=payments.status==='canceled'
+                                    onkeydown="handleDebitAmountKeydown(event)" autocomplete="off" required <%=payments.status==='canceled'
                                     ? 'disabled' : '' %>>
                             </div>
 
@@ -207,7 +207,7 @@
                                         <label for="InstNo">Inst. No.</label>
                                         <input type="text" name="InstNo" id="InstNo" class="form-control"
                                             onkeydown="handleInstNoKeydown(event)" value="<%= payments.InstNo %>"
-                                            <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                                            autocomplete="off" <%=payments.status==='canceled' ? 'disabled' : '' %>>
                                     </div>
                                 </div>
                             </div>
@@ -216,7 +216,7 @@
                     <div class="d-flex justify-content-between">
                         <div class="col">
                             <input type="text" class="form-control" name="description" id="description"
-                                placeholder="Description" value="<%=payments.description%>"
+                                placeholder="Description" value="<%=payments.description%>" autocomplete="off"
                                 onkeydown="handleDescriptionKeydown(event)" <%=payments.status==='canceled' ? 'disabled'
                                 : '' %>>
                         </div>

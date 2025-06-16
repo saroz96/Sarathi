@@ -129,7 +129,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="fromDate">From Date</label>
-                                    <input type="text" name="fromDate" id="fromDate" class="form-control datepicker"
+                                    <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
                                         value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
                                         autofocus>
                                 </div>
@@ -137,7 +137,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="toDate">To Date</label>
-                                    <input type="text" name="toDate" id="toDate" class="form-control datepicker"
+                                    <input type="date" name="toDate" id="toDate" class="form-control datepicker"
                                         value="<%= new Date().toISOString().split('T')[0] %>">
                                 </div>
                             </div>
@@ -145,7 +145,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="fromDate">From Date</label>
-                                        <input type="text" name="fromDate" id="fromDate" class="form-control datepicker"
+                                        <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
                                             value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
                                             autofocus>
                                     </div>
@@ -153,8 +153,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="toDate">To Date</label>
-                                        <input type="text" name="toDate" id="toDate" class="form-control datepicker"
-                                            value="<%= nepaliDate %>">
+                                        <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                                            value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
                                     </div>
                                 </div>
                                 <% } %>
@@ -225,6 +225,7 @@
                                         <tr>
                                             <th>Date</th>
                                             <th>Vch. No.</th>
+                                            <th>Party Inv. No.</th>
                                             <th>Supplier's Name</th>
                                             <th>Supplier's PAN</th>
                                             <th class="numeric-cell">Total Purchase</th>
@@ -243,6 +244,9 @@
                                                     </td>
                                                     <td>
                                                         <%= report.billNumber %>
+                                                    </td>
+                                                    <td>
+                                                        <%= report.partyBillNumber %>
                                                     </td>
                                                     <td style="white-space: nowrap;">
                                                         <%= report.account %>
@@ -276,7 +280,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="totals-row">
-                                            <td colspan="4"><strong>Total:</strong></td>
+                                            <td colspan="5"><strong>Total:</strong></td>
                                             <td class="numeric-cell"><strong id="totalPurchaseAmount">0.00</strong></td>
                                             <td class="numeric-cell"><strong id="totalDiscountAmount">0.00</strong></td>
                                             <td class="numeric-cell"><strong id="totalNonVatPurchase">0.00</strong></td>
@@ -354,11 +358,11 @@
                 const rows = document.querySelectorAll('#billsList tbody tr');
 
                 rows.forEach(row => {
-                    const total = parseFloat(row.dataset.total) || parseFloat(row.cells[4].textContent.replace(/,/g, '')) || 0;
-                    const discount = parseFloat(row.dataset.discount) || parseFloat(row.cells[5].textContent.replace(/,/g, '')) || 0;
-                    const nonVat = parseFloat(row.dataset.nonvat) || parseFloat(row.cells[6].textContent.replace(/,/g, '')) || 0;
-                    const taxable = parseFloat(row.dataset.taxable) || parseFloat(row.cells[7].textContent.replace(/,/g, '')) || 0;
-                    const vat = parseFloat(row.dataset.vat) || parseFloat(row.cells[8].textContent.replace(/,/g, '')) || 0;
+                    const total = parseFloat(row.dataset.total) || parseFloat(row.cells[5].textContent.replace(/,/g, '')) || 0;
+                    const discount = parseFloat(row.dataset.discount) || parseFloat(row.cells[6].textContent.replace(/,/g, '')) || 0;
+                    const nonVat = parseFloat(row.dataset.nonvat) || parseFloat(row.cells[7].textContent.replace(/,/g, '')) || 0;
+                    const taxable = parseFloat(row.dataset.taxable) || parseFloat(row.cells[8].textContent.replace(/,/g, '')) || 0;
+                    const vat = parseFloat(row.dataset.vat) || parseFloat(row.cells[9].textContent.replace(/,/g, '')) || 0;
 
                     totalPurchase += total;
                     totalDiscount += discount;
@@ -380,7 +384,7 @@
             const totals = calculateTotals();
             const newTotalsRow = document.createElement('tr');
             newTotalsRow.innerHTML = `
-            <td colspan="4" style="text-align: right; font-weight: bold;">Total:</td>
+            <td colspan="5" style="text-align: right; font-weight: bold;">Total:</td>
             <td style="text-align: right; font-weight: bold;">${totals.totalPurchase.toFixed(2)}</td>
             <td style="text-align: right; font-weight: bold;">${totals.totalDiscount.toFixed(2)}</td>
             <td style="text-align: right; font-weight: bold;">${totals.totalNonVat.toFixed(2)}</td>
@@ -412,11 +416,11 @@
                 const rows = document.querySelectorAll('#billsList tbody tr');
 
                 rows.forEach(row => {
-                    totalPurchaseAmount += parseFloat(row.cells[4]?.textContent.replace(/,/g, '') || 0);
-                    totalDiscountAmount += parseFloat(row.cells[5]?.textContent.replace(/,/g, '') || 0);
-                    totalNonVatPurchase += parseFloat(row.cells[6]?.textContent.replace(/,/g, '') || 0);
-                    totalTaxableAmount += parseFloat(row.cells[7]?.textContent.replace(/,/g, '') || 0);
-                    totalVatAmount += parseFloat(row.cells[8]?.textContent.replace(/,/g, '') || 0);
+                    totalPurchaseAmount += parseFloat(row.cells[5]?.textContent.replace(/,/g, '') || 0);
+                    totalDiscountAmount += parseFloat(row.cells[6]?.textContent.replace(/,/g, '') || 0);
+                    totalNonVatPurchase += parseFloat(row.cells[7]?.textContent.replace(/,/g, '') || 0);
+                    totalTaxableAmount += parseFloat(row.cells[8]?.textContent.replace(/,/g, '') || 0);
+                    totalVatAmount += parseFloat(row.cells[9]?.textContent.replace(/,/g, '') || 0);
                 });
 
                 document.getElementById('totalPurchaseAmount').textContent = totalPurchaseAmount.toFixed(2);

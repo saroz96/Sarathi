@@ -9,7 +9,7 @@ const PurchaseReturn = require('../../models/retailer/PurchaseReturns');
 const SalesBill = require('../../models/retailer/SalesBill');
 const SalesReturn = require('../../models/retailer/SalesReturn');
 const Company = require('../../models/Company');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const { isLoggedIn } = require('../../middleware/auth');
 
 // // Render VAT report page

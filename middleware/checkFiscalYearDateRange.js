@@ -1,4 +1,4 @@
-const FiscalYear = require('../models/retailer/FiscalYear');
+const FiscalYear = require('../models/FiscalYear');
 const Company = require('../models/Company');
 
 // Middleware to check if the current date is within the active fiscal year

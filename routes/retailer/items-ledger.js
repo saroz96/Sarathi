@@ -18,7 +18,7 @@ const { ensureAuthenticated, ensureCompanySelected, isLoggedIn } = require('../.
 const { ensureTradeType } = require('../../middleware/tradeType');
 const SalesReturn = require('../../models/retailer/SalesReturn');
 const purchaseReturn = require('../../models/retailer/PurchaseReturns');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 
 // Route to render the initial page
 router.get('/items-ledger', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {

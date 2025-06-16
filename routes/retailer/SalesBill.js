@@ -20,7 +20,7 @@ const NepaliDate = require('nepali-date');
 const { ensureTradeType } = require('../../middleware/tradeType');
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
 const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const checkDemoPeriod = require('../../middleware/checkDemoPeriod');
 const { getNextBillNumber } = require('../../middleware/getNextBillNumber');
 const CompanyGroup = require('../../models/retailer/CompanyGroup');
@@ -87,63 +87,6 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
         });
     }
 });
-
-
-// router.get("/api/fetch/cashaccounts", async (req, res) => {
-//     try {
-//         const companyId = req.session.currentCompany;
-//         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
-
-//         // Check if fiscal year is already in the session or available in the company
-//         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
-//         let currentFiscalYear = null;
-
-//         if (fiscalYear) {
-//             // Fetch the fiscal year from the database if available in the session
-//             currentFiscalYear = await FiscalYear.findById(fiscalYear);
-//         }
-
-//         // If no fiscal year is found in session or currentCompany, throw an error
-//         if (!currentFiscalYear && company.fiscalYear) {
-//             currentFiscalYear = company.fiscalYear;
-
-//             // Set the fiscal year in the session for future requests
-//             req.session.currentFiscalYear = {
-//                 id: currentFiscalYear._id.toString(),
-//                 startDate: currentFiscalYear.startDate,
-//                 endDate: currentFiscalYear.endDate,
-//                 name: currentFiscalYear.name,
-//                 dateFormat: currentFiscalYear.dateFormat,
-//                 isActive: currentFiscalYear.isActive
-//             };
-
-//             // Assign fiscal year ID for use
-//             fiscalYear = req.session.currentFiscalYear.id;
-//         }
-
-//         if (!fiscalYear) {
-//             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
-//         }
-
-//         // Fetch only the required company groups: Cash in Hand, Sundry Debtors, Sundry Creditors
-//         const relevantGroups = await CompanyGroup.find({
-//             name: { $in: ['Cash in Hand'] }
-//         }).exec();
-
-//         // Convert relevant group IDs to an array of ObjectIds
-//         const relevantGroupIds = relevantGroups.map(group => group._id);
-
-//         const accounts = await Account.find({
-//             company: companyId,
-//             fiscalYear: fiscalYear,
-//             isActive: true,
-//             companyGroups: { $in: relevantGroupIds }
-//         });
-//         res.json(accounts);
-//     } catch (error) {
-//         res.status(500).json({ error: "Failed to fetch accounts" });
-//     }
-// });
 
 router.get("/api/fetch/cashaccounts", async (req, res) => {
     try {
@@ -401,9 +344,20 @@ router.get('/sales-bills/finds', isLoggedIn, ensureAuthenticated, ensureCompanyS
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+        // Fetch the latest saved bill number (without modifying it)
+        const latestBill = await SalesBill.findOne({
+            company: companyId,
+            fiscalYear: fiscalYear,
+            cashAccount: { $exists: false } // Exclude documents where cashAccount exists
+        })
+            .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+            .select('billNumber date')
+            .lean();
+
         res.render('retailer/sales-bills/billNumberForm', {
             company,
             currentFiscalYear,
+            latestBillNumber: latestBill ? latestBill.billNumber : '',
             currentCompanyName: req.session.currentCompanyName,
             date: new Date().toISOString().split('T')[0], // Today's date in ISO format
             title: '',
@@ -531,10 +485,22 @@ router.get('/cash-sales/sales-bills/finds', isLoggedIn, ensureAuthenticated, ens
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+         // Fetch the latest saved bill number (without modifying it)
+        const latestBill = await SalesBill.findOne({ 
+            company: companyId,
+            fiscalYear: fiscalYear,
+            account: { $exists: false }
+        })
+        .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+        .select('billNumber date')
+        .lean();
+
+
         res.render('retailer/sales-bills/cash/billNumberForm', {
             company,
             currentFiscalYear,
             currentCompanyName: req.session.currentCompanyName,
+            latestBillNumber: latestBill ? latestBill.billNumber : '',
             date: new Date().toISOString().split('T')[0], // Today's date in ISO format
             title: '',
             body: '',
@@ -4093,12 +4059,12 @@ router.get('/bills/:id/print', isLoggedIn, ensureAuthenticated, ensureCompanySel
         }
 
         // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid invoice date provided');
-        }
-        if (!transactionDateNepali || isNaN(new Date(transactionDateNepali).getTime())) {
-            throw new Error('Invalid transaction date provided ')
-        }
+        // if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+        //     throw new Error('Invalid invoice date provided');
+        // }
+        // if (!transactionDateNepali || isNaN(new Date(transactionDateNepali).getTime())) {
+        //     throw new Error('Invalid transaction date provided ')
+        // }
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
             console.log("Current Company:", currentCompany); // Debugging line
@@ -4208,9 +4174,9 @@ router.get('/bills/:id/direct-print', isLoggedIn, ensureAuthenticated, ensureCom
         // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
 
         // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
+        // if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+        //     throw new Error('Invalid date provided');
+        // }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
@@ -4318,10 +4284,10 @@ router.get('/bills/:id/direct-print/credit-open', isLoggedIn, ensureAuthenticate
 
         // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
 
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
+        // // Validate the selectedDate
+        // if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+        //     throw new Error('Invalid date provided');
+        // }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
@@ -4430,10 +4396,10 @@ router.get('/bills/:id/cash/direct-print', isLoggedIn, ensureAuthenticated, ensu
 
         // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
 
-        // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
+        // // Validate the selectedDate
+        // if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+        //     throw new Error('Invalid date provided');
+        // }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
@@ -4542,9 +4508,9 @@ router.get('/bills/:id/direct-print/cash-open', isLoggedIn, ensureAuthenticated,
         // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
 
         // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
+        // if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+        //     throw new Error('Invalid date provided');
+        // }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
@@ -4654,9 +4620,9 @@ router.get('/bills/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, ensu
         // const { selectedDate } = req.query; // Assume selectedDate is passed as a query parameter
 
         // Validate the selectedDate
-        if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
-            throw new Error('Invalid date provided');
-        }
+        // if (!nepaliDate || isNaN(new Date(nepaliDate).getTime())) {
+        //     throw new Error('Invalid date provided');
+        // }
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));

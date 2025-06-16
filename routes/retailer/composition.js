@@ -3,7 +3,7 @@ const router = express.Router();
 
 const Composition = require('../../models/retailer/Composition');
 const Company = require('../../models/Company');
-const FiscalYear = require('../../models/retailer/FiscalYear');
+const FiscalYear = require('../../models/FiscalYear');
 const { isLoggedIn, ensureAuthenticated, ensureCompanySelected } = require('../../middleware/auth');
 const { ensureTradeType } = require('../../middleware/tradeType');
 
