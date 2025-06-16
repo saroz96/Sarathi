@@ -375,10 +375,22 @@ router.get('/cash-sales-return/sales-return/finds', isLoggedIn, ensureAuthentica
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+         // Fetch the latest saved bill number (without modifying it)
+                const latestBill = await SalesReturn.findOne({ 
+                    company: companyId,
+                    fiscalYear: fiscalYear,
+                    account: { $exists: false }
+                })
+                .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+                .select('billNumber date')
+                .lean();
+        
+
         res.render('retailer/salesReturn/cash/billNumberForm', {
             company,
             currentFiscalYear,
             currentCompanyName: req.session.currentCompanyName,
+            latestBillNumber: latestBill ? latestBill.billNumber : '',
             date: new Date().toISOString().split('T')[0], // Today's date in ISO format
             title: '',
             body: '',
@@ -455,7 +467,7 @@ router.get('/cash-sales-return/sales-return/edit/billNumber', isLoggedIn, ensure
         }
 
 
-        res.render('retailer/salesReturn/edit', {
+        res.render('retailer/salesReturn/cash/edit', {
             salesReturnBill,
             accounts,
             items: salesReturnBill.items,
