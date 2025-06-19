@@ -39,14 +39,6 @@
                             </div>
 
                             <% } else { %>
-                                <!-- English Date Fields -->
-                                <!-- <div class="col">
-                                    <label for="transactionDateRoman">Transaction Date:</label>
-                                    <input type="date" name="transactionDateRoman" id="transactionDateRoman"
-                                        class="form-control"
-                                        value="<%= bill.transactionDate ? bill.transactionDate.toISOString().split('T')[0]: '' %>"
-                                        autofocus required>
-                                </div> -->
                                 <div class="col">
                                     <label for="transactionDateRoman">Transaction Date:</label>
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
@@ -56,11 +48,6 @@
                                     <span class="error-message" style="color: red; display: none;"></span>
 
                                 </div>
-                                <!-- <div class="col">
-                                    <label for="billDate">Invoice Date:</label>
-                                    <input type="date" name="billDate" id="billDate" class="form-control" required
-                                        value="<%= bill.date ? bill.date.toISOString().split('T')[0] : '' %>">
-                                </div> -->
                                 <div class="col">
                                     <label for="billDate">Invoice Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
@@ -217,13 +204,17 @@
                                                 value="<%=item.uniqueUuId%>">
 
                                         </td>
+                                        <td class="hidden">
+                                            <input type="hidden" name="items[<%= index %>][vatStatus]"
+                                            value="<%= item.vatStatus %>">
+                                        <input type="hidden" name="items[<%= index %>][puPrice]"
+                                                value="<%= item.puPrice || 0 %>">
+                                        </td>
                                         <td>
                                             <button type="button" class="btn btn-danger" onclick="removeItem(this)">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </td>
-                                        <input type="hidden" name="items[<%= index %>][vatStatus]"
-                                            value="<%= item.vatStatus %>">
                                     </tr>
                                     <% }); %>
                                         <% } %>

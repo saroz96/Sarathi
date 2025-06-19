@@ -349,7 +349,8 @@ router.get('/retailerDashboard/indexv1', isLoggedIn, ensureAuthenticated, ensure
                 formattedDate = `${nepaliMonths[nepaliMonthIndex]} ${year}`;
             } else {
                 const date = new Date(year, month - 1);
-                formattedDate = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                // formattedDate = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                formattedDate = date.toLocaleString('default', { month: 'numeric', year: 'numeric' });
             }
 
             categories.push(formattedDate);

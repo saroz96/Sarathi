@@ -485,15 +485,15 @@ router.get('/cash-sales/sales-bills/finds', isLoggedIn, ensureAuthenticated, ens
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-         // Fetch the latest saved bill number (without modifying it)
-        const latestBill = await SalesBill.findOne({ 
+        // Fetch the latest saved bill number (without modifying it)
+        const latestBill = await SalesBill.findOne({
             company: companyId,
             fiscalYear: fiscalYear,
             account: { $exists: false }
         })
-        .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
-        .select('billNumber date')
-        .lean();
+            .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+            .select('billNumber date')
+            .lean();
 
 
         res.render('retailer/sales-bills/cash/billNumberForm', {
@@ -829,6 +829,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    puPrice: item.puPrice,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -1449,6 +1450,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                     item: product._id,
                     quantity: item.quantity,
                     price: item.price,
+                    puPrice: item.puPrice,
                     unit: item.unit,
                     batchNumber: item.batchNumber,
                     expiryDate: item.expiryDate,
@@ -2035,6 +2037,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    puPrice: item.puPrice,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -2639,6 +2642,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                     item: product._id,
                     quantity: item.quantity,
                     price: item.price,
+                    puPrice: item.puPrice,
                     unit: item.unit,
                     batchNumber: item.batchNumber,
                     expiryDate: item.expiryDate,
@@ -3172,51 +3176,9 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                     entry.batchNumber === removedItem.batchNumber &&
                     entry.uniqueUuId === removedItem.uniqueUuId
                 );
-
-                // if (batchEntry) {
-                //     batchEntry.quantity += removedItem.quantity; // Restore stock
-                //     await product.save({ session });
-                // } else {
-                //     console.warn(`Batch number ${removedItem.batchNumber} not found for product: ${product.name}`);
-                // }
             }
 
             console.log('Stock successfully restored for removed items.');
-
-            // // Step 1: Identify updated items
-            // const updatedItems = existingBill.items.filter(existingItem =>
-            //     items.some(item =>
-            //         item.item === existingItem.item.toString() &&
-            //         item.batchNumber === existingItem.batchNumber &&
-            //         item.uniqueUuId === existingItem.uniqueUuId
-            //     )
-            // );
-
-            // // Step 2: Reverse stock for updated items
-            // for (const updatedItem of updatedItems) {
-            //     const product = await Item.findById(updatedItem.item).session(session);
-            //     if (!product) {
-            //         console.warn(`Product with ID ${updatedItem.item} not found`);
-            //         continue;
-            //     }
-
-            //     // Find the exact batch entry using both batchNumber and uniqueUuId
-            //     const batchEntry = product.stockEntries.find(entry =>
-            //         entry.batchNumber === updatedItem.batchNumber &&
-            //         entry.uniqueUuId === updatedItem.uniqueUuId
-            //     );
-
-            //     if (batchEntry) {
-            //         // Restore stock for the old quantity
-            //         batchEntry.quantity += updatedItem.quantity;
-            //         await product.save({ session });
-            //         console.log(`Stock restored for batch ${updatedItem.batchNumber} with uniqueUuId ${updatedItem.uniqueUuId} for product: ${product.name}`);
-            //     } else {
-            //         console.warn(`Batch number ${updatedItem.batchNumber} with uniqueUuId ${updatedItem.uniqueUuId} not found for product: ${product.name}`);
-            //     }
-            // }
-
-            // console.log('Stock successfully reversed for updated items.');
 
             // Delete all associated transactions
             await Transaction.deleteMany({ billId: existingBill._id }).session(session);
@@ -3358,6 +3320,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    puPrice: item.puPrice,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -3603,6 +3566,11 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
 
                 if (batchEntry) {
                     batchEntry.quantity += existingItem.quantity;
+                    batchEntry.batchNumber = existingItem.batchNumber;
+                    batchEntry.expiryDate = existingItem.expiryDate;
+                    batchEntry.uniqueUuId = existingItem.uniqueUuId;
+                    batchEntry.price = existingItem.price;
+                    batchEntry.puPrice = existingItem.puPrice;
                 } else {
                     // If batch doesn't exist, create a new one (shouldn't happen for existing bills)
                     batchEntry = {
@@ -3821,6 +3789,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    puPrice: item.puPrice,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,

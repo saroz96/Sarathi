@@ -424,6 +424,7 @@ function addItemToBill(item, dropdownMenu) {
 
     // Use price from the first stock entry
     const batchPrice = firstStockEntry.price || 0;
+    const batchPuPrice = firstStockEntry.puPrice || 0;
 
     tr.innerHTML = `
         <td>${serialNumber}</td>
@@ -460,6 +461,8 @@ function addItemToBill(item, dropdownMenu) {
             </button>
         </td>
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
+        <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(batchPuPrice * 100) / 100}">
+
     `;
     tbody.appendChild(tr);
 

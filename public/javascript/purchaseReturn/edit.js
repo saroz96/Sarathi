@@ -496,6 +496,14 @@ function showBatchModal(item, callback) {
 
 
 function removeItem(button) {
+        // Get all item rows
+    const itemRows = document.querySelectorAll('#items tr.item');
+
+    // If there's only one row left, prevent removal
+    if (itemRows.length <= 1) {
+        alert("You cannot remove the last item. A bill must have at least one item.");
+        return;
+    }
     const row = button.closest('tr');
     row.remove();
     calculateTotal();

@@ -364,6 +364,7 @@ function addItemToBill(item, dropdownMenu) {
         </td>
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
+        <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
     `;
 
         tbody.appendChild(tr);
@@ -468,7 +469,8 @@ function showBatchModal(item, callback) {
                 const expiryDate = row.cells[1].textContent; // Expiry date in the second cell
                 const price = row.cells[3].textContent;
                 const uniqueUuId = row.cells[7].textContent;
-                callback({ batchNumber, expiryDate, price, uniqueUuId });
+                const puPrice = row.cells[4].textContent;
+                callback({ batchNumber, expiryDate, price, uniqueUuId, puPrice });
                 // Hide the modal after selection
                 $(modal).modal('hide');
             }

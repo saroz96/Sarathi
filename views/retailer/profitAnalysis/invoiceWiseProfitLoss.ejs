@@ -1,0 +1,282 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .profit-positive {
+            color: green;
+            font-weight: bold;
+        }
+
+        .profit-negative {
+            color: red;
+            font-weight: bold;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e9f7fe;
+        }
+    </style>
+
+    <div class="container-fluid py-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Invoice Wise Profit/Loss Report</h2>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <% if (companyDateFormat==='english' ) { %>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="fromDate">From</label>
+                                <input type="date" name="fromDate" id="fromDate" class="form-control"
+                                    value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                    autofocus autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="toDate">To</label>
+                                <input type="date" name="toDate" id="toDate" class="form-control"
+                                    value="<%= new Date().toISOString().substr(0, 10) %>" autocomplete="off">
+                            </div>
+                        </div>
+                        <% } else if (companyDateFormat==='nepali' ) { %>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="fromDate">From</label>
+                                    <input type="date" name="fromDate" id="fromDate" class="form-control"
+                                        value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                        autofocus autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="toDate">To</label>
+                                    <input type="date" name="toDate" id="toDate" class="form-control"
+                                        value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <% } %>
+                                <div class="col">
+                                    <label class="form-label">Bill Number</label>
+                                    <input type="text" name="billNumber" class="form-control" value="<%= billNumber %>"
+                                        placeholder="Search bill..." autocomplete="off">
+                                </div>
+                                <div class="col d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary me-2">Filter</button>
+                                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                                </div>
+                </form>
+            </div>
+
+            <!-- Results Table -->
+            <div class="card-body">
+                <% if (!results || results.length===0) { %>
+                    <div class="alert alert-info">No invoices found matching your criteria</div>
+                    <% } else { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Invoice #</th>
+                                        <th>Account</th>
+                                        <th class="text-end">Total Cost</th>
+                                        <th class="text-end">Total Sales</th>
+                                        <th class="text-end">C.P(%)</th>
+                                        <th class="text-end">S.P(%)</th>
+                                        <th class="text-end">Total Profit</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% results.forEach(bill=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= new Date(bill.date).toLocaleDateString() %>
+                                            </td>
+                                            <td>
+                                                <%= bill.billNumber %>
+                                            </td>
+
+                                            <td>
+                                                <%= bill.accountDetails && bill.accountDetails.name ? bill.accountDetails.name : (bill.cashAccount || 'N/A') %>
+
+                                            </td>
+                                            <td class="text-end">
+                                                <%= bill.totalCost.toFixed(2) %>
+                                            </td>
+                                            <td class="text-end">
+                                                <%= bill.totalSales.toFixed(2) %>
+                                            </td>
+                                            <td class="text-end">
+                                                <%= ((bill.totalProfit/bill.totalCost)*100).toFixed(2) %>
+                                            </td>
+                                            <td class="text-end">
+                                                <%= ((bill.totalProfit/bill.totalSales)*100).toFixed(2) %>
+                                            </td>
+                                            <td
+                                                class="text-end <%= bill.totalProfit >= 0 ? 'profit-positive' : 'profit-negative' %>">
+                                                <%= bill.totalProfit.toFixed(2) %>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#details-<%= bill._id %>">
+                                                    View Items
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <!-- Item Details Row -->
+                                        <tr class="collapse" id="details-<%= bill._id %>">
+                                            <td colspan="9">
+                                                <div class="accordion">
+                                                    <div class="accordion-item">
+                                                        <h2 class="accordion-header">
+                                                            <button class="accordion-button collapsed" type="button"
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="#items-<%= bill._id %>">
+                                                                Item-wise Profit Details
+                                                            </button>
+                                                        </h2>
+                                                        <div id="items-<%= bill._id %>"
+                                                            class="accordion-collapse collapse">
+                                                            <div class="accordion-body p-0">
+                                                                <table class="table table-sm">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Item</th>
+                                                                            <th>Qty</th>
+                                                                            <th class="text-end">Sale Price</th>
+                                                                            <th class="text-end">Cost Price</th>
+                                                                            <th class="text-end">Profit/Unit</th>
+                                                                            <th class="text-end">Total Profit</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <% bill.items.forEach(item=> {
+                                                                            const profitPerUnit = item.price -
+                                                                            (item.puPrice || 0);
+                                                                            const itemProfit = profitPerUnit *
+                                                                            item.quantity;
+                                                                            %>
+                                                                            <tr>
+                                                                                <td>
+                                                                                    <%= item.itemName || 'N/A' %>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= item.quantity %>
+                                                                                </td>
+                                                                                <td class="text-end">
+                                                                                    <%= item.price.toFixed(2) %>
+                                                                                </td>
+                                                                                <td class="text-end">
+                                                                                    <%= (item.puPrice || 0).toFixed(2)
+                                                                                        %>
+                                                                                </td>
+                                                                                <td
+                                                                                    class="text-end <%= profitPerUnit >= 0 ? 'profit-positive' : 'profit-negative' %>">
+                                                                                    <%= profitPerUnit.toFixed(2) %>
+                                                                                </td>
+                                                                                <td
+                                                                                    class="text-end <%= itemProfit >= 0 ? 'profit-positive' : 'profit-negative' %>">
+                                                                                    <%= itemProfit.toFixed(2) %>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <% }); %>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                </tbody>
+                                <tfoot class="table-group-divider">
+                                    <tr class="fw-bold">
+                                        <td colspan="3">Grand Total</td>
+                                        <td class="text-end">
+                                            <%= results.reduce((sum, bill)=> sum + bill.totalCost, 0).toFixed(2) %>
+                                        </td>
+                                        <td class="text-end">
+                                            <%= results.reduce((sum, bill)=> sum + bill.totalSales, 0).toFixed(2) %>
+                                        </td>
+                                        <td class="text-end">
+                                            <% const totalCost=results.reduce((sum, bill)=> sum + bill.totalCost, 0);
+                                                const totalProfit = results.reduce((sum, bill) => sum +
+                                                bill.totalProfit, 0);
+                                                const totalSales = results.reduce((sum, bill) => sum + bill.totalSales,
+                                                0);
+                                                const cpPercentage = totalCost !== 0 ? (totalProfit / totalCost * 100) :
+                                                0;
+                                                const spPercentage = totalSales !== 0 ? (totalProfit / totalSales * 100)
+                                                : 0;
+                                                %>
+                                                <%= cpPercentage.toFixed(2) %>
+                                        </td>
+                                        <td class="text-end">
+                                            <%= spPercentage.toFixed(2) %>
+                                        </td>
+                                        <td
+                                            class="text-end <%= totalProfit >= 0 ? 'profit-positive' : 'profit-negative' %>">
+                                            <%= totalProfit.toFixed(2) %>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function resetForm() {
+            document.querySelector('form').reset();
+            window.location.search = '';
+        }
+
+
+        function moveToNextVisibleInput(currentElement) {
+            const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+
+            // Find the current element's index in the form
+            const currentIndex = formElements.indexOf(currentElement);
+
+            // Iterate through the remaining elements to find the next visible one
+            for (let i = currentIndex + 1; i < formElements.length; i++) {
+                if (formElements[i].offsetParent !== null) { // Check if the element is visible
+                    formElements[i].focus();
+                    break;
+                }
+            }
+        }
+
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+
+                // Move to the next visible input
+                moveToNextVisibleInput(event.target);
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select, form group select option');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+
+    </script>

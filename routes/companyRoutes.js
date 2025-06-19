@@ -35,6 +35,7 @@ const JournalVoucher = require('../models/retailer/JournalVoucher');
 const OpeningStock = require('../models/retailer/OpeningStock');
 const Payment = require('../models/retailer/Payment');
 const Receipt = require('../models/retailer/Receipt');
+const itemsCompany = require('../models/retailer/itemsCompany');
 
 router.get('/company/new', ensureAuthenticated, ensureNotAdministrator, async (req, res) => {
     const companyId = req.session.currentCompany;
@@ -433,6 +434,18 @@ async function addDefaultItemCategory(companyId) {
     await categories.save();
 }
 
+const defaultItemCompany = {
+    name: 'General'
+}
+
+async function addDefaultItemCompany(companyId) {
+    const itemsCompanies = new itemsCompany({
+        name: defaultItemCompany.name,
+        company: companyId,
+    });
+    await itemsCompanies.save();
+}
+
 const defaultItemUnit = [
     { name: 'Bott' },
     { name: 'Box' },
@@ -642,6 +655,7 @@ router.post('/company', ensureAuthenticated, async (req, res) => {
 
         await addDefaultAccountGroups(company._id);
         await addDefaultItemCategory(company._id);
+        await addDefaultItemCompany(company._id);
         await addDefaultItemUnit(company._id);
         await addDefaultItemMainUnit(company._id);
         // Create default store

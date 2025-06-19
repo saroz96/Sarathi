@@ -114,7 +114,7 @@
                         <div class="col">
                             <label for="cashAccountPhone">Phone:</label>
                             <input type="tel" id="cashAccountPhone" name="cashAccountPhone" class="form-control"
-                            value="<%=bill.cashAccountPhone%>" onfocus="selectValue(this)" autocomplete="off">
+                                value="<%=bill.cashAccountPhone%>" onfocus="selectValue(this)" autocomplete="off">
                         </div>
                     </div>
                     <hr style="border: 1px solid gray;">
@@ -199,14 +199,16 @@
                                             <input type="text" name="items[<%=index%>][uniqueUuId]"
                                                 value="<%=item.uniqueUuId%>">
 
+                                            <input type="hidden" name="items[<%= index %>][vatStatus]"
+                                                value="<%= item.vatStatus %>">
+                                            <input type="number" name="items[<%= index %>][puPrice]"
+                                                value="<%= item.puPrice || 0 %>">
                                         </td>
                                         <td>
                                             <button type="button" class="btn btn-danger" onclick="removeItem(this)">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </td>
-                                        <input type="hidden" name="items[<%= index %>][vatStatus]"
-                                            value="<%= item.vatStatus %>">
                                     </tr>
                                     <% }); %>
                                         <% } %>

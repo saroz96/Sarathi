@@ -131,7 +131,7 @@ router.delete('/items-company/:id', isLoggedIn, ensureAuthenticated, ensureCompa
                 req.flash('error', 'Company not found');
                 return res.redirect('/retailer/items-company');
             }
-            if (category.name === 'General') {
+            if (itemsCompanies.name === 'General') {
                 req.flash('error', 'The default "General" company cannot be deleted');
                 return res.redirect('/retailer/items-company');
             }

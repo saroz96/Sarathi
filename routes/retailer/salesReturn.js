@@ -2008,31 +2008,6 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                         await vatTransaction.save({ session });
                     }
                 }
-
-                // // Round-off transaction
-                // if (roundOffAmount > 0) {
-                //     const roundOffAccount = await Account.findOne({ name: 'Rounded Off', company: companyId }).session(session);
-                //     if (roundOffAccount) {
-                //         const roundOffTransaction = new Transaction({
-                //             account: roundOffAccount._id,
-                //             billNumber: existingBill.billNumber,
-                //             isType: 'RoundOff',
-                //             type: 'SlRt',
-                //             salesReturnBillId: existingBill._id,
-                //             purchaseSalesType: 'Sales Return',
-                //             debit: roundOffAmount > 0 ? 0 : Math.abs(roundOffAmount),
-                //             credit: roundOffAmount > 0 ? roundOffAmount : 0,
-                //             paymentMode: paymentMode,
-                //             balance: 0,
-                //             date: nepaliDate ? nepaliDate : new Date(billDate),
-                //             company: companyId,
-                //             user: userId,
-                //             fiscalYear: currentFiscalYear
-                //         });
-                //         await roundOffTransaction.save({ session });
-                //     }
-                // }
-
                 // Create a transaction for the round-off amount
                 if (roundOffAmount > 0) {
                     const roundOffAccount = await Account.findOne({ name: 'Rounded Off', company: companyId });

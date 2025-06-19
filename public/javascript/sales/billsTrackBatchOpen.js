@@ -3,22 +3,6 @@ let currentFocus = 0;
 let isFirstLoad = true;
 
 $(document).ready(function () {
-    // Initialize Select2 for searchable dropdown
-    // $('#account').select2({
-    //     placeholder: "Select a party name",
-    //     allowClear: true,
-    //     width: '100%', // Ensure it takes the full width of the container
-    // });
-
-    // Listen for the change event on the account dropdown
-    // $('#account').on('change', function () {
-    //     const selectedOption = $(this).find('option:selected');
-    //     const address = selectedOption.data('address');
-
-    //     // Set the address field with the selected account's address
-    //     $('#address').val(address || 'Address not available');
-    // });
-
 
     // Initialize Select2 for searchable dropdown
     $('#companyGroup').select2({
@@ -390,6 +374,7 @@ function addItemToBill(item, dropdownMenu) {
         </td>
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
+        <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
 
     `;
 
@@ -446,6 +431,7 @@ function addItemToBill(item, dropdownMenu) {
         </td>
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
+        <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
 
     `;
 
@@ -553,7 +539,8 @@ function showBatchModal(item, callback) {
                 const expiryDate = row.cells[1].textContent; // Expiry date in the second cell
                 const price = row.cells[3].textContent;
                 const uniqueUuId = row.cells[7].textContent;
-                callback({ batchNumber, expiryDate, price, uniqueUuId });
+                const puPrice = row.cells[4].textContent;
+                callback({ batchNumber, expiryDate, price, uniqueUuId, puPrice });
                 // Hide the modal after selection
                 $(modal).modal('hide');
             }

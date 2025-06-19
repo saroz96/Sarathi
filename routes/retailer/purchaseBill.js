@@ -250,7 +250,7 @@ router.get('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySele
         let stores = [];
         if (req.storeManagementEnabled) {
             stores = await Store.find({
-            company: companyId,
+                company: companyId,
                 isActive: true
             });
         }
@@ -337,13 +337,13 @@ router.get('/purchase-bills/finds', isLoggedIn, ensureAuthenticated, ensureCompa
         }
 
         // Fetch the latest saved bill number (without modifying it)
-        const latestBill = await PurchaseBill.findOne({ 
+        const latestBill = await PurchaseBill.findOne({
             company: companyId,
             fiscalYear: fiscalYear
         })
-        .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
-        .select('billNumber date')
-        .lean();
+            .sort({ date: -1, billNumber: -1 }) // Sort by date descending, then billNumber descending
+            .select('billNumber date')
+            .lean();
 
 
         res.render('retailer/purchase/billNumberForm', {
@@ -1354,6 +1354,19 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
 
                 const puPriceWithOutBonus = parsedPuPrice * quantityNumber;
 
+                let calculatedPuPrice = 0;
+
+                if (totalQuantity > 0) {
+                    calculatedPuPrice = puPriceWithOutBonus / totalQuantity;
+                } else {
+                    calculatedPuPrice = parsedPuPrice; // Fallback to original puPrice if totalQuantity is 0
+                }
+
+                // Ensure calculatedPuPrice is a valid number
+                if (isNaN(calculatedPuPrice)) {
+                    calculatedPuPrice = parsedPuPrice;
+                }
+
                 // Find existing stock entry if updating
                 let existingStockEntry = null;
                 let stockEntryIndex = -1;
@@ -1383,8 +1396,8 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     price: parsedPrice !== undefined ? parsedPrice / WSUnitNumber : undefined,
-                    // puPrice: parsedPuPrice / WSUnitNumber,
-                    puPrice: WSUnitNumber ? puPriceWithOutBonus / totalQuantity : 0,
+                    // puPrice: WSUnitNumber ? puPriceWithOutBonus / totalQuantity : 0,
+                    puPrice: calculatedPuPrice,
                     mainUnitPuPrice: parsedPuPrice,
                     mrp: parsedMrp !== undefined ? parsedMrp / WSUnitNumber : undefined,
                     marginPercentage: parsedMarginPercentage,
@@ -2235,7 +2248,7 @@ router.get('/purchase-vat-report', isLoggedIn, ensureAuthenticated, ensureCompan
                 company,
                 currentFiscalYear,
                 billNumber: bill.billNumber,
-                partyBillNumber:bill.partyBillNumber,
+                partyBillNumber: bill.partyBillNumber,
                 date: bill.date,
                 account: account.name,
                 panNumber: account.pan,
