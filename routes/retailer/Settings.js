@@ -47,7 +47,7 @@ router.get('/', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTr
             }
 
 
-            let settings = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settings = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
 
             if (!settings) {
                 settings = { roundOffSales: false, roundOffPurchase: false, displayTransactions: false, storeManagement: false }; // Provide default settings
@@ -112,9 +112,9 @@ router.post('/roundoff-sales', ensureAuthenticated, ensureCompanySelected, ensur
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
-            let settingsForSales = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settingsForSales = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settingsForSales) {
-                settingsForSales = new Settings({ companyId, userId, fiscalYear: fiscalYear, roundOffSales: roundOffBoolean });
+                settingsForSales = new Settings({ company: companyId, userId, fiscalYear: fiscalYear, roundOffSales: roundOffBoolean });
             } else {
                 settingsForSales.roundOffSales = roundOffBoolean;
             }
@@ -170,7 +170,7 @@ router.get('/roundoff-sales-return', ensureAuthenticated, ensureCompanySelected,
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
-            let settingsForSalesReturn = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settingsForSalesReturn = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settingsForSalesReturn) {
                 settingsForSalesReturn = {
                     roundOffSales: false,
@@ -238,9 +238,9 @@ router.post('/roundoff-sales-return', ensureAuthenticated, ensureCompanySelected
             if (!fiscalYear) {
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
-            let settingsForSalesReturn = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settingsForSalesReturn = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settingsForSalesReturn) {
-                settingsForSalesReturn = new Settings({ companyId, userId, roundOffSalesReturn: roundOffBoolean });
+                settingsForSalesReturn = new Settings({ company: companyId, userId, roundOffSalesReturn: roundOffBoolean });
             } else {
                 settingsForSalesReturn.roundOffSalesReturn = roundOffBoolean;
             }
@@ -263,7 +263,7 @@ router.get('/roundoff-purchase', ensureAuthenticated, ensureCompanySelected, ens
             const companyId = req.session.currentCompany;
             const currentCompanyName = req.session.currentCompanyName;
 
-            let settingsForPurchase = await Settings.findOne({ companyId, userId });
+            let settingsForPurchase = await Settings.findOne({ company: companyId, userId });
             if (!settingsForPurchase) {
                 settingsForPurchase = { roundOffSales: false, roundOffPurchase: false, displayTransactions: false }; // Provide default settings
             }
@@ -326,9 +326,9 @@ router.post('/roundoff-purchase', ensureAuthenticated, ensureCompanySelected, en
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
-            let settingsForPurchase = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settingsForPurchase = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settingsForPurchase) {
-                settingsForPurchase = new Settings({ companyId, userId, roundOffPurchase: roundOffBoolean });
+                settingsForPurchase = new Settings({ company: companyId, userId, roundOffPurchase: roundOffBoolean });
             } else {
                 settingsForPurchase.roundOffPurchase = roundOffBoolean;
             }
@@ -384,7 +384,7 @@ router.get('/roundoff-purchase-return', ensureAuthenticated, ensureCompanySelect
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
-            let settingsForPurchaseReturn = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settingsForPurchaseReturn = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settingsForPurchaseReturn) {
                 settingsForPurchaseReturn = { roundOffSales: false, roundOffPurchase: false, roundOffPurchaseReturn: false, displayTransactions: false }; // Provide default settings
             }
@@ -447,9 +447,9 @@ router.post('/roundoff-purchase-return', ensureAuthenticated, ensureCompanySelec
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
-            let settingsForPurchaseReturn = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settingsForPurchaseReturn = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settingsForPurchaseReturn) {
-                settingsForPurchaseReturn = new Settings({ companyId, userId, roundOffPurchaseReturn: roundOffBoolean });
+                settingsForPurchaseReturn = new Settings({ company: companyId, userId, roundOffPurchaseReturn: roundOffBoolean });
             } else {
                 settingsForPurchaseReturn.roundOffPurchaseReturn = roundOffBoolean;
             }
@@ -480,7 +480,7 @@ router.get('/get-display-transactions', ensureAuthenticated, ensureCompanySelect
                 return res.status(400).json({ error: 'Invalid company or user information.' });
             }
 
-            const settings = await Settings.findOne({ companyId, userId });
+            const settings = await Settings.findOne({ company: companyId, userId });
 
             // If settings exist, return the displayTransactions setting; otherwise, return false
             const displayTransactions = settings ? settings.displayTransactions : false;
@@ -553,7 +553,7 @@ router.post('/update', ensureAuthenticated, ensureCompanySelected, ensureTradeTy
 
             // Find and update the settings
             const updatedSettings = await Settings.findOneAndUpdate(
-                { companyId, userId, fiscalYear: fiscalYear },
+                { company: companyId, userId, fiscalYear: fiscalYear },
                 { displayTransactions: displayTransactions === 'on' },
                 { upsert: true, new: true }
             );
@@ -579,7 +579,7 @@ router.get('/get-display-sales-return-transactions', ensureAuthenticated, ensure
             const userId = req.user._id;
             const companyId = req.session.currentCompany;
             const currentCompanyName = req.session.currentCompanyName;
-            const settings = await Settings.findOne({ companyId, userId });
+            const settings = await Settings.findOne({ company: companyId, userId });
             res.json({
                 displayTransactionsForSalesReturn: settings ? settings.displayTransactionsForSalesReturn : false,
                 currentCompanyName, company: companyId, title: '',
@@ -646,7 +646,7 @@ router.post('/updateDisplayTransactionsForSalesReturn', ensureAuthenticated, ens
 
             // Find and update the settings
             const updatedSettings = await Settings.findOneAndUpdate(
-                { companyId, userId, fiscalYear: fiscalYear },
+                { company: companyId, userId, fiscalYear: fiscalYear },
                 { displayTransactionsForSalesReturn: displayTransactionsForSalesReturn === 'on' },
                 { upsert: true, new: true }
             );
@@ -704,7 +704,7 @@ router.get('/get-display-purchase-transactions', ensureAuthenticated, ensureComp
             if (!fiscalYear) {
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
-            const settings = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            const settings = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             res.json({
                 displayTransactionsForPurchase: settings ? settings.displayTransactionsForPurchase : false,
                 currentCompanyName, company: companyId, title: '',
@@ -769,7 +769,7 @@ router.post('/PurchaseTransactionDisplayUpdate', ensureAuthenticated, ensureComp
 
             // Find and update the settings
             const updatedSettings = await Settings.findOneAndUpdate(
-                { companyId, userId, fiscalYear: fiscalYear },
+                { company: companyId, userId, fiscalYear: fiscalYear },
                 { displayTransactionsForPurchase: displayTransactionsForPurchase === 'on' },
                 { upsert: true, new: true }
             );
@@ -794,7 +794,7 @@ router.get('/get-display-purchase-return-transactions', ensureAuthenticated, ens
             const userId = req.user._id;
             const companyId = req.session.currentCompany;
             const currentCompanyName = req.session.currentCompanyName;
-            const settings = await Settings.findOne({ companyId, userId });
+            const settings = await Settings.findOne({ company: companyId, userId });
             res.json({
                 displayTransactionsForPurchaseReturn: settings ? settings.displayTransactionsForPurchaseReturn : false,
                 currentCompanyName, company: companyId,
@@ -860,7 +860,7 @@ router.post('/PurchaseReturnTransactionDisplayUpdate', ensureAuthenticated, ensu
 
             // Find and update the settings
             const updatedSettings = await Settings.findOneAndUpdate(
-                { companyId, userId, fiscalYear: fiscalYear },
+                { company: companyId, userId, fiscalYear: fiscalYear },
                 { displayTransactionsForPurchaseReturn: displayTransactionsForPurchaseReturn === 'on' },
                 { upsert: true, new: true }
             );
@@ -885,7 +885,7 @@ router.get('/storemanagement', ensureAuthenticated, ensureCompanySelected, ensur
             const companyId = req.session.currentCompany;
             const currentCompanyName = req.session.currentCompanyName;
 
-            const company = await Company.findById(companyId).populate('fiscalYear');
+            const company = await Company.findById({ company: companyId }).populate('fiscalYear');
 
             // Check if fiscal year is already in the session or available in the company
             let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -918,7 +918,7 @@ router.get('/storemanagement', ensureAuthenticated, ensureCompanySelected, ensur
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
-            let settings = await Settings.findOne({ companyId, userId, fiscalYear: fiscalYear });
+            let settings = await Settings.findOne({ company: companyId, userId, fiscalYear: fiscalYear });
             if (!settings) {
                 settings = {
                     storeManagement: false,
@@ -944,10 +944,10 @@ router.get('/storemanagement', ensureAuthenticated, ensureCompanySelected, ensur
 // POST update store management setting
 router.post('/storemanagement', async (req, res) => {
     try {
-        const companyId = req.session.currentCompany;
+        const company = req.session.currentCompany;
         const fiscalYearId = req.session.currentFiscalYear?.id;
 
-        if (!companyId || !fiscalYearId) {
+        if (!company || !fiscalYearId) {
             return res.status(400).json({ error: 'Company or fiscal year not selected' });
         }
 
@@ -956,7 +956,7 @@ router.post('/storemanagement', async (req, res) => {
 
         // Update settings
         const settings = await Settings.findOneAndUpdate(
-            { companyId, fiscalYear: fiscalYearId },
+            { company: company, fiscalYear: fiscalYearId },
             { storeManagement },
             { new: true, upsert: true }
         );
@@ -966,7 +966,7 @@ router.post('/storemanagement', async (req, res) => {
 
         // 2. Update Company document
         await Company.findByIdAndUpdate(
-            companyId,
+            company,
             { storeManagement }, // Update the new field in Company
             { new: true }
         );

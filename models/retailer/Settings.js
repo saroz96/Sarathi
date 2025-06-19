@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const SettingsSchema = new Schema({
-    companyId: {
+    company: {
         type: Schema.Types.ObjectId,
         ref: 'Company',
         required: true
@@ -59,6 +59,6 @@ const SettingsSchema = new Schema({
 });
 
 // Ensure one Settings document per company
-SettingsSchema.index({ companyId: 1, fiscalYear: 1 }, { unique: true });
+SettingsSchema.index({ company: 1, fiscalYear: 1 }, { unique: true });
 
 module.exports = mongoose.model('Settings', SettingsSchema);
