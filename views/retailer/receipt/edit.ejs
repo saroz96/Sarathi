@@ -94,7 +94,7 @@
                         <% if (companyDateFormat==='nepali' ) { %>
                             <div class="col">
                                 <label for="nepaliDate">Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control"
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control"
                                     onkeydown="handleDateKeydown(event)" required
                                     value="<%= receipts.date ? receipts.date.toISOString().split('T')[0] : '' %>"
                                     autofocus <%=receipts.status==='canceled' ? 'disabled' : '' %>>

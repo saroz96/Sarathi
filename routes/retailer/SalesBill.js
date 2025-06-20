@@ -732,7 +732,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
             }
 
             // Create the bill number **after successful validation and processing**
-            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
+            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales', session);
 
             // Create new bill
             const newBill = new SalesBill({
@@ -1278,7 +1278,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales', session);
 
             // Apply discount proportionally to vatable and non-vatable items
             const discountForTaxable = (totalTaxableAmount * discount) / 100;
@@ -1937,7 +1937,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
             }
 
             // Create the bill number **after successful validation and processing**
-            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
+            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales', session);
 
             // Create new bill
             const newBill = new SalesBill({
@@ -2466,7 +2466,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                 }
             }
 
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales');
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'sales', session);
 
             // Apply discount proportionally to vatable and non-vatable items
             const discountForTaxable = (totalTaxableAmount * discount) / 100;

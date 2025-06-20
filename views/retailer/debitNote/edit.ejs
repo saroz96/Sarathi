@@ -38,9 +38,9 @@
                         <div class="col-md-6 mb-3">
                             <label for="nepaliDate" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top"
                                 title="Enter Nepali Date">Date:</label>
-                            <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
+                            <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
                                 value="<%= debitNotes.date?debitNotes.date.toISOString().split('T')[0] : '' %>"
-                                placeholder="YYYY/MM/DD" autofocus <%=debitNotes.status==='canceled' ?'disabled':''%>>
+                                autofocus <%=debitNotes.status==='canceled' ?'disabled':''%>>
                         </div>
                         <% } else { %>
                             <div class="row">

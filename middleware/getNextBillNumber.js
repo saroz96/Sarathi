@@ -1,7 +1,7 @@
 const BillCounter = require('../models/retailer/billCounter'); // Assuming the schema is saved in models/BillCounter
 const FiscalYear = require('../models/FiscalYear');
 
-async function getNextBillNumber(companyId, fiscalYearId, transactionType) {
+async function getNextBillNumber(companyId, fiscalYearId, transactionType, session) {
     try {
         // Validate transaction types
         const validTypes = ['sales','salesQuotation', 'salesReturn', 'purchase', 'purchaseReturn',
@@ -27,7 +27,7 @@ async function getNextBillNumber(companyId, fiscalYearId, transactionType) {
                 transactionType: transactionType
             },
             { $inc: { currentBillNumber: 1 } },
-            { new: true, upsert: true }
+            { new: true, upsert: true, session }
         );
 
         // Format with leading zeros

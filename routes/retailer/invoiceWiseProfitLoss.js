@@ -28,6 +28,7 @@ const Category = require('../../models/retailer/Category');
 const itemsCompany = require('../../models/retailer/itemsCompany');
 const Composition = require('../../models/retailer/Composition');
 const MainUnit = require('../../models/retailer/MainUnit');
+const SalesReturn = require('../../models/retailer/SalesReturn');
 
 router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
@@ -103,8 +104,22 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                 matchCriteria.billNumber = billNumber;
             }
 
+            // Build match criteria for SALES RETURNS (same date range)
+            const salesReturnMatchCriteria = {
+                company: new ObjectId(companyId),
+                date: {
+                    $gte: new Date(fromDate),
+                    $lte: new Date(toDate)
+                }
+            };
+
+            if (billNumber) {
+                salesReturnMatchCriteria.billNumber = billNumber;
+            }
+
+
             // Aggregation pipeline for profit calculation
-            const results = await SalesBill.aggregate([
+            const salesResults = await SalesBill.aggregate([
                 { $match: matchCriteria },
                 { $unwind: "$items" },
                 // Lookup for item details
@@ -167,8 +182,77 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                 { $unwind: { path: "$accountDetails", preserveNullAndEmptyArrays: true } }
             ]);
 
+
+            // Aggregation pipeline for SALES RETURNS (negative profit)
+            const salesReturnResults = await SalesReturn.aggregate([
+                { $match: salesReturnMatchCriteria },
+                { $unwind: "$items" },
+                {
+                    $lookup: {
+                        from: "items",
+                        localField: "items.item",
+                        foreignField: "_id",
+                        as: "items.itemDetails"
+                    }
+                },
+                { $unwind: { path: "$items.itemDetails", preserveNullAndEmptyArrays: true } },
+                {
+                    $project: {
+                        billNumber: 1,
+                        date: 1,
+                        account: 1,
+                        cashAccount: 1,
+                        "items.quantity": 1,
+                        "items.price": 1,
+                        "items.puPrice": 1,
+                        "items.itemName": "$items.itemDetails.name",
+                        itemProfit: {
+                            $multiply: [
+                                { $subtract: [{ $ifNull: ["$items.puPrice", 0] }, "$items.price"] }, // Inverse calculation
+                                "$items.quantity"
+                            ]
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id",
+                        billNumber: { $first: "$billNumber" },
+                        date: { $first: "$date" },
+                        account: { $first: "$account" },
+                        cashAccount: { $first: "$cashAccount" },
+                        totalProfit: { $sum: "$itemProfit" }, // This will be negative
+                        totalSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }, // Positive but should be treated as negative
+                        totalCost: { $sum: { $multiply: ["$items.puPrice", "$items.quantity"] } }, // Positive but should be treated as negative
+                        items: {
+                            $push: {
+                                quantity: "$items.quantity",
+                                price: "$items.price",
+                                puPrice: "$items.puPrice",
+                                itemName: "$items.itemName",
+                                isReturn: true // Flag to identify returns
+                            }
+                        },
+                        isReturn: { $first: true } // Flag the entire document as return
+                    }
+                },
+                { $sort: { date: 1 } },
+                {
+                    $lookup: {
+                        from: "accounts",
+                        localField: "account",
+                        foreignField: "_id",
+                        as: "accountDetails"
+                    }
+                },
+                { $unwind: { path: "$accountDetails", preserveNullAndEmptyArrays: true } }
+            ]);
+
+            // Combine both results and sort by date
+            const combinedResults = [...salesResults, ...salesReturnResults].sort((a, b) => new Date(a.date) - new Date(b.date));
+
             res.render('retailer/profitAnalysis/invoiceWiseProfitLoss', {
-                results,
+                results: combinedResults,
                 fromDate: fromDate || '',
                 toDate: toDate || '',
                 billNumber: billNumber || '',

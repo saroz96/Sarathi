@@ -569,7 +569,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 roundOffAmount = parseFloat(manualRoundOffAmount);
                 finalAmount = totalAmount + roundOffAmount;
             }
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'purchaseReturn');
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'purchaseReturn', session);
 
             // Create new bill
             const newBill = new PurchaseReturn({
@@ -851,8 +851,6 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
             }
             // Update bill with items
             newBill.items = billItems;
-            console.log('New Bill', newBill);
-            console.log('billItems', billItems);
             await newBill.save({ session });
             // If everything goes smoothly, commit the transaction
             await session.commitTransaction();

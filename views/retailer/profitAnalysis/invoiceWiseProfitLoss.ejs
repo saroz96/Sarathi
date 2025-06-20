@@ -117,10 +117,10 @@
                                                 <%= bill.totalSales.toFixed(2) %>
                                             </td>
                                             <td class="text-end">
-                                                <%= ((bill.totalProfit/bill.totalCost)*100).toFixed(2) %>
+                                                <%= bill.totalCost === 0 ? '0.00' : ((bill.totalProfit/bill.totalCost)*100).toFixed(2) %>
                                             </td>
                                             <td class="text-end">
-                                                <%= ((bill.totalProfit/bill.totalSales)*100).toFixed(2) %>
+                                               <%= bill.totalSales === 0 ? '0.00' : ((bill.totalProfit/bill.totalSales)*100).toFixed(2) %>
                                             </td>
                                             <td
                                                 class="text-end <%= bill.totalProfit >= 0 ? 'profit-positive' : 'profit-negative' %>">

@@ -649,7 +649,7 @@ router.post('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected,
 
                 const totalAmount = finalTaxableAmount + finalNonTaxableAmount + vatAmount;
 
-                const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'stockAdjustment');
+                const billNumber = await getNextBillNumber(companyId, currentFiscalYear, 'stockAdjustment', session);
                 const newStockAdjustment = new StockAdjustment({
                     items: itemsArray,
                     billNumber,
@@ -673,6 +673,11 @@ router.post('/stockAdjustments/new', ensureAuthenticated, ensureCompanySelected,
                 });
 
                 await newStockAdjustment.save({ session });
+
+                // Commit the transaction
+                await session.commitTransaction();
+                session.endSession();
+
                 req.flash('success', 'Stock adjustment recorded successfully');
             });
 

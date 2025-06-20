@@ -265,7 +265,7 @@ router.post('/sales-quotation', isLoggedIn, ensureAuthenticated, ensureCompanySe
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
-            const { accountId, items, vatPercentage, transactionDateRoman, transactionDateNepali, billDate, nepaliDate, isVatExempt, discountPercentage, paymentMode, roundOffAmount: manualRoundOffAmount, } = req.body;
+            const { accountId, items, vatPercentage, transactionDateRoman, transactionDateNepali, billDate, nepaliDate, isVatExempt, discountPercentage, paymentMode, description, roundOffAmount: manualRoundOffAmount, } = req.body;
             const companyId = req.session.currentCompany;
             const currentFiscalYear = req.session.currentFiscalYear.id;
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -385,7 +385,7 @@ router.post('/sales-quotation', isLoggedIn, ensureAuthenticated, ensureCompanySe
             }
 
             // Create the bill number **after successful validation and processing**
-            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesQuotation');
+            newBillNumber = await getNextBillNumber(companyId, fiscalYearId, 'salesQuotation', session);
 
             // Create new bill
             const newBill = new SalesQuotation({
@@ -405,6 +405,7 @@ router.post('/sales-quotation', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 totalAmount: finalAmount,
                 roundOffAmount: roundOffAmount,
                 paymentMode,
+                description,
                 date: nepaliDate ? nepaliDate : new Date(billDate),
                 transactionDate: transactionDateNepali ? transactionDateNepali : new Date(transactionDateRoman),
                 company: companyId,
@@ -588,20 +589,20 @@ router.put('/sales-quotation/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
         session.startTransaction();
         try {
             const { id } = req.params;
-            const { 
-                accountId, 
-                items, 
-                vatPercentage, 
-                transactionDateRoman, 
-                transactionDateNepali, 
-                billDate, 
-                nepaliDate, 
-                isVatExempt, 
-                discountPercentage, 
-                paymentMode, 
-                roundOffAmount: manualRoundOffAmount 
+            const {
+                accountId,
+                items,
+                vatPercentage,
+                transactionDateRoman,
+                transactionDateNepali,
+                billDate,
+                nepaliDate,
+                isVatExempt,
+                discountPercentage,
+                paymentMode,
+                roundOffAmount: manualRoundOffAmount
             } = req.body;
-            
+
             const companyId = req.session.currentCompany;
             const currentFiscalYear = req.session.currentFiscalYear.id;
             const userId = req.user._id;

@@ -609,8 +609,8 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 roundOffAmount = parseFloat(manualRoundOffAmount);
                 finalAmount = totalAmount + roundOffAmount;
             }
-            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'purchase')
 
+            const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'purchase', session)
             // Create new purchase bill
             const newBill = new PurchaseBill({
                 // billNumber: billCounter.count,

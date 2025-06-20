@@ -28,14 +28,15 @@
                         <% if (companyDateFormat==='nepali' ) { %>
                             <div class="col">
                                 <label for="transactionDateNepali">Transaction Date:</label>
-                                <input type="text" name="transactionDateNepali" id="transactionDateNepali"
+                                <input type="date" name="transactionDateNepali" id="transactionDateNepali"
                                     class="form-control" value="<%= transactionDateNepali ||'' %>" autofocus required
                                     onfocus="selectValue(this)" autocomplete="off">
                             </div>
                             <div class="col">
                                 <label for="nepaliDate">Quotation Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
-                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)" autocomplete="off" autofocus>
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
+                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)" autocomplete="off"
+                                    autofocus>
                             </div>
                             <% } else { %>
                                 <!-- English Date Fields -->
@@ -202,6 +203,11 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label for="description">Description</label>
+                            <input type="text" class="form-control" id="description" name="description"
+                                autocomplete="off">
+                        </div>
                     </div>
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end mt-4">

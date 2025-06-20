@@ -227,23 +227,24 @@
             <div class="details-container">
                 <div class="left">
                     <h6>
-                        M/S: <%= salesQuotation.account && salesQuotation.account.name ? salesQuotation.account.name : (salesQuotation.cashAccount
-                            || 'Account Not Found' ) %>
+                        M/S: <%= salesQuotation.account && salesQuotation.account.name ? salesQuotation.account.name :
+                            (salesQuotation.cashAccount || 'Account Not Found' ) %>
                     </h6>
                     <strong>Address:</strong>
-                    <%= salesQuotation.account && salesQuotation.account.address ? salesQuotation.account.address :(salesQuotation.cashAccountAddress || 'Null'
-                        ) %>&nbsp;
+                    <%= salesQuotation.account && salesQuotation.account.address ? salesQuotation.account.address
+                        :(salesQuotation.cashAccountAddress || 'Null' ) %>&nbsp;
                         <br>
                         <strong>Pan no.:</strong>
-                        <%= salesQuotation.account && salesQuotation.account.pan ? salesQuotation.account.pan :(salesQuotation.cashAccountPan || 'Null' ) %>
+                        <%= salesQuotation.account && salesQuotation.account.pan ? salesQuotation.account.pan
+                            :(salesQuotation.cashAccountPan || 'Null' ) %>
                             &nbsp;
                             <br>
                             <strong>Email:</strong>
-                            <%= salesQuotation.account && salesQuotation.account.email ? salesQuotation.account.email :(salesQuotation.cashAccountEmail
-                                || 'Null' ) %>&nbsp;
+                            <%= salesQuotation.account && salesQuotation.account.email ? salesQuotation.account.email
+                                :(salesQuotation.cashAccountEmail || 'Null' ) %>&nbsp;
                                 <strong>Tel.:</strong>
-                                <%= salesQuotation.account && salesQuotation.account.phone ? salesQuotation.account.phone :(salesQuotation.cashAccountPhone
-                                    || 'Null' ) %>&nbsp;
+                                <%= salesQuotation.account && salesQuotation.account.phone ?
+                                    salesQuotation.account.phone :(salesQuotation.cashAccountPhone || 'Null' ) %>&nbsp;
 
                 </div>
 
@@ -312,7 +313,8 @@
                                     <%= salesQuotation.items[i].quantity %>
                                 </td>
                                 <td>
-                                    <%= salesQuotation.items[i].item.unit ? salesQuotation.items[i].item.unit.name : '' %>
+                                    <%= salesQuotation.items[i].item.unit ? salesQuotation.items[i].item.unit.name : ''
+                                        %>
                                 </td>
                                 <td>
                                     <%= salesQuotation.items[i].price.toFixed(2) %>
@@ -347,7 +349,8 @@
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="6" class="text-right"><strong>Discount (<%= salesQuotation.discountPercentage %>
+                            <td colspan="6" class="text-right"><strong>Discount (<%= salesQuotation.discountPercentage
+                                        %>
                                         %):</strong></td>
                             <td>
                                 <%= salesQuotation.discountAmount.toFixed(2) %>
@@ -371,7 +374,8 @@
                                             %):</strong>
                                 </td>
                                 <td>
-                                    <%= (salesQuotation.taxableAmount * salesQuotation.vatPercentage / 100).toFixed(2) %>
+                                    <%= (salesQuotation.taxableAmount * salesQuotation.vatPercentage / 100).toFixed(2)
+                                        %>
                                 </td>
                             </tr>
                             <tr>
@@ -408,6 +412,10 @@
                 </table>
                 <td class="text-left"><strong>In Words:</strong>
                     <span id="amountInWords"></span> Only.
+                </td>
+                <br><br><br><br><br>
+                <td class="text-left"><strong>Note:</strong>
+                    <%= salesQuotation.description%>
                 </td>
             </div>
             <br><br><br>

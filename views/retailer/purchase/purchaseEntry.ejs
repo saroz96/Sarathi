@@ -47,12 +47,12 @@
                         <% if (companyDateFormat==='nepali' ) { %>
                             <div class="col">
                                 <label for="transactionDateNepali">Transaction Date:</label>
-                                <input type="text" name="transactionDateNepali" id="transactionDateNepali"
+                                <input type="date" name="transactionDateNepali" id="transactionDateNepali"
                                     class="form-control" value="<%= transactionDateNepali ||'' %>" autofocus required>
                             </div>
                             <div class="col">
                                 <label for="nepaliDate">Invoice Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
                                     value="<%= nepaliDate || '' %>" autofocus>
                             </div>
                             <% } else { %>

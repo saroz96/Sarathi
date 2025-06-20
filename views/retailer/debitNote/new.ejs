@@ -12,26 +12,16 @@
                         <div class="col-md-6 mb-3">
                             <label for="nepaliDate" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top"
                                 title="Enter Nepali Date">Date:</label>
-                            <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
+                            <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
                                 value="<%= nepaliDate || '' %>" placeholder="YYYY/MM/DD" autofocus>
-                        </div>
-                        <div class="col-md-6 mb-3 d-none">
-                            <label for="billDate" class="form-label">Date:</label>
-                            <input type="date" name="billDate" id="billDate" class="form-control"
-                                value="<%= new Date().toISOString().split('T')[0] %>" disabled>
                         </div>
                         <% } else { %>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="billDate" class="form-label" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Select Date">English Date:</label>
+                                        data-bs-placement="top" title="Select Date">Date:</label>
                                     <input type="date" name="billDate" id="billDate" class="form-control" required
                                         value="<%= new Date().toISOString().split('T')[0] %>" autofocus>
-                                </div>
-                                <div class="col-md-6 mb-3 d-none">
-                                    <label for="nepaliDate" class="form-label">Nepali Date:</label>
-                                    <input type="text" name="nepaliDate" id="nepaliDate" class="form-control"
-                                        value="<%= nepaliDate || '' %>" disabled>
                                 </div>
                                 <% } %>
                                     <div class="col-md-6 mb-3">

@@ -37,6 +37,7 @@ const SalesReturnSchema = new Schema({
         unit: { type: mongoose.Schema.Types.ObjectId, ref: 'Unit' },
         quantity: { type: Number, required: true },  // Required in item schema
         price: { type: Number, required: true },     // Required in item schema
+        puPrice: { type: Number},     // Required in item schema
         batchNumber: { type: String },
         expiryDate: { type: Date },
         vatStatus: {

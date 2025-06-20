@@ -214,7 +214,7 @@
                         <% if (companyDateFormat==='nepali' ) { %>
                             <div class="col">
                                 <label for="nepaliDate">Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
                                     value="<%= stockAdjustment.date ? stockAdjustment.date.toISOString().split('T')[0] : '' %>"
                                     autofocus <%=stockAdjustment.status==='canceled' ? 'disabled' : '' %>>
                             </div>

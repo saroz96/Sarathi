@@ -24,7 +24,7 @@
                             <!-- Nepali Date Fields -->
                             <div class="col">
                                 <label for="transactionDateNepali">Transaction Date:</label>
-                                <input type="text" name="transactionDateNepali" id="transactionDateNepali"
+                                <input type="date" name="transactionDateNepali" id="transactionDateNepali"
                                     class="form-control"
                                     value="<%= bill.transactionDate ? bill.transactionDate.toISOString().split('T')[0]: '' %>"
                                     onfocus="selectValue(this)" autofocus required />
@@ -33,7 +33,7 @@
 
                             <div class="col">
                                 <label for="nepaliDate">Invoice Date:</label>
-                                <input type="text" name="nepaliDate" id="nepaliDate" class="form-control" required
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
                                     value="<%= bill.date ? bill.date.toISOString().split('T')[0] : '' %>"
                                     onfocus="selectValue(this)" autofocus />
 

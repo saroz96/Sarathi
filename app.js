@@ -80,8 +80,6 @@ db.once("open", () => {
     console.log("Database connected");
 });
 
-
-
 const sessionConfig = {
     secret: 'thisisnotagoodsecret',
     resave: false,
