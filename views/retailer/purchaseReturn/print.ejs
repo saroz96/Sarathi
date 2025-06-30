@@ -212,7 +212,7 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col d-flex justify-content-end align-items-start">
-                    <a href="/purchase-return/list" class="btn btn-secondary"><i class="bi bi-back"></i></a>
+                    <a href="#" class="btn btn-secondary" id="backButton"><i class="bi bi-back"></i></a>
                     <a href="/bills/<%= bill._id %>/pdf" class="btn btn-primary ml-2"><i class="bi bi-file-pdf"></i></a>
                     <button class="btn btn-info ml-2" onclick="printBill()"><i class="bi bi-printer"></i></button>
                 </div>
@@ -422,88 +422,95 @@
             </div>
         </div>
     </div>
-    </div>
+</div>
 
-    <script>
-        function printBill() {
-            var printContents = document.getElementById('printableContent').innerHTML;
-            var styles = document.getElementById('printStyles').innerHTML;
-            var originalContents = document.body.innerHTML;
-            document.body.innerHTML = '<style>' + styles + '</style>' + printContents;
-            window.print();
-            document.body.innerHTML = originalContents;
-        }
-    
-        function numberToWords(num) {
-            const ones = [
-                '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-                'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
-                'Seventeen', 'Eighteen', 'Nineteen'
-            ];
-    
-            const tens = [
-                '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
-            ];
-    
-            const scales = ['', 'Thousand', 'Million', 'Billion'];
-    
-            function convertHundreds(num) {
-                let words = '';
-    
-                if (num > 99) {
-                    words += ones[Math.floor(num / 100)] + ' Hundred ';
-                    num %= 100;
-                }
-    
-                if (num > 19) {
-                    words += tens[Math.floor(num / 10)] + ' ';
-                    num %= 10;
-                }
-    
-                if (num > 0) {
-                    words += ones[num] + ' ';
-                }
-    
-                return words.trim();
-            }
-    
-            if (num === 0) return 'Zero';
-    
-            if (num < 0) return 'Negative ' + numberToWords(Math.abs(num));
-    
+<script>
+    function printBill() {
+        var printContents = document.getElementById('printableContent').innerHTML;
+        var styles = document.getElementById('printStyles').innerHTML;
+        var originalContents = document.body.innerHTML;
+        document.body.innerHTML = '<style>' + styles + '</style>' + printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+    }
+
+    function numberToWords(num) {
+        const ones = [
+            '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+            'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+            'Seventeen', 'Eighteen', 'Nineteen'
+        ];
+
+        const tens = [
+            '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+        ];
+
+        const scales = ['', 'Thousand', 'Million', 'Billion'];
+
+        function convertHundreds(num) {
             let words = '';
-    
-            for (let i = 0; i < scales.length; i++) {
-                let unit = Math.pow(1000, scales.length - i - 1);
-                let currentNum = Math.floor(num / unit);
-    
-                if (currentNum > 0) {
-                    words += convertHundreds(currentNum) + ' ' + scales[scales.length - i - 1] + ' ';
-                }
-    
-                num %= unit;
+
+            if (num > 99) {
+                words += ones[Math.floor(num / 100)] + ' Hundred ';
+                num %= 100;
             }
-    
+
+            if (num > 19) {
+                words += tens[Math.floor(num / 10)] + ' ';
+                num %= 10;
+            }
+
+            if (num > 0) {
+                words += ones[num] + ' ';
+            }
+
             return words.trim();
         }
-    
-        function numberToWordsWithPaisa(amount) {
-            // Split the amount into rupees and paisa
-            const rupees = Math.floor(amount);
-            const paisa = Math.round((amount - rupees) * 100);
-    
-            let result = numberToWords(rupees) + ' Rupees';
-    
-            if (paisa > 0) {
-                result += ' and ' + numberToWords(paisa) + ' Paisa';
+
+        if (num === 0) return 'Zero';
+
+        if (num < 0) return 'Negative ' + numberToWords(Math.abs(num));
+
+        let words = '';
+
+        for (let i = 0; i < scales.length; i++) {
+            let unit = Math.pow(1000, scales.length - i - 1);
+            let currentNum = Math.floor(num / unit);
+
+            if (currentNum > 0) {
+                words += convertHundreds(currentNum) + ' ' + scales[scales.length - i - 1] + ' ';
             }
-    
-            return result;
+
+            num %= unit;
         }
-    
-        document.addEventListener("DOMContentLoaded", function () {
-            var netTotal = <%= bill.totalAmount %>;
-            document.getElementById("amountInWords").textContent = numberToWordsWithPaisa(netTotal);
-        });
-    
-    </script>
+
+        return words.trim();
+    }
+
+    function numberToWordsWithPaisa(amount) {
+        // Split the amount into rupees and paisa
+        const rupees = Math.floor(amount);
+        const paisa = Math.round((amount - rupees) * 100);
+
+        let result = numberToWords(rupees) + ' Rupees';
+
+        if (paisa > 0) {
+            result += ' and ' + numberToWords(paisa) + ' Paisa';
+        }
+
+        return result;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var netTotal = <%= bill.totalAmount %>;
+        document.getElementById("amountInWords").textContent = numberToWordsWithPaisa(netTotal);
+    });
+
+</script>
+
+<script>
+    document.getElementById('backButton').addEventListener('click', function () {
+        // Navigate back twice to skip the success message page
+        window.history.go(-1);
+    });
+</script>

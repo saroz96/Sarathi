@@ -982,4 +982,5 @@ router.post('/storemanagement', async (req, res) => {
         res.redirect('/settings');
     }
 });
+
 module.exports = router;

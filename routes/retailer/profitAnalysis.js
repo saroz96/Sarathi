@@ -215,7 +215,7 @@ async function getNetSales({ companyId, fiscalYearId, startDate, endDate }) {
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                totalSales: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
+                totalSales: { $sum: { $multiply: ["$items.quantity", "$items.netPrice"] } },
                 count: { $sum: 1 }
             }
         },
@@ -235,7 +235,7 @@ async function getNetSales({ companyId, fiscalYearId, startDate, endDate }) {
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                totalReturns: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
+                totalReturns: { $sum: { $multiply: ["$items.quantity", "$items.netPrice"] } },
                 count: { $sum: 1 }
             }
         },
@@ -298,8 +298,8 @@ async function getNetPurchases({ companyId, fiscalYearId, startDate, endDate }) 
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                totalPurchases: { $sum: { $multiply: ["$items.quantity", "$items.puPrice"] } },
-                totalCost: { $sum: { $multiply: ["$items.quantity", "$items.puPrice"] } },
+                totalPurchases: { $sum: { $multiply: ["$items.quantity", "$items.netPuPrice"] } },
+                totalCost: { $sum: { $multiply: ["$items.quantity", "$items.netPuPrice"] } },
                 count: { $sum: 1 }
             }
         },
@@ -397,7 +397,7 @@ async function getItemCosts(companyId, fiscalYearId, startDate, endDate) {
                 itemId: "$items.item",
                 quantity: "$items.quantity",
                 price: "$items.price",
-                puPrice: "$items.puPrice"
+                puPrice: "$items.netPuPrice"
             }
         },
         { $sort: { date: 1 } } // FIFO - oldest first
@@ -418,7 +418,7 @@ async function getItemCosts(companyId, fiscalYearId, startDate, endDate) {
                 date: 1,
                 itemId: "$items.item",
                 quantity: "$items.quantity",
-                price: "$items.price"
+                price: "$items.netPrice",
             }
         }
     ]);
@@ -592,7 +592,7 @@ async function getSalesReturnsWithCost(companyId, fiscalYearId, startDate, endDa
                 itemId: "$items.item",
                 quantity: "$items.quantity",
                 price: "$items.price",
-                puPrice: "$items.puPrice"
+                puPrice: "$items.netPuPrice"
             }
         },
         { $sort: { date: 1 } } // FIFO - oldest first
@@ -613,7 +613,7 @@ async function getSalesReturnsWithCost(companyId, fiscalYearId, startDate, endDa
                 date: 1,
                 itemId: "$items.item",
                 quantity: "$items.quantity",
-                price: "$items.price"
+                price: "$items.netPrice"
             }
         }
     ]);

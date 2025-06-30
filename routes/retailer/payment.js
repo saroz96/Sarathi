@@ -26,7 +26,11 @@ router.get('/payments-list', isLoggedIn, ensureAuthenticated, ensureCompanySelec
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
 
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
 
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -59,15 +63,49 @@ router.get('/payments-list', isLoggedIn, ensureAuthenticated, ensureCompanySelec
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const payments = await Payment.find({ fiscalYear: fiscalYear, company: companyId })
+        if (!fromDate || !toDate) {
+            return res.render('retailer/payment/list', {
+                company,
+                currentFiscalYear,
+                payments: '',
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+        const payments = await Payment.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account', 'name') // Assuming 'name' field exists in Account schema
             .populate('user', 'name') // Assuming 'username' field exists in User schema
             .populate('paymentAccount', 'name') // Assuming 'name' field exists in Account schema for paymentAccount
             .exec();
         res.render('retailer/payment/list', {
-            company, currentFiscalYear,
-            payments, currentCompanyName, currentCompany,
+            company,
+            currentFiscalYear,
+            payments,
+            currentCompanyName,
+            currentCompany,
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
             title: '',
             body: '',
             user: req.user,
@@ -177,17 +215,17 @@ router.get('/payments', isLoggedIn, ensureAuthenticated, ensureCompanySelected, 
             // }
 
             // Get last counter without incrementing
-                    const lastCounter = await BillCounter.findOne({
-                        company: companyId,
-                        fiscalYear: fiscalYear,
-                        transactionType: 'payment'
-                    });
-            
-                    // Calculate next number for display only
-                    const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
-                    const fiscalYears = await FiscalYear.findById(fiscalYear);
-                    const prefix = fiscalYears.billPrefixes.payment;
-                    const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
+            const lastCounter = await BillCounter.findOne({
+                company: companyId,
+                fiscalYear: fiscalYear,
+                transactionType: 'payment'
+            });
+
+            // Calculate next number for display only
+            const nextNumber = lastCounter ? lastCounter.currentBillNumber + 1 : 1;
+            const fiscalYears = await FiscalYear.findById(fiscalYear);
+            const prefix = fiscalYears.billPrefixes.payment;
+            const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
             res.render('retailer/payment/payment', {
                 company,
                 currentFiscalYear,

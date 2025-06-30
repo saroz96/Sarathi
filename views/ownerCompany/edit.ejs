@@ -26,6 +26,12 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--light-bg);
             color: var(--dark-text);
+
+            background-image: url('/logo/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         .navbar {
@@ -82,14 +88,16 @@
             color: #495057;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             padding: 0.75rem 1rem;
             border-radius: 8px;
             border: 1px solid #ced4da;
             transition: all 0.3s ease;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
         }
@@ -182,7 +190,7 @@
             .edit-card {
                 padding: 1.5rem;
             }
-            
+
             .page-title {
                 font-size: 1.5rem;
             }
@@ -208,12 +216,12 @@
                                 <i class="fas fa-plus-circle me-1"></i>Create Company
                             </a>
                         </li>
-                    <% } %>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </li>
+                        <% } %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/logout">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                </a>
+                            </li>
                 </ul>
             </div>
         </div>
@@ -231,12 +239,14 @@
                 <p id="loader-percentage-text">Saving changes... <span id="loader-percentage">0%</span></p>
             </div>
 
-            <form action="/company/edit/<%= company._id %>?_method=PUT" method="POST" class="needs-validation" novalidate>
+            <form action="/company/edit/<%= company._id %>?_method=PUT" method="POST" class="needs-validation"
+                novalidate>
                 <div class="row g-3 mb-4">
                     <!-- Company Name -->
                     <div class="col-md-6">
                         <label for="name" class="form-label">Company Name</label>
-                        <input type="text" class="form-control" id="name" name="name" value="<%= company.name %>" required>
+                        <input type="text" class="form-control" id="name" name="name" value="<%= company.name %>"
+                            required>
                         <div class="invalid-feedback">Please enter the company name</div>
                     </div>
 
@@ -244,7 +254,7 @@
                     <div class="col-md-6">
                         <label for="country" class="form-label">Country</label>
                         <select class="form-select" id="country" name="country" required>
-                            <option value="Nepal" <%= company.country === 'Nepal' ? 'selected' : '' %>>Nepal</option>
+                            <option value="Nepal" <%=company.country==='Nepal' ? 'selected' : '' %>>Nepal</option>
                         </select>
                         <div class="invalid-feedback">Please select a country</div>
                     </div>
@@ -254,14 +264,16 @@
                     <!-- State -->
                     <div class="col-md-6">
                         <label for="state" class="form-label">State/Province</label>
-                        <input type="text" class="form-control" id="state" name="state" value="<%= company.state %>" required>
+                        <input type="text" class="form-control" id="state" name="state" value="<%= company.state %>"
+                            required>
                         <div class="invalid-feedback">Please enter the state/province</div>
                     </div>
 
                     <!-- City -->
                     <div class="col-md-6">
                         <label for="city" class="form-label">City</label>
-                        <input type="text" class="form-control" id="city" name="city" value="<%= company.city %>" required>
+                        <input type="text" class="form-control" id="city" name="city" value="<%= company.city %>"
+                            required>
                         <div class="invalid-feedback">Please enter the city</div>
                     </div>
                 </div>
@@ -270,7 +282,8 @@
                     <!-- Address -->
                     <div class="col-md-6">
                         <label for="address" class="form-label">Address</label>
-                        <input type="text" class="form-control" id="address" name="address" value="<%= company.address %>" required>
+                        <input type="text" class="form-control" id="address" name="address"
+                            value="<%= company.address %>" required>
                         <div class="invalid-feedback">Please enter the address</div>
                     </div>
 
@@ -286,14 +299,16 @@
                     <!-- Phone -->
                     <div class="col-md-6">
                         <label for="phone" class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" value="<%= company.phone %>" required>
+                        <input type="tel" class="form-control" id="phone" name="phone" value="<%= company.phone %>"
+                            required>
                         <div class="invalid-feedback">Please enter a valid phone number</div>
                     </div>
 
                     <!-- Ward -->
                     <div class="col-md-6">
                         <label for="ward" class="form-label">Ward Number</label>
-                        <input type="number" class="form-control" id="ward" name="ward" value="<%= company.ward %>" required>
+                        <input type="number" class="form-control" id="ward" name="ward" value="<%= company.ward %>"
+                            required>
                         <div class="invalid-feedback">Please enter the ward number</div>
                     </div>
                 </div>
@@ -302,7 +317,8 @@
                     <!-- Email -->
                     <div class="col-md-6">
                         <label for="email" class="form-label">Company Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<%= company.email %>" required>
+                        <input type="email" class="form-control" id="email" name="email" value="<%= company.email %>"
+                            required>
                         <div class="invalid-feedback">Please enter a valid email address</div>
                     </div>
 
@@ -310,9 +326,11 @@
                     <div class="col-md-6">
                         <label for="tradeType" class="form-label">Business Type</label>
                         <select class="form-select select2" id="tradeType" name="tradeType" required>
-                            <option value="retailer" <%= company.tradeType === 'retailer' ? 'selected' : '' %>>Retailer</option>
-                            <option value="Pharmacy" <%= company.tradeType === 'Pharmacy' ? 'selected' : '' %>>Pharmacy</option>
-                            <option value="Other" <%= company.tradeType === 'Other' ? 'selected' : '' %>>Other</option>
+                            <option value="retailer" <%=company.tradeType==='retailer' ? 'selected' : '' %>>Retailer
+                            </option>
+                            <option value="Pharmacy" <%=company.tradeType==='Pharmacy' ? 'selected' : '' %>>Pharmacy
+                            </option>
+                            <option value="Other" <%=company.tradeType==='Other' ? 'selected' : '' %>>Other</option>
                         </select>
                         <div class="invalid-feedback">Please select a business type</div>
                     </div>
@@ -324,22 +342,28 @@
                         <label for="dateFormat" class="form-label">Date Format</label>
                         <select class="form-select" id="dateFormat" name="dateFormat" required>
                             <option value="" disabled>Select date format</option>
-                            <option value="nepali" <%= company.dateFormat === 'nepali' ? 'selected' : '' %>>Nepali Date</option>
-                            <option value="english" <%= company.dateFormat === 'english' ? 'selected' : '' %>>English Date</option>
+                            <option value="nepali" <%=company.dateFormat==='nepali' ? 'selected' : '' %>>Nepali Date
+                            </option>
+                            <option value="english" <%=company.dateFormat==='english' ? 'selected' : '' %>>English Date
+                            </option>
                         </select>
                         <div class="invalid-feedback">Please select a date format</div>
                     </div>
 
                     <!-- Fiscal Year Start Date (dynamic based on date format) -->
                     <div class="col-md-6">
-                        <div class="english-date-fields" style="display: <%= company.dateFormat === 'english' ? 'block' : 'none' %>;">
+                        <div class="english-date-fields"
+                            style="display: <%= company.dateFormat === 'english' ? 'block' : 'none' %>;">
                             <label for="startDateEnglish" class="form-label">Fiscal Year Start Date (English)</label>
-                            <input type="date" class="form-control" id="startDateEnglish" name="startDateEnglish" value="<%= company.fiscalYearStartDate %>">
+                            <input type="date" class="form-control" id="startDateEnglish" name="startDateEnglish"
+                                value="<%= company.fiscalYearStartDate %>">
                         </div>
 
-                        <div class="nepali-date-fields" style="display: <%= company.dateFormat === 'nepali' ? 'block' : 'none' %>;">
+                        <div class="nepali-date-fields"
+                            style="display: <%= company.dateFormat === 'nepali' ? 'block' : 'none' %>;">
                             <label for="startDateNepali" class="form-label">Fiscal Year Start Date (Nepali)</label>
-                            <input type="date" class="form-control" id="startDateNepali" name="startDateNepali" value="<%= company.fiscalYearStartDate %>">
+                            <input type="date" class="form-control" id="startDateNepali" name="startDateNepali"
+                                value="<%= company.fiscalYearStartDate %>">
                         </div>
                     </div>
                 </div>
@@ -348,7 +372,8 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="vatEnabled" name="vatEnabled" <%= company.vatEnabled ? 'checked' : '' %>>
+                            <input class="form-check-input" type="checkbox" id="vatEnabled" name="vatEnabled"
+                                <%=company.vatEnabled ? 'checked' : '' %>>
                             <label class="form-check-label" for="vatEnabled">Enable VAT</label>
                         </div>
                     </div>
@@ -372,7 +397,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Initialize Select2 for tradeType
             $('.select2').select2({
                 placeholder: "Select business type",
@@ -381,7 +406,7 @@
             });
 
             // Handle date format change
-            $('#dateFormat').change(function() {
+            $('#dateFormat').change(function () {
                 var selectedFormat = $(this).val();
                 if (selectedFormat === 'english') {
                     $('.english-date-fields').show();
@@ -393,19 +418,19 @@
             });
 
             // Form validation
-            (function() {
+            (function () {
                 'use strict'
                 var forms = document.querySelectorAll('.needs-validation')
-                
-                Array.from(forms).forEach(function(form) {
-                    form.addEventListener('submit', function(event) {
+
+                Array.from(forms).forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
                         if (!form.checkValidity()) {
                             event.preventDefault()
                             event.stopPropagation()
                         } else {
                             showLoader();
                         }
-                        
+
                         form.classList.add('was-validated')
                     }, false)
                 })
@@ -433,11 +458,12 @@
         }
 
         // Handle back button navigation
-        window.onpageshow = function(event) {
+        window.onpageshow = function (event) {
             if (event.persisted) {
                 hideLoader();
             }
         };
     </script>
 </body>
+
 </html>

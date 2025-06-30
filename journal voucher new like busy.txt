@@ -1,0 +1,604 @@
+<%- include('../layouts/boilerplate', { title: 'Journal Entry' , body: '' }) %>
+    <style>
+        .journal-form-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        .entry-table th {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .entry-table td {
+            padding: 8px 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .account-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            text-align: right;
+        }
+
+        .debit-input:focus,
+        .credit-input:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+        }
+
+        .debit-input {
+            background-color: #e8f5e9;
+        }
+
+        .credit-input {
+            background-color: #fff8e1;
+        }
+
+        .totals-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .balance-row {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .show-more {
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin: 10px 0;
+            display: inline-block;
+        }
+
+        .form-section {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+    </style>
+    <div class="journal-form-container">
+        <div class="card shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+            <form action="/journal/new" method="POST" id="journalForm">
+
+                <div class="form-section">
+                    <div class="section-title">Journal Entries</div>
+                          <div class="row">
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Date:</label>
+                                <input type="text" name="nepaliDate" class="form-control" required
+                                    value="<%= nepaliDate || '' %>" placeholder="YYYY/MM/DD" autofocus>
+                            </div>
+                            <% } else { %>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Date:</label>
+                                    <input type="date" name="billDate" class="form-control" required
+                                        value="<%= new Date().toISOString().split('T')[0] %>" autofocus>
+                                </div>
+                                <% } %>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Voucher No:</label>
+                                        <input type="text" name="billNumber" class="form-control" required
+                                            value="<%= nextBillNumber %>" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Description:</label>
+                                        <input type="text" name="description" class="form-control"
+                                            placeholder="Enter voucher description">
+                                    </div>
+                    </div>
+                    <div class="table-container" id="journal-table-container">
+                        <table class="entry-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="45%">Account</th>
+                                    <th width="25%">Debit Amount</th>
+                                    <th width="25%">Credit Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journal-entries">
+                                <% for (let i=0; i < 20; i++) { %>
+                                    <tr class="entry-row <%= i >= 6 ? 'hidden-row' : '' %>" data-index="<%= i %>">
+                                        <td>
+                                            <%= i + 1 %>
+                                        </td>
+                                        <td>
+                                            <!-- CORRECTED: Changed name attribute to entries[i][account] -->
+                                            <input type="text" class="form-control account-input"
+                                                 data-index="<%= i %>"
+                                                autocomplete="off">
+                                            <!-- CORRECTED: Changed name to entries[i][accountId] -->
+                                            <input type="hidden" class="account-id-input"
+                                                name="entries[<%= i %>][accountId]">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="entries[<%= i %>][debit]"
+                                                class="amount-input debit-input" min="0" step="0.01" placeholder="0.00"
+                                                onkeydown="handleJournalKeydown(event, <%= i %>, 'debit')">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="entries[<%= i %>][credit]"
+                                                class="amount-input credit-input" min="0" step="0.01" placeholder="0.00"
+                                                onkeydown="handleJournalKeydown(event, <%= i %>, 'credit')">
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- MOVE TOTALS AND BALANCE OUTSIDE THE SCROLL CONTAINER -->
+                    <table class="entry-table">
+                        <tfoot>
+                            <tr class="totals-row">
+                                <td width="50%" colspan="2" style="text-align: right;">Total:</td>
+                                <td width="25%" id="total-debit">0.00</td>
+                                <td width="25%" id="total-credit">0.00</td>
+                            </tr>
+                            <tr class="balance-row">
+                                <td width="50%" colspan="2" style="text-align: right;">Balance:</td>
+                                <td width="50%" colspan="2" id="balance">0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="show-more" id="show-more" style="display: none;">
+                        ▼ Show More Rows
+                    </div>
+                </div>
+
+                <div class="nav-buttons" style="float: right;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button type="submit" class="btn btn-secondary" name="print" value="true">
+                        <i class="fas fa-print"></i> Save & Print
+                    </button>
+                    <button type="button" class="btn btn-light" id="clear-form">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal for account -->
+    <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountModalLabel">Select an Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Fixed Search Input -->
+                <div class="p-3 bg-white sticky-top">
+                    <input type="text" id="searchAccount" class="form-control" placeholder="Search Account"
+                        onfocus="selectValue(this)" autofocus autocomplete="off">
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Scrollable Account List -->
+                    <div class="overflow-auto" style="max-height: 400px;">
+                        <ul id="accountList" class="list-group">
+                            <!-- Accounts will be dynamically loaded here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // Global variables for account modal
+        let selectedIndex = 0;
+        let currentRowIndex = null;
+        let allAccounts = [];
+
+        $(document).ready(function () {
+            // Account modal functionality
+            const $accountModal = $("#accountModal");
+            const $searchInput = $("#searchAccount");
+            const $accountList = $("#accountList");
+            const $modalBody = $accountList.parent();
+
+            // Open modal when any account input is focused
+            $(document).on('focus', '.account-input', function () {
+                currentRowIndex = $(this).data('index');
+                $accountModal.modal("show");
+                fetchAccounts();
+            });
+
+            // Focus on search input when modal opens
+            $accountModal.on("shown.bs.modal", function () {
+                // Clear search input and reset selected index
+                $searchInput.val('').trigger('input');
+                selectedIndex = 0;
+
+                // Focus on search input
+                $searchInput.focus();
+            });
+
+            // Fetch accounts from server
+            function fetchAccounts() {
+                $.ajax({
+                    url: "/api/accounts/forJournal",
+                    method: "GET",
+                    success: function (data) {
+                        allAccounts = data;
+                        allAccounts.sort(function (a, b) {
+                            const nameA = a.name.toLowerCase();
+                            const nameB = b.name.toLowerCase();
+                            if (nameA < nameB) return -1;
+                            if (nameA > nameB) return 1;
+                            return 0;
+                        });
+                        renderAccounts();
+                    },
+                    error: function (err) {
+                        console.error("Error fetching accounts:", err);
+                        $accountList.html('<li class="list-group-item text-danger">Failed to load accounts</li>');
+                    }
+                });
+            }
+
+            // Render accounts dynamically
+            function renderAccounts(filtered = allAccounts) {
+                $accountList.empty();
+
+                if (filtered.length === 0) {
+                    $accountList.html('<li class="list-group-item text-muted">No accounts found</li>');
+                    return;
+                }
+
+                filtered.forEach((account, index) => {
+                    const isActive = index === 0 ? "active" : "";
+                    $accountList.append(`
+                <li class="list-group-item account-item ${isActive}" 
+                    data-id="${account._id}" 
+                    data-name="${account.name}" 
+                    data-index="${index}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${account.uniqueNumber || 'N/A'} ${account.name}</strong>
+                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+                    </div>
+                </li>
+            `);
+                });
+            }
+
+            // Search accounts dynamically
+            $searchInput.on("input", function () {
+                let searchText = $(this).val().toLowerCase();
+                let filteredAccounts = allAccounts.filter(account =>
+                    account.name.toLowerCase().includes(searchText)
+                );
+                renderAccounts(filteredAccounts);
+            });
+
+            // Handle keyboard navigation & scrolling
+            $searchInput.on("keydown", function (e) {
+                let visibleItems = $(".account-item");
+
+                if (e.key === "ArrowDown") {
+                    if (selectedIndex < visibleItems.length - 1) {
+                        selectedIndex++;
+                    }
+                } else if (e.key === "ArrowUp") {
+                    if (selectedIndex > 0) {
+                        selectedIndex--;
+                    }
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (visibleItems.length > 0) {
+                        selectAccount(visibleItems.eq(selectedIndex));
+                    }
+                }
+
+                // Highlight the selected item
+                visibleItems.removeClass("active");
+                let selectedItem = visibleItems.eq(selectedIndex);
+                selectedItem.addClass("active");
+                adjustScroll(selectedItem);
+            });
+
+            // Click to select account
+            $(document).on("click", ".account-item", function () {
+                selectAccount($(this));
+            });
+
+            // Function to select account and populate fields
+            function selectAccount(element) {
+                if (currentRowIndex === null) return;
+
+                let accountId = element.data("id");
+                let accountName = element.data("name");
+
+                // Update the specific row that opened the modal
+                $(`.account-input[data-index="${currentRowIndex}"]`).val(accountName);
+                $(`.account-id-input[data-index="${currentRowIndex}"]`).val(accountId);
+                $accountModal.modal("hide");
+
+                // Move focus to the debit input of the same row
+                setTimeout(() => {
+                    $(`tr.entry-row[data-index="${currentRowIndex}"] .debit-input`).focus();
+                }, 300);
+            }
+
+            // Function to adjust scroll position
+            function adjustScroll(selectedItem) {
+                let itemTop = selectedItem.position().top;
+                let itemHeight = selectedItem.outerHeight();
+                let modalHeight = $modalBody.innerHeight();
+
+                if (itemTop + itemHeight > modalHeight) {
+                    $modalBody.scrollTop($modalBody.scrollTop() + itemHeight);
+                } else if (itemTop < 0) {
+                    $modalBody.scrollTop($modalBody.scrollTop() - itemHeight);
+                }
+            }
+
+            // Handle Enter key press in any input when journal is balanced
+            $(document).on('keydown', 'input', function (e) {
+                if (e.key === 'Enter') {
+                    const balance = parseFloat($('#balance').text());
+                    const totalDebit = parseFloat($('#total-debit').text());
+                    const totalCredit = parseFloat($('#total-credit').text());
+
+                    // Check if journal is balanced AND there are transactions entered
+                    if (balance === 0 && (totalDebit > 0 || totalCredit > 0)) {
+                        e.preventDefault();
+                        $('button[type="submit"]').first().focus();
+                    }
+                }
+            });
+
+            // Rest of the journal functionality
+            // Hide the "Show More" button since we're using scroll
+            $('#show-more').hide();
+
+            // Calculate totals when amounts change
+            $('body').on('input', '.debit-input, .credit-input', calculateTotals);
+
+            // Initial calculation
+            calculateTotals();
+
+            // Form submission validation
+            $('#journalForm').submit(function (e) {
+                const balance = parseFloat($('#balance').text());
+                if (balance !== 0) {
+                    e.preventDefault();
+                    alert('Journal entries must balance. Total debit must equal total credit.');
+                }
+            });
+
+            // Clear form
+            $('#clear-form').click(function () {
+                if (confirm('Are you sure you want to clear the form?')) {
+                    $('select').val('').trigger('change');
+                    $('input[type="number"]').val('');
+                    $('.account-input').val('');
+                    $('.account-id-input').val('');
+                    calculateTotals();
+                }
+            });
+
+            // Track which rows have been revealed
+            let lastRevealedRow = 5; // Start with 6 rows visible (0-5)
+
+            // Function to reveal the next row
+            function revealNextRow() {
+                if (lastRevealedRow < 19) {
+                    lastRevealedRow++;
+                    $(`.entry-row[data-index="${lastRevealedRow}"]`).removeClass('hidden-row');
+                    return true;
+                }
+                return false;
+            }
+
+            // Scroll event to reveal rows as user scrolls down
+            $('#journal-table-container').on('scroll', function () {
+                const container = $(this);
+                const scrollHeight = container[0].scrollHeight;
+                const scrollTop = container.scrollTop();
+                const clientHeight = container.innerHeight();
+
+                // Check if user has scrolled near the bottom
+                if (scrollTop + clientHeight >= scrollHeight - 50) {
+                    if (revealNextRow()) {
+                        // Recalculate totals after revealing row
+                        calculateTotals();
+                    }
+                }
+            });
+
+            // Initially reveal first 6 rows (index 0-5)
+            for (let i = 0; i < 6; i++) {
+                $(`.entry-row[data-index="${i}"]`).removeClass('hidden-row');
+            }
+        });
+
+        function calculateTotals() {
+            let totalDebit = 0;
+            let totalCredit = 0;
+
+            $('.entry-row').each(function () {
+                if ($(this).hasClass('hidden-row')) {
+                    return; // Skip hidden rows
+                }
+
+                const debit = parseFloat($(this).find('.debit-input').val()) || 0;
+                const credit = parseFloat($(this).find('.credit-input').val()) || 0;
+
+                totalDebit += debit;
+                totalCredit += credit;
+
+                // Auto-clear the other field if one is entered
+                if (debit > 0) {
+                    $(this).find('.credit-input').val('');
+                } else if (credit > 0) {
+                    $(this).find('.debit-input').val('');
+                }
+            });
+
+            $('#total-debit').text(totalDebit.toFixed(2));
+            $('#total-credit').text(totalCredit.toFixed(2));
+
+            const balance = totalDebit - totalCredit;
+            $('#balance').text(balance.toFixed(2));
+
+            // Highlight balance status
+            if (balance === 0) {
+                $('#balance').closest('tr').css('background-color', '#e8f5e9');
+            } else {
+                $('#balance').closest('tr').css('background-color', '#ffebee');
+            }
+        }
+
+        function handleJournalKeydown(event, rowIndex, type) {
+            // Tab navigation
+            if (event.key === 'Tab') {
+                event.preventDefault();
+
+                const visibleRows = $('.entry-row:not(.hidden-row)');
+                const currentRow = visibleRows.filter(`[data-index="${rowIndex}"]`);
+                const rowPosition = visibleRows.index(currentRow);
+
+                if (event.shiftKey && type === 'debit') {
+                    // Move to account in same row
+                    $(`tr.entry-row[data-index="${rowIndex}"] .account-input`).focus();
+                    return;
+                }
+
+                if (!event.shiftKey && type === 'credit') {
+                    // Move to next row's account
+                    if (rowPosition < visibleRows.length - 1) {
+                        const nextRowIndex = visibleRows.eq(rowPosition + 1).data('index');
+                        $(`tr.entry-row[data-index="${nextRowIndex}"] .account-input`).focus();
+                    } else {
+                        // Last row, move to description
+                        $('input[name="description"]').focus();
+                    }
+                    return;
+                }
+
+                // Move to next cell
+                const nextCell = currentRow.find('td').eq(type === 'debit' ? 3 : 2);
+                if (nextCell.find('input').length) {
+                    nextCell.find('input').focus();
+                }
+            }
+
+            // Navigation with arrow keys
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const visibleRows = $('.entry-row:not(.hidden-row)');
+                const currentRow = visibleRows.filter(`[data-index="${rowIndex}"]`);
+                const rowPosition = visibleRows.index(currentRow);
+                const direction = event.key === 'ArrowDown' ? 1 : -1;
+                const newRowPosition = rowPosition + direction;
+
+                if (newRowPosition >= 0 && newRowPosition < visibleRows.length) {
+                    const newRowIndex = visibleRows.eq(newRowPosition).data('index');
+                    visibleRows.eq(newRowPosition).find(`.${type}-input`).focus();
+                }
+            }
+
+            // Enter key moves to next row or save button when balanced
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const balance = parseFloat($('#balance').text());
+
+                // Focus Save button when journal is balanced
+                if (balance === 0) {
+                    $('button[type="submit"]').first().focus();
+                    return;
+                }
+
+                const visibleRows = $('.entry-row:not(.hidden-row)');
+                const currentRow = visibleRows.filter(`[data-index="${rowIndex}"]`);
+                const rowPosition = visibleRows.index(currentRow);
+
+                if (rowPosition < visibleRows.length - 1) {
+                    const nextRowIndex = visibleRows.eq(rowPosition + 1).data('index');
+                    visibleRows.eq(rowPosition + 1).find(`.${type}-input`).focus();
+                } else {
+                    $('input[name="description"]').focus();
+                }
+            }
+        }
+
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+    </script>

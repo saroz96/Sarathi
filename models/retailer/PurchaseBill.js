@@ -56,6 +56,18 @@ const PurchaseBillSchema = new Schema({
             type: Number,
             required: true
         },
+        discountPercentagePerItem: {
+            type: Number,
+            default: 0,
+        },
+        discountAmountPerItem: {
+            type: Number,
+            default: 0,
+        },
+        netPuPrice: {
+            type: Number,
+            default: 0,
+        },
         mrp: {
             type: Number,
             default: 0,

@@ -26,7 +26,11 @@ router.get('/receipts-list', isLoggedIn, ensureAuthenticated, ensureCompanySelec
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
 
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
         let currentFiscalYear = null;
@@ -58,17 +62,51 @@ router.get('/receipts-list', isLoggedIn, ensureAuthenticated, ensureCompanySelec
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const receipts = await Receipt.find({ company: companyId, fiscalYear: fiscalYear })
+        if (!fromDate || !toDate) {
+            return res.render('retailer/receipt/list', {
+                company,
+                currentFiscalYear,
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                receipts: '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+        const receipts = await Receipt.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account', 'name') // Assuming 'name' field exists in Account schema
             .populate('user', 'name') // Assuming 'username' field exists in User schema
             .populate('receiptAccount', 'name') // Assuming 'name' field exists in Account schema for paymentAccount
             .exec();
         res.render('retailer/receipt/list', {
-            company, currentFiscalYear,
-            receipts, currentCompanyName, currentCompany,
-            title: 'View Receipt',
-            body: 'retailer >> receipt >> view receipts',
+            company,
+            currentFiscalYear,
+            receipts,
+            currentCompanyName,
+            currentCompany,
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
+            title: '',
+            body: '',
             user: req.user,
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });

@@ -1,12 +1,50 @@
 <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/stylesheet/purchase/edit.css">
-
-
     <!-- Nepali Datepicker -->
     <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
         rel="stylesheet" type="text/css" />
 
+    <style>
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+
+        #bill-details-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #items {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        /* Add this to prevent text selection during double-click */
+        #transactionList tbody tr {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Visual feedback for click actions */
+        #transactionList tbody tr:active {
+            transform: scale(0.99);
+            transition: transform 0.1s;
+        }
+
+        /* Focus styles */
+        #transactionList tbody tr:focus {
+            outline: 2px solid #0d6efd;
+            outline-offset: -2px;
+        }
+    </style>
 
     <div class="container wow-form expanded-container">
         <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
@@ -27,7 +65,7 @@
                                 <input type="date" name="transactionDateNepali" id="transactionDateNepali"
                                     class="form-control"
                                     value="<%= purchaseInvoice.transactionDate ? purchaseInvoice.transactionDate.toISOString().split('T')[0]: '' %>"
-                                    onfocus="selectValue(this)" autofocus required autocomplete="off"/>
+                                    onfocus="selectValue(this)" autofocus required autocomplete="off" />
 
                             </div>
                             <div class="col">
@@ -45,7 +83,8 @@
                                     <input type="date" name="transactionDateRoman" id="transactionDateRoman"
                                         class="form-control"
                                         value="<%= purchaseInvoice.transactionDate ? purchaseInvoice.transactionDate.toISOString().split('T')[0]: '' %>"
-                                        onfocus="selectValue(this)" autofocus required onblur="validateDate(this)" autocomplete="off">
+                                        onfocus="selectValue(this)" autofocus required onblur="validateDate(this)"
+                                        autocomplete="off">
                                     <span class="error-message" style="color: red; display: none;"></span>
 
                                 </div>
@@ -124,7 +163,8 @@
                             <!-- New field for the address -->
                             <label for="address">Party Address:</label>
                             <input type="text" id="address" name="address" class="form-control"
-                                value="<%=purchaseInvoice.account.address%>" autocomplete="off" onfocus="selectValue(this)">
+                                value="<%=purchaseInvoice.account.address%>" autocomplete="off"
+                                onfocus="selectValue(this)">
                         </div>
                         <div class="col">
                             <!-- New field for the address -->
@@ -176,7 +216,8 @@
                                         <td>
                                             <input type="number" name="items[<%=index%>][WSUnit]"
                                                 value="<%=item.item.WSUnit%>" class="form-control item-WSUnit"
-                                                id="WSUnit-<%=index%>" step="any" autocomplete="off" onfocus="selectValue(this)">
+                                                id="WSUnit-<%=index%>" step="any" autocomplete="off"
+                                                onfocus="selectValue(this)">
                                         </td>
                                         <td>
                                             <input type="text" name="items[<%= index %>][batchNumber]"
@@ -286,7 +327,8 @@
                                     <td>
                                         <input type="number" step="any" name="discountAmount" id="discountAmount"
                                             value="<%= purchaseInvoice.discountAmount.toFixed(2) %>"
-                                            class="form-control" oninput="calculateTotal()" onfocus="selectValue(this)" autocomplete="off">
+                                            class="form-control" oninput="calculateTotal()" onfocus="selectValue(this)"
+                                            autocomplete="off">
                                     </td>
                                 </tr>
 
@@ -350,17 +392,6 @@
         </div>
     </div>
 
-    <style>
-        #accountModal .modal-body {
-            min-height: 400px;
-            /* Ensures modal stays the same size */
-            max-height: 500px;
-            /* Limits height */
-            overflow-y: auto;
-            /* Allows scrolling */
-        }
-    </style>
-
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -391,7 +422,7 @@
     <!-- Transaction Modal -->
     <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="transactionModalLabel">Last Transactions</h5>
@@ -400,18 +431,27 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <ul id="transactionList" class="list-group">
+                    <ul id="transactionList" class="list-group" style="overflow-y:hidden;">
                         <!-- Transactions will be dynamically inserted here -->
                     </ul>
                 </div>
                 <div class="modal-footer">
+                    <!-- <button id="showAllParties" class="btn btn-info">
+                        <i class="bi bi-receipt"></i> Show All Parties
+                    </button> -->
+                    <button id="showSalesTransactions" class="btn btn-info">
+                        <i class="bi bi-receipt"></i> Show Sales Transactions
+                    </button>
+                    <button id="showPurchaseTransactions" class="btn btn-info">
+                        <i class="bi bi-cart"></i> Show Purchase Transactions
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeModalButton"
                         onkeydown="handleCloseButtonKeydown(event)">Close</button>
+
                 </div>
             </div>
         </div>
     </div>
-
     <!-- Sales Price Modal -->
     <div class="modal fade" id="setSalesPriceModal" tabindex="-1" aria-labelledby="setSalesPriceModalLabel"
         aria-hidden="true">
@@ -445,8 +485,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="salesPrice" class="form-label">Sales Price</label>
-                        <input type="number" class="form-control" id="salesPrice" step="any" autocomplete="off" onfocus="selectValue(this)"
-                            required>
+                        <input type="number" class="form-control" id="salesPrice" step="any" autocomplete="off"
+                            onfocus="selectValue(this)" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -456,53 +496,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal for payment mode -->
-    <!-- <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Select Payment Mode</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" class="form-control mb-2" id="searchPayment" placeholder="Search Payment Mode"
-                        autocomplete="off">
-                    <ul class="list-group" id="paymentOptions">
-                        <li class="list-group-item active" data-value="credit">credit</li>
-                        <li class="list-group-item" data-value="cash">cash</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-    <!-- Modal for VAT options -->
-    <!-- <div class="modal fade" id="vatModal" tabindex="-1" aria-labelledby="vatModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="vatModalLabel">VAT</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" id="searchVat" class="form-control mb-3" placeholder="Search VAT options..."
-                        oninput="searchVatOptions()" autofocus autocomplete="off" />
-
-                    <% if (vatEnabled) {%>
-
-                        <button class="btn btn-outline-primary w-100 vat-option" onclick="selectVatOption('all')"
-                            id="vatOptionAll">All</button>
-                        <button class="btn btn-outline-primary w-100 vat-option" onclick="selectVatOption('false')"
-                            id="vatOption13">13%</button>
-                        <%}%>
-                            <button class="btn btn-outline-primary w-100 vat-option" onclick="selectVatOption('true')"
-                                id="vatOptionExempt">Exempt</button>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
     <script src="/javascript/purchase/edit.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -678,96 +671,6 @@
         });
         //-----------------------------------------------------------------------------------------------
 
-        // window.onload = function () {
-        //     var transactionDateNepali = document.getElementById("transactionDateNepali");
-        //     var nepaliDate = document.getElementById("nepaliDate");
-
-        //     transactionDateNepali.nepaliDatePicker();
-        //     nepaliDate.nepaliDatePicker();
-
-        //     // Add validation for Transaction Date
-        //     transactionDateNepali.addEventListener("blur", function () {
-        //         validateNepaliDate(this, "transactionDateError");
-        //     });
-
-        //     // Add validation for Invoice Date
-        //     nepaliDate.addEventListener("blur", function () {
-        //         validateNepaliDate(this, "nepaliDateError");
-        //     });
-        // };
-
-        // // Function to validate Nepali date
-        // function validateNepaliDate(inputField, errorSpanId) {
-        //     var errorSpan = document.getElementById(errorSpanId);
-        //     var dateString = inputField.value.trim();
-
-        //     // Check if the date is valid
-        //     if (dateString && !isValidNepaliDate(dateString)) {
-        //         errorSpan.style.display = "inline"; // Show error message
-        //         // Prevent focus from moving to the next field
-        //         event.preventDefault();
-        //         inputField.focus(); // Keep focus on the current input field
-        //     } else {
-        //         errorSpan.style.display = "none"; // Hide error message
-        //     }
-        // }
-
-
-        // // Function to check if the Nepali date is valid
-        // function isValidNepaliDate(dateString) {
-        //     // Regular expression to match the Nepali date format (YYYY-MM-DD)
-        //     var datePattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
-        //     if (!datePattern.test(dateString)) return false;
-
-        //     // Split the date string into year, month, and day
-        //     var parts = dateString.split("-");
-        //     var year = parseInt(parts[0], 10);
-        //     var month = parseInt(parts[1], 10);
-        //     var day = parseInt(parts[2], 10);
-
-        //     // Check if the month and day are valid
-        //     if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
-        //     if (month < 1 || month > 12 || day < 1 || day > 32) return false;
-
-        //     // Manually validate the number of days in the month
-        //     var maxDays = getMaxDaysInNepaliMonth(year, month);
-        //     if (day > maxDays) return false;
-
-        //     return true;
-        // }
-
-        // // Function to get the maximum number of days in a Nepali month
-        // function getMaxDaysInNepaliMonth(year, month) {
-        //     // Define the number of days in each month for a given year
-        //     // This is a simplified example and may not cover all edge cases
-        //     var nepaliMonths = [
-        //         31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30 // Example for year 2080
-        //     ];
-
-        //     // Adjust for leap years if necessary
-        //     if (year % 4 === 0 && month === 1) { // Check if it's a leap year and the month is Baisakh
-        //         nepaliMonths[0] = 31; // Baisakh has 31 days in a leap year
-        //     }
-
-        //     return nepaliMonths[month - 1]; // Return the number of days for the given month
-        // }
-
-        // //for english date validation
-        // function validateDate(input) {
-        //     const errorMessage = input.nextElementSibling; // Get the error message span
-        //     const dateValue = input.value;
-
-        //     // Check if the date is valid
-        //     if (!dateValue || isNaN(new Date(dateValue).getTime())) {
-        //         errorMessage.textContent = "Invalid date!";
-        //         errorMessage.style.display = "block";
-        //         input.focus(); // Prevent moving to the next field
-        //     } else {
-        //         errorMessage.style.display = "none"; // Hide error if valid
-        //     }
-        // }
-
-
         window.onload = function () {
             var transactionDateNepali = document.getElementById("transactionDateNepali");
             var nepaliDate = document.getElementById("nepaliDate");
@@ -864,212 +767,5 @@
                 errorMessage.style.display = "none"; // Hide error if valid
             }
         }
-
-
-        //for payment mode:
-        $(document).ready(function () {
-            let selectedIndex = 0;
-            const inputField = $("#paymentMode");
-            const searchField = $("#searchPayment");
-            const nextField = $("#partyBillNumber"); // Next field to focus
-            const modal = new bootstrap.Modal(document.getElementById("paymentModal"));
-            const optionsList = $("#paymentOptions li");
-
-            // Show modal on input focus
-            inputField.focus(function () {
-                modal.show();
-                setTimeout(() => searchField.focus(), 500); // Auto-focus search bar in modal
-            });
-
-            // Search function
-            searchField.on("input", function () {
-                let searchText = $(this).val().toLowerCase();
-                optionsList.each(function () {
-                    let text = $(this).text().toLowerCase();
-                    $(this).toggle(text.includes(searchText));
-                });
-            });
-
-            // Keyboard navigation
-            searchField.keydown(function (e) {
-                if (e.key === "ArrowDown") {
-                    selectedIndex = (selectedIndex + 1) % optionsList.length;
-                    updateActiveOption();
-                } else if (e.key === "ArrowUp") {
-                    selectedIndex = (selectedIndex - 1 + optionsList.length) % optionsList.length;
-                    updateActiveOption();
-                } else if (e.key === "Enter") {
-                    if (selectedIndex !== -1) {
-                        selectOption($(optionsList[selectedIndex]));
-                    }
-                }
-            });
-
-            // Click selection
-            optionsList.click(function () {
-                selectOption($(this));
-            });
-
-            function updateActiveOption() {
-                optionsList.removeClass("active");
-                if (selectedIndex !== -1) {
-                    $(optionsList[selectedIndex]).addClass("active");
-                }
-            }
-
-            function selectOption(option) {
-                inputField.val(option.text());
-                modal.hide();
-                nextField.focus(); // Focus next field
-            }
-        });
-        //-----------------------------------------------------------------------------------------
-
-        //for vat selection
-        // Check if the payment modal is open
-        let isPaymentModalOpen = false;
-
-        // Monitor the opening and closing of the payment modal
-        $('#paymentModal').on('show.bs.modal', function () {
-            isPaymentModalOpen = true;
-        });
-
-        $('#paymentModal').on('hide.bs.modal', function () {
-            isPaymentModalOpen = false;
-        });
-        // Open VAT modal when VAT select field is focused
-        function openVatModal() {
-            if (isPaymentModalOpen) {
-                // Prevent opening the VAT modal if payment modal is open
-                return;
-            }
-            $('#vatModal').modal('show');
-
-            // Ensure search input gets focus when modal is shown
-            $('#vatModal').on('shown.bs.modal', function () {
-                $('#searchVat').focus();
-                highlightFirstVisibleOption(); // Highlight the first visible option
-            });
-        }
-
-        // Function to select VAT option from modal and update the VAT field
-        function selectVatOption(value) {
-            // Set the value to the VAT select field
-            document.getElementById('isVatExempt').value = value;
-
-            // Close the modal
-            $('#vatModal').modal('hide');
-
-            // Trigger the toggleVatInputs function after selection
-            toggleVatInputs();
-
-            // Move focus to the account input field after VAT selection
-            document.getElementById('account').focus();
-        }
-
-        // Manage navigation and selected option
-        let currentHighlightedIndex = 0;
-
-        $(document).ready(function () {
-            // Handle search input
-            $('#searchVat').on('input', searchVatOptions);
-
-            // Enable navigation via arrow keys and Enter
-            $(document).on('keydown', handleKeydownNavigation);
-        });
-
-        // Search function to filter VAT options and highlight the first visible one
-        function searchVatOptions() {
-            const searchTerm = document.getElementById('searchVat').value.toLowerCase();
-            const vatOptions = document.querySelectorAll('.vat-option');
-
-            vatOptions.forEach(option => {
-                const text = option.innerText.toLowerCase();
-                option.style.display = text.includes(searchTerm) ? 'block' : 'none';
-            });
-
-            // Highlight the first visible option after filtering
-            highlightFirstVisibleOption();
-        }
-
-        // Highlight the first visible VAT option dynamically
-        function highlightFirstVisibleOption() {
-            const visibleOptions = Array.from(document.querySelectorAll('.vat-option')).filter(option => option.style.display !== 'none');
-
-            if (visibleOptions.length > 0) {
-                currentHighlightedIndex = 0;
-                highlightOption(visibleOptions, currentHighlightedIndex);
-            }
-        }
-
-        // Highlight the selected VAT option
-        function highlightOption(visibleOptions, index) {
-            document.querySelectorAll('.vat-option').forEach(option => option.classList.remove('highlight'));
-
-            if (visibleOptions.length > 0) {
-                visibleOptions[index].classList.add('highlight');
-            }
-        }
-
-        // Navigate between the VAT options using arrow keys
-        function navigateOptions(direction) {
-            const visibleOptions = Array.from(document.querySelectorAll('.vat-option')).filter(option => option.style.display !== 'none');
-
-            if (visibleOptions.length > 0) {
-                currentHighlightedIndex = (currentHighlightedIndex + direction + visibleOptions.length) % visibleOptions.length;
-                highlightOption(visibleOptions, currentHighlightedIndex);
-            }
-        }
-
-        // Handle keydown event for navigation and selection
-        function handleKeydownNavigation(e) {
-            if ($('#vatModal').hasClass('show')) {
-                const visibleOptions = Array.from(document.querySelectorAll('.vat-option')).filter(option => option.style.display !== 'none');
-
-                if (e.key === "ArrowDown") {
-                    navigateOptions(1);
-                } else if (e.key === "ArrowUp") {
-                    navigateOptions(-1);
-                } else if (e.key === "Enter" && visibleOptions.length > 0) {
-                    selectVatOption(visibleOptions[currentHighlightedIndex].getAttribute("onclick").match(/'(.*)'/)[1]);
-                }
-            }
-        }
-
-        // Apply the custom highlight style
-        const style = document.createElement('style');
-        style.innerHTML = `
-    .vat-option.highlight {
-        background-color: #007bff;
-        color: white;
-        outline: none;
-    }
-`;
-        document.head.appendChild(style);
-
-        //------------------------------------------------------------------------------------------------
-
-        // Add an event listener to the paymentMode select element
-        document.getElementById('paymentMode').addEventListener('keydown', function (event) {
-            // Check if the Enter key is pressed (key code 13)
-            if (event.key === 'Enter') {
-                // Prevent the default form submission behavior
-                event.preventDefault();
-
-                // Move focus to the next input field
-                document.getElementById('partyBillNumber').focus();
-            }
-        });
-
-        document.getElementById('isVatExempt').addEventListener('keydown', function (event) {
-            // Check if the Enter key is pressed (key code 13)
-            if (event.key === 'Enter') {
-                // Prevent the default form submission behavior
-                event.preventDefault();
-
-                // Move focus to the next input field
-                document.getElementById('account').focus();
-            }
-        });
 
     </script>

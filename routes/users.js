@@ -823,7 +823,7 @@ router.post('/admin/users/:id/role', ensureAuthenticated, async (req, res) => {
         const newRole = req.body.role;
 
         // Validate the role to prevent invalid role assignments
-        const validRoles = ['Sales', 'Purchase', 'Supervisor'];
+        const validRoles = ['Account', 'Sales', 'Purchase', 'Supervisor', 'ADMINISTRATOR', 'User'];
         if (!validRoles.includes(newRole)) {
             req.flash('error', 'Invalid role.');
             return res.redirect('/admin/users/list');
@@ -1058,5 +1058,6 @@ router.get('/logout', (req, res) => {
         res.redirect('/login');
     });
 });
+
 
 module.exports = router;

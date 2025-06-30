@@ -425,6 +425,7 @@ function addItemToBill(item, dropdownMenu) {
     // Use price from the first stock entry
     const batchPrice = firstStockEntry.price || 0;
     const batchPuPrice = firstStockEntry.puPrice || 0;
+    const batchNetPuPrice = firstStockEntry.netPuPrice || 0;
 
     tr.innerHTML = `
         <td>${serialNumber}</td>
@@ -444,8 +445,7 @@ function addItemToBill(item, dropdownMenu) {
             <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(firstStockEntry.expiryDate || '')}" oninput="this.value='${formatDateForInput(firstStockEntry.expiryDate)}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})">
         </td>
         <td>
-            <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
-        </td>
+            <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" max="${totalStock}" step="any" oninput="validateQuantity(this, ${totalStock})" onkeydown="handleQuantityKeydown(event, ${itemIndex}, ${totalStock})" onfocus="selectValue(this)">        </td>
         <td>
             ${item.unit ? item.unit.name : ''}
             <input type="hidden" name="items[${itemIndex}][unit]" value="${item.unit ? item.unit._id : ''}">
@@ -462,6 +462,7 @@ function addItemToBill(item, dropdownMenu) {
         </td>
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(batchPuPrice * 100) / 100}">
+        <input type="hidden" name="items[${itemIndex}][netPuPrice]" value="${Math.round(batchNetPuPrice * 100) / 100}">
 
     `;
     tbody.appendChild(tr);
@@ -480,6 +481,48 @@ function addItemToBill(item, dropdownMenu) {
 
     // Focus on the quantity input field of the newly added row
     document.getElementById(`quantity-${itemIndex - 1}`).focus();
+}
+
+// New function to validate quantity
+function validateQuantity(input, maxStock) {
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value <= 0) {
+        input.value = '';
+        return;
+    }
+
+    if (value > maxStock) {
+        alert(`Quantity cannot exceed available stock (${maxStock})`);
+        input.value = maxStock;
+        input.focus();
+    }
+    updateItemTotal(input);
+}
+
+// Modified handleQuantityKeydown function
+function handleQuantityKeydown(event, index, maxStock) {
+    const quantityInput = document.getElementById(`quantity-${index}`);
+    const priceInput = document.getElementById(`price-${index}`);
+
+    if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+
+        const quantity = parseFloat(quantityInput.value);
+        if (isNaN(quantity) || quantity <= 0) {
+            alert('Please enter a valid quantity');
+            quantityInput.focus();
+            return;
+        }
+
+        if (quantity > maxStock) {
+            alert(`Quantity cannot exceed available stock (${maxStock})`);
+            quantityInput.focus();
+            return;
+        }
+
+        // Only proceed to price if quantity is valid
+        priceInput.focus();
+    }
 }
 
 function removeItem(button) {

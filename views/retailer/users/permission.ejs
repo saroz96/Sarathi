@@ -1,0 +1,1092 @@
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  .permission-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .permission-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: none;
+  }
+
+  .user-header {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-right: 1.5rem;
+  }
+
+  .user-info h3 {
+    margin-bottom: 0.25rem;
+  }
+
+  .user-info p {
+    margin-bottom: 0;
+    color: #6c757d;
+  }
+
+  .permission-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .permission-table th {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .permission-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+  }
+
+  .permission-name {
+    font-weight: 500;
+  }
+
+  .form-check-input {
+    width: 1.5em;
+    height: 1.5em;
+  }
+
+  .form-switch .form-check-input {
+    width: 2.5em;
+    margin-left: 0;
+  }
+
+  .save-btn {
+    min-width: 150px;
+  }
+
+  .note-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .user-header {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .user-avatar {
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+
+    .permission-table th,
+    .permission-table td {
+      padding: 0.75rem;
+    }
+  }
+</style>
+
+<div class="container permission-container">
+  <div class="card permission-card">
+    <div class="user-header">
+      <div class="user-avatar">
+        <%= user.name.charAt(0).toUpperCase() %>
+      </div>
+      <div class="user-info">
+        <h3>
+          <%= user.name %>
+        </h3>
+        <p>
+          <%= user.email %>
+        </p>
+        <p>
+          <span
+            class="badge bg-<%= user.role === 'ADMINISTRATOR' || user.role === 'Supervisor' ? 'primary' : 'secondary' %>">
+            <%= user.role %>
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <h4 class="mb-4">Menu Access Permissions</h4>
+
+      <% if (user.role==='Admin' || user.role==='ADMINISTRATOR' || user.role==='Supervisor' ) { %>
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          This user has <strong>
+            <%= user.role %>
+          </strong> role and has full access to all system features.
+          Permissions cannot be modified for this role.
+        </div>
+        <% } else { %>
+          <form id="permissionForm">
+            <table class="permission-table">
+              <thead>
+                <tr>
+                  <th>Menu</th>
+                  <th>Description</th>
+                  <th>Access</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="permission-name">Dashboard</td>
+                  <td>Access to the main dashboard</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="dashboard" <%=permissions.dashboard
+                        ? 'checked' : '' %> disabled>
+                    </div>
+                  </td>
+                </tr>
+                <!--Items Menu Access-->
+                <tr>
+                  <td class="permission-name">Items</td>
+                  <td>Access to items header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="itemsHeader" <%=permissions.itemsHeader
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Item</td>
+                  <td>Access to item module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="createItem" <%=permissions.createItem
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Category</td>
+                  <td>Access to item-category module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="category" <%=permissions.category
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Company</td>
+                  <td>Access to item-company module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="company" <%=permissions.company ? 'checked'
+                        : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Unit</td>
+                  <td>Access to item-unit module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="unit" <%=permissions.unit ? 'checked' : ''
+                        %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Main Unit</td>
+                  <td>Access to item mainUnit module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="mainUnit" <%=permissions.mainUnit
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Composition</td>
+                  <td>Access to item composition/generic module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="composition" <%=permissions.composition
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Accounts Menu Access-->
+                <tr>
+                  <td class="permission-name">Accounts</td>
+                  <td>Access to accounts header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="accountsHeader"
+                        <%=permissions.accountsHeader ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Account</td>
+                  <td>Access to account module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="account" <%=permissions.account ? 'checked'
+                        : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Account Group</td>
+                  <td>Access to account group module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="accountGroup" <%=permissions.accountGroup
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Sales Quotation Menu Access-->
+                <tr>
+                  <td class="permission-name">Sales Quotation</td>
+                  <td>Access to sales quotation module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="salesQuotation"
+                        <%=permissions.salesQuotation ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Sales Menu Access-->
+                <tr>
+                  <td class="permission-name">Sales Department</td>
+                  <td>Access to sales department header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="salesDepartment"
+                        <%=permissions.salesDepartment ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Credit Sales</td>
+                  <td>Access to credit sales module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="creditSales" <%=permissions.creditSales
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Credit Sales Modify</td>
+                  <td>Access to credit sales modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="creditSalesModify"
+                        <%=permissions.creditSalesModify ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Cash Sales</td>
+                  <td>Access to cash sales module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="cashSales" <%=permissions.cashSales
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Cash Sales Modify</td>
+                  <td>Access to cash sales modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="cashSalesModify"
+                        <%=permissions.cashSalesModify ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Sales Register</td>
+                  <td>Access to sales register module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="salesRegister" <%=permissions.salesRegister
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+
+                <!--Sales Return Menu Access-->
+                <tr>
+                  <td class="permission-name">Credit Sales Return</td>
+                  <td>Access to credit sales return module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="creditSalesRtn"
+                        <%=permissions.creditSalesRtn ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Cash Sales Return</td>
+                  <td>Access to cash sales return module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="cashSalesRtn" <%=permissions.cashSalesRtn
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Sales Return Register</td>
+                  <td>Access to sales return register module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="salesRtnRegister"
+                        <%=permissions.salesRtnRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Purchase Menu Access-->
+                <tr>
+                  <td class="permission-name">Purchase Department</td>
+                  <td>Access to purchase department header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseDepartment"
+                        <%=permissions.purchaseDepartment ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Entry</td>
+                  <td>Access to purchase module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="createPurchase"
+                        <%=permissions.createPurchase ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Modify</td>
+                  <td>Access to purchase entry modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseModify"
+                        <%=permissions.purchaseModify ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Register</td>
+                  <td>Access to purchase register module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseRegister"
+                        <%=permissions.purchaseRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+
+                <!--Purchase Return Menu Access-->
+                <tr>
+                  <td class="permission-name">Purchase Return Entry</td>
+                  <td>Access to purchase return module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="createPurchaseRtn"
+                        <%=permissions.createPurchaseRtn ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Return Modify</td>
+                  <td>Access to purchase return modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseRtnModify"
+                        <%=permissions.purchaseRtnModify ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Return Register</td>
+                  <td>Access to purchase return register module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseRtnRegister"
+                        <%=permissions.purchaseRtnRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Inventory-->
+                <tr>
+                  <td class="permission-name">Inventory</td>
+                  <td>Access to inventory header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="inventoryHeader"
+                        <%=permissions.inventoryHeader ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Item Ledger</td>
+                  <td>Access to item ledger and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="itemLedger" <%=permissions.itemLedger
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Stock Adjustment</td>
+                  <td>Access to stock adjustment module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="createStockAdj"
+                        <%=permissions.createStockAdj ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Stock Adj. Register</td>
+                  <td>Access to stock adjustment register</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="stockAdjRegister"
+                        <%=permissions.stockAdjRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Store/Rack</td>
+                  <td>Access to store and rack management sub-header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="storeRackSubHeader"
+                        <%=permissions.storeRackSubHeader ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Store</td>
+                  <td>Access to store management and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="store" <%=permissions.store ? 'checked' : ''
+                        %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Rack</td>
+                  <td>Access to rack management and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="rack" <%=permissions.rack ? 'checked' : ''
+                        %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Stock Status</td>
+                  <td>Access to stock details report and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="stockStatus" <%=permissions.stockStatus
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Re-Order level</td>
+                  <td>Access to re-order level management features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="reorderLevel" <%=permissions.reorderLevel
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Item Sales Report</td>
+                  <td>Access to view item sales report features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="itemSalesReport"
+                        <%=permissions.itemSalesReport ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Account Department Menu Access-->
+                <tr>
+                  <td class="permission-name">Account Department</td>
+                  <td>Access to account department header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="accountDepartment"
+                        <%=permissions.accountDepartment ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Payment</td>
+                  <td>Access to payment entry module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="payment" <%=permissions.payment ? 'checked'
+                        : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Payment Modify</td>
+                  <td>Access to payment entry modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="paymentModify" <%=permissions.paymentModify
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Payment Register</td>
+                  <td>Access to list of payment register</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="paymentRegister"
+                        <%=permissions.paymentRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Receipt</td>
+                  <td>Access to receipt entry module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="receipt" <%=permissions.receipt ? 'checked'
+                        : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Receipt Modify</td>
+                  <td>Access to receipt entry modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="receiptModify" <%=permissions.receiptModify
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Receipt Register</td>
+                  <td>Access to list of receipt register</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="receiptRegister"
+                        <%=permissions.receiptRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Journal</td>
+                  <td>Access to journal entry module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="journal" <%=permissions.journal ? 'checked'
+                        : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Journal Modify</td>
+                  <td>Access to journal entry modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="journalModify" <%=permissions.journalModify
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Journal Register</td>
+                  <td>Access to list of journal register</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="journalRegister"
+                        <%=permissions.journalRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Debit Note</td>
+                  <td>Access to debit note entry module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="debitNote" <%=permissions.debitNote
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Debit Note Modify</td>
+                  <td>Access to debit note modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="debitNoteModify"
+                        <%=permissions.debitNoteModify ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Debit Note Register</td>
+                  <td>Access to list of debit note register</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="debitNoteRegister"
+                        <%=permissions.debitNoteRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Credit Note</td>
+                  <td>Access to credit note entry module and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="creditNote" <%=permissions.creditNote
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Credit Note Modify</td>
+                  <td>Access to credit note modify</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="creditNoteModify"
+                        <%=permissions.creditNoteModify ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Credit Note Register</td>
+                  <td>Access to list of credit note register</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="creditNoteRegister"
+                        <%=permissions.creditNoteRegister ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <!--Outstanding-->
+                <tr>
+                  <td class="permission-name">Outstanding</td>
+                  <td>Access to outstanding header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="outstandingHeader"
+                        <%=permissions.outstandingHeader ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Ageing Sub Header</td>
+                  <td>Access to ageing sub header and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="ageingSubHeader"
+                        <%=permissions.ageingSubHeader ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">AgeingFIFO</td>
+                  <td>Access to ageing reporting and analytics features(FIFO Basis)</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="ageingFIFO" <%=permissions.ageingFIFO
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Ageing Day Wise</td>
+                  <td>Access to ageing reporting and analytics features day wise</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="ageingDayWise" <%=permissions.ageingDayWise
+                        ? 'checked' : '' %>>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Ageing All Party</td>
+                  <td>Access to ageing reporting and analytics features all party(on slab)</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="ageingAllParty"
+                        <%=permissions.ageingAllParty ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Statements</td>
+                  <td>Access to view statement of party</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="statements" <%=permissions.statements
+                        ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Reports</td>
+                  <td>Access to reports sub header and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="reportsSubHeader"
+                        <%=permissions.reportsSubHeader ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Daily Profit/Sale Analysis</td>
+                  <td>Access to daily profit/sales and analytics features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="dailyProfitSaleAnalysis"
+                        <%=permissions.dailyProfitSaleAnalysis ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Invoice-Wise Profit/Loss</td>
+                  <td>Access to view invoice-wise profit and loss features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="invoiceWiseProfitLoss"
+                        <%=permissions.invoiceWiseProfitLoss ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <!--Vat Summary-->
+                <tr>
+                  <td class="permission-name">Vat Summary</td>
+                  <td>Access to vat summary header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="vatSummaryHeader"
+                        <%=permissions.vatSummaryHeader ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Sales Vat Register</td>
+                  <td>Access to sales vat report</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="salesVatRegister"
+                        <%=permissions.salesVatRegister ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Sales Return Register</td>
+                  <td>Access to sales return vat report</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="salesRtnVatRegister"
+                        <%=permissions.salesRtnVatRegister ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Vat Register</td>
+                  <td>Access to purchase vat report</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseVatRegister"
+                        <%=permissions.purchaseVatRegister ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Purchase Return Register</td>
+                  <td>Access to purchase return vat report</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="purchaseRtnVatRegister"
+                        <%=permissions.purchaseRtnVatRegister ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Monthly Vat Summary</td>
+                  <td>Access to monthly vat summary report</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="monthlyVatSummary"
+                        <%=permissions.monthlyVatSummary ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <!--Configuration-->
+                <tr>
+                  <td class="permission-name">Configuration</td>
+                  <td>Access to configuration header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="configurationHeader"
+                        <%=permissions.configurationHeader ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Voucher Configuration</td>
+                  <td>Access to voucher configuration and related features</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="voucherConfiguration"
+                        <%=permissions.voucherConfiguration ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Change Fiscal Year</td>
+                  <td>Access to change or create new fiscal year </td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="changeFiscalYear"
+                        <%=permissions.changeFiscalYear ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Existing Fiscal Year</td>
+                  <td>Access to view and manage existing fiscal year</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="existingFiscalYear"
+                        <%=permissions.existingFiscalYear ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Import/Export</td>
+                  <td>Access to import and export sub header</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="importExportSubHeader"
+                        <%=permissions.importExportSubHeader ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="permission-name">Monthly Vat Summary</td>
+                  <td>Access to manage import and export of items</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="itemsImport"
+                        <%=permissions.itemsImport ? 'checked' : '' %>
+                    </div>
+                  </td>
+                </tr>
+                <!-- <tr>
+                  <td class="permission-name">User Management</td>
+                  <td>Access to manage other users (admins only)</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="users" 
+                      <%=permissions.users ? 'checked' : ''
+                        %>
+                      <%= user.role==='ADMINISTRATOR' ? 'disabled' : '' %>>
+                    </div>
+                  </td>
+                </tr> -->
+              </tbody>
+            </table>
+
+            <div class="d-flex justify-content-end mt-4">
+              <a href="/admin/users/list" class="btn btn-outline-secondary me-3">
+                <i class="fas fa-arrow-left me-2"></i>Back to Users
+              </a>
+              <button type="submit" class="btn btn-primary save-btn">
+                <i class="fas fa-save me-2"></i>Save Changes
+              </button>
+            </div>
+
+            <div class="note-text">
+              <i class="fas fa-info-circle me-1"></i>
+              Last updated:
+              <% if (user.lastPermissionUpdate) { %>
+                <%= new Date(user.lastPermissionUpdate).toLocaleString() %>
+                  <% } else { %>
+                    Never
+                    <% } %>
+                      <% if (user.grantedBy) { %>
+                        by <%= user.grantedBy.name || 'Admin' %>
+                          <% } %>
+            </div>
+          </form>
+          <% } %>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const permissionForm = document.getElementById('permissionForm');
+
+    if (permissionForm) {
+      permissionForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Collect all permissions
+        const permissions = {
+          dashboard: true, // Always true (disabled in UI)
+
+          //Accounts
+          itemsHeader: permissionForm.elements.itemsHeader.checked,
+          createItem: permissionForm.elements.createItem.checked,
+          category: permissionForm.elements.category.checked,
+          company: permissionForm.elements.company.checked,
+          unit: permissionForm.elements.unit.checked,
+          mainUnit: permissionForm.elements.mainUnit.checked,
+          composition: permissionForm.elements.composition.checked,
+          //Accounts
+          accountsHeader: permissionForm.elements.accountsHeader.checked,
+          account: permissionForm.elements.account.checked,
+          accountGroup: permissionForm.elements.accountGroup.checked,
+          //Sales Quotation
+          salesQuotation: permissionForm.elements.salesQuotation.checked,
+          //Sales
+          salesDepartment: permissionForm.elements.salesDepartment.checked,
+          creditSales: permissionForm.elements.creditSales.checked,
+          creditSalesModify: permissionForm.elements.creditSalesModify.checked,
+          cashSales: permissionForm.elements.cashSales.checked,
+          cashSalesModify: permissionForm.elements.cashSalesModify.checked,
+          salesRegister: permissionForm.elements.salesRegister.checked,
+          //Sales return
+          creditSalesRtn: permissionForm.elements.creditSalesRtn.checked,
+          cashSalesRtn: permissionForm.elements.cashSalesRtn.checked,
+          salesRtnRegister: permissionForm.elements.salesRtnRegister.checked,
+          //Purchase
+          purchaseDepartment: permissionForm.elements.purchaseDepartment.checked,
+          createPurchase: permissionForm.elements.createPurchase.checked,
+          purchaseModify: permissionForm.elements.purchaseModify.checked,
+          purchaseRegister: permissionForm.elements.purchaseRegister.checked,
+          //Purchase Return
+          createPurchaseRtn: permissionForm.elements.createPurchaseRtn.checked,
+          purchaseRtnModify: permissionForm.elements.purchaseRtnModify.checked,
+          purchaseRtnRegister: permissionForm.elements.purchaseRtnRegister.checked,
+          //Account Department
+          accountDepartment: permissionForm.elements.accountDepartment.checked,
+          payment: permissionForm.elements.payment.checked,
+          paymentModify: permissionForm.elements.paymentModify.checked,
+          paymentRegister: permissionForm.elements.paymentRegister.checked,
+          receipt: permissionForm.elements.receipt.checked,
+          receiptModify: permissionForm.elements.receiptModify.checked,
+          receiptRegister: permissionForm.elements.receiptRegister.checked,
+          journal: permissionForm.elements.journal.checked,
+          journalModify: permissionForm.elements.journalModify.checked,
+          journalRegister: permissionForm.elements.journalRegister.checked,
+          debitNote: permissionForm.elements.debitNote.checked,
+          debitNoteModify: permissionForm.elements.debitNoteModify.checked,
+          debitNoteRegister: permissionForm.elements.debitNoteRegister.checked,
+          creditNote: permissionForm.elements.creditNote.checked,
+          creditNoteModify: permissionForm.elements.creditNoteModify.checked,
+          creditNoteRegister: permissionForm.elements.creditNoteRegister.checked,
+          //Inventory
+          inventoryHeader: permissionForm.elements.inventoryHeader.checked,
+          itemLedger: permissionForm.elements.itemLedger.checked,
+          createStockAdj: permissionForm.elements.createStockAdj.checked,
+          stockAdjRegister: permissionForm.elements.stockAdjRegister.checked,
+          storeRackSubHeader: permissionForm.elements.storeRackSubHeader.checked,
+          store: permissionForm.elements.store.checked,
+          rack: permissionForm.elements.rack.checked,
+          stockStatus: permissionForm.elements.stockStatus.checked,
+          reorderLevel: permissionForm.elements.reorderLevel.checked,
+          itemSalesReport: permissionForm.elements.itemSalesReport.checked,
+          //Outstanding
+          outstandingHeader: permissionForm.elements.outstandingHeader.checked,
+          ageingSubHeader: permissionForm.elements.ageingSubHeader.checked,
+          ageingFIFO: permissionForm.elements.ageingFIFO.checked,
+          ageingDayWise: permissionForm.elements.ageingDayWise.checked,
+          ageingAllParty: permissionForm.elements.ageingAllParty.checked,
+          statements: permissionForm.elements.statements.checked,
+          reportsSubHeader: permissionForm.elements.reportsSubHeader.checked,
+          dailyProfitSaleAnalysis: permissionForm.elements.dailyProfitSaleAnalysis.checked,
+          invoiceWiseProfitLoss: permissionForm.elements.invoiceWiseProfitLoss.checked,
+          //Vat Summary
+          vatSummaryHeader: permissionForm.elements.vatSummaryHeader.checked,
+          salesVatRegister: permissionForm.elements.salesVatRegister.checked,
+          salesRtnVatRegister: permissionForm.elements.salesRtnVatRegister.checked,
+          purchaseVatRegister: permissionForm.elements.purchaseVatRegister.checked,
+          purchaseRtnVatRegister: permissionForm.elements.purchaseRtnVatRegister.checked,
+          monthlyVatSummary: permissionForm.elements.monthlyVatSummary.checked,
+          //Configuration
+          configurationHeader: permissionForm.elements.configurationHeader.checked,
+          voucherConfiguration: permissionForm.elements.voucherConfiguration.checked,
+          changeFiscalYear: permissionForm.elements.changeFiscalYear.checked,
+          existingFiscalYear: permissionForm.elements.existingFiscalYear.checked,
+          importExportSubHeader: permissionForm.elements.importExportSubHeader.checked,
+          itemsImport: permissionForm.elements.itemsImport.checked,
+
+          // users: permissionForm.elements.users.checked
+        };
+
+        try {
+          const response = await fetch(`/api/permissions/admin/users/user-permissions/<%= user._id %>`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ permissions })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert('Permissions updated successfully!');
+            // Optionally refresh the page to show updated timestamp
+            window.location.reload();
+          } else {
+            throw new Error(result.message || 'Failed to update permissions');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error updating permissions: ' + error.message);
+        }
+      });
+    }
+
+    // Disable all checkboxes if user is admin/supervisor
+    <% if (user.role === 'Admin' || user.role === 'ADMINISTRATOR' || user.role === 'Supervisor') { %>
+      document.querySelectorAll('.form-check-input').forEach(checkbox => {
+        checkbox.disabled = true;
+      });
+    <% } %>
+  });
+</script>

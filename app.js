@@ -43,6 +43,7 @@ const storeRoutes = require('./routes/retailer/store');
 const itemsCompanyRoutes = require('./routes/retailer/itemsCompany');
 const salesQuotationRoutes = require('./routes/retailer/salesQuotation');
 const invoiceWiseProfitLossRoutes = require('./routes/retailer/invoiceWiseProfitLoss');
+const permissionRoutes = require('./routes/permissions');
 
 //Admin Panel
 const systemAdminDashboardRoutes = require('./routes/systemAdmin/adminDashboard');
@@ -150,6 +151,7 @@ app.use('/retailer', storeRoutes);
 app.use('/retailer', itemsCompanyRoutes);
 app.use('/retailer', salesQuotationRoutes);
 app.use('/retailer', invoiceWiseProfitLossRoutes);
+app.use('/api/permissions', permissionRoutes);
 
 //Admin Panel
 app.use('/', systemAdminDashboardRoutes);

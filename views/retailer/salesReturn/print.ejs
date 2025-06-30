@@ -205,7 +205,7 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col d-flex justify-content-end align-items-start">
-                    <a href="/sales-return/list" class="btn btn-secondary"><i class="bi bi-back"></i></a>
+                    <a href="#" class="btn btn-secondary" id="backButton"><i class="bi bi-back"></i></a>
                     <a href="/sales-return/<%= bill._id %>/pdf" class="btn btn-danger ml-2"><i
                             class="bi bi-file-pdf"></i></a>
                     <button class="btn btn-info ml-2" onclick="printBill()"><i class="bi bi-printer"></i></button>
@@ -557,4 +557,11 @@
     //     window.location.href = '/retailerDashboard'; // Change '/' to your home page URL
     // });
 
+</script>
+
+<script>
+    document.getElementById('backButton').addEventListener('click', function () {
+        // Navigate back twice to skip the success message page
+        window.history.go(-1);
+    });
 </script>

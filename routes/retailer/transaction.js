@@ -35,9 +35,9 @@ router.get('/transactions/:itemId/:accountId/:purchaseSalesType', ensureAuthenti
 
             // Fetch the user's settings to check if display transactions is enabled
             // const settings = await Setting.findOne({ companyId, userId });
-            const settings = await Setting.findOne({ companyId, userId });
+            const settings = await Setting.findOne({ company: companyId, userId });
             if (!settings) {
-             return res.status(400).json({ error: 'User settings not found' });
+                return res.status(400).json({ error: 'User settings not found' });
             }
 
             // Specific checks for transaction types
@@ -57,18 +57,84 @@ router.get('/transactions/:itemId/:accountId/:purchaseSalesType', ensureAuthenti
                 purchaseSalesType: purchaseSalesType,
                 company: companyId
             })
-            .populate('billId') // Assuming 'billId' is a valid field to populate
-            .populate('purchaseBillId')
-            .populate('unit', 'name')
-            .sort({ billNumber: -1 })
-            .limit(20); // Limit to last 20 transactions, adjust as needed
+                .populate('billId') // Assuming 'billId' is a valid field to populate
+                .populate('purchaseBillId')
+                .populate('unit', 'name')
+                .sort({ date: -1 })
+                .limit(20); // Limit to last 20 transactions, adjust as needed
 
             res.json(transactions, companyDateFormat, nepaliDate);
         } catch (err) {
             console.error('Error fetching transactions:', err);
             res.status(500).json({ error: 'Internal server error' });
         }
-    }else {
+    } else {
+        return res.status(403).json({ error: 'Access denied for this trade type' });
+    }
+});
+
+router.get('/transactions/sales-by-item-account', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        const { itemId, accountId } = req.query; // Now using query parameters
+        const companyId = req.session.currentCompany;
+
+        if (!itemId || !accountId) {
+            return res.status(400).json({ error: 'Both itemId and accountId are required' });
+        }
+
+        try {
+            const transactions = await Transaction.find({
+                item: itemId,
+                account: accountId,
+                purchaseSalesType: 'Sales',
+                company: companyId
+            })
+                .populate('billId')
+                .populate('item', 'name')
+                .populate('unit', 'name')
+                .sort({ date: -1 })
+                .limit(20);
+
+            res.json(transactions);
+        } catch (err) {
+            console.error('Error fetching sales transactions:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    } else {
+        return res.status(403).json({ error: 'Access denied for this trade type' });
+    }
+});
+
+
+
+router.get('/transactions/purchase-by-item-account', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        const { itemId, accountId } = req.query; // Now using query parameters
+        const companyId = req.session.currentCompany;
+
+        if (!itemId || !accountId) {
+            return res.status(400).json({ error: 'Both itemId and accountId are required' });
+        }
+
+        try {
+            const transactions = await Transaction.find({
+                item: itemId,
+                account: accountId,
+                purchaseSalesType: 'Purchase',
+                company: companyId
+            })
+                .populate('purchaseBillId')
+                .populate('item', 'name')
+                .populate('unit', 'name')
+                .sort({ date: -1 })
+                .limit(20);
+
+            res.json(transactions);
+        } catch (err) {
+            console.error('Error fetching sales transactions:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    } else {
         return res.status(403).json({ error: 'Access denied for this trade type' });
     }
 });

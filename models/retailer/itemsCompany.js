@@ -5,7 +5,6 @@ const itemsCompanySchema = new mongoose.Schema({
     company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
-        required: true
     }
 });
 //This means each company can have itemsCompanySchema with the same name, but account names must be unique within a company.

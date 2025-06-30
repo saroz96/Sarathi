@@ -22,6 +22,13 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--light-bg);
             color: var(--dark-text);
+
+            /* font-family: Arial, sans-serif; */
+            background-image: url('/logo/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         .dashboard-container {
@@ -220,13 +227,13 @@
             .table-responsive {
                 overflow-x: auto;
             }
-            
+
             .action-buttons {
                 display: flex;
                 flex-direction: column;
                 gap: 0.5rem;
             }
-            
+
             .btn {
                 width: 100%;
             }
@@ -252,12 +259,12 @@
                                 <i class="fas fa-plus-circle me-1"></i>Create Company
                             </a>
                         </li>
-                    <% } %>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </li>
+                        <% } %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/logout">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                </a>
+                            </li>
                 </ul>
             </div>
         </div>
@@ -268,7 +275,8 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="welcome-title">Welcome, <%= user.name %></h1>
+                        <h1 class="welcome-title">Welcome, <%= user.name %>
+                        </h1>
                         <h2 class="card-title">Your Companies</h2>
                     </div>
                     <div class="search-container">
@@ -276,85 +284,104 @@
                             <span class="input-group-text bg-white">
                                 <i class="fas fa-search"></i>
                             </span>
-                            <input type="text" class="form-control search-input" id="searchInput" placeholder="Search companies..." autocomplete="off">
+                            <input type="text" class="form-control search-input" id="searchInput"
+                                placeholder="Search companies..." autocomplete="off">
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="card-body p-0">
                 <% if (messages && messages.length) { %>
                     <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                        <i class="fas fa-check-circle me-2"></i><%= messages %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <i class="fas fa-check-circle me-2"></i>
+                        <%= messages %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                <% } %>
-                
-                <% if (error && error.length) { %>
-                    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i><%= error %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <% } %>
-                
-                <div class="no-results" id="noResultsMessage">
-                    <i class="fas fa-building"></i>
-                    <h4>No Companies Found</h4>
-                    <p>Try adjusting your search or create a new company</p>
-                </div>
-                
-                <% if (companies.length > 0) { %>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Company Name</th>
-                                    <th>Trade Type</th>
-                                    <th>Date Format</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="companyList">
-                                <% companies.forEach((company, index) => { %>
-                                    <tr class="searchable-row" tabindex="0" data-id="<%= company._id %>">
-                                        <td><%= index + 1 %></td>
-                                        <td>
-                                            <strong><%= company.name %></strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary"><%= company.tradeType %></span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info text-dark"><%= company.dateFormat.charAt(0).toUpperCase() + company.dateFormat.slice(1) %></span>
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="action-buttons d-flex justify-content-end">
-                                                <form action="/switch/<%= company._id %>" method="GET" class="me-2">
-                                                    <button type="submit" class="btn btn-primary btn-sm open-btn">
-                                                        <i class="fas fa-door-open me-1"></i>Open
-                                                    </button>
-                                                </form>
-                                                <a href="/company/<%= company._id %>" class="btn btn-info btn-sm view-btn" title="View Details">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                    </div>
-                <% } else { %>
-                    <div class="text-center py-5">
-                        <i class="fas fa-building fa-3x text-muted mb-3"></i>
-                        <h4>No Companies Available</h4>
-                        <p class="text-muted">You don't have any companies yet. Create your first company to get started.</p>
-                        <a href="/company/new" class="btn btn-primary mt-3">
-                            <i class="fas fa-plus-circle me-2"></i>Create Company
-                        </a>
-                    </div>
-                <% } %>
+                    <% } %>
+
+                        <% if (error && error.length) { %>
+                            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <%= error %>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                            </div>
+                            <% } %>
+
+                                <div class="no-results" id="noResultsMessage">
+                                    <i class="fas fa-building"></i>
+                                    <h4>No Companies Found</h4>
+                                    <p>Try adjusting your search or create a new company</p>
+                                </div>
+
+                                <% if (companies.length> 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Company Name</th>
+                                                    <th>Trade Type</th>
+                                                    <th>Date Format</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="companyList">
+                                                <% companies.forEach((company, index)=> { %>
+                                                    <tr class="searchable-row" tabindex="0"
+                                                        data-id="<%= company._id %>">
+                                                        <td>
+                                                            <%= index + 1 %>
+                                                        </td>
+                                                        <td>
+                                                            <strong>
+                                                                <%= company.name %>
+                                                            </strong>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-primary">
+                                                                <%= company.tradeType %>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-info text-dark">
+                                                                <%= company.dateFormat.charAt(0).toUpperCase() +
+                                                                    company.dateFormat.slice(1) %>
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <div class="action-buttons d-flex justify-content-end">
+                                                                <form action="/switch/<%= company._id %>" method="GET"
+                                                                    class="me-2">
+                                                                    <button type="submit"
+                                                                        class="btn btn-primary btn-sm open-btn">
+                                                                        <i class="fas fa-door-open me-1"></i>Open
+                                                                    </button>
+                                                                </form>
+                                                                <a href="/company/<%= company._id %>"
+                                                                    class="btn btn-info btn-sm view-btn"
+                                                                    title="View Details">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                                            <h4>No Companies Available</h4>
+                                            <p class="text-muted">You don't have any companies yet. Create your first
+                                                company to get started.</p>
+                                            <a href="/company/new" class="btn btn-primary mt-3">
+                                                <i class="fas fa-plus-circle me-2"></i>Create Company
+                                            </a>
+                                        </div>
+                                        <% } %>
             </div>
         </div>
     </div>
@@ -367,7 +394,7 @@
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 
+    <!-- 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Initialize keyboard navigation
@@ -528,26 +555,26 @@
     </script> -->
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             // Initialize keyboard navigation
             const rows = document.querySelectorAll("#companyList tr.searchable-row");
             let currentRowIndex = 0;
             let firstVisibleRowIndex = 0; // Track first visible row after search
-            
+
             // Highlight the first row by default
             if (rows.length > 0) {
                 highlightRow(rows[currentRowIndex]);
                 rows[currentRowIndex].focus();
             }
-            
+
             // Keyboard navigation handler
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 // Only handle arrow keys and Enter when not in an input field
                 if (document.activeElement.tagName === 'INPUT' && event.key !== 'Enter') return;
-                
+
                 if (rows.length === 0) return;
-                
-                switch(event.key) {
+
+                switch (event.key) {
                     case 'ArrowDown':
                         event.preventDefault();
                         if (currentRowIndex < rows.length - 1) {
@@ -557,7 +584,7 @@
                             rows[currentRowIndex].focus();
                         }
                         break;
-                        
+
                     case 'ArrowUp':
                         event.preventDefault();
                         if (currentRowIndex > 0) {
@@ -567,7 +594,7 @@
                             rows[currentRowIndex].focus();
                         }
                         break;
-                        
+
                     case 'Enter':
                         event.preventDefault();
                         // Get the currently focused row (could be from search results)
@@ -581,16 +608,16 @@
                         break;
                 }
             });
-            
+
             // Row highlighting functions
             function highlightRow(row) {
                 row.classList.add('focused-row');
             }
-            
+
             function unhighlightRow(row) {
                 row.classList.remove('focused-row');
             }
-            
+
             // Mouse interaction
             rows.forEach(row => {
                 row.addEventListener('mouseenter', () => {
@@ -598,12 +625,12 @@
                     if (currentRowIndex >= 0 && currentRowIndex < rows.length) {
                         unhighlightRow(rows[currentRowIndex]);
                     }
-                    
+
                     // Highlight hovered row and update current index
                     currentRowIndex = Array.from(rows).indexOf(row);
                     highlightRow(row);
                 });
-                
+
                 row.addEventListener('click', () => {
                     // When clicking a row, focus it for keyboard navigation
                     if (currentRowIndex >= 0 && currentRowIndex < rows.length) {
@@ -614,17 +641,17 @@
                     row.focus();
                 });
             });
-            
+
             // Live search functionality
             const searchInput = document.getElementById('searchInput');
             const noResultsMessage = document.getElementById('noResultsMessage');
-            
+
             if (searchInput) {
-                searchInput.addEventListener('input', function() {
+                searchInput.addEventListener('input', function () {
                     const searchTerm = this.value.toLowerCase().trim();
                     let hasResults = false;
                     let firstVisibleRow = null;
-                    
+
                     document.querySelectorAll('.searchable-row').forEach((row, index) => {
                         const companyName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                         if (companyName.includes(searchTerm)) {
@@ -638,12 +665,12 @@
                             row.style.display = 'none';
                         }
                     });
-                    
+
                     noResultsMessage.style.display = hasResults ? 'none' : 'block';
-                    
+
                     // Keep focus on search input during typing
                     searchInput.focus();
-                    
+
                     // Update the first visible row index but don't move focus
                     if (firstVisibleRow) {
                         // Unhighlight all rows first
@@ -656,17 +683,17 @@
                     }
                 });
             }
-            
+
             // Loader functionality
             function showLoader() {
                 document.getElementById("loader").style.display = "flex";
                 updateLoaderPercentage();
             }
-            
+
             function hideLoader() {
                 document.getElementById("loader").style.display = "none";
             }
-            
+
             function updateLoaderPercentage() {
                 let percentage = 0;
                 const loaderPercentage = document.getElementById("loader-percentage");
@@ -676,22 +703,22 @@
                     if (percentage >= 100) clearInterval(interval);
                 }, 100);
             }
-            
+
             // Attach loader to form submissions and link clicks
             document.querySelectorAll("form").forEach(form => {
                 form.addEventListener("submit", showLoader);
             });
-            
+
             document.querySelectorAll("a[href]").forEach(link => {
-                if (!link.href.includes('javascript:') && 
-                    !link.hasAttribute('target') && 
+                if (!link.href.includes('javascript:') &&
+                    !link.hasAttribute('target') &&
                     link.hostname === window.location.hostname) {
                     link.addEventListener("click", showLoader);
                 }
             });
-            
+
             // Handle back button navigation
-            window.onpageshow = function(event) {
+            window.onpageshow = function (event) {
                 if (event.persisted) {
                     hideLoader();
                 }
@@ -699,4 +726,5 @@
         });
     </script>
 </body>
+
 </html>

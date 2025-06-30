@@ -34,8 +34,12 @@ router.get('/purchase-return/list', isLoggedIn, ensureAuthenticated, ensureCompa
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
-
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
+
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
 
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -68,8 +72,36 @@ router.get('/purchase-return/list', isLoggedIn, ensureAuthenticated, ensureCompa
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
+        if (!fromDate || !toDate) {
+            return res.render('retailer/purchaseReturn/allPurchaseReturn', {
+                company,
+                currentFiscalYear,
+                bills: '',
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
 
-        const bills = await PurchaseReturn.find({ company: companyId })
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+
+        const bills = await PurchaseReturn.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account')
             .populate('items.item')
@@ -80,6 +112,9 @@ router.get('/purchase-return/list', isLoggedIn, ensureAuthenticated, ensureCompa
             bills,
             currentCompany,
             currentCompanyName,
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
             user: req.user,
             title: '',
             body: '',
@@ -554,7 +589,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
             let finalAmount = totalAmount;
 
             // Check if round off is enabled in settings
-            const roundOffForPurchaseReturn = await Settings.findOne({ companyId, userId }).session(session); // Assuming you have a single settings document
+            const roundOffForPurchaseReturn = await Settings.findOne({ company: companyId, userId }).session(session); // Assuming you have a single settings document
 
             // Handle case where settings is null
             if (!roundOffForPurchaseReturn) {
@@ -1696,7 +1731,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             let finalAmount = totalAmount;
 
             // Check if round off is enabled in settings
-            const roundOffForPurchaseReturn = await Settings.findOne({ companyId, userId }); // Assuming you have a single settings document
+            const roundOffForPurchaseReturn = await Settings.findOne({ company: companyId, userId }); // Assuming you have a single settings document
 
             // Handle case where settings is null
             if (!roundOffForPurchaseReturn) {

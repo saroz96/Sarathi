@@ -34,7 +34,11 @@ router.get('/purchase-bills-list', isLoggedIn, ensureAuthenticated, ensureCompan
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
 
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
 
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -67,7 +71,35 @@ router.get('/purchase-bills-list', isLoggedIn, ensureAuthenticated, ensureCompan
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const bills = await PurchaseBill.find({ company: companyId, fiscalYear: currentFiscalYear })
+        if (!fromDate || !toDate) {
+            return res.render('retailer/purchase/allbills', {
+                company,
+                currentFiscalYear,
+                bills: '',
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+        const bills = await PurchaseBill.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account')
             .populate('items.item')
@@ -78,8 +110,11 @@ router.get('/purchase-bills-list', isLoggedIn, ensureAuthenticated, ensureCompan
             bills,
             currentCompany,
             currentCompanyName,
-            title: 'Purchase',
-            body: 'retailer >> purchase >> bills',
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
+            title: '',
+            body: '',
             user: req.user,
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });
@@ -178,6 +213,7 @@ router.get('/api/last-item-values/:itemId', async (req, res) => {
                     mrp: "$items.mrp",
                     marginPercentage: "$items.marginPercentage",
                     price: "$items.price",
+                    puPrice: "$items.puPrice",
                     currency: "$items.currency"
                 },
             },
@@ -194,6 +230,7 @@ router.get('/api/last-item-values/:itemId', async (req, res) => {
             mrp: lastItemValues.mrp,
             marginPercentage: lastItemValues.marginPercentage,
             price: lastItemValues.price,
+            puPrice:lastItemValues.puPrice,
             currency: lastItemValues.currency,
         });
     } catch (error) {
@@ -659,6 +696,13 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                 const quantityWithOutBonus = Number(quantity);
                 const puPriceWithOutBonus = parsedPuPrice * quantityWithOutBonus;
                 const WsUnitWithNetQuantity = WSUnitNumber * quantityNumber;
+
+                // Calculate discount values
+                const itemTotal = parsedPuPrice * quantityNumber;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parsedPuPrice - (parsedPuPrice * discount / 100);
+
                 const stockEntry = {
                     date: nepaliDate ? nepaliDate : new Date(billDate),
                     WSUnit: WSUnitNumber,
@@ -668,6 +712,9 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     expiryDate: expiryDate,
                     price: WSUnitNumber ? parsedPrice / WSUnitNumber : 0,
                     puPrice: WSUnitNumber ? puPriceWithOutBonus / WsUnitWithNetQuantity : 0,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     mainUnitPuPrice: parsedPuPrice,
                     mrp: WSUnitNumber ? parsedMrp / WSUnitNumber : 0,
                     marginPercentage: marginPercentage,
@@ -692,6 +739,11 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.puPrice) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Same percentage for all items
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.puPrice) - (parseFloat(item.puPrice) * discount / 100);
 
                 if (!product) {
                     req.flash('error', `Item with id ${item.item} not found`);
@@ -727,6 +779,9 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     Altbonus: item.bonus,
                     price: item.price,
                     puPrice: item.puPrice,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     Altquantity: item.quantity,
                     Altprice: item.price,
                     AltpuPrice: item.puPrice,
@@ -746,9 +801,25 @@ router.post('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySel
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.puPrice) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Same percentage for all items
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.puPrice) - (parseFloat(item.puPrice) * discount / 100);
+
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
+                    unit: item.unit,
+                    WSUnit: item.WSUnit,
+                    price: item.price,
+                    puPrice: item.puPrice,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
+                    quantity: item.quantity,
                     account: accountId,
                     billNumber: billNumber,
                     partyBillNumber,
@@ -1166,10 +1237,6 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     entry.uniqueUuId === existingItem.uniqueUuId // Match the purchase bill ID
                 );
 
-                console.log('Stock Entry:', stockEntry);
-                console.log('Stock Entry Quantity:', stockEntry.quantity);
-                console.log('Existing Item Quantity:', existingItem.quantity * (existingItem.WSUnit || 1));
-
                 if (!stockEntry || stockEntry.quantity < existingItem.quantity * (existingItem.WSUnit || 1)) {
                     isStockUsed = true;
                     break;
@@ -1354,6 +1421,7 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
 
                 const puPriceWithOutBonus = parsedPuPrice * quantityNumber;
 
+
                 let calculatedPuPrice = 0;
 
                 if (totalQuantity > 0) {
@@ -1387,6 +1455,11 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
 
                 // Update product stock
                 product.stock += totalQuantity;
+                // Calculate discount values for the item
+                const itemTotal = calculatedPuPrice * totalQuantity;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = calculatedPuPrice - (calculatedPuPrice * discount / 100);
 
                 const stockEntry = {
                     date: nepaliDate ? nepaliDate : new Date(billDate),
@@ -1396,7 +1469,9 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     price: parsedPrice !== undefined ? parsedPrice / WSUnitNumber : undefined,
-                    // puPrice: WSUnitNumber ? puPriceWithOutBonus / totalQuantity : 0,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     puPrice: calculatedPuPrice,
                     mainUnitPuPrice: parsedPuPrice,
                     mrp: parsedMrp !== undefined ? parsedMrp / WSUnitNumber : undefined,
@@ -1447,6 +1522,11 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     await session.abortTransaction();
                     return res.redirect('/purchase-bills');
                 }
+                // Calculate discount values for the item
+                const itemTotal = parseFloat(item.puPrice) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.puPrice) - (parseFloat(item.puPrice) * discount / 100);
 
                 const existingBillItemIndex = billItems.findIndex(billItem =>
                     billItem.item && billItem.item.toString() === item.item
@@ -1475,7 +1555,10 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                         uniqueUuId: item.uniqueUuId !== undefined && item.uniqueUuId !== "" ? item.uniqueUuId : existingBillItem.uniqueUuId,
                         bonus: Number(item.bonus || 0), // Ensure bonus is properly set
                         unit: item.unit,
-                        vatStatus: product.vatStatus
+                        vatStatus: product.vatStatus,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice
                     };
                 } else {
                     // Add new item to the bill
@@ -1501,6 +1584,9 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                         vatStatus: product.vatStatus,
                         uniqueUuId: newUniqueId,
                         bonus: item.bonus,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice
                     });
                     // Use the same uniqueUuId for the stock entry
                     item.uniqueUuId = newUniqueId;
@@ -1517,6 +1603,9 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                     existingTransaction.quantity = item.quantity;
                     existingTransaction.bonus = item.bonus;
                     existingTransaction.puPrice = item.puPrice;
+                    existingTransaction.discountPercentagePerItem = discountPercentagePerItem;
+                    existingTransaction.discountAmountPerItem = discountAmountPerItem;
+                    existingTransaction.netPuPrice = netPuPrice;
                     existingTransaction.unit = item.unit;
                     existingTransaction.credit = finalAmount;
                     existingTransaction.paymentMode = paymentMode;
@@ -1533,6 +1622,9 @@ router.put('/purchase-bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCo
                         partyBillNumber: existingBill.partyBillNumber,
                         quantity: item.quantity,
                         puPrice: item.puPrice,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice,
                         unit: item.unit,
                         isType: 'Purc',
                         type: 'Purc',

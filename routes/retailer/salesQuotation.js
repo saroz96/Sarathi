@@ -103,6 +103,11 @@ router.get('/sales-quotation/list', isLoggedIn, ensureAuthenticated, ensureCompa
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
+
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
 
 
         // Check if fiscal year is already in the session or available in the company
@@ -136,7 +141,35 @@ router.get('/sales-quotation/list', isLoggedIn, ensureAuthenticated, ensureCompa
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const salesQuotation = await SalesQuotation.find({ company: companyId, fiscalYear: fiscalYear })
+        if (!fromDate || !toDate) {
+            return res.render('retailer/sales-bills/quotation/list', {
+                company,
+                currentFiscalYear,
+                salesQuotation: '',
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+        const salesQuotation = await SalesQuotation.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account')
             .populate('items.item')
@@ -147,6 +180,9 @@ router.get('/sales-quotation/list', isLoggedIn, ensureAuthenticated, ensureCompa
             salesQuotation,
             currentCompany,
             currentCompanyName,
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
             title: '',
             body: '',
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'

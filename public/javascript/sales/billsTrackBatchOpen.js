@@ -375,6 +375,8 @@ function addItemToBill(item, dropdownMenu) {
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
         <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
+        <input type="number" name="items[${itemIndex}][netPuPrice]" value="${Math.round(selectedBatch.netPuPrice * 100) / 100}">
+
 
     `;
 
@@ -432,6 +434,8 @@ function addItemToBill(item, dropdownMenu) {
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
         <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
+        <input type="number" name="items[${itemIndex}][netPuPrice]" value="${Math.round(selectedBatch.netPuPrice * 100) / 100}">
+
 
     `;
 
@@ -501,6 +505,8 @@ function showBatchModal(item, callback) {
                     <td>${Math.round(entry.marginPercentage * 100) / 100}</td>
                     <td>${Math.round(entry.mrp * 100) / 100}</td>
                     <td class="hidden">${entry.uniqueUuId}</td>
+                    <td class="">${entry.netPuPrice}</td>
+
                 </tr>
             `;
             }
@@ -540,7 +546,8 @@ function showBatchModal(item, callback) {
                 const price = row.cells[3].textContent;
                 const uniqueUuId = row.cells[7].textContent;
                 const puPrice = row.cells[4].textContent;
-                callback({ batchNumber, expiryDate, price, uniqueUuId, puPrice });
+                const netPuPrice = row.cells[8].textContent;
+                callback({ batchNumber, expiryDate, price, uniqueUuId, puPrice, netPuPrice });
                 // Hide the modal after selection
                 $(modal).modal('hide');
             }
@@ -853,9 +860,8 @@ async function fetchLastTransactions(itemId) {
             <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>Trans. Id</th>
                         <th>Date</th>
-                        <th>Bill No.</th>
+                        <th>Inv. No.</th>
                         <th>Type</th>
                         <th>A/c Type</th>
                         <th>Pay.Mode</th>
@@ -871,7 +877,6 @@ async function fetchLastTransactions(itemId) {
         tableHtml += transactions.map(transaction => {
             return `
                 <tr onclick="window.location.href='/bills/${transaction.billId._id}/print'" style="cursor: pointer;">
-                    <td>${transaction._id}</td>
                     <td>${new Date(transaction.date).toLocaleDateString()}</td>
                     <td>${transaction.billNumber}</td>
                     <td>${transaction.type}</td>

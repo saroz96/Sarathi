@@ -272,333 +272,612 @@
             <a href="/retailerDashboard/indexv1" class="active" id="home">Home</a>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Accounts</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item"><a href="/companies">Account</a></li>
-                <li class="menu-item">
-                  <a href="/account-group">Account Group</a>
-                </li>
-              </ul>
-            </div>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+              user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+              user.menuPermissions.get('AccountsHeader')) { %>
+              <a href="#" class="active">Accounts</a>
+              <% } %>
+                <div class="sub-menu-wrapper slideInUp">
+                  <ul class="sub-menu">
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                      user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+                      user.menuPermissions.get('Account')) { %>
+                      <li class="menu-item"><a href="/companies">Account</a></li>
+                      <% } %>
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Account' ||
+                          user.isAdmin || user.menuPermissions.get('AccountGroup')) { %>
+                          <li class="menu-item">
+                            <a href="/account-group">Account Group</a>
+                          </li>
+                          <% } %>
+                  </ul>
+                </div>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Items</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item"><a href="/items">Item</a></li>
-                <li class="menu-item"><a href="/categories">Category</a></li>
-                <li class="menu-item"><a href="/retailer/items-company">Company</a></li>
-                <li class="menu-item"><a href="/units">Unit</a></li>
-                <li class="menu-item"><a href="/mainUnits">Main Unit</a></li>
-                <li class="menu-item"><a href="/compositions">Composition</a></li>
-              </ul>
-            </div>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+              user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+              user.menuPermissions.get('itemsHeader')) { %>
+              <a href="#" class="active">Items</a>
+              <% } %>
+
+                <div class="sub-menu-wrapper slideInUp">
+                  <ul class="sub-menu">
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                      user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+                      user.menuPermissions.get('createItem')) { %>
+                      <li class="menu-item"><a href="/items">Item</a></li>
+                      <% } %>
+
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                          user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+                          user.menuPermissions.get('category')) { %>
+                          <li class="menu-item"><a href="/categories">Category</a></li>
+                          <% } %>
+
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                              user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+                              user.menuPermissions.get('company')) { %>
+                              <li class="menu-item"><a href="/retailer/items-company">Company</a></li>
+                              <% } %>
+
+                                <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                                  user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+                                  user.menuPermissions.get('unit')) { %>
+                                  <li class="menu-item"><a href="/units">Unit</a></li>
+                                  <% } %>
+
+                                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                      user.role==='Sales' || user.role==='Purchase' || user.role==='Account' ||
+                                      user.isAdmin || user.menuPermissions.get('mainUnit')) { %>
+                                      <li class="menu-item"><a href="/mainUnits">Main Unit</a></li>
+                                      <% } %>
+
+                                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                          user.role==='Sales' || user.role==='Purchase' || user.role==='Account' ||
+                                          user.isAdmin || user.menuPermissions.get('composition')) { %>
+                                          <li class="menu-item"><a href="/compositions">Composition</a></li>
+                                          <% } %>
+
+                  </ul>
+                </div>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Sales Department</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <!-- Sales Quotation Section -->
-                <li class="menu-item dropdown">
-                  <a href="#">Sales Quotation</a>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' || user.isAdmin ||
+              user.menuPermissions.get('salesDepartment')) { %>
+              <a href="#" class="active">Sales Department</a>
+              <% } %>
+                <div class="sub-menu-wrapper slideInUp">
                   <ul class="sub-menu">
-                    <li class="menu-item"><a href="/retailer/sales-quotation">Add</a></li>
-                    <li class="menu-item">
-                      <a href="#">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/retailer/sales-quotation/list">List</a>
-                    </li>
+                    <!-- Sales Quotation Section -->
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                      user.isAdmin || user.menuPermissions.get('salesQuotation')) { %>
+                      <li class="menu-item dropdown">
+                        <a href="#">Sales Quotation</a>
+                        <ul class="sub-menu">
+                          <li class="menu-item"><a href="/retailer/sales-quotation">Add</a></li>
+
+                          <li class="menu-item">
+                            <a href="#">Edit</a>
+                          </li>
+                          <li class="menu-item">
+                            <a href="/retailer/sales-quotation/list">List</a>
+                          </li>
+
+                        </ul>
+                      </li>
+                      <% } %>
+                        <!-- Party Sales Section -->
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                          user.isAdmin || user.menuPermissions.get('creditSales')) { %>
+                          <li class="menu-item dropdown">
+                            <a href="#">Credit Sales</a>
+                            <ul class="sub-menu">
+                              <li class="menu-item"><a href="/bills">Add Sales</a></li>
+                              <li class="menu-item">
+                                <a href="/billsTrackBatchOpen">Add Sales Open</a>
+                              </li>
+
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                                user.isAdmin || user.menuPermissions.get('creditSalesModify')) { %>
+                                <li class="menu-item">
+                                  <a href="/sales-bills/finds">Edit Sales</a>
+                                </li>
+                                <% } %>
+
+                            </ul>
+                          </li>
+                          <% } %>
+
+                            <!-- Cash Sales Section -->
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                              user.isAdmin || user.menuPermissions.get('cashSales')) { %>
+                              <li class="menu-item dropdown">
+                                <a href="#">Cash Sales</a>
+                                <ul class="sub-menu">
+                                  <li class="menu-item"><a href="/cash/bills/add">Add Sales</a></li>
+                                  <li class="menu-item">
+                                    <a href="/cash/bills/addOpen">Add Sales Open</a>
+                                  </li>
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales'
+                                    || user.isAdmin || user.menuPermissions.get('cashSalesModify')) { %>
+                                    <li class="menu-item">
+                                      <a href="/cash-sales/sales-bills/finds">Edit Sales</a>
+                                    </li>
+                                    <% } %>
+
+                                </ul>
+                              </li>
+                              <% } %>
+
+                                <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                                  user.isAdmin || user.menuPermissions.get('salesRegister')) { %>
+                                  <li class="menu-item">
+                                    <a href="/bills-list">Sales Register</a>
+                                  </li>
+                                  <% } %>
+
+                                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                      user.role==='Sales' || user.isAdmin || user.menuPermissions.get('creditSalesRtn'))
+                                      { %>
+                                      <li class="menu-item dropdown">
+                                        <a href="#">Credit Sales Rtn</a>
+                                        <ul class="sub-menu">
+                                          <li class="menu-item">
+                                            <a href="/sales-return">Add</a>
+                                          </li>
+                                          <li class="menu-item">
+                                            <a href="/sales-return/finds">Edit</a>
+                                          </li>
+                                        </ul>
+                                      </li>
+                                      <% } %>
+                                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                          user.role==='Sales' || user.isAdmin ||
+                                          user.menuPermissions.get('cashSalesRtn')) { %>
+                                          <li class="menu-item dropdown">
+                                            <a href="#">Cash Sales Rtn</a>
+                                            <ul class="sub-menu">
+                                              <li class="menu-item">
+                                                <a href="/cash/sales-return/add">Add</a>
+                                              </li>
+                                              <li class="menu-item">
+                                                <a href="/cash-sales-return/sales-return/finds">Edit</a>
+                                              </li>
+                                            </ul>
+                                          </li>
+                                          <% } %>
+                                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                              user.role==='Sales' || user.isAdmin ||
+                                              user.menuPermissions.get('salesRtnRegister')) { %>
+                                              <li class="menu-item">
+                                                <a href="/sales-return/list">Sales Rtn Register</a>
+                                              </li>
+                                              <% } %>
+
                   </ul>
-                </li>
-                <!-- Party Sales Section -->
-                <li class="menu-item dropdown">
-                  <a href="#">Party Sales</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item"><a href="/bills">Add Sales</a></li>
-                    <li class="menu-item">
-                      <a href="/billsTrackBatchOpen">Add Sales Open</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/sales-bills/finds">Edit Sales</a>
-                    </li>
-                  </ul>
-                </li>
-                <!-- Cash Sales Section -->
-                <li class="menu-item dropdown">
-                  <a href="#">Cash Sales</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item"><a href="/cash/bills/add">Add Sales</a></li>
-                    <li class="menu-item">
-                      <a href="/cash/bills/addOpen">Add Sales Open</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/cash-sales/sales-bills/finds">Edit Sales</a>
-                    </li>
-                  </ul>
-                </li>
-                <li class="menu-item">
-                  <a href="/bills-list">Sales Register</a>
-                </li>
-                <li class="menu-item dropdown">
-                  <a href="#">Party Sales Rtn</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/sales-return">Add</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/sales-return/finds">Edit</a>
-                    </li>
-                  </ul>
-                </li>
-                <li class="menu-item dropdown">
-                  <a href="#">Cash Sales Rtn</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/cash/sales-return/add">Add</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/cash-sales-return/sales-return/finds">Edit</a>
-                    </li>
-                  </ul>
-                </li>
-                <li class="menu-item">
-                  <a href="/sales-return/list">Sales Rtn Register</a>
-                </li>
-              </ul>
-            </div>
+                </div>
           </li>
 
           <li class="menu-item dropdown">
-            <a href="#" class="active">Purchase Department</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item dropdown">
-                  <a href="#">Purchase</a>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Account' ||
+              user.role==='Purchase' || user.isAdmin || user.menuPermissions.get('purchaseDepartment')) { %>
+              <a href="#" class="active">Purchase Department</a>
+              <% } %>
+
+                <div class="sub-menu-wrapper slideInUp">
                   <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/purchase-bills">Add</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/purchase-bills/finds">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/purchase-bills-list">Purchase Register</a>
-                    </li>
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Account' ||
+                      user.role==='Purchase' || user.isAdmin || user.menuPermissions.get('createPurchase')) { %>
+                      <li class="menu-item dropdown">
+                        <a href="#">Purchase</a>
+                        <ul class="sub-menu">
+                          <li class="menu-item">
+                            <a href="/purchase-bills">Add</a>
+                          </li>
+                          <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Account' ||
+                            user.role==='Purchase' || user.isAdmin || user.menuPermissions.get('purchaseModify')) { %>
+                            <li class="menu-item">
+                              <a href="/purchase-bills/finds">Edit</a>
+                            </li>
+                            <% } %>
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Account' ||
+                                user.role==='Purchase' || user.isAdmin || user.menuPermissions.get('purchaseRegister'))
+                                { %>
+                                <li class="menu-item">
+                                  <a href="/purchase-bills-list">Purchase Register</a>
+                                </li>
+                                <% } %>
+                        </ul>
+                      </li>
+                      <% } %>
+
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Purchase' ||
+                          user.isAdmin || user.menuPermissions.get('createPurchaseRtn')) { %>
+                          <li class="menu-item dropdown">
+                            <a href="#">Purchase Return</a>
+                            <ul class="sub-menu">
+                              <li class="menu-item">
+                                <a href="/purchase-return">Add</a>
+                              </li>
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Purchase'
+                                || user.isAdmin || user.menuPermissions.get('purchaseRtnModify')) { %>
+                                <li class="menu-item">
+                                  <a href="/purchase-return/finds">Edit</a>
+                                </li>
+                                <% } %>
+
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                    user.role==='Purchase' || user.isAdmin ||
+                                    user.menuPermissions.get('purchaseRtnRegister')) { %>
+                                    <li class="menu-item">
+                                      <a href="/purchase-return/list">Purchase Rtn Register</a>
+                                    </li>
+                                    <% } %>
+
+                            </ul>
+                          </li>
+                          <% } %>
+
                   </ul>
-                </li>
-                <li class="menu-item dropdown">
-                  <a href="#">Purchase Return</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/purchase-return">Add</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/purchase-return/finds">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/purchase-return/list">Purchase Rtn Register</a>
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </div>
+                </div>
           </li>
 
           <li class="menu-item dropdown">
-            <a href="#" class="active">Inventory</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item">
-                  <a href="/items-ledger">Item Ledger</a>
-                </li>
-                <li class="menu-item dropdown">
-                  <a href="#">Stock Adjustment</a>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+              user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+              user.menuPermissions.get('inventoryHeader')) { %>
+              <a href="#" class="active">Inventory</a>
+              <% } %>
+
+                <div class="sub-menu-wrapper slideInUp">
                   <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/stockAdjustments/new">Add</a>
-                    </li>
-                    <!-- <li class="menu-item">
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.role==='Sales' ||
+                      user.role==='Purchase' || user.role==='Account' || user.isAdmin ||
+                      user.menuPermissions.get('itemLedger')) { %>
+                      <li class="menu-item">
+                        <a href="/items-ledger">Item Ledger</a>
+                      </li>
+                      <% } %>
+
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                          user.menuPermissions.get('createStockAdj')) { %>
+                          <li class="menu-item dropdown">
+                            <a href="#">Stock Adjustment</a>
+                            <ul class="sub-menu">
+                              <li class="menu-item">
+                                <a href="/stockAdjustments/new">Add</a>
+                              </li>
+                              <!-- <li class="menu-item">
                       <a href="/stockAdjustments/finds">Edit</a>
                     </li> -->
-                    <li class="menu-item">
-                      <a href="/stockAdjustments">Stock Adj. Register</a>
-                    </li>
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                user.menuPermissions.get('stockAdjRegister')) { %>
+                                <li class="menu-item">
+                                  <a href="/stockAdjustments">Stock Adj. Register</a>
+                                </li>
+                                <% } %>
+                            </ul>
+                          </li>
+                          <% } %>
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                              user.menuPermissions.get('storeRackSubHeader')) { %>
+                              <li class="menu-item dropdown">
+                                <a href="#">Store/Rack</a>
+                                <ul class="sub-menu">
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                    user.menuPermissions.get('store')) { %>
+                                    <li class="menu-item">
+                                      <a href="/retailer/store/management">Store</a>
+                                    </li>
+                                    <% } %>
+                                      <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                        user.menuPermissions.get('rack')) { %>
+                                        <li class="menu-item">
+                                          <a href="/retailer/rack/management">Rack</a>
+                                        </li>
+                                        <% } %>
+                                </ul>
+                              </li>
+                              <% } %>
+                                <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                  user.menuPermissions.get('stockStatus')) { %>
+                                  <li class="menu-item">
+                                    <a href="/retailer/stock-status">Stock Status</a>
+                                  </li>
+                                  <% } %>
+                                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                      user.role==='Purchase' || user.menuPermissions.get('reorderLevel')) { %>
+                                      <li class="menu-item">
+                                        <a href="/items/reorder">Re Order Level</a>
+                                      </li>
+                                      <% } %>
+                                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin
+                                          || user.role==='Purchase' || user.menuPermissions.get('itemSalesReport')) { %>
+                                          <li class="menu-item">
+                                            <a href="/api/sold-items">Item Sales Report</a>
+                                          </li>
+                                          <% } %>
+
                   </ul>
-                </li>
-                <li class="menu-item dropdown">
-                  <a href="#">Store/Rack</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/retailer/store/management">Store</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/retailer/rack/management">Rack</a>
-                    </li>
-                  </ul>
-                </li>
-                <li class="menu-item">
-                  <a href="/retailer/stock-status">Stock Status</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/items/reorder">Re Order Level</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/api/sold-items">Item Sales Report</a>
-                </li>
-              </ul>
-            </div>
+                </div>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Account Department</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item dropdown">
-                  <a href="#">Payment</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item"><a href="/payments">Add</a></li>
-                    <li class="menu-item">
-                      <a href="/payments/finds">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/payments-list">List</a>
-                    </li>
-                  </ul>
-                </li>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin || user.role==='Purchase' ||
+              user.role==='Account' || user.menuPermissions.get('accountDepartment')) { %>
+              <a href="#" class="active">Account Department</a>
+              <% } %>
 
-                <li class="menu-item dropdown">
-                  <a href="#">Receipt</a>
+                <div class="sub-menu-wrapper slideInUp">
                   <ul class="sub-menu">
-                    <li class="menu-item"><a href="/receipts">Add</a></li>
-                    <li class="menu-item">
-                      <a href="/receipts/finds">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/receipts-list">List</a>
-                    </li>
-                  </ul>
-                </li>
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                      user.role==='Purchase' || user.role==='Account' || user.menuPermissions.get('payment')) { %>
+                      <li class="menu-item dropdown">
+                        <a href="#">Payment</a>
+                        <ul class="sub-menu">
+                          <li class="menu-item"><a href="/payments">Add</a></li>
+                          <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                            user.role==='Purchase' || user.role==='Account' ||
+                            user.menuPermissions.get('paymentModify')) { %>
+                            <li class="menu-item">
+                              <a href="/payments/finds">Edit</a>
+                            </li>
+                            <% } %>
 
-                <li class="menu-item dropdown">
-                  <a href="#">Journal</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/journal/new">Add</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/journals/finds">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/journal/list">List</a>
-                    </li>
-                  </ul>
-                </li>
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                user.role==='Purchase' || user.role==='Account' ||
+                                user.menuPermissions.get('paymentRegister')) { %>
+                                <li class="menu-item">
+                                  <a href="/payments-list">List</a>
+                                </li>
+                                <% } %>
 
-                <li class="menu-item dropdown">
-                  <a href="#">Debit Note</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/debit-note/new">Add</a>
-                    </li>
-                    <li class="menu-item"><a href="/debitnote/finds">Edit</a></li>
-                    <li class="menu-item"><a href="/debit-note/list">List</a></li>
-                  </ul>
-                </li>
+                        </ul>
+                      </li>
+                      <% } %>
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                          user.role==='Account' || user.menuPermissions.get('receipt')) { %>
+                          <li class="menu-item dropdown">
+                            <a href="#">Receipt</a>
+                            <ul class="sub-menu">
+                              <li class="menu-item"><a href="/receipts">Add</a></li>
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                user.role==='Account' || user.menuPermissions.get('receiptModify')) { %>
+                                <li class="menu-item">
+                                  <a href="/receipts/finds">Edit</a>
+                                </li>
+                                <% } %>
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                    user.role==='Account' || user.menuPermissions.get('receiptRegister')) { %>
+                                    <li class="menu-item">
+                                      <a href="/receipts-list">List</a>
+                                    </li>
+                                    <% } %>
+                            </ul>
+                          </li>
+                          <% } %>
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                              user.role==='Account' || user.menuPermissions.get('journal')) { %>
+                              <li class="menu-item dropdown">
+                                <a href="#">Journal</a>
+                                <ul class="sub-menu">
+                                  <li class="menu-item">
+                                    <a href="/journal/new">Add</a>
+                                  </li>
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                    user.role==='Account' || user.menuPermissions.get('journalModify')) { %>
+                                    <li class="menu-item">
+                                      <a href="/journals/finds">Edit</a>
+                                    </li>
+                                    <% } %>
 
-                <li class="menu-item dropdown">
-                  <a href="#">Credit Note</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/credit-note/new">Add</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/creditnote/finds">Edit</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/credit-note/list">List</a>
-                    </li>
-                  </ul>
-                </li>
+                                      <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                        user.role==='Account' || user.menuPermissions.get('journalRegister')) { %>
+                                        <li class="menu-item">
+                                          <a href="/journal/list">List</a>
+                                        </li>
+                                        <% } %>
+                                </ul>
+                              </li>
+                              <% } %>
+                                <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                  user.role==='Account' || user.menuPermissions.get('debitNote')) { %>
+                                  <li class="menu-item dropdown">
+                                    <a href="#">Debit Note</a>
+                                    <ul class="sub-menu">
+                                      <li class="menu-item">
+                                        <a href="/debit-note/new">Add</a>
+                                      </li>
+                                      <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                        user.role==='Account' || user.menuPermissions.get('debitNoteModify')) { %>
+                                        <li class="menu-item"><a href="/debitnote/finds">Edit</a></li>
+                                        <% } %>
 
-              </ul>
-            </div>
+                                          <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin
+                                            || user.role==='Account' || user.menuPermissions.get('debitNoteRegister')) {
+                                            %>
+                                            <li class="menu-item"><a href="/debit-note/list">List</a></li>
+                                            <% } %>
+
+                                    </ul>
+                                  </li>
+                                  <% } %>
+                                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                      user.role==='Account' || user.menuPermissions.get('creditNote')) { %>
+                                      <li class="menu-item dropdown">
+                                        <a href="#">Credit Note</a>
+                                        <ul class="sub-menu">
+                                          <li class="menu-item">
+                                            <a href="/credit-note/new">Add</a>
+                                          </li>
+                                          <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin
+                                            || user.role==='Account' || user.menuPermissions.get('creditNoteModify')) {
+                                            %>
+                                            <li class="menu-item">
+                                              <a href="/creditnote/finds">Edit</a>
+                                            </li>
+                                            <% } %>
+                                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' ||
+                                                user.isAdmin || user.role==='Account' ||
+                                                user.menuPermissions.get('creditNoteRegister')) { %>
+                                                <li class="menu-item">
+                                                  <a href="/credit-note/list">List</a>
+                                                </li>
+                                                <% } %>
+                                        </ul>
+                                      </li>
+                                      <% } %>
+
+
+                  </ul>
+                </div>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Outstanding</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item dropdown">
-                  <a href="#">Ageing</a>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin || user.role==='Account' ||
+              user.menuPermissions.get('outstandingHeader')) { %>
+              <a href="#" class="active">Outstanding</a>
+              <% } %>
+                <div class="sub-menu-wrapper slideInUp">
                   <ul class="sub-menu">
-                    <li class="menu-item">
-                      <a href="/aging/accounts">Ageing(FIFO)</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/day-count-aging">Day Wise</a>
-                    </li>
-                    <li class="menu-item">
-                      <a href="/ageing-all/accounts">All Party</a>
-                    </li>
-                  </ul>
-                </li>
-                <li class="menu-item"><a href="/statement">Statements</a></li>
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                      user.role==='Account' || user.menuPermissions.get('ageingSubHeader')) { %>
+                      <li class="menu-item dropdown">
+                        <a href="#">Ageing</a>
+                        <ul class="sub-menu">
+                          <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                            user.role==='Account' || user.menuPermissions.get('ageingFIFO')) { %>
+                            <li class="menu-item">
+                              <a href="/aging/accounts">Ageing(FIFO)</a>
+                            </li>
+                            <% } %>
+                              <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                user.role==='Account' || user.menuPermissions.get('ageingDayWise')) { %>
+                                <li class="menu-item">
+                                  <a href="/day-count-aging">Day Wise</a>
+                                </li>
+                                <% } %>
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                    user.role==='Account' || user.menuPermissions.get('ageingAllParty')) { %>
+                                    <li class="menu-item">
+                                      <a href="/ageing-all/accounts">All Party</a>
+                                    </li>
+                                    <% } %>
+                        </ul>
+                      </li>
+                      <% } %>
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                          user.role==='Account' || user.menuPermissions.get('statements')) { %>
+                          <li class="menu-item"><a href="/statement">Statements</a></li>
+                          <% } %>
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                              user.role==='Account' || user.menuPermissions.get('reportsSubHeader')) { %>
+                              <li class="menu-item dropdown">
+                                <a href="#">Reports</a>
+                                <ul class="sub-menu">
+                                  <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                    user.role==='Account' || user.menuPermissions.get('dailyProfitSaleAnalysis')) { %>
+                                    <li class="menu-item"><a href="/retailer/daily-profit/sales-analysis">Daily
+                                        Profit/Sale
+                                        Analysis</a>
+                                    </li>
+                                    <% } %>
 
-                <li class="menu-item dropdown">
-                  <a href="#">Reports</a>
-                  <ul class="sub-menu">
-                    <li class="menu-item"><a href="/retailer/daily-profit/sales-analysis">Daily Profit/Sale
-                        Analysis</a>
-                    </li>
-                    <li class="menu-item"><a href="/retailer/invoice-wise-profit-loss">Invoice Wise Profit & Loss</a></li>
+                                      <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                        user.role==='Account' || user.menuPermissions.get('invoiceWiseProfitLoss')) { %>
+                                        <li class="menu-item"><a href="/retailer/invoice-wise-profit-loss">Invoice Wise
+                                            Profit &
+                                            Loss</a>
+                                        </li>
+                                        <% } %>
+
+                                </ul>
+                              </li>
+                              <% } %>
                   </ul>
-                </li>
-              </ul>
-            </div>
+                </div>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Vat Summary</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item">
-                  <a href="/sales-vat-report">Sales Vat Register</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/salesReturn-vat-report">Sales Return Register</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/purchase-vat-report">Purchase Vat Register</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/purchaseReturn-vat-report">Purchase Return Register</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/retailer/monthly-vat-report">Monthly Vat Summary</a>
-                </li>
-              </ul>
-            </div>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+              user.menuPermissions.get('vatSummaryHeader')) { %>
+              <a href="#" class="active">Vat Summary</a>
+              <% } %>
+                <div class="sub-menu-wrapper slideInUp">
+                  <ul class="sub-menu">
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                      user.menuPermissions.get('salesVatRegister')) { %>
+                      <li class="menu-item">
+                        <a href="/sales-vat-report">Sales Vat Register</a>
+                      </li>
+                      <% } %>
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                          user.menuPermissions.get('salesRtnVatRegister')) { %>
+                          <li class="menu-item">
+                            <a href="/salesReturn-vat-report">Sales Return Register</a>
+                          </li>
+                          <% } %>
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                              user.menuPermissions.get('purchaseVatRegister')) { %>
+                              <li class="menu-item">
+                                <a href="/purchase-vat-report">Purchase Vat Register</a>
+                              </li>
+                              <% } %>
+                                <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                  user.menuPermissions.get('purchaseRtnVatRegister')) { %>
+                                  <li class="menu-item">
+                                    <a href="/purchaseReturn-vat-report">Purchase Return Register</a>
+                                  </li>
+                                  <% } %>
+                                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                      user.menuPermissions.get('monthlyVatSummary')) { %>
+                                      <li class="menu-item">
+                                        <a href="/retailer/monthly-vat-report">Monthly Vat Summary</a>
+                                      </li>
+                                      <% } %>
+                  </ul>
+                </div>
           </li>
           <li class="menu-item dropdown">
-            <a href="#" class="active">Configuration</a>
-            <div class="sub-menu-wrapper slideInUp">
-              <ul class="sub-menu">
-                <li class="menu-item">
-                  <a href="/settings">Voucher Configuration</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/change-fiscal-year">Change Fiscal Year</a>
-                </li>
-                <li class="menu-item">
-                  <a href="/switch-fiscal-year">Existing Fiscal Year</a>
-                </li>
-                <li class="menu-item dropdown">
-                  <a href="#">Import</a>
+            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+              user.menuPermissions.get('configurationHeader')) { %>
+              <a href="#" class="active">Configuration</a>
+              <% } %>
+                <div class="sub-menu-wrapper slideInUp">
                   <ul class="sub-menu">
-                    <li class="menu-item"><a href="/import">Items Import</a></li>
+                    <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                      user.menuPermissions.get('voucherConfiguration')) { %>
+                      <li class="menu-item">
+                        <a href="/settings">Voucher Configuration</a>
+                      </li>
+                      <% } %>
+
+                        <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                          user.menuPermissions.get('changeFiscalYear')) { %>
+                          <li class="menu-item">
+                            <a href="/change-fiscal-year">Change Fiscal Year</a>
+                          </li>
+                          <% } %>
+
+                            <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                              user.menuPermissions.get('existingFiscalYear')) { %>
+                              <li class="menu-item">
+                                <a href="/switch-fiscal-year">Existing Fiscal Year</a>
+                              </li>
+                              <% } %>
+
+                                <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                  user.menuPermissions.get('importExportSubHeader')) { %>
+                                  <li class="menu-item dropdown">
+                                    <a href="#">Import</a>
+                                    <ul class="sub-menu">
+                                      <% if (user.role==='ADMINISTRATOR' || user.role==='Supervisor' || user.isAdmin ||
+                                        user.menuPermissions.get('itemsImport')) { %>
+                                        <li class="menu-item"><a href="/import">Items Import</a></li>
+                                        <% } %>
+
+                                    </ul>
+                                  </li>
+                                  <% } %>
                   </ul>
-                </li>
-              </ul>
-            </div>
+                </div>
           </li>
           <li class="menu-item dropdown">
             <a href="#" class="active"><i class="bi bi-person" style="font-size: 20px"></i></a>

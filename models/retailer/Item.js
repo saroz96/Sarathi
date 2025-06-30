@@ -33,7 +33,23 @@ const stockEntrySchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    netPrice: {
+        type: Number,
+        default: 0,
+    },
     puPrice: {
+        type: Number,
+        default: 0,
+    },
+    discountPercentagePerItem: {
+        type: Number,
+        default: 0,
+    },
+    discountAmountPerItem: {
+        type: Number,
+        default: 0,
+    },
+    netPuPrice: {
         type: Number,
         default: 0,
     },

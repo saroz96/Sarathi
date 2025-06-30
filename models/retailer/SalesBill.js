@@ -37,6 +37,19 @@ const SalesBillSchema = new Schema({
         quantity: { type: Number, required: true },  // Required in item schema
         price: { type: Number, required: true },     // Required in item schema
         puPrice: { type: Number },
+        netPuPrice: { type: Number },
+        discountPercentagePerItem: {
+            type: Number,
+            default: 0,
+        },
+        discountAmountPerItem: {
+            type: Number,
+            default: 0,
+        },
+        netPrice: {
+            type: Number,
+            default: 0,
+        },
         batchNumber: { type: String },
         expiryDate: { type: Date },
         vatStatus: {

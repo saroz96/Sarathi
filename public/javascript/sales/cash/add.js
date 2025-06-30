@@ -345,7 +345,7 @@ function addItemToBill(item, dropdownMenu) {
             <input type="date" name="items[${itemIndex}][expiryDate]" value="${formatDateForInput(firstStockEntry.expiryDate || '')}" oninput="this.value='${formatDateForInput(firstStockEntry.expiryDate)}'" class="form-control item-expiryDate" id="expiryDate-${itemIndex}" onkeydown="handleExpDateKeydown(event, ${itemIndex})">
         </td>
         <td>
-            <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" min="1" step="any" oninput="updateItemTotal(this)" onkeydown="handleQuantityKeydown(event, ${itemIndex})" onfocus="selectValue(this)">
+            <input type="number" name="items[${itemIndex}][quantity]" value="0" class="form-control item-quantity" id="quantity-${itemIndex}" max="${totalStock}" step="any" oninput="validateQuantity(this, ${totalStock})" onkeydown="handleQuantityKeydown(event, ${itemIndex}, ${totalStock})" onfocus="selectValue(this)">        </td>
         </td>
         <td>
             ${item.unit ? item.unit.name : ''}
@@ -386,6 +386,50 @@ function addItemToBill(item, dropdownMenu) {
         }
     }, 100); // Adding a small delay to ensure that the row is added and focus can be set properly
 }
+
+
+// New function to validate quantity
+function validateQuantity(input, maxStock) {
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value <= 0) {
+        input.value = '';
+        return;
+    }
+
+    if (value > maxStock) {
+        alert(`Quantity cannot exceed available stock (${maxStock})`);
+        input.value = maxStock;
+        input.focus();
+    }
+    updateItemTotal(input);
+}
+
+// Modified handleQuantityKeydown function
+function handleQuantityKeydown(event, index, maxStock) {
+    const quantityInput = document.getElementById(`quantity-${index}`);
+    const priceInput = document.getElementById(`price-${index}`);
+
+    if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+
+        const quantity = parseFloat(quantityInput.value);
+        if (isNaN(quantity) || quantity <= 0) {
+            alert('Please enter a valid quantity');
+            quantityInput.focus();
+            return;
+        }
+
+        if (quantity > maxStock) {
+            alert(`Quantity cannot exceed available stock (${maxStock})`);
+            quantityInput.focus();
+            return;
+        }
+
+        // Only proceed to price if quantity is valid
+        priceInput.focus();
+    }
+}
+
 
 // First, add a helper function to format dates for input fields
 function formatDateForInput(date) {

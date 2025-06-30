@@ -139,12 +139,12 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         account: 1,
                         cashAccount: 1,
                         "items.quantity": 1,
-                        "items.price": 1,
-                        "items.puPrice": 1,
+                        "items.netPrice": 1,
+                        "items.netPuPrice": 1,
                         "items.itemName": "$items.itemDetails.name", // Get item name
                         itemProfit: {
                             $multiply: [
-                                { $subtract: ["$items.price", { $ifNull: ["$items.puPrice", 0] }] },
+                                { $subtract: ["$items.netPrice", { $ifNull: ["$items.netPuPrice", 0] }] },
                                 "$items.quantity"
                             ]
                         }
@@ -158,13 +158,13 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         account: { $first: "$account" },
                         cashAccount: { $first: "$cashAccount" },
                         totalProfit: { $sum: "$itemProfit" },
-                        totalSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
-                        totalCost: { $sum: { $multiply: ["$items.puPrice", "$items.quantity"] } },
+                        totalSales: { $sum: { $multiply: ["$items.netPrice", "$items.quantity"] } },
+                        totalCost: { $sum: { $multiply: ["$items.netPuPrice", "$items.quantity"] } },
                         items: {
                             $push: {
                                 quantity: "$items.quantity",
-                                price: "$items.price",
-                                puPrice: "$items.puPrice",
+                                price: "$items.netPrice",
+                                puPrice: "$items.netPuPrice",
                                 itemName: "$items.itemName"
                             }
                         }
@@ -203,15 +203,16 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         account: 1,
                         cashAccount: 1,
                         "items.quantity": 1,
-                        "items.price": 1,
-                        "items.puPrice": 1,
+                        "items.netPrice": 1,
+                        "items.netPuPrice": 1,
                         "items.itemName": "$items.itemDetails.name",
-                        itemProfit: {
+                       itemProfit: {
                             $multiply: [
-                                { $subtract: [{ $ifNull: ["$items.puPrice", 0] }, "$items.price"] }, // Inverse calculation
+                                { $subtract: ["$items.netPuPrice", { $ifNull: ["$items.netPrice", 0] }] },
+                                -1,
                                 "$items.quantity"
                             ]
-                        }
+                        },
                     }
                 },
                 {
@@ -221,14 +222,14 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         date: { $first: "$date" },
                         account: { $first: "$account" },
                         cashAccount: { $first: "$cashAccount" },
-                        totalProfit: { $sum: "$itemProfit" }, // This will be negative
-                        totalSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }, // Positive but should be treated as negative
-                        totalCost: { $sum: { $multiply: ["$items.puPrice", "$items.quantity"] } }, // Positive but should be treated as negative
+                        totalProfit: { $sum: "$itemProfit" },
+                        totalSales: { $sum: { $multiply: ["$items.netPrice", "$items.quantity",-1] } },
+                        totalCost: { $sum: { $multiply: ["$items.netPuPrice", "$items.quantity",-1] } },
                         items: {
                             $push: {
                                 quantity: "$items.quantity",
-                                price: "$items.price",
-                                puPrice: "$items.puPrice",
+                                price: "$items.netPrice",
+                                puPrice: "$items.netPuPrice",
                                 itemName: "$items.itemName",
                                 isReturn: true // Flag to identify returns
                             }

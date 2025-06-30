@@ -26,14 +26,113 @@ const userSchema = new mongoose.Schema({
     isAdmin: { type: Boolean, default: false },
     role: {
         type: String,
-        enum: ['Admin', 'Sales', 'Purchase', 'Supervisor', 'ADMINISTRATOR'],
+        enum: ['Admin', 'Account', 'Sales', 'Purchase', 'Supervisor', 'ADMINISTRATOR', 'User'],
         default: 'Sales'
     },
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
     emailVerificationExpires: Date,
     resetPasswordToken: String,
-    resetPasswordExpires: Date
+    resetPasswordExpires: Date,
+
+    menuPermissions: {
+        type: Map,
+        of: Boolean,
+        default: () => new Map([
+            ['dashboard', true], // All users get dashboard by default
+            //Accounts
+            ['accountsHeader', false],
+            ['account', false],
+            ['accountGroup', false],
+            //Items creation and related features
+            ['itemsHeader', false],
+            ['createItem', false],
+            ['category', false],
+            ['company', false],
+            ['unit', false],
+            ['mainUnit', false],
+            ['composition', false],
+            //Sales Quotation
+            ['salesQuotation', false],
+            //Sales
+            ['salesDepartment', false],
+            ['creditSales', false],
+            ['creditSalesModify', false],
+            ['cashSales', false],
+            ['cashSalesModify', false],
+            ['salesRegister', false],
+            //Sales Return
+            ['creditSalesRtn', false],
+            ['cashSalesRtn', false],
+            ['salesRtnRegister', false],
+            //Purchase
+            ['purchaseDepartment', false],
+            ['createPurchase', false],
+            ['purchaseModify', false],
+            ['purchaseRegister', false],
+            //Purchase Return
+            ['createPurchaseRtn', false],
+            ['purchaseRtnModify', false],
+            ['purchaseRtnRegister', false],
+            //Account Department
+            ['accountDepartment', false]
+            ['payment', false]
+            ['paymentModify', false]
+            ['paymentRegister', false]
+            ['receipt', false]
+            ['receiptModify', false]
+            ['receiptRegister', false]
+            ['journal', false]
+            ['journalModify', false]
+            ['journalRegister', false]
+            ['debitNote', false]
+            ['debitNoteModify', false]
+            ['debitNoteRegister', false]
+            ['creditNote', false]
+            ['creditNoteModify', false]
+            ['creditNoteRegister', false]
+            //Inventory
+            ['inventoryHeader', false],
+            ['itemLedger', false],
+            ['createStockAdj', false],
+            ['stockAdjRegister', false],
+            ['storeRackSubHeader', false],
+            ['store', false],
+            ['rack', false],
+            ['stockStatus', false],
+            ['reorderLevel', false],
+            ['itemSalesReport', false],
+            //Outstanding
+            ['outstandingHeader', false],
+            ['ageingSubHeader', false],
+            ['ageingFIFO', false],
+            ['ageingDayWise', false]
+            ['ageingAllParty', false]
+            ['statements', false]
+            ['reportsSubHeader', false]
+            ['dailyProfitSaleAnalysis', false]
+            ['invoiceWiseProfitLoss', false]
+            //Vat Summary
+            ['vatSummaryHeader', false]
+            ['salesVatRegister', false]
+            ['salesRtnVatRegister', false]
+            ['purchaseVatRegister', false]
+            ['purchaseRtnVatRegister', false]
+            ['monthlyVatSummary', false]
+            //Configuration
+            ['configurationHeader', false]
+            ['voucherConfiguration', false]
+            ['changeFiscalYear', false]
+            ['existingFiscalYear', false]
+            ['importExportSubHeader', false]
+            ['itemsImport', false]
+        ])
+    },
+    grantedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    lastPermissionUpdate: Date
 }, { timestamps: true });
 
 // Hash the password before saving the user

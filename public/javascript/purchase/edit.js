@@ -1,6 +1,13 @@
 let itemIndex = 0;
 let currentFocus = 0;
 let isFirstLoad = true;
+let currentSelectedRowIndex = -1;
+// Track the current scroll position and visible range
+let currentScrollPosition = 0;
+let visibleStartIndex = 0;
+const VISIBLE_ROWS = 7;
+let lastClickTime = 0;
+const DOUBLE_CLICK_THRESHOLD = 300; // milliseconds
 
 
 async function fetchItems(query, vatStatus, existingItemIds) {
@@ -328,6 +335,7 @@ function addItemToBill(item, dropdownMenu) {
 
     // Fetch and display last transactions for the added item
     fetchLastTransactions(item._id);
+    setLastSelectedItemId(item._id);
     fetchLastItemsData(item._id);
 
     // Hide the dropdown menu
@@ -382,6 +390,37 @@ function removeItem(button) {
 
     // Renumber the rows
     renumberRows();
+}
+
+// Add this function to renumber rows after removal
+function renumberRows() {
+    const itemRows = document.querySelectorAll('#items tr.item');
+    itemRows.forEach((row, index) => {
+        // Update the row number in the first cell
+        const rowNumberCell = row.querySelector('td:first-child');
+        if (rowNumberCell) {
+            rowNumberCell.textContent = index + 1;
+        }
+
+        // Update any input names/ids that use the row index
+        const inputs = row.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            const name = input.name;
+            const id = input.id;
+
+            if (name && name.includes('[') && name.includes(']')) {
+                input.name = name.replace(/\[\d+\]/, `[${index}]`);
+            }
+
+            if (id && id.includes('_')) {
+                const parts = id.split('_');
+                if (!isNaN(parts[parts.length - 1])) {
+                    parts[parts.length - 1] = index;
+                    input.id = parts.join('_');
+                }
+            }
+        });
+    });
 }
 
 
@@ -694,10 +733,175 @@ async function shouldDisplayTransactions() {
     }
 }
 
+// Handle mouse clicks on rows
+function handleRowClick(event, row) {
+    const now = new Date().getTime();
+    if (now - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
+        // This is part of a double click, let the dblclick handler handle it
+        return;
+    }
+    lastClickTime = now;
+
+    // Just select the row, don't navigate
+    const rows = document.querySelectorAll('#transactionList tbody tr');
+    const rowIndex = Array.from(rows).indexOf(row);
+    if (rowIndex >= 0) {
+        currentSelectedRowIndex = rowIndex;
+        highlightRow(rows);
+    }
+    event.preventDefault();
+}
+
+// Handle double clicks on rows
+function handleRowDoubleClick(row) {
+    const url = row.getAttribute('data-href');
+    if (url) {
+        window.location.href = url;
+    }
+}
+
+// Function to handle keyboard navigation in the transactions table
+function handleTransactionTableKeydown(event) {
+    const tbody = document.querySelector('#transactionList tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    if (rows.length === 0) return;
+
+    switch (event.key) {
+        case 'ArrowUp':
+            event.preventDefault();
+            if (currentSelectedRowIndex > 0) {
+                currentSelectedRowIndex--;
+                highlightRow(rows);
+            }
+            break;
+        case 'ArrowDown':
+            event.preventDefault();
+            if (currentSelectedRowIndex < rows.length - 1) {
+                currentSelectedRowIndex++;
+                highlightRow(rows);
+            }
+            break;
+        case 'PageUp':
+            event.preventDefault();
+            currentSelectedRowIndex = Math.max(0, currentSelectedRowIndex - VISIBLE_ROWS);
+            highlightRow(rows);
+            break;
+        case 'PageDown':
+            event.preventDefault();
+            currentSelectedRowIndex = Math.min(rows.length - 1, currentSelectedRowIndex + VISIBLE_ROWS);
+            highlightRow(rows);
+            break;
+        case 'Home':
+            event.preventDefault();
+            currentSelectedRowIndex = 0;
+            highlightRow(rows);
+            break;
+        case 'End':
+            event.preventDefault();
+            currentSelectedRowIndex = rows.length - 1;
+            highlightRow(rows);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (currentSelectedRowIndex >= 0 && currentSelectedRowIndex < rows.length) {
+                const url = rows[currentSelectedRowIndex].getAttribute('data-href');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+            break;
+        case 'Escape':
+            $('#transactionModal').modal('hide');
+            break;
+    }
+}
+
+// Function to highlight the current row and handle scrolling
+function highlightRow(rows) {
+    const container = document.querySelector('#transactionList .table-responsive');
+    if (!container || rows.length === 0) return;
+
+    const rowHeight = rows[0].offsetHeight;
+    const containerHeight = container.offsetHeight;
+    const maxScroll = rows.length * rowHeight - containerHeight;
+
+    // Calculate the new visible range
+    visibleStartIndex = Math.floor(container.scrollTop / rowHeight);
+    const visibleEndIndex = visibleStartIndex + VISIBLE_ROWS - 1;
+
+    // Adjust scroll position if needed
+    if (currentSelectedRowIndex < visibleStartIndex) {
+        // Scroll up to show the selected row at the top
+        container.scrollTop = currentSelectedRowIndex * rowHeight;
+    } else if (currentSelectedRowIndex > visibleEndIndex) {
+        // Scroll down to show the selected row at the bottom
+        container.scrollTop = (currentSelectedRowIndex - VISIBLE_ROWS + 1) * rowHeight;
+    }
+
+    // Update the scroll position tracking
+    currentScrollPosition = container.scrollTop;
+
+    // Highlight the selected row
+    rows.forEach((row, index) => {
+        if (index === currentSelectedRowIndex) {
+            row.classList.add('table-primary');
+            row.focus();
+
+            // Ensure the row is fully visible (handle partial visibility at edges)
+            const rowTop = index * rowHeight;
+            const rowBottom = rowTop + rowHeight;
+            const viewportTop = container.scrollTop;
+            const viewportBottom = viewportTop + containerHeight;
+
+            if (rowTop < viewportTop) {
+                container.scrollTop = rowTop;
+            } else if (rowBottom > viewportBottom) {
+                container.scrollTop = rowBottom - containerHeight;
+            }
+        } else {
+            row.classList.remove('table-primary');
+        }
+    });
+}
+
+
+// Update the initialization code to add click handlers:
+function initializeTransactionTable() {
+    const container = document.querySelector('#transactionList .table-responsive');
+    if (!container) return;
+
+    // Set exact height for the container to show exactly 7 rows
+    const rows = container.querySelectorAll('tbody tr');
+    if (rows.length > 0) {
+        const rowHeight = rows[0].offsetHeight;
+        container.style.height = `${VISIBLE_ROWS * rowHeight}px`;
+
+        // Add click handlers to each row
+        rows.forEach(row => {
+            row.addEventListener('click', (e) => handleRowClick(e, row));
+        });
+    }
+
+    // Add scroll event listener to track position
+    container.addEventListener('scroll', () => {
+        currentScrollPosition = container.scrollTop;
+    });
+    currentSelectedRowIndex = -1;
+}
+
+// Modified modal show function with proper initialization
+function showTransactionsModal() {
+    $('#transactionModal').modal('show').on('shown.bs.modal', function () {
+        initializeTransactionTable();
+        document.querySelector('#transactionModal .modal-body').focus();
+    });
+}
+
 async function fetchLastTransactions(itemId) {
-    // const itemId = select.value;
     const accountId = document.getElementById('accountId').value;
-    const purchaseSalesType = document.getElementById('purchaseSalesType').value; // Ensure this element exists and has a value
+    const purchaseSalesType = document.getElementById('purchaseSalesType').value;
     const transactionList = document.getElementById('transactionList');
 
     if (!purchaseSalesType) {
@@ -706,45 +910,41 @@ async function fetchLastTransactions(itemId) {
     }
 
     try {
-
         const response = await fetch(`/api/transactions/${itemId}/${accountId}/${purchaseSalesType}`);
         const transactions = await response.json();
-        // const { transactions, companyDateFormat } = await response.json();
 
-        // Check if transactions are empty
         if (transactions.length === 0) {
             transactionList.innerHTML = '<p>No transactions to display.</p>';
-            // Do not show the modal if there are no transactions
             return;
         }
 
-        // Create table header
+        // Create table with fixed height and scrollable tbody
         let tableHtml = `
-    <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Vch. No.</th>
-                <th>Type</th>
-                <th>A/c Type</th>
-                <th>Pay.Mode</th>
-                <th>Qty.</th>
-                <th>Unit</th>
-                <th>Rate</th>
-            </tr>
-        </thead>
-        <tbody>
-`;
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr class="sticky-top bg-light">
+                    <th>S.N.</th>
+                    <th>Date</th>
+                    <th>Vch. No.</th>
+                    <th>Type</th>
+                    <th>A/c Type</th>
+                    <th>Pay.Mode</th>
+                    <th>Qty.</th>
+                    <th>Unit</th>
+                    <th>Unit Rate</th>
+                    <th>Disc</th>
+                    <th>Nett. Rate</th>
+                </tr>
+            </thead>
+            <tbody>`;
 
         // Add table rows for each transaction
-        tableHtml += transactions.map(transaction => {
-
-            // const isPurchase = transaction.type === 'Purc'; // Assuming 'Purc' indicates a purchase transaction
-            // const billId = isPurchase ? transaction.purchaseBillId : transaction.billId;
-            // const price = isPurchase ? transaction.puPrice : transaction.price;
-
+        tableHtml += transactions.map((transaction, index) => {
             return `
-        <tr onclick="window.location.href='/bills/${transaction.purchaseBillId._id}/print'" style="cursor: pointer;">
+        <tr data-href="/purchase-bills/${transaction.purchaseBillId._id}/print" 
+            style="cursor: pointer;" tabindex="0" ondblclick="handleRowDoubleClick(this)">
+            <td>${index + 1}</td>
             <td>${new Date(transaction.date).toLocaleDateString()}</td>
             <td>${transaction.billNumber}</td>
             <td>${transaction.type}</td>
@@ -752,26 +952,250 @@ async function fetchLastTransactions(itemId) {
             <td>${transaction.paymentMode}</td>
             <td>${transaction.quantity}</td>
             <td>${transaction.unit ? transaction.unit.name : 'N/A'}</td>
-            <td>Rs.${transaction.puPrice.toFixed(2)}</td>
-        </tr>
-    `;
+            <td>Rs.${Math.round(transaction.puPrice * 100) / 100}</td>
+            <td>${Math.round(transaction.discountPercentagePerItem * 100) / 100} %</td>
+            <td>Rs.${Math.round(transaction.netPuPrice * 100) / 100}</td>
+        </tr>`;
         }).join('');
 
         // Close table
         tableHtml += `
-        </tbody>
-    </table>
-`;
+            </tbody>
+        </table>
+    </div>`;
+
 
         // Set the innerHTML of the transaction list container
         transactionList.innerHTML = tableHtml;
 
+        // Reset selected row index
+        currentSelectedRowIndex = -1;
+
+        // Add keyboard event listener
+        document.querySelector('#transactionList table')?.addEventListener('keydown', handleTransactionTableKeydown);
+
+        // Toggle button visibility
+        document.getElementById('showSalesTransactions').classList.remove('d-none');
+        document.getElementById('showPurchaseTransactions').classList.add('d-none');
+
         // Show the modal
-        $('#transactionModal').modal('show');
+        showTransactionsModal();
+
     } catch (error) {
         console.error('Error fetching transactions:', error);
     }
 }
+// Store the last selected item ID globally
+let lastSelectedItemId = null;
+
+
+// Function to set the last selected item ID
+function setLastSelectedItemId(itemId) {
+    lastSelectedItemId = itemId;
+}
+
+
+// Modified fetchSalesTransactions function with 7-row visible layout
+async function fetchSalesTransactions() {
+    const accountId = document.getElementById('accountId').value;
+    const transactionList = document.getElementById('transactionList');
+
+    if (!accountId) {
+        alert('Please select an account first');
+        return;
+    }
+
+    if (!lastSelectedItemId) {
+        alert('Please select an item first');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/transactions/sales-by-item-account?itemId=${lastSelectedItemId}&accountId=${accountId}`);
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+
+        const transactions = await response.json();
+
+        if (!transactions || transactions.length === 0) {
+            transactionList.innerHTML = '<div class="alert alert-info">No sales transactions found for this item and account.</div>';
+            return;
+        }
+
+        // Build the transactions table with same structure as fetchLastTransactions
+        let tableHtml = `
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr class="sticky-top bg-light">
+                    <th>S.N.</th>
+                    <th>Date</th>
+                    <th>Inv. No.</th>
+                    <th>Type</th>
+                    <th>A/c Type</th>
+                    <th>Pay.Mode</th>
+                    <th>Qty.</th>
+                    <th>Unit</th>
+                    <th>Unit Rate</th>
+                    <th>Disc</th>
+                    <th>Nett. Rate</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        tableHtml += transactions.map((transaction, index) => {
+            return `
+        <tr data-href="/bills/${transaction.billId?._id}/print" 
+            style="cursor: pointer;" tabindex="0" ondblclick="handleRowDoubleClick(this)">
+            <td>${index + 1}</td>
+            <td>${new Date(transaction.date).toLocaleDateString()}</td>
+            <td>${transaction.billNumber}</td>
+            <td>${transaction.type}</td>
+            <td>${transaction.purchaseSalesType}</td>
+            <td>${transaction.paymentMode}</td>
+            <td>${transaction.quantity}</td>
+            <td>${transaction.unit?.name || 'N/A'}</td>
+            <td>Rs.${Math.round(transaction.price * 100) / 100}</td>
+            <td>${Math.round(transaction.discountPercentagePerItem * 100) / 100} %</td>
+            <td>Rs.${Math.round(transaction.netPrice * 100) / 100}</td>
+        </tr>`;
+        }).join('');
+
+        tableHtml += `
+            </tbody>
+        </table>
+    </div>`;
+
+        transactionList.innerHTML = tableHtml;
+
+        // Reset selected row index
+        currentSelectedRowIndex = -1;
+
+        // Initialize the table with 7 visible rows
+        initializeTransactionTable();
+
+        // Add keyboard event listener
+        document.querySelector('#transactionList table')?.addEventListener('keydown', handleTransactionTableKeydown);
+
+        // Toggle button visibility
+        document.getElementById('showPurchaseTransactions').classList.remove('d-none');
+        document.getElementById('showSalesTransactions').classList.add('d-none');
+
+    } catch (error) {
+        console.error('Failed to fetch sales transactions:', error);
+        transactionList.innerHTML = `
+            <div class="alert alert-danger">
+                Failed to load sales transactions. Please try again.
+                <br><small>${error.message}</small>
+            </div>`;
+    }
+}
+
+// Event listener for the button
+document.getElementById('showSalesTransactions')?.addEventListener('click', fetchSalesTransactions);
+
+
+// Modified fetchPurchaseTransactions function with 7-row visible layout
+async function fetchPurchaseTransactions() {
+    const accountId = document.getElementById('accountId').value;
+    const transactionList = document.getElementById('transactionList');
+
+    if (!accountId) {
+        alert('Please select an account first');
+        return;
+    }
+
+    if (!lastSelectedItemId) {
+        alert('Please select an item first');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/transactions/purchase-by-item-account?itemId=${lastSelectedItemId}&accountId=${accountId}`);
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+
+        const transactions = await response.json();
+
+        if (!transactions || transactions.length === 0) {
+            transactionList.innerHTML = '<div class="alert alert-info">No purchase transactions found for this item and account.</div>';
+            return;
+        }
+
+        // Build the transactions table with same structure as fetchLastTransactions
+        let tableHtml = `
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr class="sticky-top bg-light">
+                    <th>S.N.</th>
+                    <th>Date</th>
+                    <th>Vch. No.</th>
+                    <th>Type</th>
+                    <th>A/c Type</th>
+                    <th>Pay.Mode</th>
+                    <th>Qty.</th>
+                    <th>Unit</th>
+                    <th>Unit Rate</th>
+                    <th>Disc</th>
+                    <th>Nett. Rate</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        tableHtml += transactions.map((transaction, index) => {
+            return `
+        <tr data-href="/purchase-bills/${transaction.purchaseBillId._id}/print" 
+            style="cursor: pointer;" tabindex="0" ondblclick="handleRowDoubleClick(this)">
+            <td>${index + 1}</td>
+            <td>${new Date(transaction.date).toLocaleDateString()}</td>
+            <td>${transaction.billNumber}</td>
+            <td>${transaction.type}</td>
+            <td>${transaction.purchaseSalesType}</td>
+            <td>${transaction.paymentMode}</td>
+            <td>${transaction.quantity}</td>
+            <td>${transaction.unit?.name || 'N/A'}</td>
+            <td>Rs.${Math.round(transaction.puPrice * 100) / 100}</td>
+            <td>${Math.round(transaction.discountPercentagePerItem * 100) / 100} %</td>
+            <td>Rs.${Math.round(transaction.netPuPrice * 100) / 100}</td>
+        </tr>`;
+        }).join('');
+
+        tableHtml += `
+            </tbody>
+        </table>
+    </div>`;
+
+        transactionList.innerHTML = tableHtml;
+
+        // Reset selected row index
+        currentSelectedRowIndex = -1;
+
+        // Initialize the table with 7 visible rows
+        initializeTransactionTable();
+
+        // Add keyboard event listener
+        document.querySelector('#transactionList table')?.addEventListener('keydown', handleTransactionTableKeydown);
+
+        // Toggle button visibility
+        document.getElementById('showSalesTransactions').classList.remove('d-none');
+        document.getElementById('showPurchaseTransactions').classList.add('d-none');
+
+    } catch (error) {
+        console.error('Failed to fetch purchase transactions:', error);
+        transactionList.innerHTML = `
+            <div class="alert alert-danger">
+                Failed to load purchase transactions. Please try again.
+                <br><small>${error.message}</small>
+            </div>`;
+    }
+}
+
+// Event listener for the button
+document.getElementById('showPurchaseTransactions')?.addEventListener('click', fetchPurchaseTransactions);
+
 async function handleFetchLastTransactions(itemId) {
     const displayTransactions = await shouldDisplayTransactions();
     if (displayTransactions) {

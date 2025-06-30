@@ -70,6 +70,10 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    netPrice: {
+        type: Number,
+        default: 0,
+    },
     puPrice: {
         type: Number,
         set: function (value) {
@@ -77,6 +81,18 @@ const transactionSchema = new mongoose.Schema({
             const wsUnit = this.WSUnit || 1;
             return value / wsUnit;
         }
+    },
+    discountPercentagePerItem: {
+        type: Number,
+        default: 0,
+    },
+    discountAmountPerItem: {
+        type: Number,
+        default: 0,
+    },
+    netPuPrice: {
+        type: Number,
+        default: 0,
     },
     type: {
         type: String,

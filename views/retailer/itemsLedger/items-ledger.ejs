@@ -21,6 +21,7 @@
             font-weight: 500;
             padding: 12px 8px;
             border: none;
+            z-index: 10;
         }
 
         .ledger-table td {
@@ -38,6 +39,30 @@
             box-shadow: inset 3px 0 0 #4a6fdc;
             color: white !important;
             font-weight: bold;
+        }
+
+        /* Table footer styling */
+        .ledger-table tfoot tr {
+            position: sticky;
+            bottom: 0;
+            background-color: #f8f9fa;
+            z-index: 5;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Table container with proper scrolling */
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        /* Ensure the table takes full width inside container */
+        .table-container table {
+            width: 100%;
+            margin-bottom: 0;
         }
 
         /* Optional: Add hover effect for other rows */
@@ -361,8 +386,8 @@
                                         <div class="filter-group">
                                             <label for="toDate">To Date</label>
                                             <input type="date" name="toDate" id="toDate" class="form-control datepicker"
-                                            value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
-                                            autocomplete="off">
+                                                value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                                autocomplete="off">
                                         </div>
                                         <% } %>
 
@@ -953,7 +978,6 @@
             searchInput.addEventListener('input', filterAdjustment);
             typeFilter.addEventListener('change', filterAdjustment);
 
-            // Keyboard navigation
             document.addEventListener('keydown', function (e) {
                 const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
                     .filter(row => row.style.display !== 'none');
@@ -968,11 +992,21 @@
                 switch (e.key) {
                     case 'ArrowUp':
                         e.preventDefault();
-                        selectedRowIndex = (selectedRowIndex > 0) ? selectedRowIndex - 1 : visibleRows.length - 1;
+                        if (selectedRowIndex > 0) {
+                            selectedRowIndex--;
+                        } else {
+                            // At top - keep focus on first row but don't wrap
+                            selectedRowIndex = 0;
+                        }
                         break;
                     case 'ArrowDown':
                         e.preventDefault();
-                        selectedRowIndex = (selectedRowIndex < visibleRows.length - 1) ? selectedRowIndex + 1 : 0;
+                        if (selectedRowIndex < visibleRows.length - 1) {
+                            selectedRowIndex++;
+                        } else {
+                            // At bottom - keep focus on last row but don't wrap
+                            selectedRowIndex = visibleRows.length - 1;
+                        }
                         break;
                     case 'Home':
                         e.preventDefault();
@@ -994,11 +1028,46 @@
                 // Add new selection
                 visibleRows[selectedRowIndex].classList.add('selected-row');
 
-                // Scroll to the selected row
-                visibleRows[selectedRowIndex].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest'
-                });
+                // Scroll to the selected row with proper header/footer visibility
+                const tableContainer = document.querySelector('.table-container');
+                const rowElement = visibleRows[selectedRowIndex];
+                const rowTop = rowElement.offsetTop;
+                const rowHeight = rowElement.offsetHeight;
+                const containerHeight = tableContainer.offsetHeight;
+                const currentScroll = tableContainer.scrollTop;
+
+                // Header height (50px) and footer height (40px)
+                const headerHeight = 50;
+                const footerHeight = 40;
+
+                if (rowTop < currentScroll + headerHeight) {
+                    // Row is above visible area (accounting for sticky header)
+                    tableContainer.scrollTop = rowTop - headerHeight;
+                } else if (rowTop + rowHeight > currentScroll + containerHeight - footerHeight) {
+                    // Row is below visible area (accounting for sticky footer)
+                    tableContainer.scrollTop = rowTop - containerHeight + rowHeight + footerHeight;
+                }
+
+                // Ensure the row is fully visible if possible
+                const rowBottom = rowTop + rowHeight;
+                const visibleAreaTop = currentScroll + headerHeight;
+                const visibleAreaBottom = currentScroll + containerHeight - footerHeight;
+
+                if (rowHeight <= containerHeight - headerHeight - footerHeight) {
+                    // Row fits completely in visible area
+                    if (rowTop < visibleAreaTop) {
+                        tableContainer.scrollTop = rowTop - headerHeight;
+                    } else if (rowBottom > visibleAreaBottom) {
+                        tableContainer.scrollTop = rowTop - containerHeight + rowHeight + footerHeight;
+                    }
+                } else {
+                    // Row is taller than visible area - show as much as possible
+                    if (rowTop < visibleAreaTop) {
+                        tableContainer.scrollTop = rowTop - headerHeight;
+                    } else {
+                        tableContainer.scrollTop = rowTop - containerHeight + rowHeight + footerHeight;
+                    }
+                }
             });
 
             // Row click handler

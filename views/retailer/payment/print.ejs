@@ -2,7 +2,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
 
 <div class="mt-4" style="float: right; margin-right: 100px;">
-    <a href="/payments-list" class="btn btn-secondary"><i class="bi bi-back"></i></a>
+    <a href="#" class="btn btn-secondary" id="backButton"><i class="bi bi-back"></i></a>
     <button class="btn btn-secondary" onclick="window.print()"><i class="bi bi-printer"></i></button>
     <a href="/payments" class="btn btn-primary"><i class="bi bi-receipt"></i></a>
 </div>
@@ -118,8 +118,8 @@
             <div class="signature-section" style="display: flex; justify-content: space-between;margin-top:5px;">
                 <div class="signature">
                     <p style="margin-bottom: 0;"><strong>
-                        <%= payment.user ? payment.user.name : 'N/A' %>
-                    </strong></p>
+                            <%= payment.user ? payment.user.name : 'N/A' %>
+                        </strong></p>
                     <p style="text-decoration: overline; margin-top: 5px;">Prepared By:</p>
                 </div>
                 <div class="signature">
@@ -235,4 +235,11 @@
         digit.textContent = panVatNo[i];
         container.appendChild(digit);
     }
+</script>
+
+<script>
+    document.getElementById('backButton').addEventListener('click', function () {
+        // Navigate back twice to skip the success message page
+        window.history.go(-1);
+    });
 </script>

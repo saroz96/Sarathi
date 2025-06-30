@@ -29,6 +29,9 @@ const itemsCompany = require('../../models/retailer/itemsCompany');
 const Composition = require('../../models/retailer/Composition');
 const MainUnit = require('../../models/retailer/MainUnit');
 
+// const checkMenuAccess = require('../../middleware/menuAccess');
+
+// router.use(checkMenuAccess('sales'))
 
 // Fetch all sales bills
 router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
@@ -37,7 +40,11 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
 
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
 
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -70,7 +77,35 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const bills = await SalesBill.find({ company: companyId, fiscalYear: fiscalYear })
+        if (!fromDate || !toDate) {
+            return res.render('retailer/sales-bills/allbills', {
+                company,
+                currentFiscalYear,
+                bills: '',
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+        const bills = await SalesBill.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account')
             .populate('items.item')
@@ -81,6 +116,9 @@ router.get('/bills-list', isLoggedIn, ensureAuthenticated, ensureCompanySelected
             bills,
             currentCompany,
             currentCompanyName,
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
             title: '',
             body: '',
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
@@ -821,6 +859,12 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
             for (const item of Object.values(groupedItems)) {
                 const product = await Item.findById(item.item).session(session);
 
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Reduce stock using FIFO and get the batches used
                 const batchesUsed = await reduceStock(product, item.quantity);
 
@@ -829,7 +873,11 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    netPrice: netPrice,
                     puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -845,9 +893,24 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
+                    unit: item.unit,
+                    WSUnit: item.WSUnit,
+                    price: item.price,
+                    puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
+                    netPrice: netPrice,
+                    quantity: item.quantity,
                     account: accountId,
                     billNumber: newBillNumber,
                     isType: 'Sale',
@@ -1347,41 +1410,6 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
             if (accountTransaction) {
                 previousBalance = accountTransaction.balance;
             }
-
-            // async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
-            //     let remainingQuantity = quantity;
-
-            //     // Find all batch entries with the specific batch number
-            //     const batchEntries = product.stockEntries.filter(entry => entry.batchNumber === batchNumber);
-
-            //     if (batchEntries.length === 0) {
-            //         throw new Error(`Batch number ${batchNumber} not found for product: ${product.name}`);
-            //     }
-
-            //     // Find the specific stock entry using uniqueUuId
-            //     const selectedBatchEntry = batchEntries.find(entry => entry.uniqueUuId === uniqueUuId);
-
-            //     if (!selectedBatchEntry) {
-            //         throw new Error(`Selected stock entry with ID ${uniqueUuId} not found for batch number ${batchNumber}`);
-            //     }
-
-            //     // Reduce stock for the selected batch entry
-            //     if (selectedBatchEntry.quantity <= remainingQuantity) {
-            //         remainingQuantity -= selectedBatchEntry.quantity;
-            //         selectedBatchEntry.quantity = 0; // All stock from this batch is used
-            //     } else {
-            //         selectedBatchEntry.quantity -= remainingQuantity;
-            //         remainingQuantity = 0; // Stock is fully reduced for this batch
-            //     }
-
-            //     if (remainingQuantity > 0) {
-            //         throw new Error(`Not enough stock in the selected stock entry for batch number ${batchNumber} of product: ${product.name}`);
-            //     }
-
-            //     // Save the product with the updated stock entries
-            //     await product.save({ session });
-            // }
-
             async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
                 let remainingQuantity = quantity;
 
@@ -1438,6 +1466,11 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                     req.flash('error', `Item with id ${item.item} not found`);
                     return res.redirect('/billsTrackBatchOpen');
                 }
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
 
                 // Reduce stock for the specific batch
                 await reduceStockBatchWise(product, item.batchNumber, item.quantity, item.uniqueUuId);
@@ -1450,8 +1483,11 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                     item: product._id,
                     quantity: item.quantity,
                     price: item.price,
+                    netPrice: netPrice,
                     puPrice: item.puPrice,
-                    unit: item.unit,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount, unit: item.unit,
                     batchNumber: item.batchNumber,
                     expiryDate: item.expiryDate,
                     vatStatus: product.vatStatus,
@@ -1468,6 +1504,12 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
@@ -1475,6 +1517,11 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                     billNumber: billNumber,
                     quantity: items.reduce((sum, item) => sum + item.quantity, 0), // Total quantity
                     price: items[0].price, // Assuming same price for all items
+                    puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
+                    netPrice: netPrice,
                     unit: items[0].unit, // Assuming same unit for all items
                     isType: 'Sale',
                     type: 'Sale',
@@ -5303,7 +5350,7 @@ function prepareStatementWithOpeningBalanceAndTotals(openingBalance, transaction
 
     const statement = paymentMode !== 'cash' ? [
         {
-            date: fromDate ? fromDate.toISOString().split('T')[0] : 'July 17, 2023',
+            date: fromDate ? fromDate.toISOString().split('T')[0] : '',
             type: '',
             billNumber: '',
             paymentMode: '',

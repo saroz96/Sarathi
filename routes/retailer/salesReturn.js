@@ -35,7 +35,11 @@ router.get('/sales-return/list', isLoggedIn, ensureAuthenticated, ensureCompanyS
         const currentCompanyName = req.session.currentCompanyName;
         const currentCompany = await Company.findById(new ObjectId(companyId));
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const companyDateFormat = currentCompany ? currentCompany.dateFormat : 'english';
 
+        // Extract dates from query parameters
+        let fromDate = req.query.fromDate ? req.query.fromDate : null;
+        let toDate = req.query.toDate ? req.query.toDate : null;
 
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -68,7 +72,35 @@ router.get('/sales-return/list', isLoggedIn, ensureAuthenticated, ensureCompanyS
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
 
-        const bills = await SalesReturn.find({ company: companyId, fiscalYear: fiscalYear })
+        if (!fromDate || !toDate) {
+            return res.render('retailer/salesReturn/list', {
+                company,
+                currentFiscalYear,
+                bills: '',
+                currentCompany,
+                currentCompanyName,
+                companyDateFormat,
+                fromDate: req.query.fromDate || '',
+                toDate: req.query.toDate || '',
+                title: '',
+                body: '',
+                user: req.user,
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        }
+
+        // Build the query based on the company's date format
+        let query = { company: companyId };
+
+        if (fromDate && toDate) {
+            query.date = { $gte: fromDate, $lte: toDate };
+        } else if (fromDate) {
+            query.date = { $gte: fromDate };
+        } else if (toDate) {
+            query.date = { $lte: toDate };
+        }
+
+        const bills = await SalesReturn.find(query)
             .sort({ date: 1 }) // Sort by date in ascending order (1 for ascending, -1 for descending)
             .populate('account')
             .populate('items.item')
@@ -80,6 +112,9 @@ router.get('/sales-return/list', isLoggedIn, ensureAuthenticated, ensureCompanyS
             bills,
             currentCompany,
             currentCompanyName,
+            companyDateFormat,
+            fromDate: req.query.fromDate || '',
+            toDate: req.query.toDate || '',
             title: '',
             body: '',
             user: req.user,
@@ -638,9 +673,19 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
             async function addStock(product, quantity, price, batchNumber, expiryDate, uniqueId) {
                 const quantityNumber = Number(quantity);
 
+                // Calculate discount values
+                const itemTotal = price * quantityNumber;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = price - (price * discount / 100);
+
                 product.stockEntries.push({
                     quantity: quantityNumber,
                     price: price,
+                    puPrice: price,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     date: nepaliDate ? nepaliDate : new Date(billDate),
@@ -661,12 +706,19 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
 
+
                 if (!product) {
                     await session.abortTransaction();
                     session.endSession();
                     req.flash('error', `Item with id ${item.item} not found`);
                     return res.redirect('/purchase-bills');
                 }
+
+                // Calculate discount values
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
 
                 await addStock(
                     product, item.quantity, item.price, item.batchNumber, item.expiryDate, uniqueId
@@ -678,7 +730,11 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                     expiryDate: item.expiryDate,
                     quantity: item.quantity,
                     price: item.price,
-                    puPrice: 0,
+                    netPrice: netPuPrice,
+                    puPrice: item.price,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     unit: item.unit,
                     vatStatus: product.vatStatus,
                     uniqueUuId: uniqueId,
@@ -690,7 +746,13 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
-                
+
+                // Calculate discount values
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 const transaction = new Transaction({
                     item: product,
                     account: accountId,
@@ -698,6 +760,9 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                     purchaseSalesReturnType: 'Sales Return',
                     quantity: items[0].quantity,
                     price: items[0].price,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     isType: 'SlRt',
                     type: 'SlRt',
                     salesReturnBillId: newBill._id,
@@ -725,7 +790,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                         session.endSession();
                         return res.status(400).json({ error: 'Party account not found.' });
                     }
-                    const salesTransaction = new Transaction({
+                    const salesRtnTransaction = new Transaction({
                         account: salesRtnAccount._id,
                         billNumber: billNumber,
                         type: 'SlRt',
@@ -740,7 +805,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                         user: userId,
                         fiscalYear: currentFiscalYear
                     });
-                    await salesTransaction.save({ session });
+                    await salesRtnTransaction.save({ session });
                 }
             }
 
@@ -784,7 +849,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                         session.endSession();
                         return res.status(400).json({ error: 'Party account not found.' });
                     }
-                    
+
                     const roundOffTransaction = new Transaction({
                         account: roundOffAccount._id,
                         billNumber: billNumber,
@@ -1159,7 +1224,7 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
-                
+
                 const transaction = new Transaction({
                     item: product,
                     cashAccount: cashAccount,
@@ -1910,14 +1975,20 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
 
                 // Sales Return transaction (debit Sales account)
                 if (salesReturnAmount > 0) {
-                    const salesAccount = await Account.findOne({ name: 'Sales', company: companyId }).session(session);
-                    if (salesAccount) {
+                    const salesRtnAccount = await Account.findOne({ name: 'Sales', company: companyId }).session(session);
+                    if (salesRtnAccount) {
+                        const partyAccount = await Account.findById(accountId).session(session);
+                        if (!partyAccount) {
+                            await session.abortTransaction();
+                            session.endSession();
+                            return res.status(400).json({ error: 'Party account not found.' });
+                        }
                         const salesTransaction = new Transaction({
-                            account: salesAccount._id,
+                            account: salesRtnAccount._id,
                             billNumber: existingBill.billNumber,
                             type: 'SlRt',
                             salesReturnBillId: existingBill._id,
-                            purchaseSalesType: 'Sales Return',
+                            purchaseSalesType: partyAccount.name,
                             debit: salesReturnAmount,
                             credit: 0,
                             paymentMode: paymentMode,
@@ -1935,13 +2006,19 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                 if (vatAmount > 0) {
                     const vatAccount = await Account.findOne({ name: 'VAT', company: companyId }).session(session);
                     if (vatAccount) {
+                        const partyAccount = await Account.findById(accountId).session(session); // Find the party account (from where the purchase is made)
+                        if (!partyAccount) {
+                            await session.abortTransaction();
+                            session.endSession();
+                            return res.status(400).json({ error: 'Party account not found.' });
+                        }
                         const vatTransaction = new Transaction({
                             account: vatAccount._id,
                             billNumber: existingBill.billNumber,
                             isType: 'VAT',
                             type: 'SlRt',
                             salesReturnBillId: existingBill._id,
-                            purchaseSalesType: 'Sales Return',
+                            purchaseSalesType: partyAccount.name,
                             debit: vatAmount,
                             credit: 0,
                             paymentMode: paymentMode,
@@ -2015,12 +2092,18 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                 if (paymentMode === 'cash') {
                     const cashAccount = await Account.findOne({ name: 'Cash in Hand', company: companyId }).session(session);
                     if (cashAccount) {
+                        const partyAccount = await Account.findById(accountId).session(session); // Find the party account (from where the purchase is made)
+                        if (!partyAccount) {
+                            await session.abortTransaction();
+                            session.endSession();
+                            return res.status(400).json({ error: 'Party account not found.' });
+                        }
                         const cashTransaction = new Transaction({
                             account: cashAccount._id,
                             billNumber: existingBill.billNumber,
                             type: 'SlRt',
                             salesReturnBillId: existingBill._id,
-                            purchaseSalesType: 'Sales Return',
+                            purchaseSalesType: partyAccount.name,
                             debit: finalAmount,
                             credit: 0,
                             paymentMode: paymentMode,
@@ -2461,10 +2544,10 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
 
                 // Sales Return transaction (debit Sales account)
                 if (salesReturnAmount > 0) {
-                    const salesAccount = await Account.findOne({ name: 'Sales', company: companyId }).session(session);
-                    if (salesAccount) {
-                        const salesTransaction = new Transaction({
-                            account: salesAccount._id,
+                    const salesRtnAccount = await Account.findOne({ name: 'Sales', company: companyId }).session(session);
+                    if (salesRtnAccount) {
+                        const salesRtnTransaction = new Transaction({
+                            account: salesRtnAccount._id,
                             billNumber: existingBill.billNumber,
                             type: 'SlRt',
                             salesReturnBillId: existingBill._id,
@@ -2478,7 +2561,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                             user: userId,
                             fiscalYear: currentFiscalYear
                         });
-                        await salesTransaction.save({ session });
+                        await salesRtnTransaction.save({ session });
                     }
                 }
 
@@ -2506,38 +2589,10 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                     }
                 }
 
-                // // Round-off transaction
-                // if (roundOffAmount > 0) {
-                //     const roundOffAccount = await Account.findOne({ name: 'Rounded Off', company: companyId }).session(session);
-                //     if (roundOffAccount) {
-                //         const roundOffTransaction = new Transaction({
-                //             account: roundOffAccount._id,
-                //             billNumber: existingBill.billNumber,
-                //             isType: 'RoundOff',
-                //             type: 'SlRt',
-                //             salesReturnBillId: existingBill._id,
-                //             purchaseSalesType: 'Sales Return',
-                //             debit: roundOffAmount > 0 ? 0 : Math.abs(roundOffAmount),
-                //             credit: roundOffAmount > 0 ? roundOffAmount : 0,
-                //             paymentMode: paymentMode,
-                //             balance: 0,
-                //             date: nepaliDate ? nepaliDate : new Date(billDate),
-                //             company: companyId,
-                //             user: userId,
-                //             fiscalYear: currentFiscalYear
-                //         });
-                //         await roundOffTransaction.save({ session });
-                //     }
-                // }
-
                 // Create a transaction for the round-off amount
                 if (roundOffAmount > 0) {
                     const roundOffAccount = await Account.findOne({ name: 'Rounded Off', company: companyId });
                     if (roundOffAccount) {
-                        // const partyAccount = await Account.findById(accountId); // Find the party account (from where the purchase is made)
-                        // if (!partyAccount) {
-                        //     return res.status(400).json({ error: 'Party account not found.' });
-                        // }
                         const roundOffTransaction = new Transaction({
                             account: roundOffAccount._id,
                             billNumber: existingBill.billNumber,
