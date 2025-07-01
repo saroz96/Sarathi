@@ -21,20 +21,47 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchCompositionInput');
     const searchRelatedItemsInput = document.getElementById('searchRelatedItemsInput');
 
-    // Function to open composition modal with F6 key
+    // // Function to open composition modal with F6 key
+    // document.addEventListener('keydown', function (event) {
+    //     if (event.key === 'F6') {
+    //         event.preventDefault();
+    //         fetch('/api/compositions')
+    //             .then(response => response.json())
+    //             .then(data => {
+    //                 allCompositions = data;
+    //                 compositions = data;
+    //                 displayCompositions(compositions);
+    //                 $('#compositionModal').modal('show');
+    //             })
+    //             .catch(error => console.error('Error fetching composition details:', error));
+    //     }
+    // });
+
+
+    function openCompositionModal() {
+        fetch('/api/compositions')
+            .then(response => response.json())
+            .then(data => {
+                allCompositions = data;
+                compositions = data;
+                displayCompositions(compositions);
+                $('#compositionModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching composition details:', error));
+    }
+
+    // F6 key listener
     document.addEventListener('keydown', function (event) {
         if (event.key === 'F6') {
             event.preventDefault();
-            fetch('/api/compositions')
-                .then(response => response.json())
-                .then(data => {
-                    allCompositions = data;
-                    compositions = data;
-                    displayCompositions(compositions);
-                    $('#compositionModal').modal('show');
-                })
-                .catch(error => console.error('Error fetching composition details:', error));
+            openCompositionModal();
         }
+    });
+
+    // Click listener for composition button
+    document.getElementById('compositionButton').addEventListener('click', function (event) {
+        event.preventDefault();
+        openCompositionModal();
     });
 
     // Search functionality for compositions

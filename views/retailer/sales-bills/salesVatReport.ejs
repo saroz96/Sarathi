@@ -10,6 +10,28 @@
             padding: 0 15px;
         }
 
+        .highlight-row {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+        .highlight-row td {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+
+        #billsList thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f2f2f2;
+            z-index: 1;
+        }
+
+        .only-print {
+            display: none;
+        }
+
         @media print {
             @page {
                 size: A4 landscape;
@@ -18,6 +40,10 @@
 
             .no-print {
                 display: none !important;
+            }
+
+            .only-print {
+                display: block !important;
             }
 
             body {
@@ -187,36 +213,49 @@
                         view data
                     </div>
                     <% } else { %>
-                        <div class="report-container">
-                            <div class="text-center mb-4">
-                                <h2>
+                        <div class="report-container" style="width: 100%;">
+                            <div class="only-print">
+                                <h1>
                                     <%= currentCompanyName %>
-                                </h2>
-                                <p class="mb-1">
+                                </h1>
+                                <span>
                                     <%= currentCompany.address %>-<%= currentCompany.ward %>, <%= currentCompany.city %>
                                                 , <%= currentCompany.country %>
-                                </p>
-                                <p class="mb-0"><strong>PAN:</strong>
-                                    <%= currentCompany.pan %>
-                                </p>
+                                </span>
+                                <p><strong>Sales Book</strong></p>
                             </div>
 
-                            <div class="d-flex justify-content-between mb-3">
+                            <div class="d-flex justify-content-between align-items-center print-row">
                                 <div>
                                     <span class="badge bg-light text-dark">
                                         <i class="fas fa-calendar-alt me-2"></i>
-                                        <%= fromDate %> to <%= toDate %>
+                                        <strong>Period of Sale:</strong>
+                                        <% const date=new Date(fromDate); const month=date.getMonth(); // 0-based index
+                                            const englishMonths=["January", "February" , "March" , "April" , "May"
+                                            , "June" , "July" , "August" , "September" , "October" , "November"
+                                            , "December" ]; const nepaliMonths=["Baishakh", "Jestha" , "Ashadh"
+                                            , "Shrawan" , "Bhadra" , "Ashwin" , "Kartik" , "Mangsir" , "Poush" , "Magh"
+                                            , "Falgun" , "Chaitra" ]; const displayMonth=companyDateFormat==="nepali" ?
+                                            nepaliMonths[month] : englishMonths[month]; %>
+                                            <%= displayMonth %>
                                     </span>
+                                    <br>
+                                    <strong>From:
+                                        <%= fromDate %>to:
+                                            <%= toDate %>
+                                    </strong>
                                 </div>
-                                <div>
-                                    <span class="badge bg-primary">
-                                        <i class="fas fa-file-invoice me-2"></i>
-                                        Sales VAT Report
-                                    </span>
+                                <div class="only-print">
+                                    <p class="mb-0">
+                                        <strong>Year: </strong>
+                                        <%= fromDate.split('-')[0] %> | <strong>PAN:</strong>
+                                            <%= currentCompany.pan %>
+                                    </p>
+
                                 </div>
                             </div>
 
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                                 <table class="table table-bordered table-hover" id="billsList">
                                     <thead class="table-light">
                                         <tr>
@@ -266,7 +305,8 @@
                                                 <% }) %>
                                                     <% } else { %>
                                                         <tr>
-                                                            <td colspan="9">No transactions found for the selected date
+                                                            <td colspan="9">No transactions found for the selected
+                                                                date
                                                                 range.</td>
                                                         </tr>
                                                         <% } %>
@@ -274,10 +314,14 @@
                                     <tfoot>
                                         <tr class="totals-row">
                                             <td colspan="4"><strong>Total:</strong></td>
-                                            <td class="numeric-cell"><strong id="totalSalesAmount">0.00</strong></td>
-                                            <td class="numeric-cell"><strong id="totalDiscountAmount">0.00</strong></td>
-                                            <td class="numeric-cell"><strong id="totalNonVatSales">0.00</strong></td>
-                                            <td class="numeric-cell"><strong id="totalTaxableAmount">0.00</strong></td>
+                                            <td class="numeric-cell"><strong id="totalSalesAmount">0.00</strong>
+                                            </td>
+                                            <td class="numeric-cell"><strong id="totalDiscountAmount">0.00</strong>
+                                            </td>
+                                            <td class="numeric-cell"><strong id="totalNonVatSales">0.00</strong>
+                                            </td>
+                                            <td class="numeric-cell"><strong id="totalTaxableAmount">0.00</strong>
+                                            </td>
                                             <td class="numeric-cell"><strong id="totalVatAmount">0.00</strong></td>
                                         </tr>
                                     </tfoot>
@@ -432,10 +476,55 @@
         document.addEventListener('DOMContentLoaded', function () {
             updateTotals();
 
-            // Initialize date pickers if needed
-            // Example: flatpickr(".datepicker", {dateFormat: "Y-m-d"});
+            setTimeout(() => {
+                setupRowNavigation();
+            }, 100); // slight delay to ensure rows render
         });
 
+        function setupRowNavigation() {
+            let selectedRowIndex = 0;
+            const tableRows = Array.from(document.querySelectorAll('#billsList tbody tr'));
+
+            if (!tableRows.length) return;
+
+            // Initial highlight
+            highlightRow(selectedRowIndex);
+
+            function highlightRow(index) {
+                tableRows.forEach(row => row.classList.remove('highlight-row'));
+
+                if (index < 0) index = 0;
+                if (index >= tableRows.length) index = tableRows.length - 1;
+
+                tableRows[index].classList.add('highlight-row');
+                selectedRowIndex = index;
+
+                // Scroll into view
+                tableRows[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            tableRows.forEach((row, index) => {
+                row.addEventListener('click', () => {
+                    highlightRow(index);
+                });
+            });
+
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (selectedRowIndex < tableRows.length - 1) {
+                        highlightRow(selectedRowIndex + 1);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (selectedRowIndex > 0) {
+                        highlightRow(selectedRowIndex - 1);
+                    }
+                }
+            });
+
+        }
 
         function showToast(message, type = 'info') {
             // Implement your toast notification system here
@@ -465,85 +554,6 @@
     </script>
 
     <script>
-        //     function printReport() {
-        //         // Create a new window for printing
-        //         const printWindow = window.open('', '_blank');
-
-        //         // Get the report content
-        //         const reportContent = document.querySelector('.report-container').innerHTML;
-
-        //         // Add the company name to the print window title
-        //         const companyName = '<%= currentCompanyName %>';
-
-        //         // Create the HTML for the print window
-        //         printWindow.document.write(`
-        //     <html>
-        //         <head>
-        //             <title>Sales VAT Report - ${companyName}</title>
-        //             <style>
-        //                 body {
-        //                     font-family: Arial, sans-serif;
-        //                     font-size: 12pt;
-        //                     margin: 0;
-        //                     padding: 0;
-        //                 }
-        //                 .container {
-        //                     width: 100%;
-        //                     margin: 0;
-        //                 }
-        //                 table {
-        //                     width: 100%;
-        //                     border-collapse: collapse;
-        //                     margin-top: 10px;
-        //                 }
-        //                 th, td {
-        //                     border: 1px solid #000;
-        //                     padding: 8px;
-        //                     text-align: left;
-        //                 }
-        //                 th {
-        //                     background-color: #f2f2f2;
-        //                 }
-        //                 .totals-row {
-        //                     font-weight: bold;
-        //                 }
-        //                 .report-header {
-        //                     text-align: center;
-        //                     margin-bottom: 15px;
-        //                 }
-        //                 .report-dates {
-        //                     display: flex;
-        //                     justify-content: space-between;
-        //                     margin-bottom: 10px;
-        //                 }
-        //                 .print-actions {
-        //                     margin-top: 20px;
-        //                     text-align: center;
-        //                 }
-        //                 .print-actions button {
-        //                     padding: 8px 16px;
-        //                     margin: 0 5px;
-        //                     cursor: pointer;
-        //                 }
-        //             </style>
-        //         </head>
-        //         <body>
-        //             ${reportContent}
-
-        //             <script>
-        //                 // Automatically trigger print when window loads
-        //                 window.onload = function() {
-        //                     setTimeout(function() {
-        //                         window.print();
-        //                     }, 200);
-        //                 };
-        //             <\/script>
-        //         </body>
-        //     </html>
-        // `);
-
-        //         printWindow.document.close();
-        //     }
 
         function printReport() {
             // Create a new window for printing
@@ -597,6 +607,25 @@
                             justify-content: space-between;
                             margin-bottom: 5px;
                             font-size: 9pt;
+                        }
+                        .only-print {
+                            display: block !important;
+                            text-align: center;
+                            margin: 0 auto;
+                        }
+                       .print-row {
+                            display: flex !important;
+                            justify-content: space-between;
+                            align-items: center;
+                             width: 100%;
+                        }
+
+                        .print-row > div {
+                            flex: 1;
+                        }
+
+                        .print-row .only-print {
+                            text-align: right;
                         }
                     </style>
             </head>

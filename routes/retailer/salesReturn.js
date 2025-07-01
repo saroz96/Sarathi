@@ -3420,8 +3420,8 @@ router.get('/salesReturn-vat-report', isLoggedIn, ensureAuthenticated, ensureCom
             return {
                 billNumber: bill.billNumber,
                 date: bill.date,
-                account: account.name,
-                panNumber: account.pan,
+                accountName: account ? account.name : 'N/A',
+                panNumber: account ? account.pan : 'N/A',
                 totalAmount: bill.totalAmount,
                 discountAmount: bill.discountAmount,
                 nonVatSales: bill.nonVatSalesReturn,
