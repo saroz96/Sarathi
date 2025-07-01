@@ -760,6 +760,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
                     purchaseSalesReturnType: 'Sales Return',
                     quantity: items[0].quantity,
                     price: items[0].price,
+                    netPrice: netPuPrice,
                     discountPercentagePerItem: discountPercentagePerItem,
                     discountAmountPerItem: discountAmountPerItem,
                     netPuPrice: netPuPrice,
@@ -1173,9 +1174,19 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
             async function addStock(product, quantity, price, batchNumber, expiryDate, uniqueId) {
                 const quantityNumber = Number(quantity);
 
+                // Calculate discount values
+                const itemTotal = price * quantityNumber;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = price - (price * discount / 100);
+
                 product.stockEntries.push({
                     quantity: quantityNumber,
                     price: price,
+                    puPrice: price,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     date: nepaliDate ? nepaliDate : new Date(billDate),
@@ -1203,6 +1214,12 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                     return res.redirect('/purchase-bills');
                 }
 
+                // Calculate discount values
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 await addStock(
                     product, item.quantity, item.price, item.batchNumber, item.expiryDate, uniqueId
                 );
@@ -1213,6 +1230,11 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
                     expiryDate: item.expiryDate,
                     quantity: item.quantity,
                     price: item.price,
+                    netPrice: netPuPrice,
+                    puPrice: item.price,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     unit: item.unit,
                     vatStatus: product.vatStatus,
                     uniqueUuId: uniqueId,
@@ -1224,14 +1246,24 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+                // Calculate discount values
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
 
                 const transaction = new Transaction({
                     item: product,
+
                     cashAccount: cashAccount,
                     billNumber: billNumber,
                     purchaseSalesReturnType: 'Sales Return',
                     quantity: items[0].quantity,
                     price: items[0].price,
+                    netPrice: netPuPrice,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     isType: 'SlRt',
                     type: 'SlRt',
                     salesReturnBillId: newBill._id,
@@ -1824,6 +1856,11 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
             async function addStock(product, batchNumber, expiryDate, quantity, price, uniqueUuId, isUpdate = false) {
                 const quantityNumber = Number(quantity) || 0;
                 const priceNumber = Number(price) || 0;
+                // Calculate discount values
+                const itemTotal = priceNumber * quantityNumber;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = priceNumber - (priceNumber * discount / 100);
 
                 const stockEntry = {
                     date: nepaliDate ? nepaliDate : new Date(billDate),
@@ -1831,6 +1868,10 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     price: priceNumber,
+                    puPrice: priceNumber,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     uniqueUuId: uniqueUuId,
                     salesReturnBillId: existingBill._id,
                     fiscalYear: currentFiscalYear,
@@ -1856,6 +1897,10 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                             salesReturnBillId: existingBill._id,
                             uniqueUuId: updatedUniqueUuId,
                             fiscalYear: currentFiscalYear,
+                            puPrice: price,
+                            discountPercentagePerItem: discountPercentagePerItem,
+                            discountAmountPerItem: discountAmountPerItem,
+                            netPuPrice: netPuPrice,
                         };
                     } else {
                         product.stockEntries.push(stockEntry);
@@ -1879,6 +1924,13 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                     return res.redirect('/purchase-bills');
                 }
 
+                // Calculate discount values
+                const itemTotal = item.price * item.quantity;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = item.price - (item.price * discount / 100);
+
+
                 const existingBillItemIndex = billItems.findIndex(billItem =>
                     billItem.item && billItem.item.toString() === item.item
                 );
@@ -1895,7 +1947,12 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                         price: item.price !== undefined && item.price !== "" ? item.price : existingBillItem.price, // Retain existing price if not provided
                         uniqueUuId: item.uniqueUuId !== undefined && item.uniqueUuId !== "" ? item.uniqueUuId : existingBillItem.uniqueUuId,
                         unit: item.unit,
-                        vatStatus: product.vatStatus
+                        vatStatus: product.vatStatus,
+                        puPrice: item.price,
+                        netPrice: netPuPrice,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice,
                     };
                 } else {
                     // Add new item to the bill
@@ -1911,6 +1968,10 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                         vatStatus: product.vatStatus,
                         uniqueUuId: newUniqueId,
                         fiscalYear: currentFiscalYear,
+                        puPrice: item.price,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice,
                     });
                     // Use the same uniqueUuId for the stock entry
                     item.uniqueUuId = newUniqueId;
@@ -1930,6 +1991,10 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                     existingTransaction.credit = finalAmount;
                     existingTransaction.paymentMode = paymentMode;
                     existingTransaction.date = nepaliDate ? nepaliDate : new Date(billDate);
+                    existingTransaction.puPrice = item.puPrice;
+                    existingTransaction.discountPercentagePerItem = discountPercentagePerItem;
+                    existingTransaction.discountAmountPerItem = discountAmountPerItem;
+                    existingTransaction.netPuPrice = netPuPrice;
 
                     await existingTransaction.save({ session });
                 } else {
@@ -1940,6 +2005,11 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                         // Now create a single transaction for the entire bill
                         const transaction = new Transaction({
                             item: product,
+                            price: item.price,
+                            puPrice: item.price,
+                            discountPercentagePerItem: discountPercentagePerItem,
+                            discountAmountPerItem: discountAmountPerItem,
+                            netPuPrice: netPuPrice,
                             account: accountId,
                             billNumber: existingBill.billNumber,
                             isType: 'SlRt',
@@ -2394,12 +2464,22 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                 const quantityNumber = Number(quantity) || 0;
                 const priceNumber = Number(price) || 0;
 
+                // Calculate discount values
+                const itemTotal = priceNumber * quantityNumber;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = priceNumber - (priceNumber * discount / 100);
+
                 const stockEntry = {
                     date: nepaliDate ? nepaliDate : new Date(billDate),
                     quantity: quantityNumber,
                     batchNumber: batchNumber,
                     expiryDate: expiryDate,
                     price: priceNumber,
+                    puPrice: priceNumber,
+                    discountPercentagePerItem: discountPercentagePerItem,
+                    discountAmountPerItem: discountAmountPerItem,
+                    netPuPrice: netPuPrice,
                     uniqueUuId: uniqueUuId,
                     salesReturnBillId: existingBill._id,
                     fiscalYear: currentFiscalYear,
@@ -2425,6 +2505,10 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                             salesReturnBillId: existingBill._id,
                             uniqueUuId: updatedUniqueUuId,
                             fiscalYear: currentFiscalYear,
+                            puPrice: price,
+                            discountPercentagePerItem: discountPercentagePerItem,
+                            discountAmountPerItem: discountAmountPerItem,
+                            netPuPrice: netPuPrice,
                         };
                     } else {
                         product.stockEntries.push(stockEntry);
@@ -2448,6 +2532,12 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                     return res.redirect('/purchase-bills');
                 }
 
+                // Calculate discount values
+                const itemTotal = item.price * item.quantity;
+                const discountPercentagePerItem = discount; // Using the bill-level discount
+                const discountAmountPerItem = (itemTotal * discount) / 100;
+                const netPuPrice = item.price - (item.price * discount / 100);
+
                 const existingBillItemIndex = billItems.findIndex(billItem =>
                     billItem.item && billItem.item.toString() === item.item
                 );
@@ -2464,7 +2554,12 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                         price: item.price !== undefined && item.price !== "" ? item.price : existingBillItem.price, // Retain existing price if not provided
                         uniqueUuId: item.uniqueUuId !== undefined && item.uniqueUuId !== "" ? item.uniqueUuId : existingBillItem.uniqueUuId,
                         unit: item.unit,
-                        vatStatus: product.vatStatus
+                        vatStatus: product.vatStatus,
+                        puPrice: item.price,
+                        netPrice: netPuPrice,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice,
                     };
                 } else {
                     // Add new item to the bill
@@ -2480,6 +2575,10 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                         vatStatus: product.vatStatus,
                         uniqueUuId: newUniqueId,
                         fiscalYear: currentFiscalYear,
+                        puPrice: item.price,
+                        discountPercentagePerItem: discountPercentagePerItem,
+                        discountAmountPerItem: discountAmountPerItem,
+                        netPuPrice: netPuPrice,
                     });
                     // Use the same uniqueUuId for the stock entry
                     item.uniqueUuId = newUniqueId;
@@ -2499,6 +2598,10 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                     existingTransaction.credit = finalAmount;
                     existingTransaction.paymentMode = paymentMode;
                     existingTransaction.date = nepaliDate ? nepaliDate : new Date(billDate);
+                    existingTransaction.puPrice = item.puPrice;
+                    existingTransaction.discountPercentagePerItem = discountPercentagePerItem;
+                    existingTransaction.discountAmountPerItem = discountAmountPerItem;
+                    existingTransaction.netPuPrice = netPuPrice;
 
                     await existingTransaction.save({ session });
                 } else {
@@ -2509,6 +2612,11 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                         // Now create a single transaction for the entire bill
                         const transaction = new Transaction({
                             item: product,
+                            price: item.price,
+                            puPrice: item.price,
+                            discountPercentagePerItem: discountPercentagePerItem,
+                            discountAmountPerItem: discountAmountPerItem,
+                            netPuPrice: netPuPrice,
                             cashAccount: cashAccount,
                             billNumber: existingBill.billNumber,
                             isType: 'SlRt',

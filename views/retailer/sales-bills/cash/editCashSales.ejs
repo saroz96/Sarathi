@@ -203,6 +203,8 @@
                                                 value="<%= item.vatStatus %>">
                                             <input type="number" name="items[<%= index %>][puPrice]"
                                                 value="<%= item.puPrice || 0 %>">
+                                                <input type="number" name="items[<%= index %>][netPuPrice]"
+                                                value="<%= item.netPuPrice || 0 %>">
                                         </td>
                                         <td>
                                             <button type="button" class="btn btn-danger" onclick="removeItem(this)">

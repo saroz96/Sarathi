@@ -752,7 +752,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
 
             // Check if round off is enabled in settings
             let roundOffForSales = await Settings.findOne({
-                companyId, userId, fiscalYear: currentFiscalYear
+                company: companyId, userId, fiscalYear: currentFiscalYear
             }).session(session);
 
             // Handle case where settings is null
@@ -1362,7 +1362,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
 
             // Check if round off is enabled in settings
             let roundOffForSales = await Settings.findOne({
-                companyId, userId, fiscalYear: currentFiscalYear
+                company: companyId, userId, fiscalYear: currentFiscalYear
             }).session(session);
 
             // Handle case where settings is null
@@ -1966,7 +1966,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
 
             // Check if round off is enabled in settings
             let roundOffForSales = await Settings.findOne({
-                companyId, userId, fiscalYear: currentFiscalYear
+                company: companyId, userId, fiscalYear: currentFiscalYear
             }).session(session);
 
             // Handle case where settings is null
@@ -2076,6 +2076,13 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
             for (const item of Object.values(groupedItems)) {
                 const product = await Item.findById(item.item).session(session);
 
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
+
                 // Reduce stock using FIFO and get the batches used
                 const batchesUsed = await reduceStock(product, item.quantity);
 
@@ -2084,7 +2091,11 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    netPrice: netPrice,
                     puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -2100,9 +2111,25 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
+                    unit: item.unit,
+                    WSUnit: item.WSUnit,
+                    price: item.price,
+                    puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
+                    netPrice: netPrice,
+                    quantity: item.quantity,
                     cashAccount: cashAccount,
                     billNumber: newBillNumber,
                     isType: 'Sale',
@@ -2534,7 +2561,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
 
             // Check if round off is enabled in settings
             let roundOffForSales = await Settings.findOne({
-                companyId, userId, fiscalYear: currentFiscalYear
+                company: companyId, userId, fiscalYear: currentFiscalYear
             }).session(session);
 
             // Handle case where settings is null
@@ -2586,40 +2613,6 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
             if (accountTransaction) {
                 previousBalance = accountTransaction.balance;
             }
-
-            // async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
-            //     let remainingQuantity = quantity;
-
-            //     // Find all batch entries with the specific batch number
-            //     const batchEntries = product.stockEntries.filter(entry => entry.batchNumber === batchNumber);
-
-            //     if (batchEntries.length === 0) {
-            //         throw new Error(`Batch number ${batchNumber} not found for product: ${product.name}`);
-            //     }
-
-            //     // Find the specific stock entry using uniqueUuId
-            //     const selectedBatchEntry = batchEntries.find(entry => entry.uniqueUuId === uniqueUuId);
-
-            //     if (!selectedBatchEntry) {
-            //         throw new Error(`Selected stock entry with ID ${uniqueUuId} not found for batch number ${batchNumber}`);
-            //     }
-
-            //     // Reduce stock for the selected batch entry
-            //     if (selectedBatchEntry.quantity <= remainingQuantity) {
-            //         remainingQuantity -= selectedBatchEntry.quantity;
-            //         selectedBatchEntry.quantity = 0; // All stock from this batch is used
-            //     } else {
-            //         selectedBatchEntry.quantity -= remainingQuantity;
-            //         remainingQuantity = 0; // Stock is fully reduced for this batch
-            //     }
-
-            //     if (remainingQuantity > 0) {
-            //         throw new Error(`Not enough stock in the selected stock entry for batch number ${batchNumber} of product: ${product.name}`);
-            //     }
-
-            //     // Save the product with the updated stock entries
-            //     await product.save({ session });
-            // }
 
             async function reduceStockBatchWise(product, batchNumber, quantity, uniqueUuId) {
                 let remainingQuantity = quantity;
@@ -2678,6 +2671,12 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                     return res.redirect('/billsTrackBatchOpen');
                 }
 
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Reduce stock for the specific batch
                 await reduceStockBatchWise(product, item.batchNumber, item.quantity, item.uniqueUuId);
 
@@ -2689,7 +2688,11 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                     item: product._id,
                     quantity: item.quantity,
                     price: item.price,
+                    netPrice: netPrice,
                     puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
                     unit: item.unit,
                     batchNumber: item.batchNumber,
                     expiryDate: item.expiryDate,
@@ -2707,6 +2710,12 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
@@ -2715,6 +2724,10 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                     quantity: items.reduce((sum, item) => sum + item.quantity, 0), // Total quantity
                     price: items[0].price, // Assuming same price for all items
                     unit: items[0].unit, // Assuming same unit for all items
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
+                    netPrice: netPrice,
                     isType: 'Sale',
                     type: 'Sale',
                     billId: newBill._id,
@@ -3270,7 +3283,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
 
             // Check if round off is enabled in settings
             let roundOffForSales = await Settings.findOne({
-                companyId, userId, fiscalYear: currentFiscalYear
+                company: companyId, userId, fiscalYear: currentFiscalYear
             }).session(session);
 
             // Handle case where settings is null
@@ -3359,6 +3372,12 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
             for (const item of Object.values(groupedItems)) {
                 const product = await Item.findById(item.item).session(session);
 
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Reduce stock using FIFO and get the batches used
                 const batchesUsed = await reduceStock(product, item.quantity);
 
@@ -3367,7 +3386,11 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    netPrice: netPrice,
                     puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -3383,9 +3406,26 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
+                    unit: item.unit,
+                    WSUnit: item.WSUnit,
+                    price: item.price,
+                    puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
+                    netPrice: netPrice,
+                    quantity: item.quantity,
                     account: accountId,
                     billNumber: existingBill.billNumber,
                     isType: 'Sale',
@@ -3742,7 +3782,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             let finalAmount = totalAmount;
             let roundOffAmount = 0;
 
-            const roundOffForSales = await Settings.findOne({ companyId, userId, fiscalYear: currentFiscalYear }).session(session) || { roundOffSales: false };
+            const roundOffForSales = await Settings.findOne({ company: companyId, userId, fiscalYear: currentFiscalYear }).session(session) || { roundOffSales: false };
 
             if (roundOffForSales.roundOffSales) {
                 finalAmount = Math.round(finalAmount.toFixed(2));
@@ -3828,6 +3868,12 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             for (const item of Object.values(groupedItems)) {
                 const product = await Item.findById(item.item).session(session);
 
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Reduce stock using FIFO and get the batches used
                 const batchesUsed = await reduceStock(product, item.quantity);
 
@@ -3836,7 +3882,11 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                     item: product._id,
                     quantity: batch.quantity,
                     price: item.price,
+                    netPrice: netPrice,
                     puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
                     unit: item.unit,
                     batchNumber: batch.batchNumber, // Use the actual batch number from stock reduction
                     expiryDate: item.expiryDate,
@@ -3852,9 +3902,25 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const product = await Item.findById(item.item).session(session);
+
+                // Calculate item's share of the discount
+                const itemTotal = parseFloat(item.price) * parseFloat(item.quantity);
+                const itemDiscountPercentage = discount; // Same percentage for all items
+                const itemDiscountAmount = (itemTotal * discount) / 100;
+                const netPrice = parseFloat(item.price) - (parseFloat(item.price) * discount / 100);
+
                 // Now create a single transaction for the entire bill
                 const transaction = new Transaction({
                     item: product,
+                    unit: item.unit,
+                    WSUnit: item.WSUnit,
+                    price: item.price,
+                    puPrice: item.puPrice,
+                    netPuPrice: item.netPuPrice,
+                    discountPercentagePerItem: itemDiscountPercentage,
+                    discountAmountPerItem: itemDiscountAmount,
+                    netPrice: netPrice,
+                    quantity: item.quantity,
                     cashAccount: cashAccount,
                     billNumber: existingBill.billNumber,
                     isType: 'Sale',

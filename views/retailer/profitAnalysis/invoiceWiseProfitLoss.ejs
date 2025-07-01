@@ -1,4 +1,3 @@
-<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -43,39 +42,50 @@
             body * {
                 visibility: hidden;
             }
-            .print-section, .print-section * {
+
+            .print-section,
+            .print-section * {
                 visibility: visible;
             }
+
             .print-section {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
             }
+
             .no-print {
                 display: none !important;
             }
+
             .table {
                 width: 100% !important;
             }
+
             .card {
                 border: none !important;
                 box-shadow: none !important;
             }
+
             .accordion-collapse {
                 display: block !important;
             }
+
             .accordion-button:not(.collapsed)::after {
                 transform: none !important;
             }
+
             .accordion-button::after {
                 display: none !important;
             }
+
             .accordion-button {
                 pointer-events: none;
                 background-color: transparent !important;
                 padding-left: 0 !important;
             }
+
             .table-row-highlight {
                 background-color: transparent !important;
             }
@@ -149,6 +159,7 @@
                             <table class="table table-hover table-striped" id="profitTable">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>S.N</th>
                                         <th>Date</th>
                                         <th>Invoice #</th>
                                         <th>Account</th>
@@ -163,6 +174,9 @@
                                 <tbody>
                                     <% results.forEach((bill, index)=> { %>
                                         <tr class="data-row" data-index="<%= index %>" tabindex="0">
+                                            <td>
+                                                <%= index + 1 %>
+                                            </td>
                                             <td>
                                                 <%= new Date(bill.date).toLocaleDateString() %>
                                             </td>
@@ -216,7 +230,7 @@
                                         </tr>
                                         <!-- Item Details Row -->
                                         <tr class="collapse" id="details-<%= bill._id %>" data-parent="#profitTable">
-                                            <td colspan="9">
+                                            <td colspan="10">
                                                 <div class="accordion">
                                                     <div class="accordion-item">
                                                         <h2 class="accordion-header">
@@ -234,6 +248,7 @@
                                                                 <table class="table table-sm">
                                                                     <thead>
                                                                         <tr>
+                                                                            <th>S.N</th>
                                                                             <th>Item</th>
                                                                             <th>Qty</th>
                                                                             <th class="text-end">Cost Price</th>
@@ -243,13 +258,16 @@
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                        <% bill.items.forEach(item=> {
+                                                                        <% bill.items.forEach((item, index)=> {
                                                                             const profitPerUnit = item.price -
                                                                             (item.puPrice || 0);
                                                                             const itemProfit = profitPerUnit *
                                                                             item.quantity;
                                                                             %>
                                                                             <tr>
+                                                                                <td>
+                                                                                    <%= index + 1 %>
+                                                                                </td>
                                                                                 <td>
                                                                                     <%= item.itemName || 'N/A' %>
                                                                                 </td>
@@ -284,7 +302,7 @@
                                 </tbody>
                                 <tfoot class="table-group-divider">
                                     <tr class="fw-bold">
-                                        <td colspan="3">Grand Total</td>
+                                        <td colspan="4">Grand Total</td>
                                         <td class="text-end">
                                             <%= results.reduce((sum, bill)=> sum + bill.totalCost, 0).toFixed(2) %>
                                         </td>

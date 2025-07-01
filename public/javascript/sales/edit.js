@@ -323,6 +323,7 @@ function addItemToBill(item, dropdownMenu) {
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
         <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
+        <input type="hidden" name="items[${itemIndex}][netPuPrice]" value="${Math.round(selectedBatch.netPuPrice * 100) / 100}">
 
     `;
 
@@ -381,6 +382,7 @@ function addItemToBill(item, dropdownMenu) {
         <input type="hidden" name="items[${itemIndex}][vatStatus]" value="${item.vatStatus}">
         <input type="hidden" name="items[${itemIndex}][uniqueUuId]" value="${selectedBatch.uniqueUuId}">
         <input type="hidden" name="items[${itemIndex}][puPrice]" value="${Math.round(selectedBatch.puPrice * 100) / 100}">
+        <input type="hidden" name="items[${itemIndex}][netPuPrice]" value="${Math.round(selectedBatch.netPuPrice * 100) / 100}">
     `;
 
                 tbody.appendChild(tr);
@@ -449,6 +451,7 @@ function showBatchModal(item, callback) {
                     <td>${Math.round(entry.marginPercentage * 100) / 100}</td>
                     <td>${Math.round(entry.mrp * 100) / 100}</td>
                     <td class="hidden">${entry.uniqueUuId}</td>
+                    <td class="hidden">${entry.netPuPrice}</td>
                 </tr>
             `;
             }
@@ -488,7 +491,8 @@ function showBatchModal(item, callback) {
                 const price = row.cells[3].textContent;
                 const uniqueUuId = row.cells[7].textContent;
                 const puPrice = row.cells[4].textContent;
-                callback({ batchNumber, expiryDate, price, uniqueUuId, puPrice });
+                const netPuPrice = row.cells[8].textContent;
+                callback({ batchNumber, expiryDate, price, uniqueUuId, puPrice, netPuPrice });
 
                 // Hide the modal after selection
                 $(modal).modal('hide');

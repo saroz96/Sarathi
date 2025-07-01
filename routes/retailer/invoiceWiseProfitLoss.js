@@ -170,7 +170,7 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         }
                     }
                 },
-                { $sort: { date: 1 } },
+                { $sort: { date: 1, billNumber: 1 } },
                 {
                     $lookup: {
                         from: "accounts",
@@ -206,7 +206,7 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         "items.netPrice": 1,
                         "items.netPuPrice": 1,
                         "items.itemName": "$items.itemDetails.name",
-                       itemProfit: {
+                        itemProfit: {
                             $multiply: [
                                 { $subtract: ["$items.netPuPrice", { $ifNull: ["$items.netPrice", 0] }] },
                                 -1,
@@ -223,8 +223,8 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         account: { $first: "$account" },
                         cashAccount: { $first: "$cashAccount" },
                         totalProfit: { $sum: "$itemProfit" },
-                        totalSales: { $sum: { $multiply: ["$items.netPrice", "$items.quantity",-1] } },
-                        totalCost: { $sum: { $multiply: ["$items.netPuPrice", "$items.quantity",-1] } },
+                        totalSales: { $sum: { $multiply: ["$items.netPrice", "$items.quantity", -1] } },
+                        totalCost: { $sum: { $multiply: ["$items.netPuPrice", "$items.quantity", -1] } },
                         items: {
                             $push: {
                                 quantity: "$items.quantity",
@@ -237,7 +237,7 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
                         isReturn: { $first: true } // Flag the entire document as return
                     }
                 },
-                { $sort: { date: 1 } },
+                { $sort: { date: 1, billNumber: 1 } },
                 {
                     $lookup: {
                         from: "accounts",
@@ -250,8 +250,19 @@ router.get('/invoice-wise-profit-loss', isLoggedIn, ensureAuthenticated, ensureC
             ]);
 
             // Combine both results and sort by date
-            const combinedResults = [...salesResults, ...salesReturnResults].sort((a, b) => new Date(a.date) - new Date(b.date));
+            // const combinedResults = [...salesResults, ...salesReturnResults].sort((a, b) => new Date(a.date) - new Date(b.date));
+            // Replace the current combinedResults sort with:
+            const combinedResults = [...salesResults, ...salesReturnResults].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
 
+                // First compare dates
+                if (dateA < dateB) return -1;
+                if (dateA > dateB) return 1;
+
+                // If dates are equal, compare bill numbers
+                return a.billNumber.localeCompare(b.billNumber, undefined, { numeric: true });
+            });
             res.render('retailer/profitAnalysis/invoiceWiseProfitLoss', {
                 results: combinedResults,
                 fromDate: fromDate || '',
