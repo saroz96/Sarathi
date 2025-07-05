@@ -452,7 +452,6 @@ router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelecte
             .populate('unit', 'name')
             .populate('originalFiscalYear')
             .sort({ name: 1 })
-            .limit(200); // Limit results for performance
 
         // Format items with calculated stock and price from stockEntries
         const formattedItems = await Promise.all(items.map(async (item) => {

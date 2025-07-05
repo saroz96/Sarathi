@@ -302,7 +302,7 @@ router.post('/admin/create-user/new', ensureAdminOrSupervisor, async (req, res) 
         }
 
         // Check if the role is valid
-        if (!['Admin', 'Sales', 'Purchase', 'Supervisor'].includes(role)) {
+        if (!['Admin', 'Sales', 'Purchase', 'Supervisor', 'User'].includes(role)) {
             req.flash('error', 'Invalid role');
             return res.redirect('/admin/create-user/new');
         }

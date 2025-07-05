@@ -75,22 +75,22 @@ const userSchema = new mongoose.Schema({
             ['purchaseRtnModify', false],
             ['purchaseRtnRegister', false],
             //Account Department
-            ['accountDepartment', false]
-            ['payment', false]
-            ['paymentModify', false]
-            ['paymentRegister', false]
-            ['receipt', false]
-            ['receiptModify', false]
-            ['receiptRegister', false]
-            ['journal', false]
-            ['journalModify', false]
-            ['journalRegister', false]
-            ['debitNote', false]
-            ['debitNoteModify', false]
-            ['debitNoteRegister', false]
-            ['creditNote', false]
-            ['creditNoteModify', false]
-            ['creditNoteRegister', false]
+            ['accountDepartment', false],
+            ['payment', false],
+            ['paymentModify', false],
+            ['paymentRegister', false],
+            ['receipt', false],
+            ['receiptModify', false],
+            ['receiptRegister', false],
+            ['journal', false],
+            ['journalModify', false],
+            ['journalRegister', false],
+            ['debitNote', false],
+            ['debitNoteModify', false],
+            ['debitNoteRegister', false],
+            ['creditNote', false],
+            ['creditNoteModify', false],
+            ['creditNoteRegister', false],
             //Inventory
             ['inventoryHeader', false],
             ['itemLedger', false],
@@ -106,26 +106,26 @@ const userSchema = new mongoose.Schema({
             ['outstandingHeader', false],
             ['ageingSubHeader', false],
             ['ageingFIFO', false],
-            ['ageingDayWise', false]
-            ['ageingAllParty', false]
-            ['statements', false]
-            ['reportsSubHeader', false]
-            ['dailyProfitSaleAnalysis', false]
-            ['invoiceWiseProfitLoss', false]
+            ['ageingDayWise', false],
+            ['ageingAllParty', false],
+            ['statements', false],
+            ['reportsSubHeader', false],
+            ['dailyProfitSaleAnalysis', false],
+            ['invoiceWiseProfitLoss', false],
             //Vat Summary
-            ['vatSummaryHeader', false]
-            ['salesVatRegister', false]
-            ['salesRtnVatRegister', false]
-            ['purchaseVatRegister', false]
-            ['purchaseRtnVatRegister', false]
-            ['monthlyVatSummary', false]
+            ['vatSummaryHeader', false],
+            ['salesVatRegister', false],
+            ['salesRtnVatRegister', false],
+            ['purchaseVatRegister', false],
+            ['purchaseRtnVatRegister', false],
+            ['monthlyVatSummary', false],
             //Configuration
-            ['configurationHeader', false]
-            ['voucherConfiguration', false]
-            ['changeFiscalYear', false]
-            ['existingFiscalYear', false]
-            ['importExportSubHeader', false]
-            ['itemsImport', false]
+            ['configurationHeader', false],
+            ['voucherConfiguration', false],
+            ['changeFiscalYear', false],
+            ['existingFiscalYear', false],
+            ['importExportSubHeader', false],
+            ['itemsImport', false],
         ])
     },
     grantedBy: {
