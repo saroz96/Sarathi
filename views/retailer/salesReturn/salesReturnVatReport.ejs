@@ -10,7 +10,28 @@
             padding: 0 15px;
         }
 
-        /* Print styles */
+        .highlight-row {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+        .highlight-row td {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+
+        #billsList thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f2f2f2;
+            z-index: 1;
+        }
+
+        .only-print {
+            display: none;
+        }
+
         @media print {
             @page {
                 size: A4 landscape;
@@ -21,9 +42,13 @@
                 display: none !important;
             }
 
+            .only-print {
+                display: block !important;
+            }
+
             body {
                 font-family: Arial, sans-serif;
-                font-size: 9pt;
+                font-size: 12pt;
             }
 
             .wider-container {
@@ -39,13 +64,12 @@
             table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 8pt;
             }
 
             th,
             td {
                 border: 1px solid #000;
-                padding: 4px;
+                padding: 8px;
                 text-align: left;
             }
 
@@ -118,22 +142,6 @@
                 flex: 1 0 100%;
             }
         }
-
-        /* Additional styling for better appearance */
-        .expanded-card {
-            margin: 0 -15px;
-        }
-
-        .badge {
-            font-size: 0.85rem;
-            padding: 0.35em 0.65em;
-        }
-
-        .alert-info {
-            background-color: #e7f5fe;
-            border-color: #b8e2fb;
-            color: #0c5460;
-        }
     </style>
 
     <div class="wider-container mt-4 wow-form">
@@ -205,19 +213,17 @@
                         view data
                     </div>
                     <% } else { %>
-                        <div class="report-container">
-                            <div class="text-center mb-4">
-                                <h2>
+                        <div class="report-container" style="width: 100%;">
+
+                            <div class="only-print">
+                                <h1>
                                     <%= currentCompanyName %>
-                                </h2>
-                                <p class="mb-1">
+                                </h1>
+                                <span>
                                     <%= currentCompany.address %>-<%= currentCompany.ward %>, <%= currentCompany.city %>
-                                                ,
-                                                <%= currentCompany.country %>
-                                </p>
-                                <p class="mb-0"><strong>PAN:</strong>
-                                    <%= currentCompany.pan %>
-                                </p>
+                                                , <%= currentCompany.country %>
+                                </span>
+                                <p><strong>Sales Return</strong></p>
                             </div>
 
                             <div class="d-flex justify-content-between mb-3">

@@ -228,7 +228,7 @@
                                 <p><strong>Purchase Book</strong></p>
                             </div>
 
-                       <div class="d-flex justify-content-between align-items-center print-row">
+                            <div class="d-flex justify-content-between align-items-center print-row">
                                 <div>
                                     <span class="badge bg-light text-dark">
                                         <i class="fas fa-calendar-alt me-2"></i>
@@ -526,7 +526,17 @@
         }
 
         function printReport() {
-            const printWindow = window.open('', '_blank');
+
+            // Create a popup window centered on the screen
+            const width = 1000;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            const printWindow = window.open('', '_blank',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
+
+            // const printWindow = window.open('', '_blank');
             const reportContent = document.querySelector('.report-container').innerHTML;
             const companyName = '<%= currentCompanyName %>';
 
@@ -596,12 +606,17 @@
                 <body>
                     ${reportContent}
                     <script>
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 200);
-                        };
-                    <\/script>
+                    // Automatically trigger print when window loads
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            // Close the window after printing if user agrees
+                            if (confirm('Close print window?')) {
+                                window.close();
+                            }
+                        }, 200);
+                    };
+                <\/script>
                 </body>
             </html>
         `);

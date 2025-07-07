@@ -555,9 +555,107 @@
 
     <script>
 
+        //     function printReport() {
+        //         // Create a new window for printing
+        //         const printWindow = window.open('', '_blank');
+
+        //         // Get the report content
+        //         const reportContent = document.querySelector('.report-container').innerHTML;
+
+        //         // Add the company name to the print window title
+        //         const companyName = '<%= currentCompanyName %>';
+
+        //         // Create the HTML for the print window
+        //         printWindow.document.write(`
+        //     <html>
+        //         <head>
+        //             <title>Sales VAT Report - ${companyName}</title>
+        //             <style>
+        //                     body {
+        //                         font-family: Arial, sans-serif;
+        //                         font-size: 9pt;
+        //                         margin: 0;
+        //                         padding: 0;
+        //                     }
+        //                     .container {
+        //                         width: 100%;
+        //                         margin: 0;
+        //                     }
+        //                     table {
+        //                         width: 100%;
+        //                         border-collapse: collapse;
+        //                         margin-top: 5px;
+        //                         font-size: 8pt;
+        //                     }
+        //                     th, td {
+        //                         border: 1px solid #000;
+        //                         padding: 4px;
+        //                         text-align: left;
+        //                     }
+        //                     th {
+        //                         background-color: #f2f2f2;
+        //                     }
+        //                     .totals-row {
+        //                         font-weight: bold;
+        //                     }
+        //                     h1, h2 {
+        //                         font-size: 12pt;
+        //                         margin: 5px 0;
+        //                     }
+        //                     .report-dates {
+        //                         display: flex;
+        //                         justify-content: space-between;
+        //                         margin-bottom: 5px;
+        //                         font-size: 9pt;
+        //                     }
+        //                     .only-print {
+        //                         display: block !important;
+        //                         text-align: center;
+        //                         margin: 0 auto;
+        //                     }
+        //                    .print-row {
+        //                         display: flex !important;
+        //                         justify-content: space-between;
+        //                         align-items: center;
+        //                          width: 100%;
+        //                     }
+
+        //                     .print-row > div {
+        //                         flex: 1;
+        //                     }
+
+        //                     .print-row .only-print {
+        //                         text-align: right;
+        //                     }
+        //                 </style>
+        //         </head>
+        //         <body>
+        //             ${reportContent}
+
+        //             <script>
+        //                 // Automatically trigger print when window loads
+        //                 window.onload = function() {
+        //                     setTimeout(function() {
+        //                         window.print();
+        //                     }, 200);
+        //                 };
+        //             <\/script>
+        //         </body>
+        //     </html>
+        // `);
+
+        //         printWindow.document.close();
+        //     }
+
         function printReport() {
-            // Create a new window for printing
-            const printWindow = window.open('', '_blank');
+            // Create a popup window centered on the screen
+            const width = 1000;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            const printWindow = window.open('', '_blank',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
 
             // Get the report content
             const reportContent = document.querySelector('.report-container').innerHTML;
@@ -571,63 +669,65 @@
             <head>
                 <title>Sales VAT Report - ${companyName}</title>
                 <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            font-size: 9pt;
-                            margin: 0;
-                            padding: 0;
-                        }
-                        .container {
-                            width: 100%;
-                            margin: 0;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 5px;
-                            font-size: 8pt;
-                        }
-                        th, td {
-                            border: 1px solid #000;
-                            padding: 4px;
-                            text-align: left;
-                        }
-                        th {
-                            background-color: #f2f2f2;
-                        }
-                        .totals-row {
-                            font-weight: bold;
-                        }
-                        h1, h2 {
-                            font-size: 12pt;
-                            margin: 5px 0;
-                        }
-                        .report-dates {
-                            display: flex;
-                            justify-content: space-between;
-                            margin-bottom: 5px;
-                            font-size: 9pt;
-                        }
-                        .only-print {
-                            display: block !important;
-                            text-align: center;
-                            margin: 0 auto;
-                        }
-                       .print-row {
-                            display: flex !important;
-                            justify-content: space-between;
-                            align-items: center;
-                             width: 100%;
-                        }
-
-                        .print-row > div {
-                            flex: 1;
-                        }
-
-                        .print-row .only-print {
-                            text-align: right;
-                        }
-                    </style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 9pt;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        width: 100%;
+                        margin: 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 5px;
+                        font-size: 8pt;
+                    }
+                    th, td {
+                        border: 1px solid #000;
+                        padding: 4px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                    .totals-row {
+                        font-weight: bold;
+                    }
+                    h1, h2 {
+                        font-size: 12pt;
+                        margin: 5px 0;
+                    }
+                    .report-dates {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 5px;
+                        font-size: 9pt;
+                    }
+                    .only-print {
+                        display: block !important;
+                        text-align: center;
+                        margin: 0 auto;
+                    }
+                    .print-row {
+                        display: flex !important;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 100%;
+                    }
+                    .print-row > div {
+                        flex: 1;
+                    }
+                    .print-row .only-print {
+                        text-align: right;
+                    }
+                    @page {
+                        size: A4 landscape;
+                        margin: 5mm;
+                    }
+                </style>
             </head>
             <body>
                 ${reportContent}
@@ -637,6 +737,10 @@
                     window.onload = function() {
                         setTimeout(function() {
                             window.print();
+                            // Close the window after printing if user agrees
+                            if (confirm('Close print window?')) {
+                                window.close();
+                            }
                         }, 200);
                     };
                 <\/script>

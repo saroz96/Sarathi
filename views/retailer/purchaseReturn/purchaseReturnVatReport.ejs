@@ -10,7 +10,28 @@
             padding: 0 15px;
         }
 
-        /* Print styles */
+        .highlight-row {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+        .highlight-row td {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+
+        #billsList thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f2f2f2;
+            z-index: 1;
+        }
+
+        .only-print {
+            display: none;
+        }
+
         @media print {
             @page {
                 size: A4 landscape;
@@ -21,9 +42,13 @@
                 display: none !important;
             }
 
+            .only-print {
+                display: block !important;
+            }
+
             body {
                 font-family: Arial, sans-serif;
-                font-size: 9pt;
+                font-size: 12pt;
             }
 
             .wider-container {
@@ -39,13 +64,12 @@
             table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 8pt;
             }
 
             th,
             td {
                 border: 1px solid #000;
-                padding: 4px;
+                padding: 8px;
                 text-align: left;
             }
 
@@ -118,22 +142,6 @@
                 flex: 1 0 100%;
             }
         }
-
-        /* Additional styling for better appearance */
-        .expanded-card {
-            margin: 0 -15px;
-        }
-
-        .badge {
-            font-size: 0.85rem;
-            padding: 0.35em 0.65em;
-        }
-
-        .alert-info {
-            background-color: #e7f5fe;
-            border-color: #b8e2fb;
-            color: #0c5460;
-        }
     </style>
 
     <div class="wider-container mt-4 wow-form">
@@ -162,7 +170,8 @@
                                     <div class="form-group">
                                         <label for="fromDate">From Date</label>
                                         <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
-                                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>" autofocus>
+                                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                            autofocus>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -203,42 +212,54 @@
                         view data
                     </div>
                     <% } else { %>
-                        <div class="report-container">
-                            <div class="text-center mb-4">
-                                <h2>
+                        <div class="report-container" style="width: 100%;">
+                            <div class="only-print">
+                                <h1>
                                     <%= currentCompanyName %>
-                                </h2>
-                                <p class="mb-1">
+                                </h1>
+                                <span>
                                     <%= currentCompany.address %>-<%= currentCompany.ward %>, <%= currentCompany.city %>
-                                                ,
-                                                <%= currentCompany.country %>
-                                </p>
-                                <p class="mb-0"><strong>PAN:</strong>
-                                    <%= currentCompany.pan %>
-                                </p>
+                                                , <%= currentCompany.country %>
+                                </span>
+                                <p><strong>Purchase Return Register</strong></p>
                             </div>
 
-                            <div class="d-flex justify-content-between mb-3">
+                            <div class="d-flex justify-content-between align-items-center print-row">
                                 <div>
                                     <span class="badge bg-light text-dark">
                                         <i class="fas fa-calendar-alt me-2"></i>
-                                        <%= fromDate %> to <%= toDate %>
+                                        <strong>Period of Purchase Return:</strong>
+                                        <% const date=new Date(fromDate); const month=date.getMonth(); // 0-based index
+                                            const englishMonths=["January", "February" , "March" , "April" , "May"
+                                            , "June" , "July" , "August" , "September" , "October" , "November"
+                                            , "December" ]; const nepaliMonths=["Baishakh", "Jestha" , "Ashadh"
+                                            , "Shrawan" , "Bhadra" , "Ashwin" , "Kartik" , "Mangsir" , "Poush" , "Magh"
+                                            , "Falgun" , "Chaitra" ]; const displayMonth=companyDateFormat==="nepali" ?
+                                            nepaliMonths[month] : englishMonths[month]; %>
+                                            <%= displayMonth %>
                                     </span>
+                                    <br>
+                                    <strong>From:
+                                        <%= fromDate %> to:
+                                            <%= toDate %>
+                                    </strong>
                                 </div>
-                                <div>
-                                    <span class="badge bg-primary">
-                                        <i class="fas fa-file-invoice me-2"></i>
-                                        Purchase Return VAT Report
-                                    </span>
+                                <div class="only-print">
+                                    <p class="mb-0">
+                                        <strong>Year: </strong>
+                                        <%= fromDate.split('-')[0] %> | <strong>PAN:</strong>
+                                            <%= currentCompany.pan %>
+                                    </p>
+
                                 </div>
                             </div>
 
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                                 <table class="table table-bordered table-hover" id="billsList">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Date</th>
-                                            <th>Bill No.</th>
+                                            <th>Vch. No.</th>
                                             <th>Supplier's Name</th>
                                             <th>Supplier's PAN</th>
                                             <th class="numeric-cell">Total Purchase Return</th>
@@ -449,26 +470,112 @@
         document.addEventListener('DOMContentLoaded', function () {
             updateTotals();
 
-            // Handle Nepali date conversion if needed
-            const companyDateFormat = "<%= companyDateFormat %>";
-            if (companyDateFormat === "nepali") {
-                const fromDateInput = document.getElementById('fromDate');
-                const toDateInput = document.getElementById('toDate');
-
-                if (fromDateInput.value) {
-                    const nepaliFromDate = new NepaliDate(new Date(fromDateInput.value)).format('YYYY-MM-DD');
-                    fromDateInput.value = nepaliFromDate;
-                }
-
-                if (toDateInput.value) {
-                    const nepaliToDate = new NepaliDate(new Date(toDateInput.value)).format('YYYY-MM-DD');
-                    toDateInput.value = nepaliToDate;
-                }
-            }
+            setTimeout(() => {
+                setupRowNavigation();
+            }, 100); // slight delay to ensure rows render
         });
+        function setupRowNavigation() {
+            let selectedRowIndex = 0;
+            const tableRows = Array.from(document.querySelectorAll('#billsList tbody tr'));
+
+            if (!tableRows.length) return;
+
+            // Initial highlight
+            highlightRow(selectedRowIndex);
+
+            function highlightRow(index) {
+                tableRows.forEach(row => row.classList.remove('highlight-row'));
+
+                if (index < 0) index = 0;
+                if (index >= tableRows.length) index = tableRows.length - 1;
+
+                tableRows[index].classList.add('highlight-row');
+                selectedRowIndex = index;
+
+                // Scroll into view
+                tableRows[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            tableRows.forEach((row, index) => {
+                row.addEventListener('click', () => {
+                    highlightRow(index);
+                });
+            });
+
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (selectedRowIndex < tableRows.length - 1) {
+                        highlightRow(selectedRowIndex + 1);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (selectedRowIndex > 0) {
+                        highlightRow(selectedRowIndex - 1);
+                    }
+                }
+            });
+
+        }
+
+        function showToast(message, type = 'info') {
+            // Implement your toast notification system here
+            // Example: using Bootstrap toasts
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+            document.body.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // document.addEventListener('DOMContentLoaded', function () {
+        //     updateTotals();
+
+        //     // Handle Nepali date conversion if needed
+        //     const companyDateFormat = "<%= companyDateFormat %>";
+        //     if (companyDateFormat === "nepali") {
+        //         const fromDateInput = document.getElementById('fromDate');
+        //         const toDateInput = document.getElementById('toDate');
+
+        //         if (fromDateInput.value) {
+        //             const nepaliFromDate = new NepaliDate(new Date(fromDateInput.value)).format('YYYY-MM-DD');
+        //             fromDateInput.value = nepaliFromDate;
+        //         }
+
+        //         if (toDateInput.value) {
+        //             const nepaliToDate = new NepaliDate(new Date(toDateInput.value)).format('YYYY-MM-DD');
+        //             toDateInput.value = nepaliToDate;
+        //         }
+        //     }
+        // });
 
         function printReport() {
-            const printWindow = window.open('', '_blank');
+            // Create a popup window centered on the screen
+            const width = 1000;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            const printWindow = window.open('', '_blank',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
+                
             const reportContent = document.querySelector('.report-container').innerHTML;
             const companyName = '<%= currentCompanyName %>';
 
@@ -478,56 +585,79 @@
                     <title>Purchase Return VAT Report - ${companyName}</title>
                     <style>
                         body {
-                            font-family: Arial, sans-serif;
-                            font-size: 9pt;
-                            margin: 0;
-                            padding: 0;
-                        }
-                        .container {
-                            width: 100%;
-                            margin: 0;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 5px;
-                            font-size: 8pt;
-                        }
-                        th, td {
-                            border: 1px solid #000;
-                            padding: 4px;
-                            text-align: left;
-                        }
-                        th {
-                            background-color: #f2f2f2;
-                        }
-                        .totals-row {
-                            font-weight: bold;
-                        }
-                        h1, h2 {
-                            font-size: 12pt;
-                            margin: 5px 0;
-                        }
-                        .report-dates {
-                            display: flex;
-                            justify-content: space-between;
-                            margin-bottom: 5px;
-                            font-size: 9pt;
-                        }
-                        .numeric-cell {
-                            text-align: right !important;
-                        }
+                        font-family: Arial, sans-serif;
+                        font-size: 9pt;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        width: 100%;
+                        margin: 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 5px;
+                        font-size: 8pt;
+                    }
+                    th, td {
+                        border: 1px solid #000;
+                        padding: 4px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                    .totals-row {
+                        font-weight: bold;
+                    }
+                    h1, h2 {
+                        font-size: 12pt;
+                        margin: 5px 0;
+                    }
+                    .report-dates {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 5px;
+                        font-size: 9pt;
+                    }
+                    .only-print {
+                        display: block !important;
+                        text-align: center;
+                        margin: 0 auto;
+                    }
+                    .print-row {
+                        display: flex !important;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 100%;
+                    }
+                    .print-row > div {
+                        flex: 1;
+                    }
+                    .print-row .only-print {
+                        text-align: right;
+                    }
+                    @page {
+                        size: A4 landscape;
+                        margin: 5mm;
+                    }
                     </style>
                 </head>
                 <body>
                     ${reportContent}
                     <script>
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 200);
-                        };
-                    <\/script>
+                    // Automatically trigger print when window loads
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            // Close the window after printing if user agrees
+                            if (confirm('Close print window?')) {
+                                window.close();
+                            }
+                        }, 200);
+                    };
+                <\/script>
                 </body>
             </html>
         `);
