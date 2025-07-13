@@ -1,0 +1,76 @@
+{
+  "name": "Sarathi",
+  "version": "1.0.0",
+  "description": "Sarathi Accounting Software",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "electron": "electron .",
+    "package-win": "electron-packager . Sarathi --platform=win32 --arch=x64 --out=dist --overwrite --electron-version=34.2.0",
+    "dist": "electron-builder --win",
+    "package": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
+    "bwip-js": "^4.6.0",
+    "canvas": "^3.1.0",
+    "connect-flash": "^0.1.1",
+    "country-state-city": "^3.2.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "ejs-mate": "^4.0.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.0",
+    "fs": "^0.0.1-security",
+    "googleapis": "^150.0.1",
+    "method-override": "^3.0.0",
+    "moment": "^2.30.1",
+    "mongoose": "^8.13.2",
+    "multer": "^1.4.5-lts.2",
+    "nepali-date": "^0.1.3",
+    "nepali-date-converter": "^3.3.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "pdfkit": "^0.15.0",
+    "read-excel-file": "^5.8.7",
+    "socket.io": "^4.7.5",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "electron": "^36.0.1",
+    "electron-builder": "^26.0.12",
+    "electron-packager": "^17.1.2",
+    "electron-winstaller": "^5.4.0",
+    "nodemon": "^3.1.9"
+  },
+  "build": {
+    "appId": "com.yourname.Sarathi",
+    "productName": "Sarathi",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache",
+      "!dist/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/assets/icons/icons.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

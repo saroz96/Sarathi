@@ -1,0 +1,826 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheet/sales/billsTrackBatchOpen.css">
+
+
+    <!-- Nepali Datepicker -->
+    <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
+        rel="stylesheet" type="text/css" />
+
+    <div class="container mt-4 wow-form expanded-container">
+        <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-8 col-12">
+                       Credit Sales Entry Open
+                        <span id="customAlertForBillNumber" style="color: red; display: none;">Invoice is
+                            required!</span>
+                        <span id="transactionDateError" style="color: red; display: none;">Invalid date!</span>
+                        <span id="nepaliDateError" style="color: red; display: none;">Invalid date!</span>
+                    </div>
+                    <div class="col-md-4 col-12 d-flex justify-content-between">
+                        <!-- Add Account Button -->
+                        <button type="button" class="btn btn-success" data-toggle="modal"
+                            data-target="#createAccountModal" data-toggle="tooltip"
+                            title="Create a new account for a customer or supplier">
+                            <i class="fas fa-plus-circle"></i> Add Account
+                        </button>
+
+                        <!-- Add Item Button -->
+                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createItemModal"
+                            data-toggle="tooltip" title="Add a new item to your inventory">
+                            <i class="fas fa-box"></i> Add Item
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form action="/billsTrackBatchOpen" method="post" id="billForm" class="wow-form">
+                    <div class="form-group row">
+
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <!-- Nepali Date Fields -->
+                            <div class="col">
+                                <label for="transactionDateNepali">Transaction Date:</label>
+                                <input type="date" name="transactionDateNepali" id="transactionDateNepali"
+                                    class="form-control" value="<%= transactionDateNepali|| '' %>"
+                                    onfocus="selectValue(this)" autofocus required>
+                            </div>
+                            <div class="col">
+                                <label for="nepaliDate">Invoice Date:</label>
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control" required
+                                    value="<%= nepaliDate || '' %>" onfocus="selectValue(this)">
+                            </div>
+                            <% } else { %>
+                                <!-- English Date Fields -->
+                                <div class="col">
+                                    <label for="transactionDateRoman">Transaction Date:</label>
+                                    <input type="date" name="transactionDateRoman" id="transactionDateRoman"
+                                        class="form-control" value="<%= new Date().toISOString().split('T')[0] %>"
+                                        autofocus required onfocus="selectValue(this)">
+                                </div>
+                                <div class="col">
+                                    <label for="billDate">Invoice Date:</label>
+                                    <input type="date" name="billDate" id="billDate" class="form-control" required
+                                        value="<%= new Date().toISOString().split('T')[0] %>"
+                                        onfocus="selectValue(this)">
+                                </div>
+                                <% } %>
+
+                                    <div class="col">
+                                        <label for="billNumber">Inv. No:</label>
+                                        <input type="text" id="billNumber" class="form-control"
+                                            value="<%=nextBillNumber %>" oninput="this.value='<%=nextBillNumber%>'" onfocus="selectValue(this)">
+                                    </div>
+
+                                    <div class="col">
+                                        <label for="paymentMode">Payment Mode:</label>
+                                        <select class="form-control" id="paymentMode" name="paymentMode">
+                                            <option value="credit">credit</option>
+                                            <option value="cash">cash</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col">
+                                        <label for="isVatExempt">VAT</label>
+                                        <select name="isVatExempt" id="isVatExempt" class="form-control"
+                                            onchange="toggleVatInputs()" autocomplete="off">
+                                            <% if (vatEnabled) {%>
+                                                <option value="all">All</option>
+                                                <option value="false">13%</option>
+                                                <%}%>
+                                                    <option value="true">Exempt</option>
+                                        </select>
+                                    </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col hidden">
+                            <label for="purchaseSalesType">Type:</label>
+                            <select id="purchaseSalesType" name="purchaseSalesType" class="form-control" disabled>
+                                <option value="Sales">Sales</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <!-- Account Selection Input -->
+                            <label for="account">Party Name:</label>
+                            <input type="text" id="account" name="account" class="form-control" placeholder=""
+                                autocomplete="off" required>
+                            <input type="hidden" id="accountId" name="accountId">
+                        </div>
+                        <div class="col">
+                            <!-- New field for the address -->
+                            <label for="address">Party Address:</label>
+                            <input type="text" id="address" name="address" class="form-control"
+                                onfocus="selectValue(this)">
+                        </div>
+                        <div class="col">
+                            <!-- New field for the address -->
+                            <label for="pan">Vat No:</label>
+                            <input type="text" id="pan" name="pan" class="form-control" onfocus="selectValue(this)">
+                        </div>
+                    </div>
+                    <hr style="border: 1px solid gray;">
+
+                    <div id="bill-details-container">
+                        <table class="table table-bordered compact-table" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>S.No.</th>
+                                    <th>#</th>
+                                    <th>HSN</th>
+                                    <th>Description of Goods</th>
+                                    <th>Batch</th>
+                                    <th>Expiry</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="items">
+                                <!-- Item rows will be dynamically added here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr style="border: 1px solid gray;">
+
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="itemSearch">Search Item</label>
+                            <input type="text" id="itemSearch" class="form-control" placeholder="Search for an item"
+                                oninput="filterItems(this)" autocomplete="off"
+                                onkeydown="handleItemSearchKeydown(event)">
+                            <div id="dropdownMenu" class="dropdown-menu"></div>
+                        </div>
+                    </div>
+
+                    <hr style="border: 1px solid gray;">
+                    <!-- Bill Details Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th colspan="6" class="text-center bg-light">Bill Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sub Total, Discount % and Discount Amount in the same row -->
+                                <tr>
+                                    <td><label for="subTotal">Sub Total:</label></td>
+                                    <td class="text-right">
+                                        <p class="form-control-plaintext">Rs. <span id="subTotal">0.00</span></p>
+                                    </td>
+                                    <td><label for="discountPercentage">Discount %:</label></td>
+                                    <td>
+                                        <input type="number" step="any" name="discountPercentage"
+                                            id="discountPercentage" class="form-control" value="0.00"
+                                            oninput="calculateTotal()" onfocus="selectValue(this)">
+                                    </td>
+                                    <td><label for="discountAmount">Discount (Rs.):</label></td>
+                                    <td>
+                                        <input type="number" step="any" name="discountAmount" id="discountAmount"
+                                            value="0.00" class="form-control" oninput="calculateTotal()"
+                                            onfocus="selectValue(this)">
+                                    </td>
+                                </tr>
+
+                                <!-- Taxable Amount, VAT % and VAT Amount in the same row -->
+                                <tr id="taxableAmountRow">
+                                    <td><label for="taxableAmount">Taxable Amount:</label></td>
+                                    <td class="text-right">
+                                        <p class="form-control-plaintext">Rs. <span id="taxableAmount">0.00</span></p>
+                                    </td>
+                                    <td><label for="vatPercentage">VAT (13%):</label></td>
+                                    <td>
+                                        <input type="number" name="vatPercentage" id="vatPercentage"
+                                            class="form-control" value="13.00" readonly onfocus="selectValue(this)">
+                                    </td>
+                                    <td><label for="vatAmount">VAT Amount:</label></td>
+                                    <td class="text-right">
+                                        <p class="form-control-plaintext">Rs. <span id="vatAmount">0.00</span></p>
+                                    </td>
+                                </tr>
+
+                                <!-- Round Off and Total Amount in the same row -->
+                                <tr>
+                                    <td><label for="roundOffAmount">Round Off:</label></td>
+                                    <td>
+                                        <input type="number" class="form-control" step="any" id="roundOffAmount"
+                                            name="roundOffAmount" value="0.00" oninput="calculateTotal()"
+                                            onfocus="selectValue(this)">
+                                    </td>
+                                    <td><label for="totalAmount">Total Amount:</label></td>
+                                    <td>
+                                        <p class="form-control-plaintext">Rs. <span id="totalAmount">0.00</span></p>
+                                    </td>
+                                    <td><label for="amountInWords">In Words:</label></td>
+                                    <td class="text-right">
+                                        <p class="form-control-plaintext" id="amountInWords">Zero Only.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn btn-primary mr-2 p-3" id="saveBill"
+                            onclick="submitBillForm(false)">
+                            <i class="bi bi-save"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary p-3" onclick="submitBillForm(true)">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div id="printModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Print Bill</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to print this bill?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitBillForm(true)">Save & Print</button>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+
+    <style>
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+    </style>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountModalLabel">Select an Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Fixed Search Input -->
+                <div class="p-3 bg-white sticky-top">
+                    <input type="text" id="searchAccount" class="form-control" placeholder="Search Account"
+                        onfocus="selectValue(this)" autocomplete="off">
+                </div>
+                <div class="modal-body p-0">
+
+                    <!-- Scrollable Account List -->
+                    <div class="overflow-auto" style="max-height: 400px;">
+                        <ul id="accountList" class="list-group">
+                            <!-- Accounts will be dynamically loaded here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transactionModalLabel">Last Transactions</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul id="transactionList" class="list-group">
+                        <!-- Transactions will be dynamically inserted here -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeModalButton"
+                        onkeydown="handleCloseButtonKeydown(event)">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch and Expiry Modal -->
+    <div class="modal fade" id="batchModal" tabindex="-1" aria-labelledby="batchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="batchModalLabel">Batch Information</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="batchModalBody">
+                    <!-- Batch information will be populated here dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Creating New Account -->
+    <div class="modal fade" id="createAccountModal" tabindex="-1" role="dialog"
+        aria-labelledby="createAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAccountModalLabel">Create New Account</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAccountForm" method="post" action="/create-account-from-bills-track-batch-open">
+                        <div class="form-group row">
+                            <div class="form-group col-md-4">
+                                <label for="name">Account Name <i style="color: red;">*</i></label>
+                                <input type="text" class="form-control" id="name" name="name"
+                                    placeholder="Enter account name" required autofocus autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="companyGroup">Account Group <i style="color: red;">*</i></label>
+                                <select class="form-control w-100" id="companyGroup" name="companyGroups" required>
+                                    <% if (companyGroups && companyGroups.length> 0) { %>
+                                        <option value="" disabled selected>Select a Group</option>
+                                        <% companyGroups.forEach(companyGroup=> { %>
+                                            <option value="<%= companyGroup._id %>">
+                                                <%= companyGroup.name %>
+                                            </option>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <option disabled>No companies groups available</option>
+                                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="openingBalance">Opening Balance</label>
+                                <input type="number" id="openingBalance" name="openingBalance[amount]"
+                                    class="form-control" value="0">
+                                <select id="balanceType" name="openingBalance[type]" class="form-control">
+                                    <option value="Dr">Dr.</option>
+                                    <option value="Cr">Cr.</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="pan">Pan No.:</label>
+                                <input type="text" class="form-control" id="pan" name="pan" minlength="9" maxlength="9"
+                                    placeholder="Enter pan/vat number" autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="address">Address</label>
+                                <input type="text" class="form-control" id="address" name="address"
+                                    placeholder="Enter account address" autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="ward">Ward No.:</label>
+                                <input type="number" class="form-control" id="ward" name="ward"
+                                    placeholder="Enter ward number" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="phone">Phone</label>
+                                <input type="text" class="form-control" id="phone" name="phone"
+                                    placeholder="Enter account phone" autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="Enter email" autocomplete="off" style="text-transform: lowercase;">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="contactperson">Contact Person</label>
+                                <input type="text" class="form-control" id="contactperson" name="contactperson"
+                                    placeholder="Enter contact person" autocomplete="off">
+                            </div>
+                        </div>
+                        <!-- <input type="hidden" name="companyId" value="<%= companyId %>"> -->
+                        <button type="submit" class="btn btn-primary">Add A/c</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Creating New Item -->
+    <div class="modal fade" id="createItemModal" tabindex="-1" role="dialog" aria-labelledby="createItemModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createItemModalLabel">Create New Item</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAccountForm" method="post" action="/create-items-from-bills-track-batch-open">
+                        <div class="form-group row">
+                            <div class="col">
+                                <label for="name">Item Name <i style="color: red;">*</i></label>
+                                <input type="text" class="form-control" id="name" name="name"
+                                    placeholder="Enter item name" autocomplete="off" required>
+                            </div>
+                            <div class="col">
+                                <label for="hscode">Item H.S. Code</label>
+                                <input type="number" class="form-control" id="hscode" name="hscode"
+                                    placeholder="Enter item H.S code" autocomplete="off">
+                            </div>
+                            <div class="col">
+                                <label for="category">Category <i style="color: red;">*</i></label>
+                                <select class="form-control" id="category" name="category" required>
+                                    <% if (categories && categories.length> 0) { %>
+                                        <option value="" disabled selected>Select a category</option>
+                                        <% categories.forEach(category=> { %>
+                                            <option value="<%= category._id %>">
+                                                <%= category.name %>
+                                            </option>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <option disabled>No categories available</option>
+                                                    <% } %>
+                                </select>
+                            </div>
+
+
+                        </div>
+                        <div class="form-group row">
+                            <div class="col">
+                                <label for="unit">Unit <i style="color: red;">*</i></label>
+                                <select class="form-control" id="unit" name="unit" required>
+                                    <% if (units && units.length> 0) { %>
+                                        <option value="" disabled selected>Select a Unit</option>
+                                        <% units.forEach(unit=> { %>
+                                            <option value="<%= unit._id %>">
+                                                <%= unit.name %>
+                                            </option>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <option disabled>No units available</option>
+                                                    <% } %>
+                                </select>
+                            </div>
+
+                            <div class="col">
+                                <label for="vatStatus">VAT Status <i style="color: red;">*</i></label>
+                                <select class="form-control" id="vatStatus" name="vatStatus" required>
+                                    <option value="" disabled selected>Select Vat Status</option>
+                                    <% if (vatEnabled) {%>
+                                        <option value="vatable">Vatable</option>
+                                        <%}%>
+                                            <option value="vatExempt">VAT Exempt</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label for="reorderLevel">Re-Order Level(Qty)</label>
+                                <input type="number" class="form-control" id="reorderLevel" name="reorderLevel"
+                                    value="10" aria-selected="true">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col">
+                                <label for="price">Sales Price</label>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01"
+                                    value="0.00">
+                            </div>
+                            <div class="col">
+                                <label for="puPrice">Purchase Price</label>
+                                <input type="number" class="form-control" id="puPrice" name="puPrice" step="0.01"
+                                    oninput="calculateTotalOpeningStockBalance()" value="0.00">
+                            </div>
+                            <div class="col">
+                                <label for="openingStock">Opening Stock</label>
+                                <input type="number" class="form-control" id="openingStock" name="openingStock"
+                                    oninput="calculateTotalOpeningStockBalance()" value="0.00">
+                            </div>
+                            <div class="col">
+                                <label for="openingStockBalance">Opening Stock Balance</label>
+                                <input type="number" class="form-control" id="openingStockBalance"
+                                    name="openingStockBalance" value="0.00">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="saveItem">Add Item</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #bill-details-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #items {
+            table-layout: fixed;
+            width: 100%;
+        }
+    </style>
+
+    <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
+        type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/javascript/sales/billsTrackBatchOpen.js"></script>
+
+    <script type="text/javascript">
+
+        window.onload = function () {
+            var transactionDateNepali = document.getElementById("transactionDateNepali");
+            var nepaliDate = document.getElementById("nepaliDate");
+
+            transactionDateNepali.nepaliDatePicker();
+            nepaliDate.nepaliDatePicker();
+
+            // Add validation for Transaction Date
+            transactionDateNepali.addEventListener("blur", function (event) {
+                validateNepaliDate(this, "transactionDateError", event);
+            });
+
+            // Add validation for Invoice Date
+            nepaliDate.addEventListener("blur", function (event) {
+                validateNepaliDate(this, "nepaliDateError", event);
+            });
+        };
+
+        // Function to validate Nepali date
+        function validateNepaliDate(inputField, errorSpanId, event) {
+            var errorSpan = document.getElementById(errorSpanId);
+            var dateString = inputField.value.trim();
+
+            // Check if the date is blank
+            if (!dateString) {
+                errorSpan.textContent = "Date cannot be blank!"; // Set error message
+                errorSpan.style.display = "inline"; // Show error message
+                event.preventDefault(); // Prevent moving to the next field
+                inputField.focus(); // Keep focus on the current input field
+                return;
+            }
+
+            // Check if the date is valid
+            if (!isValidNepaliDate(dateString)) {
+                errorSpan.textContent = "Invalid date!"; // Set error message
+                errorSpan.style.display = "inline"; // Show error message
+                event.preventDefault(); // Prevent moving to the next field
+                inputField.focus(); // Keep focus on the current input field
+            } else {
+                errorSpan.style.display = "none"; // Hide error message
+            }
+        }
+
+        // Function to check if the Nepali date is valid
+        function isValidNepaliDate(dateString) {
+            // Regular expression to match the Nepali date format (YYYY-MM-DD)
+            var datePattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+            if (!datePattern.test(dateString)) return false;
+
+            // Split the date string into year, month, and day
+            var parts = dateString.split("-");
+            var year = parseInt(parts[0], 10);
+            var month = parseInt(parts[1], 10);
+            var day = parseInt(parts[2], 10);
+
+            // Check if the month and day are valid
+            if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+            if (month < 1 || month > 12 || day < 1 || day > 32) return false;
+
+            // Manually validate the number of days in the month
+            var maxDays = getMaxDaysInNepaliMonth(year, month);
+            if (day > maxDays) return false;
+
+            return true;
+        }
+
+        // Function to get the maximum number of days in a Nepali month
+        function getMaxDaysInNepaliMonth(year, month) {
+            // Define the number of days in each month for a given year
+            // This is a simplified example and may not cover all edge cases
+            var nepaliMonths = [
+                31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30 // Example for year 2080
+            ];
+
+            // Adjust for leap years if necessary
+            if (year % 4 === 0 && month === 1) { // Check if it's a leap year and the month is Baisakh
+                nepaliMonths[0] = 31; // Baisakh has 31 days in a leap year
+            }
+
+            return nepaliMonths[month - 1]; // Return the number of days for the given month
+        }
+
+        //for english date validation
+        function validateDate(input) {
+            const errorMessage = input.nextElementSibling; // Get the error message span
+            const dateValue = input.value;
+
+            // Check if the date is valid
+            if (!dateValue || isNaN(new Date(dateValue).getTime())) {
+                errorMessage.textContent = "Invalid date!";
+                errorMessage.style.display = "block";
+                input.focus(); // Prevent moving to the next field
+            } else {
+                errorMessage.style.display = "none"; // Hide error if valid
+            }
+        }
+        function selectValue(input) {
+            input.select(); // Select the value of the input field when it is focused
+        }
+
+        //-----------------------------------------------------------------------------------------
+      
+        //for account
+        $(document).ready(function () {
+
+            let selectedIndex = 0;
+            let allAccounts = [];
+
+            const $accountInput = $("#account");
+            const $accountIdInput = $("#accountId"); // Hidden input field to store account ID
+            const $accountModal = $("#accountModal");
+            const $searchInput = $("#searchAccount");
+            const $accountList = $("#accountList");
+            const $modalBody = $accountList.parent();
+
+            // Open modal when input is focused
+            $accountInput.focus(function () {
+                $accountModal.modal("show");
+                fetchAccounts();
+            });
+
+            // Focus on search input when modal opens
+            $accountModal.on("shown.bs.modal", function () {
+                $searchInput.focus();
+            });
+
+            // Fetch accounts from server
+            function fetchAccounts() {
+                $.ajax({
+                    url: "/api/accounts",
+                    method: "GET",
+                    success: function (data) {
+                        allAccounts = data;
+                        renderAccounts();
+                    },
+                    error: function (err) {
+                        console.error("Error fetching accounts:", err);
+                        $accountList.html('<li class="list-group-item text-danger">Failed to load accounts</li>');
+                    }
+                });
+            }
+
+            // Render accounts dynamically
+            function renderAccounts(filtered = allAccounts) {
+                $accountList.empty();
+
+                if (filtered.length === 0) {
+                    $accountList.html('<li class="list-group-item text-muted">No accounts found</li>');
+                    return;
+                }
+
+                filtered.forEach((account, index) => {
+                    const isActive = index === 0 ? "active" : "";
+                    $accountList.append(`
+                <li class="list-group-item account-item ${isActive}" 
+                    data-id="${account._id}" 
+                    data-name="${account.name}" 
+                    data-address="${account.address || 'N/A'}" 
+                    data-pan="${account.pan || 'N/A'}"
+                    data-index="${index}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${account.name}</strong>
+                        <span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+                    </div>
+                </li>
+            `);
+                });
+
+                selectedIndex = 0;
+            }
+
+            // Search accounts dynamically
+            $searchInput.on("input", function () {
+                let searchText = $(this).val().toLowerCase();
+                let filteredAccounts = allAccounts.filter(account =>
+                    account.name.toLowerCase().includes(searchText)
+                );
+
+                renderAccounts(filteredAccounts);
+            });
+
+            // Handle keyboard navigation & scrolling
+            $searchInput.on("keydown", function (e) {
+                let visibleItems = $(".account-item");
+
+                if (e.key === "ArrowDown") {
+                    if (selectedIndex < visibleItems.length - 1) {
+                        selectedIndex++;
+                    }
+                } else if (e.key === "ArrowUp") {
+                    if (selectedIndex > 0) {
+                        selectedIndex--;
+                    }
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (visibleItems.length > 0) {
+                        selectAccount(visibleItems.eq(selectedIndex));
+                    }
+                }
+
+                // Highlight the selected item
+                visibleItems.removeClass("active");
+                let selectedItem = visibleItems.eq(selectedIndex);
+                selectedItem.addClass("active");
+
+                adjustScroll(selectedItem);
+            });
+
+            // Click to select account
+            $(document).on("click", ".account-item", function () {
+                selectAccount($(this));
+            });
+
+            // Function to select account and populate fields
+            function selectAccount(element) {
+                let accountId = element.data("id"); // Get account ID
+                let accountName = element.data("name");
+                let accountAddress = element.data("address");
+                let accountPan = element.data("pan");
+
+                $accountInput.val(accountName);
+                $accountIdInput.val(accountId); // Store account ID in hidden input
+                $("#address").val(accountAddress);
+                $("#pan").val(accountPan);
+                $accountModal.modal("hide");
+
+                // Move focus to the next input field
+                setTimeout(() => {
+                    $("#address").focus();
+                }, 300);
+            }
+
+            // Function to adjust scroll position
+            function adjustScroll(selectedItem) {
+                let itemTop = selectedItem.position().top;
+                let itemHeight = selectedItem.outerHeight();
+                let modalHeight = $modalBody.innerHeight();
+
+                if (itemTop + itemHeight > modalHeight) {
+                    $modalBody.scrollTop($modalBody.scrollTop() + itemHeight);
+                } else if (itemTop < 0) {
+                    $modalBody.scrollTop($modalBody.scrollTop() - itemHeight);
+                }
+            }
+        });
+        //----------------------------------------------------------------------------------------------------
+
+        
+        // Add an event listener to the paymentMode select element
+        document.getElementById('paymentMode').addEventListener('keydown', function (event) {
+            // Check if the Enter key is pressed (key code 13)
+            if (event.key === 'Enter') {
+                // Prevent the default form submission behavior
+                event.preventDefault();
+
+                // Move focus to the next input field
+                document.getElementById('isVatExempt').focus();
+            }
+        });
+
+        document.getElementById('isVatExempt').addEventListener('keydown', function (event) {
+            // Check if the Enter key is pressed (key code 13)
+            if (event.key === 'Enter') {
+                // Prevent the default form submission behavior
+                event.preventDefault();
+
+                // Move focus to the next input field
+                document.getElementById('account').focus();
+            }
+        });
+    </script>

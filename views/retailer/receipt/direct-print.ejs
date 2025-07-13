@@ -1,0 +1,260 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
+
+<div class="mt-4" style="float: right; margin-right: 100px;">
+    <a href="/receipts-list" class="btn btn-secondary"><i class="bi bi-back"></i></a>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="bi bi-printer"></i></button>
+    <a href="/receipts" class="btn btn-primary"><i class="bi bi-receipt"></i></a>
+</div>
+
+<br>
+
+<div class="container">
+    <div class="card shadow-lg p-4 animate__animated animate__fadeInUp">
+        <div class="voucher" id="voucher">
+            <!-- Print Header -->
+            <div id="printHeader" class="text-center" style="text-align: center;">
+                <div class="header">
+                    <h2 class="card-subtitle">
+                        <%= currentCompanyName %>
+                    </h2>
+                    <h4>
+                        <b>
+                            <%= currentCompany.address %>-<%= currentCompany.ward %>, <%= currentCompany.city %>,
+                                        <%= currentCompany.country %>
+                        </b>
+                        <br>
+                        TPIN.: <span id="pan-vat-container"></span>
+                    </h4>
+                    <hr style="border: 0.5px solid;">
+                </div>
+            </div>
+
+            <div class="voucher-header">
+                <h1 class="text-center" style="text-decoration: underline; letter-spacing: 3px;">Receipt Voucher</h1>
+                <div class="invoice-details text-right">
+                    <p><strong>Vch. No:</strong>
+                        <%= receipt.billNumber %>
+                    </p>
+                    <p><strong>Date:</strong>
+                        <%= receipt.date.toLocaleDateString() %>
+                    </p>
+                </div>
+            </div>
+
+            <table class="voucher-table">
+                <thead>
+                    <tr>
+                        <th>S.N</th>
+                        <th>Particular</th>
+                        <th>Debit Amount</th>
+                        <th>Credit Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>
+                            <% if (receipt.isActive) { %>
+                                <%= receipt.account ? receipt.account.name : 'N/A' %>
+                                    <% } else { %>
+                                        <span class="text-danger">Canceled</span>
+                                        <% } %>
+                        </td>
+                        <td>0.00</td>
+                        <td>
+                            <% if (receipt.isActive) { %>
+                                <%= receipt.credit %>
+                                    <% } else { %>
+                                        <span class="text-danger">0.00</span>
+                                        <% } %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>
+                            <% if (receipt.isActive) { %>
+                                <%= receipt.receiptAccount ? receipt.receiptAccount.name : 'N/A' %>
+                                    <% } else { %>
+                                        <span class="text-danger">Canceled</span>
+                                        <% } %>
+                        </td>
+                        <td>
+                            <% if (receipt.isActive) { %>
+                                <%= receipt.credit %>
+                                    <% } else { %>
+                                        <span class="text-danger">0.00</span>
+                                        <% } %>
+                        </td>
+                        <td>0.00</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2">Total</th>
+                        <th>
+                            <%=receipt.credit.toFixed(2)%>
+                        </th>
+                        <th>
+                            <%=receipt.credit.toFixed(2)%>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+            <p>Note: <%=receipt.description%>
+            </p>
+            <div class="row">
+                <div class="col-4">
+                    <label for="modeOfPayment">Mode of Receipt: <%= receipt.InstType%>
+                    </label>
+                </div>
+                <div class="col-4">
+                    <label for="bankAcc">Bank: <%=receipt.bankAcc%></label>
+                </div>
+                <div class="col-4">
+                    <label for="InstNo">Inst No: <%=receipt.InstNo%></label>
+                </div>
+            </div>
+            <br>
+            <div class="signature-section" style="display: flex; justify-content: space-between;margin-top:5px;">
+                <div class="signature">
+                    <p style="margin-bottom: 0;"><strong>
+                        <%= receipt.user ? receipt.user.name : 'N/A' %>
+                    </strong></p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Prepared By:</p>
+                </div>
+                <div class="signature">
+                    <p style="margin-bottom: 0;">&nbsp;</p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Checked By:</p>
+                </div>
+                <div class="signature">
+                    <p style="margin-bottom: 0;">&nbsp;</p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Approved By:</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* @page {
+            size: A5 portrait;
+            margin: 10mm;
+        } */
+
+        body * {
+            visibility: hidden;
+        }
+
+        #voucher,
+        #voucher * {
+            visibility: visible;
+        }
+
+        #voucher {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 260mm;
+            height: 150mm;
+            margin: auto;
+        }
+
+        .text-center button,
+        .text-center a {
+            display: none;
+        }
+    }
+
+    .voucher {
+        width: 250mm;
+        /* A5 portrait width */
+        height: 150mm;
+        /* A5 portrait height */
+        padding: 10mm;
+        margin: auto;
+        border: 1px solid black;
+        background-color: white;
+        font-family: Arial, sans-serif;
+    }
+
+
+    .voucher-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .invoice-details {
+        text-align: right;
+    }
+
+    .voucher-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+
+    .voucher-table th,
+    .voucher-table td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .voucher-table th {
+        background-color: #f2f2f2;
+    }
+
+    .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .signature {
+        width: 30%;
+        text-align: center;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+</style>
+
+<script>
+    function handlePrint() {
+        // Trigger the print dialog
+        window.print();
+
+        // Set a timeout to redirect after the print dialog is closed
+        setTimeout(function () {
+            // Redirect after printing or canceling the print dialog
+            window.location.href = '/receipts'; // Redirect to the payments page
+        }, 1000); // Adjust the time as necessary based on user experience
+    }
+
+    // Call handlePrint when the page loads
+    window.onload = function () {
+        handlePrint();
+    };
+
+    const panVatNo = '<%= currentCompany.pan %>';
+    const container = document.getElementById('pan-vat-container');
+
+    for (let i = 0; i < panVatNo.length; i++) {
+        const digit = document.createElement('span');
+        digit.className = 'bordered-digit';
+        digit.textContent = panVatNo[i];
+        container.appendChild(digit);
+    }
+
+    // Optional: Show loading spinner while fetching data
+    function showLoadingSpinner() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+    }
+</script>

@@ -1,0 +1,23 @@
+{
+  "_id": "67e14466e64cce43d2740173",
+  "name": "Suppliers International Pvt.Ltd.",
+  "address": "Budanilkantha, Srijansil Tol",
+  "country": "Nepal",
+  "state": "Bagmati",
+  "city": "Kathmandu",
+  "pan": "610251793",
+  "phone": "9804398593",
+  "ward": 8,
+  "email": "internationalsuppliers78@gmail.com",
+  "tradeType": "Wholeseller",
+  "owner": "67e143dde64cce43d2740168",
+  "users": [],
+  "dateFormat": "nepali",
+  "fiscalYearStartDate": "2078-04-01",
+  "vatEnabled": true,
+  "createdAt": "2078-03-31T18:15:00.000Z",
+  "updatedAt": "2025-03-25T07:53:00.016Z",
+  "__v": 0,
+  "fiscalYear": "67e14466e64cce43d2740175",
+  "renewalDate": "2082-12-11"
+}

@@ -1,0 +1,748 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <style>
+        /* Styles for the statement content */
+        .statement-container {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 2px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+        }
+
+        /* Add this to your style section */
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            .print-header {
+                display: block !important;
+                text-align: center !important;
+            }
+
+            .print-only {
+                display: block !important;
+            }
+
+            th,
+            td {
+                border: 1px solid black;
+                text-align: left;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .print-footer {
+                display: block !important;
+                margin-top: 20px;
+                text-align: center;
+                page-break-after: always;
+            }
+
+            .table-header-fixed {
+                position: static !important;
+            }
+
+            .table-footer-fixed {
+                position: static !important;
+            }
+
+            .table-container {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+        }
+
+        /* Styling for Select2 dropdown */
+        .select2-container .select2-selection--single {
+            height: 40px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Fixed header and footer styles */
+        .table-container {
+            max-height: 550px;
+            min-height: 550px;
+            overflow-y: auto;
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .table-container table {
+            margin-bottom: 0;
+        }
+
+        .table-header-fixed {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f2f2f2;
+        }
+
+        .table-footer-fixed {
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+            background-color: #f2f2f2;
+        }
+
+        /* Highlighted row styling */
+        .selected-row {
+            background-color: #5897FB !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .selected-row td {
+            background-color: #5897FB !important;
+            color: white;
+        }
+
+        /* Print footer */
+        .print-footer {
+            display: none;
+        }
+
+        /* Form styling */
+        .expanded-container {
+            max-width: 90%;
+        }
+
+        .expanded-card {
+            width: 100%;
+        }
+
+        .d-flex.flex-nowrap {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+        }
+
+        .col-4 {
+            flex: 0 0 33.333333% !important;
+            max-width: 33.333333% !important;
+            padding: 0 15px !important;
+        }
+
+        [class^="col-"] {
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        /* Hide the print header on screen but show when printing */
+        .print-header {
+            display: none;
+        }
+    </style>
+
+    <div class="container wow-form mt-0 expanded-container">
+        <div class="card shadow-lg p-0 animate__animated animate__fadeInUp expanded-card">
+            <!-- <h1 class="text-center" style="text-decoration: underline;">Financial Statement</h1> -->
+            <div class="card-body">
+                <form action="/statement" method="get" class="mb-2">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="account">Select Company</label>
+                                <select name="account" id="account" class="form-control" autofocus required>
+                                    <option value="" disabled selected>Select a company</option>
+                                    <% accounts.forEach(account=> { %>
+                                        <option value="<%= account._id %>" <%=account._id==selectedCompany ? 'selected'
+                                            : '' %>><%= account.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+                            </div>
+                        </div>
+
+                        <% if (companyDateFormat==='english' ) { %>
+                            <div class="col-2">
+                                <div class="form-group">
+                                    <label for="fromDate">From</label>
+                                    <input type="date" name="fromDate" id="fromDate" class="form-control"
+                                        value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
+                                </div>
+                            </div>
+                            <div class="col-2">
+                                <div class="form-group">
+                                    <label for="toDate">To</label>
+                                    <input type="date" name="toDate" id="toDate" class="form-control"
+                                        value="<%= new Date().toISOString().substr(0, 10) %>">
+                                </div>
+                            </div>
+                            <% } else if (companyDateFormat==='nepali' ) { %>
+                                <div class="col-2">
+                                    <div class="form-group">
+                                        <label for="fromDate">From</label>
+                                        <input type="date" name="fromDate" id="fromDate" class="form-control"
+                                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
+                                    </div>
+                                </div>
+                                <div class="col-2">
+                                    <div class="form-group">
+                                        <label for="toDate">To</label>
+                                        <input type="date" name="toDate" id="toDate" class="form-control"
+                                            value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
+                                    </div>
+                                </div>
+                                <% } %>
+
+                                    <div class="col-2">
+                                        <div class="form-group">
+                                            <label for="paymentMode">Payment Mode</label>
+                                            <select name="paymentMode" id="paymentMode" class="form-control">
+                                                <option value="all" <%=paymentMode==='all' ? 'selected' : '' %>>All
+                                                    (Include Cash)</option>
+                                                <option value="exclude-cash" <%=paymentMode==='exclude-cash'
+                                                    ? 'selected' : '' %>>All (Exclude Cash)</option>
+                                                <option value="cash" <%=paymentMode==='cash' ? 'selected' : '' %>>Cash
+                                                </option>
+                                                <option value="credit" <%=paymentMode==='credit' ? 'selected' : '' %>
+                                                    >Credit
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                    </div>
+                    <br>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-eye"></i></button>
+                    <% if (selectedCompany) { %>
+                        <a id="exportPdfBtn" class="btn btn-danger no-print"><i class="fas fa-file-pdf"></i></a>
+                        <button type="button" class="btn btn-secondary no-print" onclick="printStatement()"><i
+                                class="fas fa-print text-danger"></i></button>
+                        <% } %>
+                </form>
+
+                <% if (statement.length> 0) { %>
+                    <div class="statement-container">
+                        <div class="print-header">
+                            <h3 class="text-center">
+                                <%= currentCompanyName %> <br>
+                            </h3>
+                            <p class="text-center">
+                                <%= currentCompany.address %>-<%=currentCompany.ward%>, <%=currentCompany.city%>,
+                            </p>
+                        </div>
+                        <div class="text-center">
+                            <p>Account Ledger</p>
+                            <h5>
+                                Account: <%=partyName%>
+                            </h5>
+                        </div>
+
+                        <div class="row d-flex flex-nowrap">
+                            <div class="col-4" style="display: inline-block; white-space: nowrap;">
+                                <strong style="display: inline-block;">From:</strong>
+                                <span>
+                                    <%= fromDate %>
+                                </span>
+                            </div>
+                            <div class="col-4" style="display: inline-block; white-space: nowrap;">
+                                <strong style="display: inline-block;">To:</strong>
+                                <span>
+                                    <%= toDate %>
+                                </span>
+                            </div>
+                            <div class="col-4" style="display: inline-block; white-space: nowrap;">
+                                <strong style="display: inline-block;">Payment Mode:</strong>
+                                <span>
+                                    <%= paymentMode.charAt(0).toUpperCase() + paymentMode.slice(1) %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="table-container" id="scrollableTable">
+                            <table class="table table-stripped table-hover" id="ledgerTable">
+                                <thead>
+                                    <tr class="table-header-fixed">
+                                        <th>Date</th>
+                                        <th>Vch. No.</th>
+                                        <th>Type</th>
+                                        <th>Pay. Mode</th>
+                                        <th>Account</th>
+                                        <th>Debit (Rs.)</th>
+                                        <th>Credit (Rs.)</th>
+                                        <th>Balance (Rs.)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% let totalDebit=0; let totalCredit=0; %>
+                                        <% statement.forEach(entry=> { totalDebit += entry.debit || 0; totalCredit +=
+                                            entry.credit || 0; %>
+                                            <tr data-id="<%= entry._id %>"
+                                                ondblclick="window.location.href='/bills/<%= entry.billId %>/print'"
+                                                class="table-row">
+                                                <td>
+                                                    <%= new Date(entry.date).toLocaleDateString() %>
+                                                </td>
+                                                <td>
+                                                    <%= entry.billNumber %>
+                                                </td>
+                                                <td>
+                                                    <%= entry.type %>
+                                                </td>
+                                                <td>
+                                                    <%= entry.paymentMode %>
+                                                </td>
+                                                <td>
+                                                    <%= entry.accountType?.name || entry.purchaseSalesType ||
+                                                        entry.journalAccountType || entry.purchaseSalesReturnType ||
+                                                        entry.drCrNoteAccountType || entry.paymentReceiptAccountType
+                                                        || 'Opening' %>
+                                                        <%=entry.partyBillNumber%>
+                                                </td>
+                                                <td>
+                                                    <%= entry.debit ? entry.debit.toFixed(2) : '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= entry.credit ? entry.credit.toFixed(2) : '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= entry.balance %>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-secondary table-footer-fixed">
+                                        <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                        <td><strong>
+                                                <%= totalDebit.toFixed(2) %>
+                                            </strong></td>
+                                        <td><strong>
+                                                <%= totalCredit.toFixed(2) %>
+                                            </strong></td>
+                                        <td><strong>
+                                                <%= statement[statement.length - 1].balance %>
+                                            </strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const tableContainer = document.getElementById('scrollableTable');
+                            const tableRows = Array.from(document.querySelectorAll(".table-row"));
+                            let currentIndex = 0;
+                            const headerHeight = document.querySelector('.table-header-fixed').offsetHeight;
+                            const footerHeight = document.querySelector('.table-footer-fixed').offsetHeight;
+
+                            function ensureRowVisible(row) {
+                                const containerRect = tableContainer.getBoundingClientRect();
+                                const rowRect = row.getBoundingClientRect();
+                                const containerTop = containerRect.top + headerHeight;
+                                const containerBottom = containerRect.bottom - footerHeight;
+
+                                if (rowRect.top < containerTop) {
+                                    // Row is above the visible area (hidden by header)
+                                    tableContainer.scrollTop -= (containerTop - rowRect.top) + 5;
+                                } else if (rowRect.bottom > containerBottom) {
+                                    // Row is below the visible area (hidden by footer)
+                                    tableContainer.scrollTop += (rowRect.bottom - containerBottom) + 5;
+                                }
+                            }
+
+                            function updateRowHighlight() {
+                                tableRows.forEach(row => row.classList.remove("selected-row"));
+                                if (currentIndex >= 0 && currentIndex < tableRows.length) {
+                                    const selectedRow = tableRows[currentIndex];
+                                    selectedRow.classList.add("selected-row");
+                                    ensureRowVisible(selectedRow);
+                                }
+                            }
+
+                            // Highlight the first row initially
+                            updateRowHighlight();
+
+                            document.addEventListener("keydown", function (event) {
+                                if (event.key === "ArrowDown") {
+                                    event.preventDefault();
+                                    if (currentIndex < tableRows.length - 1) {
+                                        currentIndex++;
+                                        updateRowHighlight();
+                                    }
+                                } else if (event.key === "ArrowUp") {
+                                    event.preventDefault();
+                                    if (currentIndex > 0) {
+                                        currentIndex--;
+                                        updateRowHighlight();
+                                    }
+                                } else if (event.key === "Enter" && currentIndex >= 0) {
+                                    const selectedRow = tableRows[currentIndex];
+                                    if (selectedRow) {
+                                        // window.location.href = selectedRow.getAttribute('ondblclick').match(/'(.*?)'/)[1];
+                                    }
+                                }
+                            });
+
+                            // Highlight row on mouse click
+                            tableRows.forEach((row, index) => {
+                                row.addEventListener("click", function () {
+                                    currentIndex = index;
+                                    updateRowHighlight();
+                                });
+
+                                row.addEventListener("dblclick", function () {
+                                    window.location.href = this.getAttribute('ondblclick').match(/'(.*?)'/)[1];
+                                });
+                            });
+                        });
+                    </script>
+                    <% } else { %>
+                        <div class="alert alert-info">Please select a company.</div>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-update year
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <script>
+
+        function printStatement() {
+            // Get the party name from the h5 element in the statement container
+            const partyElement = document.querySelector('.statement-container h5');
+            let partyName = 'AccountLedger';
+            if (partyElement) {
+                const match = partyElement.textContent.match(/Account:\s*(.+)/);
+                if (match && match[1]) {
+                    partyName = match[1];
+                }
+            }
+
+            const cleanPartyName = partyName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const title = `AccountLedger_${cleanPartyName}`;
+
+            // Create a popup window centered on the screen
+            const width = 1000;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            const printWindow = window.open('', '_blank',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
+
+            // Clone the actual DOM element
+            const statementContainer = document.querySelector('.statement-container');
+            const printContent = statementContainer.cloneNode(true);
+
+            // Remove no-print elements before converting to HTML
+            printContent.querySelectorAll('.no-print').forEach(el => el.remove());
+
+            const styles = Array.from(document.querySelectorAll('style'))
+                .map(style => style.outerHTML)
+                .join('');
+
+            printWindow.document.write(`
+        <html>
+            <head>
+                <title>${title}</title>
+                ${styles}
+                <style>
+                    body { 
+                        margin: 1cm;
+                        color: black !important;
+                        font-family: Arial, sans-serif;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    .print-only {
+                        display: block !important;
+                    }
+                    .statement-container {
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .statement-container h3,
+                    .statement-container h4,
+                    .statement-container h5 {
+                        text-align: center !important;
+                        margin: 10px 0 !important;
+                    }
+                    .text-center {
+                        text-align: center !important;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        border: 1px solid black !important;
+                    }
+                    th, td {
+                        border: 1px solid black !important;
+                        padding: 4px;
+                        text-align: left;
+                        font-size: 10pt;
+                        color: black !important;
+                    }
+                    th {
+                        background-color: #f2f2f2 !important;
+                    }
+                    .selected-row,
+                    .selected-row td {
+                        background-color: white !important;
+                        color: black !important;
+                        font-weight: normal !important;
+                    }
+                    .print-footer {
+                        display: block !important;
+                        text-align: right;
+                        margin-top: 20px;
+                        font-size: 9pt;
+                        color: #555;
+                    }
+                    .table-container {
+                        max-height: none !important;
+                        overflow: visible !important;
+                    }
+                    .table-header-fixed,
+                    .table-footer-fixed {
+                        position: static !important;
+                    }
+                    .d-flex.flex-nowrap {
+                        display: flex !important;
+                        justify-content: space-between !important;
+                        margin-bottom: 10px;
+                    }
+                    .col-4 {
+                        flex: 1 !important;
+                        max-width: none !important;
+                    }
+                    @media print {
+                        .print-footer {
+                            position: absolute;
+                            bottom: 0;
+                            right: 0;
+                            width: 100%;
+                            text-align: right;
+                        }
+                        .statement-container {
+                            position: relative;
+                            padding-bottom: 30px;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                ${printContent.outerHTML}
+                <div class="print-footer">
+                    <p style="margin: 0;">
+                        <i class="fas fa-code" style="margin-right: 5px;"></i> Powered by:
+                        <strong style="color: #2c3e50;">Sarathi Accounting Software</strong>
+                    </p>
+                </div>
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            // Close the window after printing if user agrees
+                            if (confirm('Close print window?')) {
+                                window.close();
+                            }
+                        }, 200);
+                    };
+                <\/script>
+            </body>
+        </html>
+    `);
+            printWindow.document.close();
+        }
+
+        $(document).ready(function () {
+            $('#account').select2({
+                placeholder: "Select an accounts",
+                allowClear: true,
+                width: '100%',
+            });
+        });
+
+        function moveToNextVisibleInput(currentElement) {
+            const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+            const currentIndex = formElements.indexOf(currentElement);
+            for (let i = currentIndex + 1; i < formElements.length; i++) {
+                if (formElements[i].offsetParent !== null) {
+                    formElements[i].focus();
+                    break;
+                }
+            }
+        }
+
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                moveToNextVisibleInput(event.target);
+            }
+        }
+
+        const inputs = document.querySelectorAll('form input, form select');
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        // Function to export as PDF with all data and proper styling
+        function exportAsPDF() {
+            // Get the party name from the h5 element in the statement container
+            const partyElement = document.querySelector('.statement-container h5');
+            let partyName = 'AccountLedger';
+            if (partyElement) {
+                const match = partyElement.textContent.match(/Account:\s*(.+)/);
+                if (match && match[1]) {
+                    partyName = match[1];
+                }
+            }
+
+            const cleanPartyName = partyName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const filename = `AccountLedger_${cleanPartyName}.pdf`;
+
+            // Create a deep clone of the statement container
+            const element = document.querySelector('.statement-container').cloneNode(true);
+
+            // Remove no-print elements
+            element.querySelectorAll('.no-print').forEach(el => el.remove());
+
+            // Fix the table container to show all rows
+            const tableContainer = element.querySelector('.table-container');
+            if (tableContainer) {
+                tableContainer.style.maxHeight = 'none';
+                tableContainer.style.overflow = 'visible';
+            }
+
+            // Remove sticky positioning from header/footer for PDF
+            const fixedHeader = element.querySelector('.table-header-fixed');
+            if (fixedHeader) {
+                fixedHeader.style.position = 'static';
+            }
+            const fixedFooter = element.querySelector('.table-footer-fixed');
+            if (fixedFooter) {
+                fixedFooter.style.position = 'static';
+            }
+
+            // Add print-specific styles
+            const style = document.createElement('style');
+            style.innerHTML = `
+            body { 
+                margin: 0;
+                padding: 0;
+                color: black !important;
+                font-family: Arial, sans-serif;
+            }
+            .statement-container {
+                width: 100%;
+                margin: 0;
+                padding: 10px;
+            }
+            .print-header {
+                display: block !important;
+                text-align: center !important;
+                margin-bottom: 0px;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .statement-container h3, 
+            .statement-container h4,
+            .statement-container h5 {
+                text-align: center !important;
+                margin: 0px 0 !important;
+            }
+            .text-center {
+                text-align: center !important;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                border: 1px solid black !important;
+                margin-bottom: 0px;
+            }
+            th, td {
+                border: 1px solid black !important;
+                padding: 0px;
+                font-size: 12px;
+                color: black !important;
+            }
+            th {
+                background-color: #f2f2f2 !important;
+            }
+            .selected-row,
+            .selected-row td {
+                background-color: white !important;
+                color: black !important;
+                font-weight: normal !important;
+            }
+            .table-container {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .table-header-fixed,
+            .table-footer-fixed {
+                position: static !important;
+            }
+            .print-footer {
+                display: block !important;
+                margin-top: 0px;
+                text-align: center;
+                page-break-after: always;
+            }
+        `;
+            element.prepend(style);
+
+            // PDF options
+            const opt = {
+                margin: 10,
+                filename: filename,
+                image: {
+                    type: 'jpeg',
+                    quality: 0.98
+                },
+                html2canvas: {
+                    scale: 2,
+                    scrollY: 0, // Ensure we capture all content
+                    windowHeight: document.querySelector('.statement-container').scrollHeight
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait'
+                }
+            };
+
+            // Generate and download PDF
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Add event listener to the Export PDF button
+        document.getElementById('exportPdfBtn').addEventListener('click', exportAsPDF);
+    </script>

@@ -1,0 +1,1126 @@
+<%- include('../layouts/boilerplate', { title: 'Items Ledger' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <style>
+        /* Improved table styling */
+        .ledger-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: auto;
+            font-size: 0.9rem;
+        }
+
+        .ledger-table th {
+            position: sticky;
+            top: 0;
+            background-color: #4a6fdc;
+            color: white;
+            font-weight: 500;
+            padding: 12px 8px;
+            border: none;
+            z-index: 10;
+        }
+
+        .ledger-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        .ledger-table tbody tr:hover {
+            background-color: #f5f8ff;
+        }
+
+        .ledger-table tbody tr.selected-row {
+            background-color: #5897FB !important;
+            box-shadow: inset 3px 0 0 #4a6fdc;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        /* Table footer styling */
+        .ledger-table tfoot tr {
+            position: sticky;
+            bottom: 0;
+            background-color: #f8f9fa;
+            z-index: 5;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Table container with proper scrolling */
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        /* Ensure the table takes full width inside container */
+        .table-container table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        /* Optional: Add hover effect for other rows */
+        .ledger-table tbody tr:not(.selected-row):hover {
+            background-color: #f5f8ff;
+        }
+
+        /* Ensure text in cells remains white and bold */
+        .ledger-table tbody tr.selected-row td {
+            color: white !important;
+            font-weight: bold;
+        }
+
+        /* Style for type indicators in selected row */
+        .ledger-table tbody tr.selected-row .type-Purc,
+        .ledger-table tbody tr.selected-row .type-PrRt,
+        .ledger-table tbody tr.selected-row .type-Sale,
+        .ledger-table tbody tr.selected-row .type-SlRt,
+        .ledger-table tbody tr.selected-row .type-xcess,
+        .ledger-table tbody tr.selected-row .type-short {
+            color: white !important;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+
+        /* Keep the original hover effect for non-selected rows */
+        .ledger-table tbody tr:not(.selected-row):hover {
+            background-color: #f5f8ff;
+        }
+
+        /* Card styling */
+        .ledger-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: none;
+            overflow: hidden;
+        }
+
+        .ledger-card .card-header {
+            background-color: #4a6fdc;
+            color: white;
+            padding: 15px 20px;
+            border-bottom: none;
+        }
+
+        .ledger-card .card-title {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        /* Form controls */
+        .form-control {
+            border-radius: 6px;
+            border: 1px solid #d1d5e0;
+            padding: 8px 12px;
+            height: calc(1.5em + 0.75rem + 2px);
+        }
+
+        .form-control:focus {
+            border-color: #4a6fdc;
+            box-shadow: 0 0 0 0.2rem rgba(74, 111, 220, 0.25);
+        }
+
+        /* Buttons */
+        .btn-action {
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #4a6fdc;
+            border-color: #4a6fdc;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a5bc7;
+            border-color: #3a5bc7;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+        /* Update the modal styles for proper scrolling */
+
+        #itemModal .modal-content {
+            display: flex;
+            flex-direction: column;
+            height: 65vh;
+            /* Set a fixed height for the modal */
+        }
+
+        #itemModal .modal-body {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+            /* Prevent double scrollbars */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #itemModal .modal-body>div {
+            flex: 1;
+            overflow-y: auto;
+            /* Enable scrolling only for the list */
+        }
+
+        #itemModal .list-group {
+            min-height: min-content;
+            /* Ensure proper sizing */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .ledger-table {
+                font-size: 0.8rem;
+            }
+
+            .ledger-table th,
+            .ledger-table td {
+                padding: 8px 5px;
+            }
+
+            .form-group label {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+
+            body {
+                font-size: 12px;
+                margin: 10mm;
+            }
+
+            #printHeader {
+                display: block;
+            }
+
+            th,
+            td {
+                white-space: nowrap;
+            }
+
+            #filterForm,
+            #searchInput,
+            #billsList .searchClass td:last-child {
+                display: none;
+            }
+
+            #mainContainer {
+                width: 100%;
+            }
+
+            .btn-action,
+            .card-header {
+                display: none !important;
+            }
+        }
+
+        @media screen {
+            #printHeader {
+                display: none;
+            }
+        }
+
+        /* Layout improvements */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Status indicators */
+        .type-xcess {
+            color: #28a745;
+        }
+
+        .type-short {
+            color: #dc3545;
+        }
+
+        .type-Sale {
+            color: #17a2b8;
+        }
+
+        .type-SlRt {
+            color: #ffc107;
+        }
+
+        .type-Purc {
+            color: #007bff;
+        }
+
+        .type-PrRt {
+            color: #6f42c1;
+        }
+
+        /* Add these styles to your existing CSS */
+        .item-list-container {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .list-group {
+            min-height: min-content;
+        }
+
+
+
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .list-group-item.active {
+            z-index: 2;
+            position: relative;
+            background-color: #4a6fdc;
+            color: white;
+            border-color: rgba(0, 0, 0, 0.125);
+        }
+
+        .list-group-item:hover:not(.active) {
+            background-color: #f8f9fa;
+        }
+
+        /* Ensure proper modal sizing on mobile */
+        @media (max-width: 768px) {
+            #itemModal .modal-dialog {
+                margin: 10px;
+                width: calc(100% - 20px);
+            }
+
+            #itemModal .modal-content {
+                height: 90vh;
+            }
+        }
+    </style>
+
+    <div class="container-fluid wow-form">
+        <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+            <div class="card mt-4 ledger-card">
+                <div class="card-header">
+                    <h2 class="card-title text-center">
+                        <i class="bi bi-box-seam mr-2"></i>
+                        <span id="ledgerTitle">Items Ledger</span>
+                    </h2>
+                </div>
+
+                <div class="card-body">
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <label for="Items" class="font-weight-bold">Items</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="selectItemBtn"
+                                    placeholder="Select an item..." autocomplete="off">
+                            </div>
+                        </div>
+                        <form id="ledgerFilterForm" class="mb-4">
+                            <div class="row g-3">
+                                <% if (companyDateFormat==='english' ) { %>
+                                    <div class="filter-group">
+                                        <label for="fromDate">From Date</label>
+                                        <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
+                                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                            autofocus autocomplete="off">
+                                    </div>
+                                    <div class="filter-group">
+                                        <label for="toDate">To Date</label>
+                                        <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                                            value="<%= new Date().toISOString().split('T')[0] %>" autocomplete="off">
+                                    </div>
+                                    <% } else { %>
+                                        <div class="filter-group">
+                                            <label for="fromDate">From Date</label>
+                                            <input type="date" name="fromDate" id="fromDate"
+                                                class="form-control datepicker"
+                                                value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                                autofocus autocomplete="off">
+                                        </div>
+                                        <div class="filter-group">
+                                            <label for="toDate">To Date</label>
+                                            <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                                                value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                                autocomplete="off">
+                                        </div>
+                                        <% } %>
+
+                                            <div class="filter-group">
+                                                <label for=""></label>
+                                                <div class="action-buttons">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-chart-line me-2"></i>Generate Report
+                                                    </button>
+                                                </div>
+                                            </div>
+                            </div>
+                        </form>
+                        <div class="filter-group">
+                            <label for="searchInput" class="font-weight-bold">Search Party</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                </div>
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Search by party name..." autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="adjustmentTypeFilter" class="font-weight-bold">Filter by Type</label>
+                            <select class="form-control" id="adjustmentTypeFilter">
+                                <option value="">All Transactions</option>
+                                <option value="xcess">Xcess</option>
+                                <option value="short">Short</option>
+                                <option value="Sale">Sales</option>
+                                <option value="SlRt">Sales Return</option>
+                                <option value="Purc">Purchase</option>
+                                <option value="PrRt">Purchase Return</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="toolbar">
+                        <button id="printAllBills" class="btn btn-secondary btn-action" disabled>
+                            <i class="bi bi-printer mr-1"></i> Print All
+                        </button>
+                        <button id="printFilteredBills" class="btn btn-secondary btn-action" disabled>
+                            <i class="bi bi-printer-fill mr-1"></i> Print Filtered
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="ledger-table" id="adjustmentList">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Vouch/Inv.</th>
+                                    <th>Party Name</th>
+                                    <th>Type</th>
+                                    <th>Qty. In</th>
+                                    <th>Qty. Out</th>
+                                    <th>Free</th>
+                                    <th>Unit</th>
+                                    <th>Rate (Rs.)</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerTableBody">
+                                <tr>
+                                    <td colspan="10" class="text-center py-4 text-muted">
+                                        Please select an item to view its ledger
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot id="ledgerTableFooter" style="display: none;">
+                                <tr class="bg-light">
+                                    <td colspan="4"><strong>Totals:</strong></td>
+                                    <td id="totalQtyIn"><strong>0.00</strong></td>
+                                    <td id="totalQtyOut"><strong>0.00</strong></td>
+                                    <td id="totalFree"><strong>0.00</strong></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td id="finalBalance"><strong>0.00</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Fixed Search Input -->
+                <div class="p-3 bg-white sticky-top">
+                    <input type="text" id="searchItem" class="form-control" placeholder="Search Item"
+                        onfocus="selectValue(this)" autocomplete="off" autofocus>
+                </div>
+                <div class="modal-body">
+                    <!-- Scrollable Item List -->
+                    <div class="item-list-container">
+                        <ul id="itemList" class="list-group">
+                            <!-- Items will be dynamically loaded here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // DOM Elements
+            const $itemInput = $("#selectItemBtn");
+            const $selectItemBtn = $("#selectItemBtn");
+            const $itemModal = $("#itemModal").modal('show');
+            const $searchInput = $("#searchItem");
+            const $itemList = $("#itemList");
+            const $ledgerTableBody = $("#ledgerTableBody");
+            const $ledgerTitle = $("#ledgerTitle");
+            const $printAllBtn = $("#printAllBills");
+            const $printFilteredBtn = $("#printFilteredBills");
+
+            // State variables
+            let allItems = [];
+            let filteredItems = [];
+            let selectedIndex = 0;
+            let isLoading = false;
+            let currentItem = null;
+
+            // Event Handlers
+            $selectItemBtn.on('click', showItemModal);
+            $itemModal.on('shown.bs.modal', function () {
+                // Load all items when modal is shown
+                fetchItems();
+                $searchInput.trigger('focus');
+            });
+            $searchInput.on('input', filterItems);
+            $searchInput.on('keydown', handleKeyboardNavigation);
+            $(document).on('click', '.item-item', selectItem);
+
+            function showItemModal() {
+                $itemModal.modal('show');
+            }
+
+            function fetchItems() {
+                if (isLoading) return;
+
+                isLoading = true;
+                $itemList.html('<li class="list-group-item text-muted">Loading items...</li>');
+
+                $.ajax({
+                    url: '/items/search/getFetched',
+                    method: 'GET',
+                    success: function (response) {
+                        allItems = response;
+                        filteredItems = [...allItems]; // Initialize filtered items with all items
+                        renderItems();
+                    },
+                    error: function (xhr) {
+                        console.error('Error:', xhr.responseText);
+                        $itemList.html('<li class="list-group-item text-danger">Failed to load items</li>');
+                    },
+                    complete: function () {
+                        isLoading = false;
+                    }
+                });
+            }
+
+            function filterItems() {
+                const searchTerm = $searchInput.val().trim().toLowerCase();
+
+                if (searchTerm === '') {
+                    // If search is empty, show all items
+                    filteredItems = [...allItems];
+                } else {
+                    // Filter items based on search term
+                    filteredItems = allItems.filter(item =>
+                        item.name.toLowerCase().includes(searchTerm) ||
+                        (item.category && item.category.toLowerCase().includes(searchTerm)) ||
+                        (item.code && item.code.toLowerCase().includes(searchTerm))
+                    );
+                }
+
+                selectedIndex = 0;
+                renderItems();
+            }
+
+            function renderItems() {
+                $itemList.empty();
+
+                if (!filteredItems || filteredItems.length === 0) {
+                    $itemList.html('<li class="list-group-item text-muted">No items found</li>');
+                    return;
+                }
+
+                filteredItems.forEach((item, index) => {
+                    const isActive = index === selectedIndex ? 'active' : '';
+                    $itemList.append(`
+                <li class="list-group-item item-item ${isActive}" 
+                    data-id="${item._id}"
+                    data-name="${item.name}"
+                    data-unit="${item.unit?.name || 'N/A'}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.name}</strong>
+                            <div class="text-muted small">
+                                
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${item.category || ''}</span>
+                        <strong>${item.stock.toFixed(2) || '0.00'} ${item.unit || ''}</strong>
+                    </div>
+                </li>
+            `);
+                });
+            }
+
+            function handleKeyboardNavigation(e) {
+                const $visibleItems = $('.item-item');
+                const itemCount = $visibleItems.length;
+                const $container = $('.item-list-container');
+
+                if (itemCount === 0) return;
+
+                // Remove highlight from all items
+                $visibleItems.removeClass('active');
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        selectedIndex = Math.min(selectedIndex + 1, itemCount - 1);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        selectedIndex = Math.max(selectedIndex - 1, 0);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        $visibleItems.eq(selectedIndex).trigger('click');
+                        return;
+                    default:
+                        return;
+                }
+
+                // Add highlight to selected item
+                const $selectedItem = $visibleItems.eq(selectedIndex).addClass('active');
+
+                // Ensure the selected item is visible
+                const containerHeight = $container.height();
+                const itemHeight = $selectedItem.outerHeight();
+                const itemTop = $selectedItem.position().top;
+                const scrollTop = $container.scrollTop();
+
+                // Calculate positions
+                const itemOffset = itemTop + scrollTop;
+                const itemBottom = itemOffset + itemHeight;
+                const containerBottom = scrollTop + containerHeight;
+
+                // Scroll if item is not fully visible
+                if (itemOffset < scrollTop) {
+                    // Item is above the visible area
+                    $container.scrollTop(itemOffset);
+                } else if (itemBottom > containerBottom) {
+                    // Item is below the visible area
+                    $container.scrollTop(itemBottom - containerHeight);
+                }
+            }
+
+            // function scrollToItem($item) {
+            //     const itemTop = $item.position().top;
+            //     const itemHeight = $item.outerHeight();
+            //     const listHeight = $itemList.height();
+            //     const scrollTop = $itemList.scrollTop();
+
+            //     if (itemTop + itemHeight > listHeight) {
+            //         $itemList.scrollTop(scrollTop + itemHeight);
+            //     } else if (itemTop < 0) {
+            //         $itemList.scrollTop(scrollTop - itemHeight);
+            //     }
+            // }
+
+            function scrollToItem($item) {
+                const $container = $('.item-list-container');
+                const containerHeight = $container.height();
+                const itemHeight = $item.outerHeight();
+                const itemTop = $item.position().top;
+                const scrollTop = $container.scrollTop();
+
+                // Calculate positions
+                const itemBottom = itemTop + itemHeight;
+                const containerBottom = scrollTop + containerHeight;
+
+                // Scroll if item is not fully visible
+                if (itemTop < 0 || itemBottom > containerBottom) {
+                    $container.animate({
+                        scrollTop: scrollTop + itemTop - (containerHeight / 2) + (itemHeight / 2)
+                    }, 200);
+                }
+            }
+
+            function selectItem() {
+                const $item = $(this);
+                const itemId = $item.data('id');
+                const itemName = $item.data('name');
+                const itemUnit = $item.data('unit');
+
+                currentItem = {
+                    id: itemId,
+                    name: itemName,
+                    unit: itemUnit
+                };
+
+                $itemInput.val(itemName);
+                $itemModal.modal('hide');
+                $searchInput.val('');
+                selectedIndex = 0;
+
+                // Update UI
+                // $ledgerTitle.text(`Items Ledger: ${itemName}`);
+                // fetchItemLedger(itemId);
+
+                // Update UI without fetching data
+                $ledgerTitle.text(`Items Ledger: ${itemName}`);
+                $ledgerTableBody.html('<tr><td colspan="10" class="text-center py-4">Select dates and click "Generate Report" to view ledger</td></tr>');
+                $("#ledgerTableFooter").hide();
+                $printAllBtn.prop('disabled', true);
+                $printFilteredBtn.prop('disabled', true);
+
+                // Move focus to the next input field
+                setTimeout(() => {
+                    $("#fromDate").focus();
+                }, 300);
+            }
+
+            function fetchItemLedger(itemId) {
+
+                const fromDate = $('#fromDate').val();
+                const toDate = $('#toDate').val();
+
+                if (!fromDate || !toDate) {
+                    alert('Please select both From Date and To Date');
+                    return;
+                }
+
+                $.ajax({
+                    // url: `/items-ledger/${itemId}`,
+                    url: `/items-ledger/${itemId}?fromDate=${encodeURIComponent(fromDate)}&toDate=${encodeURIComponent(toDate)}`,
+                    method: 'GET',
+                    beforeSend: function () {
+                        $ledgerTableBody.html('<tr><td colspan="10" class="text-center py-4">Loading ledger data...</td></tr>');
+                        $printAllBtn.prop('disabled', true);
+                        $printFilteredBtn.prop('disabled', true);
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            renderLedgerData(response);
+                            $printAllBtn.prop('disabled', false);
+                            $printFilteredBtn.prop('disabled', false);
+                        } else {
+                            showLedgerError(response.message || 'Failed to load ledger data');
+                        }
+                    },
+                    error: function (xhr) {
+                        showLedgerError(xhr.responseJSON?.message || 'Failed to load ledger data');
+                    }
+                });
+            }
+
+            // Modify form submission handler to require item selection
+            $('#ledgerFilterForm').on('submit', function (e) {
+                e.preventDefault();
+                if (!currentItem) {
+                    alert('Please select an item first.');
+                    return;
+                }
+                fetchItemLedger(currentItem.id);
+            });
+
+            function renderLedgerData(data) {
+                $ledgerTableBody.empty();
+
+                if (data.openingStock !== undefined) {
+                    $ledgerTableBody.append(`
+            <tr class="opening-row">
+                <td colspan="3"><strong>Opening Stock</strong></td>
+                <td colspan="5"></td>
+                <td><strong>${data.purchasePrice || ''}</strong></td>
+                <td><strong>${data.openingStock || '0.00'}</strong></td>
+            </tr>
+        `);
+                }
+
+                if (data.entries && data.entries.length >= 0) {
+                    // Initialize totals
+                    let totalQtyIn = 0;
+                    let totalQtyOut = 0;
+                    let totalFree = 0;
+                    let finalBalance = data.openingStock || 0;
+
+                    data.entries.forEach((entry, index) => {
+
+                        // Calculate totals
+                        totalQtyIn += entry.qtyIn || 0;
+                        totalQtyOut += entry.qtyOut || 0;
+                        totalFree += entry.bonus || 0;
+                        finalBalance = entry.balance; // Last entry's balance is the final balance
+
+                        // Add 'selected-row' class to the first data row (index 0)
+                        const isFirstRow = index === 0 ? 'selected-row' : '';
+                        $ledgerTableBody.append(`
+                <tr class="searchClass ${isFirstRow}" 
+                    data-party-name="${entry.partyName.toLowerCase()}" 
+                    data-adjustment-type="${entry.type}">
+                    <td>${new Date(entry.date).toLocaleDateString()}</td>
+                    <td>${entry.billNumber || ''}</td>
+                    <td>${entry.partyName}</td>
+                    <td class="type-${entry.type}">${entry.type}</td>
+                    <td>${entry.qtyIn || '-'}</td>
+                    <td>${entry.qtyOut || '-'}</td>
+                    <td>${entry.bonus || 0}</td>
+                    <td>${entry.unit || ''}</td>
+                    <td>${entry.price || ''}</td>
+                    <td>${entry.balance.toFixed(2)}</td>
+                </tr>
+            `);
+                    });
+                    // Update footer with totals
+                    $("#totalQtyIn").html(`<strong>${totalQtyIn.toFixed(2)}</strong>`);
+                    $("#totalQtyOut").html(`<strong>${totalQtyOut.toFixed(2)}</strong>`);
+                    $("#totalFree").html(`<strong>${totalFree.toFixed(2)}</strong>`);
+                    $("#finalBalance").html(`<strong>${finalBalance.toFixed(2)}</strong>`);
+
+                    // Show the footer
+                    $("#ledgerTableFooter").show();
+                } else {
+                    $ledgerTableBody.html('<tr><td colspan="10" class="text-center py-4">No ledger entries found for this item</td></tr>');
+                }
+
+                // Initialize filtering functionality
+                initFiltering();
+            }
+
+            function showLedgerError(message) {
+                $ledgerTableBody.html(`
+            <tr>
+                <td colspan="10" class="text-center text-danger py-4">
+                    ${message}
+                </td>
+            </tr>
+        `);
+            }
+
+            function initFiltering() {
+                const searchInput = document.getElementById('searchInput');
+                const typeFilter = document.getElementById('adjustmentTypeFilter');
+                const table = document.getElementById('adjustmentList');
+                let selectedRowIndex = 0;
+                let rows = table.querySelectorAll('tbody tr.searchClass');
+
+                function filterAdjustment() {
+                    const searchQuery = searchInput.value.trim().toLowerCase();
+                    const selectedType = typeFilter.value.trim().toLowerCase();
+                    rows = table.querySelectorAll('tbody tr.searchClass');
+
+                    let hasVisibleRows = false;
+
+                    rows.forEach((row, index) => {
+                        const partyName = row.getAttribute('data-party-name');
+                        const adjustmentType = row.getAttribute('data-adjustment-type').toLowerCase();
+
+                        const matchesSearch = partyName.includes(searchQuery);
+                        const matchesType = selectedType === '' || adjustmentType === selectedType;
+
+                        if (matchesSearch && matchesType) {
+                            row.style.display = '';
+                            row.classList.remove('selected-row');
+                            if (!hasVisibleRows) {
+                                row.classList.add('selected-row');
+                                selectedRowIndex = index;
+                                hasVisibleRows = true;
+                            }
+                        } else {
+                            row.style.display = 'none';
+                            row.classList.remove('selected-row');
+                        }
+                    });
+
+                    if (!hasVisibleRows) {
+                        selectedRowIndex = -1;
+                    }
+                }
+
+                searchInput.addEventListener('input', filterAdjustment);
+                typeFilter.addEventListener('change', filterAdjustment);
+
+                // Print buttons functionality
+                document.getElementById('printAllBills').addEventListener('click', function () {
+                    searchInput.value = '';
+                    typeFilter.value = '';
+                    filterAdjustment();
+                    window.print();
+                });
+
+                document.getElementById('printFilteredBills').addEventListener('click', function () {
+                    window.print();
+                });
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize elements
+            const searchInput = document.getElementById('searchInput');
+            const typeFilter = document.getElementById('adjustmentTypeFilter');
+            const table = document.getElementById('adjustmentList');
+            let selectedRowIndex = 0;
+            let rows = [];
+
+            // Filter function
+            function filterAdjustment() {
+                const searchQuery = searchInput.value.trim().toLowerCase();
+                const selectedType = typeFilter.value.trim().toLowerCase();
+                rows = table.querySelectorAll('tbody tr.searchClass');
+
+                let hasVisibleRows = false;
+                let totalQtyIn = 0;
+                let totalQtyOut = 0;
+                let totalFree = 0;
+                let finalBalance = 0;
+
+                rows.forEach((row, index) => {
+                    const partyName = row.getAttribute('data-party-name');
+                    const adjustmentType = row.getAttribute('data-adjustment-type').toLowerCase();
+
+                    const matchesSearch = partyName.includes(searchQuery);
+                    const matchesType = selectedType === '' || adjustmentType === selectedType;
+
+                    if (matchesSearch && matchesType) {
+                        row.style.display = '';
+                        row.classList.remove('selected-row');
+
+                        // Calculate totals for visible rows
+                        const qtyIn = parseFloat(row.cells[4].textContent) || 0;
+                        const qtyOut = parseFloat(row.cells[5].textContent) || 0;
+                        const free = parseFloat(row.cells[6].textContent) || 0;
+
+                        totalQtyIn += qtyIn;
+                        totalQtyOut += qtyOut;
+                        totalFree += free;
+                        finalBalance = parseFloat(row.cells[9].textContent) || 0;
+
+                        if (!hasVisibleRows) {
+                            row.classList.add('selected-row');
+                            selectedRowIndex = index;
+                            hasVisibleRows = true;
+                        }
+                    } else {
+                        row.style.display = 'none';
+                        row.classList.remove('selected-row');
+                    }
+                });
+
+                // Update footer with filtered totals
+                if (hasVisibleRows) {
+                    $("#totalQtyIn").html(`<strong>${totalQtyIn.toFixed(2)}</strong>`);
+                    $("#totalQtyOut").html(`<strong>${totalQtyOut.toFixed(2)}</strong>`);
+                    $("#totalFree").html(`<strong>${totalFree.toFixed(2)}</strong>`);
+                    $("#finalBalance").html(`<strong>${finalBalance.toFixed(2)}</strong>`);
+                    $("#ledgerTableFooter").show();
+                } else {
+                    $("#ledgerTableFooter").hide();
+                    selectedRowIndex = -1;
+                }
+
+                // If no rows match, reset selection
+                if (!hasVisibleRows) {
+                    selectedRowIndex = -1;
+                }
+            }
+
+            // Event listeners
+            searchInput.addEventListener('input', filterAdjustment);
+            typeFilter.addEventListener('change', filterAdjustment);
+
+            document.addEventListener('keydown', function (e) {
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+                    .filter(row => row.style.display !== 'none');
+
+                if (visibleRows.length === 0) return;
+
+                // Remove previous selection
+                if (selectedRowIndex >= 0 && selectedRowIndex < visibleRows.length) {
+                    visibleRows[selectedRowIndex].classList.remove('selected-row');
+                }
+
+                switch (e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (selectedRowIndex > 0) {
+                            selectedRowIndex--;
+                        } else {
+                            // At top - keep focus on first row but don't wrap
+                            selectedRowIndex = 0;
+                        }
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (selectedRowIndex < visibleRows.length - 1) {
+                            selectedRowIndex++;
+                        } else {
+                            // At bottom - keep focus on last row but don't wrap
+                            selectedRowIndex = visibleRows.length - 1;
+                        }
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        selectedRowIndex = 0;
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        selectedRowIndex = visibleRows.length - 1;
+                        break;
+                    case 'Enter':
+                        if (selectedRowIndex >= 0 && selectedRowIndex < visibleRows.length) {
+                            // Add your row action here if needed
+                        }
+                        return;
+                    default:
+                        return;
+                }
+
+                // Add new selection
+                visibleRows[selectedRowIndex].classList.add('selected-row');
+
+                // Scroll to the selected row with proper header/footer visibility
+                const tableContainer = document.querySelector('.table-container');
+                const rowElement = visibleRows[selectedRowIndex];
+                const rowTop = rowElement.offsetTop;
+                const rowHeight = rowElement.offsetHeight;
+                const containerHeight = tableContainer.offsetHeight;
+                const currentScroll = tableContainer.scrollTop;
+
+                // Header height (50px) and footer height (40px)
+                const headerHeight = 50;
+                const footerHeight = 40;
+
+                if (rowTop < currentScroll + headerHeight) {
+                    // Row is above visible area (accounting for sticky header)
+                    tableContainer.scrollTop = rowTop - headerHeight;
+                } else if (rowTop + rowHeight > currentScroll + containerHeight - footerHeight) {
+                    // Row is below visible area (accounting for sticky footer)
+                    tableContainer.scrollTop = rowTop - containerHeight + rowHeight + footerHeight;
+                }
+
+                // Ensure the row is fully visible if possible
+                const rowBottom = rowTop + rowHeight;
+                const visibleAreaTop = currentScroll + headerHeight;
+                const visibleAreaBottom = currentScroll + containerHeight - footerHeight;
+
+                if (rowHeight <= containerHeight - headerHeight - footerHeight) {
+                    // Row fits completely in visible area
+                    if (rowTop < visibleAreaTop) {
+                        tableContainer.scrollTop = rowTop - headerHeight;
+                    } else if (rowBottom > visibleAreaBottom) {
+                        tableContainer.scrollTop = rowTop - containerHeight + rowHeight + footerHeight;
+                    }
+                } else {
+                    // Row is taller than visible area - show as much as possible
+                    if (rowTop < visibleAreaTop) {
+                        tableContainer.scrollTop = rowTop - headerHeight;
+                    } else {
+                        tableContainer.scrollTop = rowTop - containerHeight + rowHeight + footerHeight;
+                    }
+                }
+            });
+
+            // Row click handler
+            table.addEventListener('click', function (e) {
+                const clickedRow = e.target.closest('tr.searchClass');
+                if (!clickedRow) return;
+
+                // Remove previous selection
+                const selected = table.querySelector('.selected-row');
+                if (selected) selected.classList.remove('selected-row');
+
+                // Add new selection
+                clickedRow.classList.add('selected-row');
+
+                // Update selected index
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr.searchClass'))
+                    .filter(row => row.style.display !== 'none');
+                selectedRowIndex = visibleRows.indexOf(clickedRow);
+            });
+
+            // Print buttons functionality
+            document.getElementById('printAllBills').addEventListener('click', function () {
+                // Reset filters before printing
+                searchInput.value = '';
+                typeFilter.value = '';
+                filterAdjustment();
+                window.print();
+            });
+
+            document.getElementById('printFilteredBills').addEventListener('click', function () {
+                window.print();
+            });
+
+            // Initial filter
+            filterAdjustment();
+        });
+
+
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+    </script>

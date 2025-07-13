@@ -1,0 +1,142 @@
+<%- include('./layouts/boilerplate', { 
+    title: 'Client Management',
+    styles: [
+        'https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
+    ],
+    scripts: [
+        'https://code.jquery.com/jquery-3.6.0.min.js',
+        'https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js',
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js'
+    ]
+}) %>
+
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-lg rounded-lg border-0">
+        <div class="card-header bg-gradient-primary text-white py-3 px-4 rounded-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0 font-weight-bold">
+                    <i class="fas fa-users mr-2"></i> Client Management
+                </h2>
+                <a href="/admin/clients/add" class="btn btn-light btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add New Client
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body p-4">
+            <% if (clients.length > 0) { %>
+                <div class="table-responsive">
+                    <table id="clientsTable" class="table table-hover table-bordered w-100">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date Format</th>
+                                <th>Status</th>
+                                <th>Renewal Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% clients.forEach(client=> { %>
+                                <tr>
+                                    <td class="text-muted">#<%= client._id.toString().slice(-6) %></td>
+                                    <td class="font-weight-bold">
+                                        <a href="/admin/clients/<%= client._id %>" class="text-primary">
+                                            <i class="fas fa-building mr-1"></i> <%= client.name %>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="mailto:<%= client.email %>" class="text-dark">
+                                            <%= client.email %>
+                                        </a>
+                                    </td>
+                                    <td><%= client.dateFormat || 'Default' %></td>
+                                    <td>
+                                        <% const isActive = client.renewalDate && new Date(client.renewalDate) > new Date(); %>
+                                        <span class="badge <%= isActive ? 'bg-success' : 'bg-warning' %>">
+                                            <%= isActive ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (client.renewalDate) { %>
+                                            <%= new Date(client.renewalDate).toLocaleDateString() %>
+                                        <% } else { %>
+                                            <span class="text-muted">Demo</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="/admin/clients/<%= client._id %>" 
+                                               class="btn btn-info" 
+                                               title="View"
+                                               data-bs-toggle="tooltip">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/admin/clients/<%= client._id %>/edit" 
+                                               class="btn btn-warning" 
+                                               title="Edit"
+                                               data-bs-toggle="tooltip">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="/admin/clients/<%= client._id %>/renew" 
+                                               class="btn btn-success" 
+                                               title="Renew"
+                                               data-bs-toggle="tooltip">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-3x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">No clients found</h4>
+                    <p class="text-muted">You haven't added any clients yet.</p>
+                    <a href="/admin/clients/add" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus mr-1"></i> Add New Client
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        var table = $('#clientsTable').DataTable({
+            responsive: true,
+            dom: '<"top"f>rt<"bottom"lip><"clear">',
+            language: {
+                search: "",
+                searchPlaceholder: "Search clients...",
+                paginate: {
+                    previous: '<i class="fas fa-chevron-left"></i>',
+                    next: '<i class="fas fa-chevron-right"></i>'
+                }
+            },
+            initComplete: function() {
+                $('.dataTables_filter input').addClass('form-control mb-3');
+                $('.dataTables_filter label').contents().filter(function() {
+                    return this.nodeType === 3; // Text nodes
+                }).remove();
+            }
+        });
+
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>

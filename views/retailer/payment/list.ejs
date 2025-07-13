@@ -1,0 +1,617 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    /* Main Layout */
+    .expanded-container {
+      width: 95%;
+      max-width: 100%;
+      margin: 20px auto;
+    }
+
+    .expanded-card {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      padding: 20px;
+    }
+
+    /* Table Styling */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+      width: 100%;
+      margin-bottom: 1rem;
+      color: #212529;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table thead th {
+      vertical-align: bottom;
+      border-bottom: 2px solid #dee2e6;
+      background-color: #f8f9fa;
+      font-weight: 600;
+      padding: 12px;
+      white-space: nowrap;
+    }
+
+    .table tbody tr {
+      transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .table td {
+      padding: 10px;
+      vertical-align: middle;
+      border-top: 1px solid #dee2e6;
+      white-space: nowrap;
+    }
+
+    /* Action Buttons */
+    .action-buttons .btn {
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    /* Search and Filter */
+    .search-filter-container {
+      margin-bottom: 20px;
+    }
+
+    /* Highlighting */
+    .selected-row {
+      background-color: #5897FB !important;
+      color: white !important;
+    }
+
+    .selected-row td {
+      background-color: #5897FB !important;
+      color: white !important;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        font-size: 12px;
+        margin: 10mm;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid #000 !important;
+        padding: 6px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2 !important;
+      }
+
+      .print-header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+
+      .table td,
+      .table th {
+        padding: 6px;
+        font-size: 0.8rem;
+      }
+
+      .action-buttons .btn {
+        margin-right: 3px;
+        padding: 5px 8px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+
+  <div class="container expanded-container">
+    <div class="card expanded-card">
+      <!-- Print Header (hidden on screen) -->
+      <div id="printHeader" class="d-none print-only">
+        <div class="print-header">
+          <h1>
+            <%= currentCompanyName %>
+          </h1>
+          <p>
+            <%= currentCompany.address %>-<%=currentCompany.ward%>, <%=currentCompany.city%>,
+                  <%=currentCompany.country%><br>
+                    Tel.: <%=currentCompany.phone%>, Email: <%=currentCompany.email%><br>
+                        TPIN: <%=currentCompany.pan%>
+          </p>
+          <hr>
+        </div>
+      </div>
+
+      <h1 class="mb-4 text-center" style="text-decoration: underline;">Payment Voucher's Register</h1>
+
+      <!-- Search and Filter Section -->
+      <div class="row search-filter-container no-print">
+        <form action="/payments-list" method="get" class="mb-4">
+          <div class="row align-items-center g-3">
+            <% if (companyDateFormat==='english' ) { %>
+              <div class="col-md-2">
+                <div class="form-group mb-0">
+                  <label for="fromDate" class="form-label">From Date</label>
+                  <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
+                    value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                    autofocus>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-group mb-0">
+                  <label for="toDate" class="form-label">To Date</label>
+                  <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                    value="<%= new Date().toISOString().split('T')[0] %>">
+                </div>
+              </div>
+              <% } else { %>
+                <div class="col-md-2">
+                  <div class="form-group mb-0">
+                    <label for="fromDate" class="form-label">From Date</label>
+                    <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
+                      value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                      autofocus>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group mb-0">
+                    <label for="toDate" class="form-label">To Date</label>
+                    <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                      value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
+                  </div>
+                </div>
+                <% } %>
+
+                  <div class="col-md-2">
+                    <label for="report" class="form-label">Report</label>
+                    <button type="submit" class="btn btn-primary w-100 h-100">
+                      <i class="fas fa-chart-line me-2"></i>Generate Report
+                    </button>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="form-group mb-0">
+                      <label for="searchInput" class="form-label">Search</label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput"
+                          placeholder="Search by voucher number, suppliers name or user..." aria-label="Search"
+                          autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-group mb-0">
+                      <label for="paymentAccountFilter" class="form-label me-2 mb-0">Payment Account:</label>
+                      <select class="form-select" id="paymentAccountFilter" aria-label="Filter by Payment Account">
+                        <option value="">All</option>
+                        <!-- Options will be populated by JavaScript -->
+                      </select>
+                    </div>
+                  </div>
+          </div>
+        </form>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons no-print mb-3">
+          <a href="/payments" class="btn btn-primary">
+            <i class="fas fa-receipt"></i> New Voucher
+          </a>
+          <button id="printAllBills" class="btn btn-secondary" <%=payments.length===0 ? 'disabled' : '' %>>
+            <i class="fas fa-print"></i> Print All
+          </button>
+          <button id="printFilteredBills" class="btn btn-secondary" <%=payments.length===0 ? 'disabled' : '' %>>
+            <i class="fas fa-filter"></i> Print Filtered
+          </button>
+          <button type="button" class="btn btn-secondary no-print" onclick="refreshPage()">
+            <i class="fas fa-sync-alt me-2"></i>Refresh
+          </button>
+        </div>
+
+        <% if (payments.length===0) { %>
+          <div class="alert alert-info text-center py-3">
+            <i class="fas fa-info-circle me-2"></i>Please select date range and click "Generate Report" to
+            view
+            data
+          </div>
+          <% } else { %>
+            <!-- Payments Table -->
+            <div class="table-responsive">
+              <table class="table table-striped" id="paymentsList">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Vch. No.</th>
+                    <th>Account</th>
+                    <th class="text-end">Debit</th>
+                    <th>Payment Account</th>
+                    <th>User</th>
+                    <th class="no-print">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (payments.length> 0) { %>
+                    <% payments.forEach(payment=> { %>
+                      <tr class="searchClass payment-row"
+                        data-payment-account="<%= payment.paymentAccount ? payment.paymentAccount.name : '' %>">
+                        <td>
+                          <%= new Date(payment.date).toLocaleDateString() %>
+                        </td>
+                        <td>
+                          <%= payment.billNumber %>
+                        </td>
+                        <td>
+                          <% if (payment.isActive) { %>
+                            <%= payment.account ? payment.account.name : 'N/A' %>
+                              <% } else { %>
+                                <span class="text-danger">Canceled</span>
+                                <% } %>
+                        </td>
+                        <td class="text-end">
+                          <% if (payment.isActive) { %>
+                            <%= payment.debit.toFixed(2) %>
+                              <% } else { %>
+                                <span class="text-danger">0.00</span>
+                                <% } %>
+                        </td>
+                        <td>
+                          <% if (payment.isActive) { %>
+                            <%= payment.paymentAccount ? payment.paymentAccount.name : 'N/A' %>
+                              <% } else { %>
+                                <span class="text-danger">Canceled</span>
+                                <% } %>
+                        </td>
+                        <td>
+                          <%= payment.user ? payment.user.name : 'N/A' %>
+                        </td>
+                        <td class="no-print">
+                          <div class="d-flex">
+                            <a href="/payments/<%= payment._id %>/print" class="btn btn-sm btn-info me-1">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/payments/<%= payment._id %>" class="btn btn-sm btn-warning me-1">
+                              <i class="fas fa-edit"></i>
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                      <% }); %>
+                        <% } else { %>
+                          <tr>
+                            <td colspan="7" class="text-center">No payments found</td>
+                          </tr>
+                          <% } %>
+                </tbody>
+                <tfoot>
+                  <tr id="totalsRow">
+                    <td colspan="3"><strong>Total:</strong></td>
+                    <td class="text-end"><strong id="totalDebit">0.00</strong></td>
+                    <td colspan="2"></td>
+                    <td class="no-print"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <% } %>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Initialize variables
+      let paymentRows = document.querySelectorAll(".payment-row");
+      let currentPaymentIndex = 0;
+
+      // Get unique payment accounts for filter dropdown
+      const paymentAccounts = new Set();
+      paymentRows.forEach(row => {
+        const account = row.getAttribute('data-payment-account');
+        if (account) paymentAccounts.add(account);
+      });
+
+      const paymentAccountFilter = document.getElementById('paymentAccountFilter');
+      paymentAccounts.forEach(account => {
+        const option = document.createElement('option');
+        option.value = account;
+        option.textContent = account;
+        paymentAccountFilter.appendChild(option);
+      });
+
+      // Filter payments based on search and payment account
+      function filterPayments() {
+        const searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+        const selectedPaymentAccount = document.getElementById("paymentAccountFilter").value.trim().toLowerCase();
+
+        let visibleCount = 0;
+
+        paymentRows.forEach((row) => {
+          const billNumber = row.cells[1].textContent.trim().toLowerCase();
+          const accountName = row.cells[2].textContent.trim().toLowerCase();
+          const paymentAccount = row.cells[4].textContent.trim().toLowerCase();
+          const users = row.cells[5].textContent.trim().toLowerCase();
+
+          const matchesSearch = accountName.includes(searchQuery) ||
+            billNumber.includes(searchQuery) ||
+            users.includes(searchQuery);
+          const matchesPaymentAccount = selectedPaymentAccount === "" ||
+            paymentAccount === selectedPaymentAccount;
+
+          if (matchesSearch && matchesPaymentAccount) {
+            row.style.display = "";
+            visibleCount++;
+          } else {
+            row.style.display = "none";
+          }
+        });
+
+        updateTotals();
+
+        // Reset current index when filtering
+        currentPaymentIndex = visibleCount > 0 ? 0 : -1;
+        updatePaymentRowHighlight();
+      }
+
+      // Update totals based on visible rows
+      function updateTotals() {
+        let totalDebit = 0;
+
+        document.querySelectorAll('#paymentsList tbody tr.payment-row:not([style*="display: none"])').forEach(row => {
+          const debitCell = row.cells[3];
+          // Only sum active payments (not canceled)
+          if (!debitCell.querySelector('.text-danger')) {
+            totalDebit += parseFloat(debitCell.textContent) || 0;
+          }
+        });
+
+        document.getElementById("totalDebit").textContent = totalDebit.toFixed(2);
+      }
+
+      // Update row highlighting
+      function updatePaymentRowHighlight() {
+        const visibleRows = getVisibleRows();
+        visibleRows.forEach(row => row.classList.remove("selected-row"));
+
+        if (currentPaymentIndex >= 0 && currentPaymentIndex < visibleRows.length) {
+          visibleRows[currentPaymentIndex].classList.add("selected-row");
+          visibleRows[currentPaymentIndex].scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+          });
+        }
+      }
+
+      // Get visible rows after filtering
+      function getVisibleRows() {
+        return Array.from(document.querySelectorAll(".payment-row")).filter(
+          row => row.style.display !== "none"
+        );
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", function (event) {
+        const visibleRows = getVisibleRows();
+
+        if (event.key === "ArrowDown" && currentPaymentIndex < visibleRows.length - 1) {
+          currentPaymentIndex++;
+          updatePaymentRowHighlight();
+        } else if (event.key === "ArrowUp" && currentPaymentIndex > 0) {
+          currentPaymentIndex--;
+          updatePaymentRowHighlight();
+        } else if (event.key === "Enter" && currentPaymentIndex >= 0) {
+          const viewLink = visibleRows[currentPaymentIndex].querySelector("a.btn-info");
+          if (viewLink) viewLink.click();
+        }
+      });
+
+      // Row click handlers
+      paymentRows.forEach((row, index) => {
+        row.addEventListener("click", function () {
+          const visibleRows = getVisibleRows();
+          currentPaymentIndex = visibleRows.indexOf(row);
+          updatePaymentRowHighlight();
+        });
+
+        row.addEventListener("dblclick", function () {
+          const viewLink = row.querySelector("a.btn-info");
+          if (viewLink) viewLink.click();
+        });
+      });
+
+      // Event listeners
+      document.getElementById("searchInput").addEventListener("input", filterPayments);
+      document.getElementById("paymentAccountFilter").addEventListener("change", filterPayments);
+
+      document.getElementById("clearSearch").addEventListener("click", () => {
+        document.getElementById("searchInput").value = "";
+        filterPayments();
+      });
+
+      // Print functions
+      document.getElementById("printAllBills").addEventListener("click", printAllPayments);
+      document.getElementById("printFilteredBills").addEventListener("click", printFilteredPayments);
+
+      function printAllPayments() {
+        printPayments(document.querySelectorAll(".payment-row"));
+      }
+
+      function printFilteredPayments() {
+        printPayments(document.querySelectorAll('.payment-row:not([style*="display: none"])'));
+      }
+
+      function printPayments(rowsToPrint) {
+        if (rowsToPrint.length === 0) {
+          alert("No payments to print");
+          return;
+        }
+
+        const printWindow = window.open("", "_blank");
+        const printHeader = document.getElementById("printHeader").innerHTML;
+
+        let tableContent = `
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            font-size: 10px; 
+            margin: 0;
+            padding: 10mm;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            page-break-inside: auto;
+          }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 4px; 
+            text-align: left; 
+            white-space: nowrap;
+          }
+          th { 
+            background-color: #f2f2f2 !important; 
+            -webkit-print-color-adjust: exact; 
+          }
+          .print-header { 
+            text-align: center; 
+            margin-bottom: 15px; 
+          }
+          .nowrap {
+            white-space: nowrap;
+          }
+          .text-danger {
+            color: #dc3545 !important;
+          }
+        </style>
+        ${printHeader}
+        <h1 style="text-align:center;text-decoration:underline;">Payment Voucher's Register</h1>
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Date</th>
+              <th class="nowrap">Vch No.</th>
+              <th class="nowrap">Account</th>
+              <th class="nowrap">Debit</th>
+              <th class="nowrap">Payment Account</th>
+              <th class="nowrap">User</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+        let totalDebit = 0;
+
+        rowsToPrint.forEach(row => {
+          const cells = row.cells;
+          const isCanceled = cells[3].querySelector('.text-danger') !== null;
+
+          tableContent += `
+          <tr>
+            <td class="nowrap">${cells[0].textContent}</td>
+            <td class="nowrap">${cells[1].textContent}</td>
+            <td class="nowrap">${isCanceled ? '<span class="text-danger">Canceled</span>' : cells[2].textContent}</td>
+            <td class="nowrap">${cells[3].textContent}</td>
+            <td class="nowrap">${isCanceled ? '<span class="text-danger">Canceled</span>' : cells[4].textContent}</td>
+            <td class="nowrap">${cells[5].textContent}</td>
+          </tr>
+        `;
+
+          if (!isCanceled) {
+            totalDebit += parseFloat(cells[3].textContent) || 0;
+          }
+        });
+
+        // Add totals row
+        tableContent += `
+          <tr style="font-weight:bold;">
+            <td colspan="3">Totals</td>
+            <td>${totalDebit.toFixed(2)}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tbody>
+      </table>
+      `;
+
+        printWindow.document.write(`
+        <html>
+          <head>
+            <title>Payment Voucher's Register</title>
+          </head>
+          <body>
+            ${tableContent}
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                }, 200);
+              };
+            <\/script>
+          </body>
+        </html>
+      `);
+        printWindow.document.close();
+      }
+
+      // Initial calculations
+      filterPayments();
+    });
+
+    function refreshPage() {
+      window.location.href = '/payments-list';
+    }
+
+    // Form navigation with Enter key
+    function moveToNextVisibleInput(currentElement) {
+      const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+      const currentIndex = formElements.indexOf(currentElement);
+
+      for (let i = currentIndex + 1; i < formElements.length; i++) {
+        if (formElements[i].offsetParent !== null) {
+          formElements[i].focus();
+          break;
+        }
+      }
+    }
+
+    // Attach event listeners for form navigation
+    document.querySelectorAll('form input, form select').forEach(input => {
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          moveToNextVisibleInput(event.target);
+        }
+      });
+    });
+  </script>

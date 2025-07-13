@@ -1,0 +1,2995 @@
+<!doctype html>
+<html lang="en">
+<!--begin::Head-->
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Sarathi | Dashboard v2</title>
+  <!--begin::Primary Meta Tags-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="title" content="AdminLTE | Dashboard v2" />
+  <meta name="author" content="ColorlibHQ" />
+  <meta name="description"
+    content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS." />
+  <meta name="keywords"
+    content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard" />
+  <!--end::Primary Meta Tags-->
+  <!--begin::Fonts-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+    integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous" />
+  <!--end::Fonts-->
+  <!--begin::Third Party Plugin(OverlayScrollbars)-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
+    integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg=" crossorigin="anonymous" />
+  <!--end::Third Party Plugin(OverlayScrollbars)-->
+  <!--begin::Third Party Plugin(Bootstrap Icons)-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous" />
+  <!--end::Third Party Plugin(Bootstrap Icons)-->
+  <!--begin::Required Plugin(AdminLTE)-->
+  <link rel="stylesheet" href="/css/adminlte.css">
+  <!--end::Required Plugin(AdminLTE)-->
+  <!-- apexcharts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
+    integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0=" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+  <!-- Bootstrap JS (for modals) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+  <style>
+    *#loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      flex-direction: column;
+      /* Stack spinner and percentage */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    #loader {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #007bff;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-top-color: #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    #loader-percentage {
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+
+  <div id="loader" style="display: none;">
+    <div class="spinner"></div>
+    <!-- <p id="loader-percentage-text">Loading... <span id="loader-percentage">0%</span></p> -->
+  </div>
+  <!--begin::App Wrapper-->
+  <div class="app-wrapper">
+    <!--begin::Header-->
+    <nav class="app-header navbar navbar-expand bg-body">
+      <!--begin::Container-->
+      <div class="container-fluid">
+        <!--begin::Start Navbar Links-->
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+              <i class="bi bi-list"></i>
+            </a>
+          </li>
+          <li class="nav-item d-none d-md-block"><a href="#" class="nav-link">Home</a></li>
+          <li class="nav-item d-none d-md-block"><a href="#" class="nav-link" id="contactsButton">Contact(F4)</a></li>
+          <li class="nav-item d-none d-md-block"> <a href="#" class="nav-link" id="productsButton">Products(F9)</a>
+          </li>
+        </ul>
+        <!--end::Start Navbar Links-->
+        <!--begin::End Navbar Links-->
+        <ul class="navbar-nav ms-auto">
+          <!--begin::Navbar Search-->
+          <li class="nav-item">
+            <a class="nav-link" data-widget="navbar-search" href="#" role="button">
+              <i class="bi bi-search"></i>
+            </a>
+          </li>
+          <!--end::Navbar Search-->
+          <!--begin::Messages Dropdown Menu-->
+          <li class="nav-item dropdown">
+            <a class="nav-link" data-bs-toggle="dropdown" href="#">
+              <i class="bi bi-chat-text"></i>
+              <span class="navbar-badge badge text-bg-danger">3</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+              <a href="#" class="dropdown-item">
+                <!--begin::Message-->
+                <div class="d-flex">
+                  <div class="flex-shrink-0">
+                    <img src="/assets/img/user1-128x128.jpg" alt="User Avatar"
+                      class="img-size-50 rounded-circle me-3" />
+                  </div>
+                  <div class="flex-grow-1">
+                    <h3 class="dropdown-item-title">
+                      Brad Diesel
+                      <span class="float-end fs-7 text-danger"><i class="bi bi-star-fill"></i></span>
+                    </h3>
+                    <p class="fs-7">Call me whenever you can...</p>
+                    <p class="fs-7 text-secondary">
+                      <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
+                    </p>
+                  </div>
+                </div>
+                <!--end::Message-->
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item">
+                <!--begin::Message-->
+                <div class="d-flex">
+                  <div class="flex-shrink-0">
+                    <img src="/assets/img/user8-128x128.jpg" alt="User Avatar"
+                      class="img-size-50 rounded-circle me-3" />
+                  </div>
+                  <div class="flex-grow-1">
+                    <h3 class="dropdown-item-title">
+                      John Pierce
+                      <span class="float-end fs-7 text-secondary">
+                        <i class="bi bi-star-fill"></i>
+                      </span>
+                    </h3>
+                    <p class="fs-7">I got your message bro</p>
+                    <p class="fs-7 text-secondary">
+                      <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
+                    </p>
+                  </div>
+                </div>
+                <!--end::Message-->
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item">
+                <!--begin::Message-->
+                <div class="d-flex">
+                  <div class="flex-shrink-0">
+                    <img src="/assets/img/user3-128x128.jpg" alt="User Avatar"
+                      class="img-size-50 rounded-circle me-3" />
+                  </div>
+                  <div class="flex-grow-1">
+                    <h3 class="dropdown-item-title">
+                      Nora Silvester
+                      <span class="float-end fs-7 text-warning">
+                        <i class="bi bi-star-fill"></i>
+                      </span>
+                    </h3>
+                    <p class="fs-7">The subject goes here</p>
+                    <p class="fs-7 text-secondary">
+                      <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
+                    </p>
+                  </div>
+                </div>
+                <!--end::Message-->
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
+            </div>
+          </li>
+          <!--end::Messages Dropdown Menu-->
+          <!--begin::Notifications Dropdown Menu-->
+          <li class="nav-item dropdown">
+            <a class="nav-link" data-bs-toggle="dropdown" href="#">
+              <i class="bi bi-bell-fill"></i>
+              <span class="navbar-badge badge text-bg-warning">15</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+              <span class="dropdown-item dropdown-header">15 Notifications</span>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-envelope me-2"></i> 4 new messages
+                <span class="float-end text-secondary fs-7">3 mins</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-people-fill me-2"></i> 8 friend requests
+                <span class="float-end text-secondary fs-7">12 hours</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
+                <span class="float-end text-secondary fs-7">2 days</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
+            </div>
+          </li>
+          <!--end::Notifications Dropdown Menu-->
+          <!--begin::Fullscreen Toggle-->
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-lte-toggle="fullscreen">
+              <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
+              <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
+            </a>
+          </li>
+          <!--end::Fullscreen Toggle-->
+          <!--begin::User Menu Dropdown-->
+          <li class="nav-item dropdown user-menu">
+            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              <img src="/assets/img/human_icon.jpg" class="user-image rounded-circle shadow" alt="User Image" />
+              <span class="d-none d-md-inline">
+                <%= user.name %>
+              </span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+              <!--begin::User Image-->
+              <li class="user-header text-bg-primary">
+                <img src="/assets/img/human_icon.jpg" class="rounded-circle shadow" alt="User Image" />
+                <p>
+                  <%= user.name %>
+                    - <%= user.role %>
+                      <small>Member since <%=user.createdAt.toDateString() %></small>
+                </p>
+              </li>
+              <!--end::User Image-->
+              <!--begin::Menu Body-->
+              <li class="user-body">
+                <!--begin::Row-->
+                <div class="row">
+                  <% if (isAdminOrSupervisor) { %>
+                    <div class="col-4 text-center"><a href="/admin/create-user/new">Add User</a></div>
+                    <div class="col-4 text-center"><a href="/admin/users/list">Users</a></div>
+                    <% } %>
+                      <% if (isAdminOrSupervisor) { %>
+                        <div class="col-4 text-center"><a href="/admin/users/view/<%= user._id %>">
+                            Profile
+                          </a>
+                        </div>
+                        <%}else{%>
+                          <div class="col-4 text-center"><a href="/account/users/view/<%= user._id %>">
+                              Profile
+                            </a>
+                            <%}%>
+                          </div>
+                          <!--end::Row-->
+              </li>
+              <!--end::Menu Body-->
+              <!--begin::Menu Footer-->
+              <li class="user-footer">
+                <a href="/user/change-password" class="btn btn-default btn-flat">Change Password</a>
+                <a href="/logout" class="btn btn-default btn-flat float-end">Sign out</a>
+              </li>
+              <!--end::Menu Footer-->
+            </ul>
+          </li>
+          <!--end::User Menu Dropdown-->
+        </ul>
+        <!--end::End Navbar Links-->
+      </div>
+      <!--end::Container-->
+    </nav>
+    <!--end::Header-->
+    <!--begin::Sidebar-->
+    <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+      <!--begin::Sidebar Brand-->
+      <div class="sidebar-brand">
+        <!--begin::Brand Link-->
+        <a href="./index.html" class="brand-link">
+          <!--begin::Brand Image-->
+          <img src="/assets/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image opacity-75 shadow" />
+          <!--end::Brand Image-->
+          <!--begin::Brand Text-->
+          <span class="brand-text fw-light">Sarathi-A/c Software</span>
+          <!--end::Brand Text-->
+        </a>
+        <!--end::Brand Link-->
+      </div>
+      <!--end::Sidebar Brand-->
+      <!--begin::Sidebar Wrapper-->
+      <div class="sidebar-wrapper">
+        <nav class="mt-2">
+          <!--begin::Sidebar Menu-->
+          <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+            <li class="nav-item menu-open">
+              <a href="#" class="nav-link active">
+                <i class="nav-icon bi bi-speedometer"></i>
+                <p>
+                  Dashboard
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/retailerDashboard/indexv1" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Dashboard v1</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/retailerDashboard/indexv2" class="nav-link active">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Dashboard v2</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/retailerDashboard/indexv3" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Dashboard v3</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-people"></i>
+                <p>
+                  Accounts
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/companies" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Account</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/account-group" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Account Group</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-tag"></i>
+                <p>
+                  Items
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/items" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Item</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/categories" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Category</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/units" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Unit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/mainUnits" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Main Unit</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/compositions" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Composition</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-arrow-left-right"></i>
+                <p>
+                  Transactions
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="fas fa-file-invoice"></i>
+                    <p>
+                      Sales Department
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>
+                          Party Sales
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                      </a>
+                      <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                          <a href="/bills" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Add Sales</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="/billsTrackBatchOpen" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Add Sales Open</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="/sales-bills/finds" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Edit Sales</p>
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <p>
+                          Cash Sales
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                      </a>
+                      <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                          <a href="/cash/bills/add" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Add Sales</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="/cash/bills/addOpen" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Add Sales Open</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="/cash-sales/sales-bills/finds" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Edit Sales</p>
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/bills-list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Sales Register</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="fas fa-undo"></i>
+                    <p>
+                      Sales Rtn Department
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>
+                          Party Sales Rtn
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                      </a>
+                      <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                          <a href="/sales-return" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Add</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="/sales-return/finds" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Edit</p>
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <p>
+                          Cash Sales Rtn
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                      </a>
+                      <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                          <a href="/cash/sales-return/add" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Add</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="/cash-sales-return/sales-return/finds" class="nav-link">
+                            <i class="nav-icon bi bi-circle"></i>
+                            <p>Edit</p>
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/sales-return/list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Sales Rtn Register</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>
+                      Purchase Department
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/purchase-bills" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/purchase-bills/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/purchase-bills-list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Purchase Register</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="fas fa-undo"></i> <!-- Return icon -->
+                    <p>
+                      Purchase Rtn Department
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/purchase-return" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/purchase-return/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/purchase-return/list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Purchase Rtn Register</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-archive"></i>
+                <p>
+                  Inventory
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/items-ledger" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Item Ledger</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <p>
+                      Stock Adjustment
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/stockAdjustments/new" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <!-- <li class="nav-item">
+                      <a href="/stockAdjustments/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li> -->
+                    <li class="nav-item">
+                      <a href="/stockAdjustments" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Stock Adj. Register</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a href="/retailer/stock-status" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Stock Status</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/items/reorder" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Re Order Level</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-calculator"></i>
+                <p>
+                  Account Department
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-credit-card"></i>
+                    <p>
+                      Payment
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/payments" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/payments/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/payments-list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>List</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-receipt"></i>
+                    <p>
+                      Receipt
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/receipts" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/receipts/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/receipts-list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>List</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-journal-bookmark"></i>
+                    <p>
+                      Journal
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/journal/new" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/journals/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/journal/list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>List</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-file-earmark-arrow-down"></i>
+                    <p>
+                      Debit Note
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/debit-note/new" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/debitnote/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/debit-note/list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>List</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                    <p>
+                      Credit Note
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/credit-note/new" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Add</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/creditnote/finds" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Edit</p>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/credit-note/list" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>List</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-bar-chart-line"></i>
+                <p>
+                  Outstanding
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/aging/accounts" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Ageing</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/statement" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Statement</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-percent"></i>
+                <p>
+                  Vat Summary
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/sales-vat-report" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Sales Vat Register</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/salesReturn-vat-report" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Sales Return Register</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/purchase-vat-report" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Purchase Vat Register</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/purchaseReturn-vat-report" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Purchase Return Register</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/retailer/monthly-vat-report" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Monthly Vat Summary</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="bi bi-gear"></i>
+                <p>
+                  Configuration
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="/settings" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Voucher Configuration</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/change-fiscal-year" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Change FIscal Year</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/switch-fiscal-year" class="nav-link">
+                    <i class="nav-icon bi bi-circle"></i>
+                    <p>Existing Fiscal Year</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                    <p>
+                      Import
+                      <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                      <a href="/import" class="nav-link">
+                        <i class="nav-icon bi bi-circle"></i>
+                        <p>Items Import</p>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a href="/dashboard" class="nav-link">
+                <i class="bi bi-building"></i>
+                <p>My Company</p>
+              </a>
+            </li>
+          </ul>
+          <!--end::Sidebar Menu-->
+        </nav>
+      </div>
+      <!--end::Sidebar Wrapper-->
+    </aside>
+    <!--end::Sidebar-->
+    <!--begin::App Main-->
+    <main class="app-main">
+      <!--begin::App Content Header-->
+      <div class="app-content-header">
+        <!--begin::Container-->
+        <div class="container-fluid">
+          <!--begin::Row-->
+          <div class="row">
+            <div class="col-sm-6">
+              <h3 class="mb-0">Dashboard v2</h3>
+            </div>
+            <div class="col-sm-6">
+              <ol class="breadcrumb float-sm-end">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Dashboard v2</li>
+              </ol>
+            </div>
+          </div>
+          <!--end::Row-->
+        </div>
+        <!--end::Container-->
+      </div>
+      <div class="app-content">
+        <!--begin::Container-->
+        <div class="container-fluid">
+          <!-- Info boxes -->
+          <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon text-bg-primary shadow-sm">
+                  <i class="bi bi-gear-fill"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">CPU Traffic</span>
+                  <span class="info-box-number">
+                    10
+                    <small>%</small>
+                  </span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <!-- /.col -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon text-bg-danger shadow-sm">
+                  <i class="bi bi-hand-thumbs-up-fill"></i>
+                </span>
+                <div class="info-box-content">
+                  <a href="/api/sold-items" style="text-decoration: none;color: black;">
+                    <span class="info-box-text">Saleable item</span>
+                    <span class="info-box-number">
+                      <%= totalUniqueItemsSold %>
+                    </span>
+                  </a>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <!-- /.col -->
+            <!-- fix for small devices only -->
+            <!-- <div class="clearfix hidden-md-up"></div> -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon text-bg-success shadow-sm">
+                  <i class="bi bi-cart-fill"></i>
+                </span>
+                </a>
+                <div class="info-box-content">
+                  <a href="/bills-list" style="text-decoration: none;color: black;"><span class="info-box-text">Sales
+                    </span>
+                    <span class="info-box-number">
+                      <%= salesCount %>
+                    </span>
+                  </a>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <!-- /.col -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon text-bg-warning shadow-sm">
+                  <i class="bi bi-people-fill"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Clients</span>
+                  <span class="info-box-number">
+                    <%= sundryDebtorsCount %>
+                  </span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+            </div>
+            <!-- /.col -->
+          </div>
+          <!-- /.row -->
+          <!--begin::Row-->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title">Monthly Recap Report</h5>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                      <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+                      <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+                    </button>
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-tool dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-wrench"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" role="menu">
+                        <a href="#" class="dropdown-item">Action</a>
+                        <a href="#" class="dropdown-item">Another action</a>
+                        <a href="#" class="dropdown-item"> Something else here </a>
+                        <a class="dropdown-divider"></a>
+                        <a href="#" class="dropdown-item">Separated link</a>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                  <!--begin::Row-->
+                  <div class="row">
+                    <div class="col-md-8">
+                      <p class="text-center">
+                        <strong>Sales: 1 Jan, 2023 - 30 Jul, 2023</strong>
+                      </p>
+                      <div id="sales-chart"></div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-md-4">
+                      <p class="text-center"><strong>Goal Completion</strong></p>
+                      <div class="progress-group">
+                        Add Products to Cart
+                        <span class="float-end"><b>160</b>/200</span>
+                        <div class="progress progress-sm">
+                          <div class="progress-bar text-bg-primary" style="width: 80%"></div>
+                        </div>
+                      </div>
+                      <!-- /.progress-group -->
+                      <div class="progress-group">
+                        Complete Purchase
+                        <span class="float-end"><b>310</b>/400</span>
+                        <div class="progress progress-sm">
+                          <div class="progress-bar text-bg-danger" style="width: 75%"></div>
+                        </div>
+                      </div>
+                      <!-- /.progress-group -->
+                      <div class="progress-group">
+                        <span class="progress-text">Visit Premium Page</span>
+                        <span class="float-end"><b>480</b>/800</span>
+                        <div class="progress progress-sm">
+                          <div class="progress-bar text-bg-success" style="width: 60%"></div>
+                        </div>
+                      </div>
+                      <!-- /.progress-group -->
+                      <div class="progress-group">
+                        Send Inquiries
+                        <span class="float-end"><b>250</b>/500</span>
+                        <div class="progress progress-sm">
+                          <div class="progress-bar text-bg-warning" style="width: 50%"></div>
+                        </div>
+                      </div>
+                      <!-- /.progress-group -->
+                    </div>
+                    <!-- /.col -->
+                  </div>
+                  <!--end::Row-->
+                </div>
+                <!-- ./card-body -->
+                <div class="card-footer">
+                  <!--begin::Row-->
+                  <div class="row">
+                    <div class="col-md-3 col-6">
+                      <div class="text-center border-end">
+                        <span class="<%= salesPercentageChange >= 0 ? 'text-success' : 'text-danger' %>">
+                          <i class="bi bi-caret-up-fill"></i>
+                          <%= Math.abs(salesPercentageChange.toFixed(2)) %>%
+                        </span>
+                        <h5 class="fw-bold mb-0">Rs.<%= netSales.toFixed(2) %>
+                        </h5>
+                        <span class="text-uppercase">TOTAL REVENUE</span>
+                      </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-md-3 col-6">
+                      <div class="text-center border-end">
+                        <span class="<%= purchasePercentageChange >= 0 ? 'text-info' : 'text-danger' %>"> <i
+                            class="bi bi-caret-left-fill"></i>
+                          <%= Math.abs(purchasePercentageChange.toFixed(2)) %>%
+                        </span>
+                        <h5 class="fw-bold mb-0">Rs.<%= netPurchase.toFixed(2) %>
+                        </h5>
+                        <span class="text-uppercase">TOTAL COST</span>
+                      </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-md-3 col-6">
+                      <div class="text-center border-end">
+                        <span class="<%= totalProfitPercentage >= 0 ? 'text-success' : 'text-danger' %>">
+                          <i class="bi bi-caret-up-fill"></i>
+                          <%= Math.abs(totalProfitPercentage.toFixed(2)) %>%
+                        </span>
+                        <h5 class="fw-bold mb-0">Rs.<%=totalProfit.toFixed(2) %>
+                        </h5>
+                        <span class="text-uppercase">TOTAL PROFIT</span>
+                      </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-md-3 col-6">
+                      <div class="text-center">
+                        <span class="text-danger">
+                          <i class="bi bi-caret-down-fill"></i>
+                        </span>
+                        <h5 class="fw-bold mb-0">Rs.<%=totalStockValue.toFixed(2) %>
+                        </h5>
+                        <span class="text-uppercase">STOCK VALUE</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!--end::Row-->
+                </div>
+                <!-- /.card-footer -->
+              </div>
+              <!-- /.card -->
+            </div>
+            <!-- /.col -->
+          </div>
+          <!--end::Row-->
+          <!--begin::Row-->
+          <div class="row">
+            <!-- Start col -->
+            <div class="col-md-8">
+              <!--begin::Row-->
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                  <!-- DIRECT CHAT -->
+                  <div class="card direct-chat direct-chat-warning">
+                    <div class="card-header">
+                      <h3 class="card-title">Direct Chat</h3>
+                      <div class="card-tools">
+                        <span title="3 New Messages" class="badge text-bg-warning"> 3 </span>
+                        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                          <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+                          <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" title="Contacts" data-lte-toggle="chat-pane">
+                          <i class="bi bi-chat-text-fill"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                      <!-- Conversations are loaded here -->
+                      <div class="direct-chat-messages">
+                        <!-- Message. Default to the start -->
+                        <div class="direct-chat-msg">
+                          <div class="direct-chat-infos clearfix">
+                            <span class="direct-chat-name float-start"> Alexander Pierce </span>
+                            <span class="direct-chat-timestamp float-end"> 23 Jan 2:00 pm </span>
+                          </div>
+                          <!-- /.direct-chat-infos -->
+                          <img class="direct-chat-img" src="/assets/img/user1-128x128.jpg" alt="message user image" />
+                          <!-- /.direct-chat-img -->
+                          <div class="direct-chat-text">
+                            Is this template really for free? That's unbelievable!
+                          </div>
+                          <!-- /.direct-chat-text -->
+                        </div>
+                        <!-- /.direct-chat-msg -->
+                        <!-- Message to the end -->
+                        <div class="direct-chat-msg end">
+                          <div class="direct-chat-infos clearfix">
+                            <span class="direct-chat-name float-end"> Sarah Bullock </span>
+                            <span class="direct-chat-timestamp float-start">
+                              23 Jan 2:05 pm
+                            </span>
+                          </div>
+                          <!-- /.direct-chat-infos -->
+                          <img class="direct-chat-img" src="/assets/img/user3-128x128.jpg" alt="message user image" />
+                          <!-- /.direct-chat-img -->
+                          <div class="direct-chat-text">You better believe it!</div>
+                          <!-- /.direct-chat-text -->
+                        </div>
+                        <!-- /.direct-chat-msg -->
+                        <!-- Message. Default to the start -->
+                        <div class="direct-chat-msg">
+                          <div class="direct-chat-infos clearfix">
+                            <span class="direct-chat-name float-start"> Alexander Pierce </span>
+                            <span class="direct-chat-timestamp float-end"> 23 Jan 5:37 pm </span>
+                          </div>
+                          <!-- /.direct-chat-infos -->
+                          <img class="direct-chat-img" src="/assets/img/user1-128x128.jpg" alt="message user image" />
+                          <!-- /.direct-chat-img -->
+                          <div class="direct-chat-text">
+                            Working with AdminLTE on a great new app! Wanna join?
+                          </div>
+                          <!-- /.direct-chat-text -->
+                        </div>
+                        <!-- /.direct-chat-msg -->
+                        <!-- Message to the end -->
+                        <div class="direct-chat-msg end">
+                          <div class="direct-chat-infos clearfix">
+                            <span class="direct-chat-name float-end"> Sarah Bullock </span>
+                            <span class="direct-chat-timestamp float-start">
+                              23 Jan 6:10 pm
+                            </span>
+                          </div>
+                          <!-- /.direct-chat-infos -->
+                          <img class="direct-chat-img" src="/assets/img/user3-128x128.jpg" alt="message user image" />
+                          <!-- /.direct-chat-img -->
+                          <div class="direct-chat-text">I would love to.</div>
+                          <!-- /.direct-chat-text -->
+                        </div>
+                        <!-- /.direct-chat-msg -->
+                      </div>
+                      <!-- /.direct-chat-messages-->
+                      <!-- Contacts are loaded here -->
+                      <div class="direct-chat-contacts">
+                        <ul class="contacts-list">
+                          <li>
+                            <a href="#">
+                              <img class="contacts-list-img" src="/assets/img/user1-128x128.jpg" alt="User Avatar" />
+                              <div class="contacts-list-info">
+                                <span class="contacts-list-name">
+                                  Count Dracula
+                                  <small class="contacts-list-date float-end"> 2/28/2023 </small>
+                                </span>
+                                <span class="contacts-list-msg">
+                                  How have you been? I was...
+                                </span>
+                              </div>
+                              <!-- /.contacts-list-info -->
+                            </a>
+                          </li>
+                          <!-- End Contact Item -->
+                          <li>
+                            <a href="#">
+                              <img class="contacts-list-img" src="/assets/img/user7-128x128.jpg" alt="User Avatar" />
+                              <div class="contacts-list-info">
+                                <span class="contacts-list-name">
+                                  Sarah Doe
+                                  <small class="contacts-list-date float-end"> 2/23/2023 </small>
+                                </span>
+                                <span class="contacts-list-msg"> I will be waiting for... </span>
+                              </div>
+                              <!-- /.contacts-list-info -->
+                            </a>
+                          </li>
+                          <!-- End Contact Item -->
+                          <li>
+                            <a href="#">
+                              <img class="contacts-list-img" src="/assets/img/user3-128x128.jpg" alt="User Avatar" />
+                              <div class="contacts-list-info">
+                                <span class="contacts-list-name">
+                                  Nadia Jolie
+                                  <small class="contacts-list-date float-end"> 2/20/2023 </small>
+                                </span>
+                                <span class="contacts-list-msg"> I'll call you back at... </span>
+                              </div>
+                              <!-- /.contacts-list-info -->
+                            </a>
+                          </li>
+                          <!-- End Contact Item -->
+                          <li>
+                            <a href="#">
+                              <img class="contacts-list-img" src="/assets/img/user5-128x128.jpg" alt="User Avatar" />
+                              <div class="contacts-list-info">
+                                <span class="contacts-list-name">
+                                  Nora S. Vans
+                                  <small class="contacts-list-date float-end"> 2/10/2023 </small>
+                                </span>
+                                <span class="contacts-list-msg"> Where is your new... </span>
+                              </div>
+                              <!-- /.contacts-list-info -->
+                            </a>
+                          </li>
+                          <!-- End Contact Item -->
+                          <li>
+                            <a href="#">
+                              <img class="contacts-list-img" src="/assets/img/user6-128x128.jpg" alt="User Avatar" />
+                              <div class="contacts-list-info">
+                                <span class="contacts-list-name">
+                                  John K.
+                                  <small class="contacts-list-date float-end"> 1/27/2023 </small>
+                                </span>
+                                <span class="contacts-list-msg"> Can I take a look at... </span>
+                              </div>
+                              <!-- /.contacts-list-info -->
+                            </a>
+                          </li>
+                          <!-- End Contact Item -->
+                          <li>
+                            <a href="#">
+                              <img class="contacts-list-img" src="/assets/img/user8-128x128.jpg" alt="User Avatar" />
+                              <div class="contacts-list-info">
+                                <span class="contacts-list-name">
+                                  Kenneth M.
+                                  <small class="contacts-list-date float-end"> 1/4/2023 </small>
+                                </span>
+                                <span class="contacts-list-msg"> Never mind I found... </span>
+                              </div>
+                              <!-- /.contacts-list-info -->
+                            </a>
+                          </li>
+                          <!-- End Contact Item -->
+                        </ul>
+                        <!-- /.contacts-list -->
+                      </div>
+                      <!-- /.direct-chat-pane -->
+                    </div>
+                    <!-- /.card-body -->
+                    <div class="card-footer">
+                      <form action="#" method="post">
+                        <div class="input-group">
+                          <input type="text" name="message" placeholder="Type Message ..." class="form-control" />
+                          <span class="input-group-append">
+                            <button type="button" class="btn btn-warning">Send</button>
+                          </span>
+                        </div>
+                      </form>
+                    </div>
+                    <!-- /.card-footer-->
+                  </div>
+                  <!-- /.direct-chat -->
+                </div>
+                <!-- /.col -->
+                <div class="col-md-6">
+                  <!-- USERS LIST -->
+                  <div class="card">
+                    <div class="card-header">
+                      <h3 class="card-title">Latest Members</h3>
+                      <div class="card-tools">
+                        <span class="badge text-bg-danger"> 8 New Members </span>
+                        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                          <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+                          <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body p-0">
+                      <div class="row text-center m-1">
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user1-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Alexander Pierce
+                          </a>
+                          <div class="fs-8">Today</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user1-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Norman
+                          </a>
+                          <div class="fs-8">Yesterday</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user7-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Jane
+                          </a>
+                          <div class="fs-8">12 Jan</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user6-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            John
+                          </a>
+                          <div class="fs-8">12 Jan</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user2-160x160.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Alexander
+                          </a>
+                          <div class="fs-8">13 Jan</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user5-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Sarah
+                          </a>
+                          <div class="fs-8">14 Jan</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user4-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Nora
+                          </a>
+                          <div class="fs-8">15 Jan</div>
+                        </div>
+                        <div class="col-3 p-2">
+                          <img class="img-fluid rounded-circle" src="/assets/img/user3-128x128.jpg" alt="User Image" />
+                          <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="#">
+                            Nadia
+                          </a>
+                          <div class="fs-8">15 Jan</div>
+                        </div>
+                      </div>
+                      <!-- /.users-list -->
+                    </div>
+                    <!-- /.card-body -->
+                    <div class="card-footer text-center">
+                      <a href="javascript:"
+                        class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">View
+                        All Users</a>
+                    </div>
+                    <!-- /.card-footer -->
+                  </div>
+                  <!-- /.card -->
+                </div>
+                <!-- /.col -->
+              </div>
+              <!--end::Row-->
+              <!--begin::Latest Order Widget-->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Latest Orders</h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                      <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+                      <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table m-0">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Item</th>
+                          <th>Status</th>
+                          <th>Popularity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR9842</a>
+                          </td>
+                          <td>Call of Duty IV</td>
+                          <td><span class="badge text-bg-success"> Shipped </span></td>
+                          <td>
+                            <div id="table-sparkline-1"></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR1848</a>
+                          </td>
+                          <td>Samsung Smart TV</td>
+                          <td><span class="badge text-bg-warning">Pending</span></td>
+                          <td>
+                            <div id="table-sparkline-2"></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR7429</a>
+                          </td>
+                          <td>iPhone 6 Plus</td>
+                          <td><span class="badge text-bg-danger"> Delivered </span></td>
+                          <td>
+                            <div id="table-sparkline-3"></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR7429</a>
+                          </td>
+                          <td>Samsung Smart TV</td>
+                          <td><span class="badge text-bg-info">Processing</span></td>
+                          <td>
+                            <div id="table-sparkline-4"></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR1848</a>
+                          </td>
+                          <td>Samsung Smart TV</td>
+                          <td><span class="badge text-bg-warning">Pending</span></td>
+                          <td>
+                            <div id="table-sparkline-5"></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR7429</a>
+                          </td>
+                          <td>iPhone 6 Plus</td>
+                          <td><span class="badge text-bg-danger"> Delivered </span></td>
+                          <td>
+                            <div id="table-sparkline-6"></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a href="pages/examples/invoice.html"
+                              class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">OR9842</a>
+                          </td>
+                          <td>Call of Duty IV</td>
+                          <td><span class="badge text-bg-success">Shipped</span></td>
+                          <td>
+                            <div id="table-sparkline-7"></div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- /.table-responsive -->
+                </div>
+                <!-- /.card-body -->
+                <div class="card-footer clearfix">
+                  <a href="javascript:void(0)" class="btn btn-sm btn-primary float-start">
+                    Place New Order
+                  </a>
+                  <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-end">
+                    View All Orders
+                  </a>
+                </div>
+                <!-- /.card-footer -->
+              </div>
+              <!-- /.card -->
+            </div>
+            <!-- /.col -->
+            <div class="col-md-4">
+              <!-- Info Boxes Style 2 -->
+              <div class="info-box mb-3 text-bg-warning">
+                <span class="info-box-icon"> <i class="bi bi-tag-fill"></i> </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Inventory</span>
+                  <span class="info-box-number">5,200</span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+              <div class="info-box mb-3 text-bg-success">
+                <span class="info-box-icon"> <i class="bi bi-heart-fill"></i> </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Mentions</span>
+                  <span class="info-box-number">92,050</span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+              <div class="info-box mb-3 text-bg-danger">
+                <span class="info-box-icon"> <i class="bi bi-cloud-download"></i> </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Downloads</span>
+                  <span class="info-box-number">114,381</span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+              <div class="info-box mb-3 text-bg-info">
+                <span class="info-box-icon"> <i class="bi bi-chat-fill"></i> </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Direct Messages</span>
+                  <span class="info-box-number">163,921</span>
+                </div>
+                <!-- /.info-box-content -->
+              </div>
+              <!-- /.info-box -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h3 class="card-title">Browser Usage</h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                      <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+                      <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                  <!--begin::Row-->
+                  <div class="row">
+                    <div class="col-12">
+                      <div id="pie-chart"></div>
+                    </div>
+                    <!-- /.col -->
+                  </div>
+                  <!--end::Row-->
+                </div>
+                <!-- /.card-body -->
+                <div class="card-footer p-0">
+                  <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        United States of America
+                        <span class="float-end text-danger">
+                          <i class="bi bi-arrow-down fs-7"></i>
+                          12%
+                        </span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        India
+                        <span class="float-end text-success">
+                          <i class="bi bi-arrow-up fs-7"></i> 4%
+                        </span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        China
+                        <span class="float-end text-info">
+                          <i class="bi bi-arrow-left fs-7"></i> 0%
+                        </span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                <!-- /.footer -->
+              </div>
+              <!-- /.card -->
+              <!-- PRODUCT LIST -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Recently Added Products</h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                      <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+                      <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body p-0">
+                  <div class="px-2">
+                    <div class="d-flex border-top py-2 px-1">
+                      <div class="col-2">
+                        <img src="/assets/img/default-150x150.png" alt="Product Image" class="img-size-50" />
+                      </div>
+                      <div class="col-10">
+                        <a href="javascript:void(0)" class="fw-bold">
+                          Samsung TV
+                          <span class="badge text-bg-warning float-end"> $1800 </span>
+                        </a>
+                        <div class="text-truncate">Samsung 32" 1080p 60Hz LED Smart HDTV.</div>
+                      </div>
+                    </div>
+                    <!-- /.item -->
+                    <div class="d-flex border-top py-2 px-1">
+                      <div class="col-2">
+                        <img src="/assets/img/default-150x150.png" alt="Product Image" class="img-size-50" />
+                      </div>
+                      <div class="col-10">
+                        <a href="javascript:void(0)" class="fw-bold">
+                          Bicycle
+                          <span class="badge text-bg-info float-end"> $700 </span>
+                        </a>
+                        <div class="text-truncate">
+                          26" Mongoose Dolomite Men's 7-speed, Navy Blue.
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /.item -->
+                    <div class="d-flex border-top py-2 px-1">
+                      <div class="col-2">
+                        <img src="/assets/img/default-150x150.png" alt="Product Image" class="img-size-50" />
+                      </div>
+                      <div class="col-10">
+                        <a href="javascript:void(0)" class="fw-bold">
+                          Xbox One
+                          <span class="badge text-bg-danger float-end"> $350 </span>
+                        </a>
+                        <div class="text-truncate">
+                          Xbox One Console Bundle with Halo Master Chief Collection.
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /.item -->
+                    <div class="d-flex border-top py-2 px-1">
+                      <div class="col-2">
+                        <img src="/assets/img/default-150x150.png" alt="Product Image" class="img-size-50" />
+                      </div>
+                      <div class="col-10">
+                        <a href="javascript:void(0)" class="fw-bold">
+                          PlayStation 4
+                          <span class="badge text-bg-success float-end"> $399 </span>
+                        </a>
+                        <div class="text-truncate">PlayStation 4 500GB Console (PS4)</div>
+                      </div>
+                    </div>
+                    <!-- /.item -->
+                  </div>
+                </div>
+                <!-- /.card-body -->
+                <div class="card-footer text-center">
+                  <a href="javascript:void(0)" class="uppercase"> View All Products </a>
+                </div>
+                <!-- /.card-footer -->
+              </div>
+              <!-- /.card -->
+            </div>
+            <!-- /.col -->
+          </div>
+          <!--end::Row-->
+        </div>
+        <!--end::Container-->
+      </div>
+      <!--end::App Content-->
+    </main>
+    <!--end::App Main-->
+    <!--begin::Footer-->
+    <footer class="app-footer">
+      <!--begin::To the end-->
+      <div class="float-end d-none d-sm-inline">Anything you want</div>
+      <!--end::To the end-->
+      <!--begin::Copyright-->
+      <strong>
+        Copyright &copy; 2014-2024&nbsp;
+        <a href="https://adminlte.io" class="text-decoration-none">AdminLTE.io</a>.
+      </strong>
+      All rights reserved.
+      <!--end::Copyright-->
+    </footer>
+    <!--end::Footer-->
+  </div>
+
+
+  <!-- Modal for Product Details -->
+  <div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
+    <!-- <div class="modal-dialog modal-xl"> -->
+    <div class="modal-dialog" style="max-width: 75%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="productsModalLabel">Product Details</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form class="mb-4">
+            <div class="form-group">
+              <input type="text" class="form-control" id="searchInput"
+                placeholder="Search items by item code, name & category..." autocomplete="off"
+                onfocus="selectValue(this)">
+            </div>
+          </form>
+          <!-- Container for products -->
+          <div id="productDetailsContainer">
+            <!-- Header Row -->
+            <ul id="productDetailsHeader">
+              <li class="product-cell">#</li>
+              <li class="product-cell">HSN</li>
+              <li class="product-cell product-name">Description of Goods</li>
+              <li class="product-cell">Category</li>
+              <li class="product-cell">Rate</li>
+              <li class="product-cell">Stock</li>
+              <li class="product-cell">Unit</li>
+              <li class="product-cell">%</li>
+            </ul>
+            <ul id="productDetailsList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+              <!-- Product details will be dynamically inserted here -->
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="expiry-summary me-auto">
+            <small>
+              <span class="expiry-status expired me-2">Expired</span>
+              <span class="expiry-status danger me-2">Critical (≤30 days)</span>
+              <span class="expiry-status warning me-2">Warning (≤90 days)</span>
+            </small>
+          </div>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purchase Price Modal -->
+  <div class="modal fade" id="purchasePriceModal" tabindex="-1" aria-labelledby="purchasePriceModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Changed to modal-lg for better fit -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="purchasePriceModalLabel">Purchase Price</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="purchasePriceDisplay"></div>
+          <div class="expiry-legend mt-3">
+            <small class="text-muted">
+              <strong>Expiry Legend:</strong>
+              <span class="expiry-badge-modal expired ms-2">EXPIRED</span>
+              <span class="expiry-badge-modal danger ms-2">≤30d</span>
+              <span class="expiry-badge-modal warning ms-2">≤90d</span>
+              <span class="expiry-badge-modal safe ms-2">OK</span>
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch Update Modal -->
+  <div class="modal fade" id="updateBatchModal" tabindex="-1" aria-labelledby="updateBatchModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateBatchModalLabel">Update Batch</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="batchUpdateForm">
+            <input type="hidden" id="batchIndex">
+            <div class="mb-3">
+              <label for="batchNumberInput" class="form-label">Batch Number</label>
+              <input type="text" class="form-control" id="batchNumberInput">
+            </div>
+            <div class="mb-3">
+              <label for="expiryDateInput" class="form-label">Expiry Date</label>
+              <input type="date" class="form-control" id="expiryDateInput">
+            </div>
+            <div class="mb-3">
+              <label for="salesPriceInput" class="form-label">Sales Price</label>
+              <input type="number" class="form-control" id="salesPriceInput" step="any">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" onclick="updateBatch()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Contact Modal -->
+  <div class="modal fade" id="contactsModal" tabindex="-1" aria-labelledby="contactsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 75%;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="contactsModalLabel">Contact Details</h5>
+          <button type="button" class="btn-close btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form class="mb-4">
+            <div class="form-group">
+              <input type="text" class="form-control" id="contactSearch"
+                placeholder="Search contacts by name, address, phone, email or contact person..." autocomplete="off"
+                onfocus="selectValue(this)">
+            </div>
+          </form>
+          <!-- Container for contacts -->
+          <div id="contactsContainer">
+            <!-- Header Row -->
+            <ul id="contactsHeader">
+              <li class="contact-cell">Name</li>
+              <li class="contact-cell">Address</li>
+              <li class="contact-cell">Phone</li>
+              <li class="contact-cell">Email</li>
+              <li class="contact-cell">Contact Person</li>
+            </ul>
+            <ul id="contactsList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+              <!-- Contact details will be dynamically inserted here -->
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="text-muted small me-auto" id="resultCount"></div>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--end::App Wrapper-->
+  <!--begin::Script-->
+  <!--begin::Third Party Plugin(OverlayScrollbars)-->
+  <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
+    integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
+  <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+  <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
+  <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
+  <script src="/js/adminlte.js"></script>
+  <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
+  <script>
+    const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
+    const Default = {
+      scrollbarTheme: 'os-theme-light',
+      scrollbarAutoHide: 'leave',
+      scrollbarClickScroll: true,
+    };
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
+      if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
+        OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+          scrollbars: {
+            theme: Default.scrollbarTheme,
+            autoHide: Default.scrollbarAutoHide,
+            clickScroll: Default.scrollbarClickScroll,
+          },
+        });
+      }
+    });
+  </script>
+  <!--end::OverlayScrollbars Configure-->
+  <!-- OPTIONAL SCRIPTS -->
+  <!-- apexcharts -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"
+    integrity="sha256-+vh8GkaU7C9/wbSLIcwq82tQ2wTf44aOHA8HlBMwRI8=" crossorigin="anonymous"></script>
+  <script>
+    // NOTICE!! DO NOT USE ANY OF THIS JAVASCRIPT
+    // IT'S ALL JUST JUNK FOR DEMO
+    // ++++++++++++++++++++++++++++++++++++++++++
+
+    /* apexcharts
+     * -------
+     * Here we will create a few charts using apexcharts
+     */
+
+    //-----------------------
+    // - MONTHLY SALES CHART -
+    //-----------------------
+
+    const sales_chart_options = {
+      series: [
+        {
+          name: 'Digital Goods',
+          data: [28, 48, 40, 19, 86, 27, 90],
+        },
+        {
+          name: 'Electronics',
+          data: [65, 59, 80, 81, 56, 55, 40],
+        },
+      ],
+      chart: {
+        height: 180,
+        type: 'area',
+        toolbar: {
+          show: false,
+        },
+      },
+      legend: {
+        show: false,
+      },
+      colors: ['#0d6efd', '#20c997'],
+      dataLabels: {
+        enabled: false,
+      },
+      stroke: {
+        curve: 'smooth',
+      },
+      xaxis: {
+        type: 'datetime',
+        categories: [
+          '2023-01-01',
+          '2023-02-01',
+          '2023-03-01',
+          '2023-04-01',
+          '2023-05-01',
+          '2023-06-01',
+          '2023-07-01',
+        ],
+      },
+      tooltip: {
+        x: {
+          format: 'MMMM yyyy',
+        },
+      },
+    };
+
+    const sales_chart = new ApexCharts(
+      document.querySelector('#sales-chart'),
+      sales_chart_options,
+    );
+    sales_chart.render();
+
+    //---------------------------
+    // - END MONTHLY SALES CHART -
+    //---------------------------
+
+    function createSparklineChart(selector, data) {
+      const options = {
+        series: [{ data }],
+        chart: {
+          type: 'line',
+          width: 150,
+          height: 30,
+          sparkline: {
+            enabled: true,
+          },
+        },
+        colors: ['var(--bs-primary)'],
+        stroke: {
+          width: 2,
+        },
+        tooltip: {
+          fixed: {
+            enabled: false,
+          },
+          x: {
+            show: false,
+          },
+          y: {
+            title: {
+              formatter: function (seriesName) {
+                return '';
+              },
+            },
+          },
+          marker: {
+            show: false,
+          },
+        },
+      };
+
+      const chart = new ApexCharts(document.querySelector(selector), options);
+      chart.render();
+    }
+
+    const table_sparkline_1_data = [25, 66, 41, 89, 63, 25, 44, 12, 36, 9, 54];
+    const table_sparkline_2_data = [12, 56, 21, 39, 73, 45, 64, 52, 36, 59, 44];
+    const table_sparkline_3_data = [15, 46, 21, 59, 33, 15, 34, 42, 56, 19, 64];
+    const table_sparkline_4_data = [30, 56, 31, 69, 43, 35, 24, 32, 46, 29, 64];
+    const table_sparkline_5_data = [20, 76, 51, 79, 53, 35, 54, 22, 36, 49, 64];
+    const table_sparkline_6_data = [5, 36, 11, 69, 23, 15, 14, 42, 26, 19, 44];
+    const table_sparkline_7_data = [12, 56, 21, 39, 73, 45, 64, 52, 36, 59, 74];
+
+    createSparklineChart('#table-sparkline-1', table_sparkline_1_data);
+    createSparklineChart('#table-sparkline-2', table_sparkline_2_data);
+    createSparklineChart('#table-sparkline-3', table_sparkline_3_data);
+    createSparklineChart('#table-sparkline-4', table_sparkline_4_data);
+    createSparklineChart('#table-sparkline-5', table_sparkline_5_data);
+    createSparklineChart('#table-sparkline-6', table_sparkline_6_data);
+    createSparklineChart('#table-sparkline-7', table_sparkline_7_data);
+
+    //-------------
+    // - PIE CHART -
+    //-------------
+
+    const pie_chart_options = {
+      series: [700, 500, 400, 600, 300, 100],
+      chart: {
+        type: 'donut',
+      },
+      labels: ['Chrome', 'Edge', 'FireFox', 'Safari', 'Opera', 'IE'],
+      dataLabels: {
+        enabled: false,
+      },
+      colors: ['#0d6efd', '#20c997', '#ffc107', '#d63384', '#6f42c1', '#adb5bd'],
+    };
+
+    const pie_chart = new ApexCharts(document.querySelector('#pie-chart'), pie_chart_options);
+    pie_chart.render();
+
+    //-----------------
+    // - END PIE CHART -
+    //-----------------
+  </script>
+  <!--end::Script-->
+
+
+  <script>
+    function showLoader() {
+      document.getElementById("loader").style.display = "flex";
+      updateLoaderPercentage();
+    }
+
+    function hideLoader() {
+      document.getElementById("loader").style.display = "none";
+    }
+
+    function updateLoaderPercentage() {
+      let percentage = 0;
+      const loaderPercentage = document.getElementById("loader-percentage");
+
+      // Simulate loading progress
+      const interval = setInterval(() => {
+        percentage += 10; // Increment by 10%
+        loaderPercentage.textContent = `${percentage}%`;
+
+        if (percentage >= 100) {
+          clearInterval(interval); // Stop when 100% is reached
+        }
+      }, 100); // Update every 100ms
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Handle form submissions
+      const forms = document.querySelectorAll("form");
+      forms.forEach(function (form) {
+        form.addEventListener("submit", function () {
+          showLoader();
+        });
+      });
+
+      // Handle link clicks
+      const links = document.querySelectorAll("a[href]");
+      links.forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          const href = link.getAttribute("href");
+
+          // Show loader only for valid links
+          if (
+            href !== "#" &&
+            href !== "#!" &&
+            (!link.hasAttribute("target") || link.getAttribute("target") !== "_blank") &&
+            link.hostname === window.location.hostname
+          ) {
+            showLoader();
+          }
+        });
+      });
+    });
+
+    // Hide loader if user navigates back or the page is restored from cache
+    window.onpageshow = function (event) {
+      if (event.persisted) {
+        hideLoader();  // Hide the loader when coming from cache (back button or forward)
+      }
+    };
+    // Show loader on page navigation (e.g., reload or back/forward)
+    window.addEventListener("beforeunload", function () {
+      showLoader();
+    });
+  </script>
+
+
+  <script>
+
+    function openPurchasePriceModal(product) {
+      selectedProduct = product; // Store product globally
+      const purchasePriceDisplay = document.getElementById('purchasePriceDisplay');
+      if (purchasePriceDisplay) {
+        let tableContent = `
+          <table class="table table-bordered">
+              <thead>
+                  <tr>
+                      <th>C.P</th>
+                      <th>Stock</th>
+                      <th>Unit</th>
+                      <th>Batch</th>
+                      <th>Expiry Date</th>
+                      <th>Status</th>
+                      <th>S.P</th>
+                      <th>Action</th>
+                  </tr>
+              </thead>
+              <tbody>`;
+
+        // Filter out entries with quantity <= 0
+        const validStockEntries = product.stockEntries.filter(entry => entry.quantity > 0);
+        const now = new Date();
+
+        if (validStockEntries.length > 0) {
+          tableContent += validStockEntries.map((entry, index) => {
+            // Calculate expiry status for this batch
+            const expiryDate = new Date(entry.expiryDate);
+            const timeDiff = expiryDate.getTime() - now.getTime();
+            const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            let status = 'safe';
+            let statusText = 'OK';
+            let statusClass = 'safe';
+
+            if (daysUntilExpiry <= 0) {
+              status = 'expired';
+              statusText = 'EXPIRED';
+              statusClass = 'expired';
+            } else if (daysUntilExpiry <= 30) {
+              status = 'danger';
+              statusText = `${daysUntilExpiry}d`;
+              statusClass = 'danger';
+            } else if (daysUntilExpiry <= 90) {
+              status = 'warning';
+              statusText = `${daysUntilExpiry}d`;
+              statusClass = 'warning';
+            }
+
+            return `
+                  <tr class="${status}">
+                      <td>Rs.${entry.puPrice.toFixed(2)}</td>
+                      <td>${entry.quantity}</td>
+                      <td>${product.unit ? product.unit.name : 'No unit'}</td>
+                      <td>${entry.batchNumber}</td>
+                      <td>${formatDateForInput(entry.expiryDate)}</td>
+                      <td>
+                          <span class="expiry-badge-modal ${statusClass}">
+                              ${statusText}
+                          </span>
+                      </td>
+                      <td>Rs.${Math.round(entry.price * 100) / 100}</td>
+                      <td>
+                          <button class="btn btn-sm btn-primary" onclick="openBatchUpdateModal(${index}, '${entry.batchNumber}', '${entry.expiryDate}', '${entry.price}')">
+                              Update
+                          </button>
+                      </td>
+                  </tr>`;
+          }).join('');
+        } else {
+          // If no stock entries exist or all have 0 quantity
+          tableContent += `
+              <tr>
+                  <td>Rs.0.00</td>
+                  <td>0</td>
+                  <td>${product.unit ? product.unit.name : 'No unit'}</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>Rs.0.00</td>
+                  <td>
+                      <button class="btn btn-sm btn-secondary" disabled>Update</button>
+                  </td>
+              </tr>
+          `;
+        }
+
+        tableContent += '</tbody></table>';
+        purchasePriceDisplay.innerHTML = tableContent;
+
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('purchasePriceModal')).show();
+      }
+    }
+
+    // First, add a helper function to format dates for input fields
+    function formatDateForInput(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function openBatchUpdateModal(index, batchNumber, expiryDate, price) {
+      document.getElementById('batchIndex').value = index;
+      document.getElementById('batchNumberInput').value = batchNumber;
+      document.getElementById('expiryDateInput').value = formatDateForInput(expiryDate);
+      document.getElementById('salesPriceInput').value = Math.round(price * 100) / 100;
+
+      new bootstrap.Modal(document.getElementById('updateBatchModal')).show();
+    }
+
+    async function updateBatch() {
+      const index = document.getElementById('batchIndex').value;
+      const updatedBatchNumber = document.getElementById('batchNumberInput').value;
+      const updatedExpiryDate = document.getElementById('expiryDateInput').value;
+      const updatedSalesPrice = document.getElementById('salesPriceInput').value;
+
+      if (selectedProduct && selectedProduct._id) {
+        try {
+          const response = await fetch(`/update-batch/${selectedProduct._id}/${index}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              batchNumber: updatedBatchNumber,
+              expiryDate: updatedExpiryDate,
+              price: updatedSalesPrice,
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('Batch updated successfully!');
+            selectedProduct.stockEntries[index].batchNumber = updatedBatchNumber;
+            selectedProduct.stockEntries[index].expiryDate = updatedExpiryDate;
+            selectedProduct.stockEntries[index].price = updatedSalesPrice;
+            openPurchasePriceModal(selectedProduct); // Refresh modal
+            // bootstrap.Modal.getInstance(document.getElementById('updateBatchModal')).hide();
+
+            const updateModal = document.getElementById('updateBatchModal');
+            const modalInstance = bootstrap.Modal.getInstance(updateModal);
+            if (modalInstance) {
+              modalInstance.hide();
+            }
+
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+
+          } else {
+            alert(`Error: ${data.message}`);
+          }
+        } catch (error) {
+          console.error('Error updating batch:', error);
+        }
+      } else {
+        alert('Invalid product data!');
+      }
+    }
+
+
+
+
+    $(document).ready(function () {
+      $('#productsModal').on('shown.bs.modal', function () { $('#searchInput').focus(); });
+    });
+
+    $(document).ready(function () {
+      $('#contactsModal').on('shown.bs.modal', function () { $('#contactSearch').focus(); });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      let products = [];
+      let currentFocus = 0;
+      let allProducts = []; // Store all products for filtering
+
+      document.getElementById('productsButton').addEventListener('click', function () {
+        document.getElementById('searchInput').value = ''; // Clear the search field
+        fetch('/products')
+          .then(response => response.json())
+          .then(data => {
+            allProducts = data;
+            products = data; // Display first 10 products
+            displayProducts(products);
+            new bootstrap.Modal(document.getElementById('productsModal')).show();
+          })
+          .catch(error => console.error('Error fetching product details:', error));
+      });
+
+      document.getElementById('searchInput').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredProducts = allProducts.filter(product =>
+          product.name.toLowerCase().includes(searchQuery) ||
+          (product.category && product.category.name.toLowerCase().includes(searchQuery)) ||
+          product.uniqueNumber.toString().toLowerCase().includes(searchQuery)
+        );
+        products = filteredProducts; // Display first 10 filtered products
+        displayProducts(products);
+      });
+
+      function displayProducts(products) {
+        const list = document.getElementById('productDetailsList');
+        list.innerHTML = '';
+        currentFocus = 0;
+
+        products.forEach((product, index) => {
+          const listItem = document.createElement('li');
+          listItem.className = 'product-row list-group-item';
+          listItem.dataset.index = index;
+          listItem.dataset.vatStatus = product.vatStatus;
+
+          // Calculate expiry status for the product
+          const expiryStatus = calculateProductExpiryStatus(product);
+
+          // Add expiry status class to the row
+          if (expiryStatus.status === 'expired') {
+            listItem.classList.add('expired');
+          } else if (expiryStatus.status === 'danger') {
+            listItem.classList.add('danger');
+          } else if (expiryStatus.status === 'warning') {
+            listItem.classList.add('warning');
+          }
+
+          if (product.vatStatus === 'vatable') {
+            listItem.classList.add('vatable');
+          } else if (product.vatStatus === 'vatExempt') {
+            listItem.classList.add('vatExempt');
+          }
+
+          const totalStock = product.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+          const latestStockEntry = product.stockEntries[product.stockEntries.length - 1];
+          const price = latestStockEntry ? latestStockEntry.price : 0;
+          const margin = latestStockEntry ? latestStockEntry.marginPercentage : 'Null';
+
+          listItem.innerHTML = `
+          <div class="product-cell">${product.uniqueNumber}</div>
+          <div class="product-cell">${product.hscode}</div>
+          <div class="product-cell product-name">${product.name}</div>
+          <div class="product-cell">${product.category ? product.category.name : 'No Category'}</div>
+          <div class="product-cell">Rs.${Math.round(price * 100) / 100}</div>
+          <div class="product-cell">${totalStock}</div>
+          <div class="product-cell">${product.unit.name}</div>
+          <div class="product-cell">${margin}</div>
+        `;
+
+          listItem.addEventListener('click', () => openPurchasePriceModal(product));
+          list.appendChild(listItem);
+        });
+
+        highlightItem(currentFocus);
+      }
+
+      // Helper function to calculate expiry status for a product
+      function calculateProductExpiryStatus(product) {
+        const now = new Date();
+        let nearestExpiry = null;
+        let expiredItems = 0;
+        let warningItems = 0;
+        let dangerItems = 0;
+
+        product.stockEntries.forEach(entry => {
+          const expiryDate = new Date(entry.expiryDate);
+          if (expiryDate < now) {
+            expiredItems += entry.quantity;
+          } else {
+            if (!nearestExpiry || expiryDate < nearestExpiry) {
+              nearestExpiry = expiryDate;
+            }
+
+            const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
+            if (daysUntilExpiry <= 30) {
+              dangerItems += entry.quantity;
+            } else if (daysUntilExpiry <= 90) {
+              warningItems += entry.quantity;
+            }
+          }
+        });
+
+        return {
+          nearestExpiry,
+          expiredItems,
+          warningItems,
+          dangerItems,
+          status: expiredItems > 0 ? 'expired' :
+            dangerItems > 0 ? 'danger' :
+              warningItems > 0 ? 'warning' : 'safe'
+        };
+      }
+
+      function highlightItem(index) {
+        const items = document.querySelectorAll('#productDetailsList .list-group-item');
+        items.forEach(item => {
+          const vatStatus = item.dataset.vatStatus;
+          if (vatStatus === 'vatable') {
+            item.style.backgroundColor = 'lightgreen';
+          } else if (vatStatus === 'vatExempt') {
+            item.style.backgroundColor = 'lightyellow';
+          } else {
+            item.style.backgroundColor = '';
+          }
+
+          // Re-apply expiry status classes
+          if (item.classList.contains('expired')) {
+            item.style.backgroundColor = '#ffdddd';
+          } else if (item.classList.contains('danger')) {
+            item.style.backgroundColor = '#ffcccc';
+          } else if (item.classList.contains('warning')) {
+            item.style.backgroundColor = '#fff3cd';
+          }
+
+          item.classList.remove('active');
+          item.style.color = 'black';
+        });
+
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].scrollIntoView({ block: 'center' });
+        }
+      }
+
+      document.addEventListener('keydown', function (event) {
+        const items = document.querySelectorAll('#productDetailsList .list-group-item');
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          currentFocus = (currentFocus + 1) % items.length;
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          currentFocus = (currentFocus - 1 + items.length) % items.length;
+        } else if (event.key === 'Enter' && items[currentFocus]) {
+          event.preventDefault();
+          items[currentFocus].click();
+        }
+        highlightItem(currentFocus);
+      });
+
+      // Handle F9 key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'F9') {
+          event.preventDefault();
+          fetch('/products')
+            .then(response => response.json())
+            .then(data => {
+              allProducts = data;
+              products = data;
+              displayProducts(products);
+              $('#productsModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching product details:', error));
+        }
+
+        if (event.key === 'F3') {
+          event.preventDefault();
+          window.location.href = '/statement';
+        }
+      });
+
+      // Handle Escape key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          const purchasePriceModalElement = document.getElementById('purchasePriceModal');
+          const productsModalElement = document.getElementById('productsModal');
+
+          const purchasePriceModal = bootstrap.Modal.getInstance(purchasePriceModalElement);
+          const productsModal = bootstrap.Modal.getInstance(productsModalElement);
+
+          if (purchasePriceModal && purchasePriceModal._isShown) {
+            purchasePriceModal.hide();
+          } else if (productsModal && productsModal._isShown) {
+            productsModal.hide();
+          }
+        }
+      });
+    });
+
+    function selectValue(input) {
+      input.select(); // Select the value of the input field when it is focused
+    }
+
+
+    //----for contacts--------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+      let contacts = [];
+      let currentFocus = 0;
+      let allContacts = []; // Store all contacts for filtering
+
+      document.getElementById('contactsButton').addEventListener('click', function () {
+        document.getElementById('contactSearch').value = ''; // Clear the search field
+        fetch('/api/contacts')
+          .then(response => response.json())
+          .then(data => {
+            allContacts = data;
+            contacts = data;
+            displayContacts(contacts);
+            new bootstrap.Modal(document.getElementById('contactsModal')).show();
+          })
+          .catch(error => console.error('Error fetching contact details:', error));
+      });
+
+      document.getElementById('contactSearch').addEventListener('input', function () {
+        const searchQuery = this.value.toLowerCase();
+        const filteredContacts = allContacts.filter(contact =>
+          (contact.name && contact.name.toLowerCase().includes(searchQuery)) ||
+          (contact.address && contact.address.toLowerCase().includes(searchQuery)) ||
+          (contact.phone && contact.phone.toLowerCase().includes(searchQuery)) ||
+          (contact.email && contact.email.toLowerCase().includes(searchQuery)) ||
+          (contact.contactperson && contact.contactperson.toLowerCase().includes(searchQuery))
+        );
+        contacts = filteredContacts;
+        displayContacts(contacts);
+      });
+
+      function displayContacts(contacts) {
+        const list = document.getElementById('contactsList');
+        list.innerHTML = '';
+        currentFocus = 0;
+
+        if (contacts.length === 0) {
+          list.innerHTML = '<li class="contact-row"><div class="contact-cell text-center py-4 text-muted">No matching contacts found</div></li>';
+        } else {
+          contacts.forEach((contact, index) => {
+            const listItem = document.createElement('li');
+            listItem.className = 'contact-row list-group-item';
+            listItem.dataset.index = index;
+
+            listItem.innerHTML = `
+          <div class="contact-cell">${contact.name || 'N/A'}</div>
+          <div class="contact-cell">${contact.address || 'N/A'}</div>
+          <div class="contact-cell">${contact.phone || 'N/A'}</div>
+          <div class="contact-cell">${contact.email || 'N/A'}</div>
+          <div class="contact-cell">${contact.contactperson || 'N/A'}</div>
+        `;
+
+            listItem.addEventListener('click', () => selectContact(contact));
+            list.appendChild(listItem);
+          });
+        }
+
+        // Update result count
+        document.getElementById('resultCount').textContent = `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} found`;
+        highlightItem(currentFocus);
+      }
+
+      function selectContact(contact) {
+        // Handle contact selection here
+        console.log('Selected contact:', contact);
+        // You might want to fill some form fields with this contact's data
+        bootstrap.Modal.getInstance(document.getElementById('contactsModal')).hide();
+      }
+
+      function highlightItem(index) {
+        const items = document.querySelectorAll('#contactsList .list-group-item');
+        items.forEach(item => {
+          item.classList.remove('active');
+          item.style.color = 'black';
+          item.style.backgroundColor = '';
+        });
+
+        if (items[index]) {
+          items[index].classList.add('active');
+          items[index].style.backgroundColor = '#518CE8';
+          items[index].style.color = 'white';
+          items[index].scrollIntoView({ block: 'center' });
+        }
+      }
+
+      document.addEventListener('keydown', function (event) {
+        const items = document.querySelectorAll('#contactsList .list-group-item');
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          currentFocus = (currentFocus + 1) % items.length;
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          currentFocus = (currentFocus - 1 + items.length) % items.length;
+        } else if (event.key === 'Enter' && items[currentFocus]) {
+          event.preventDefault();
+          items[currentFocus].click();
+        }
+        highlightItem(currentFocus);
+      });
+
+      // Handle F4 key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'F4') {
+          event.preventDefault();
+          fetch('/api/contacts')
+            .then(response => response.json())
+            .then(data => {
+              allContacts = data;
+              contacts = data;
+              displayContacts(contacts);
+              $('#contactsModal').modal('show');
+            })
+            .catch(error => console.error('Error fetching contact details:', error));
+        }
+      });
+
+      // Handle Escape key press
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          const contactsModalElement = document.getElementById('contactsModal');
+          const contactsModal = bootstrap.Modal.getInstance(contactsModalElement);
+
+          if (contactsModal && contactsModal._isShown) {
+            contactsModal.hide();
+          }
+        }
+      });
+    });
+  </script>
+  <style>
+    #productDetailsHeader {
+      display: flex;
+      background: #333;
+      color: white;
+      padding: 2px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .product-row {
+      display: flex;
+      padding: 2px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      align-items: center;
+    }
+
+    .product-cell {
+      flex: 1;
+      padding: 2px;
+      text-align: left;
+      min-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-name {
+      min-width: 30ch;
+      max-width: 40ch;
+    }
+
+    .product-row.active {
+      background-color: blue !important;
+      color: white;
+    }
+
+    .vatable {
+      background-color: lightgreen;
+    }
+
+    .vatExempt {
+      background-color: lightyellow;
+    }
+
+    .modal-dialog {
+      max-width: 75%;
+      margin: 1.75rem auto;
+    }
+
+    .modal-content {
+      font-size: 1.2rem;
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .modal-header {
+      font-size: 1.5rem;
+    }
+
+    .product-cell {
+      font-size: 1.1rem;
+    }
+
+    #productsContainer {
+      max-height: 400px;
+      /* Adjust this height as needed */
+      overflow-y: auto;
+      /* Enable vertical scrolling */
+    }
+
+    #productDetailsList {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    /* Add these to your existing CSS */
+    .expiry-status {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+      display: inline-block;
+    }
+
+    .expiry-status.safe {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .expiry-status.warning {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .expiry-status.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .expiry-status.expired {
+      background-color: #ee1a22;
+      color: white;
+    }
+
+    /* Row coloring based on expiry status */
+    .product-row.expired {
+      background-color: #ee1a22 !important;
+    }
+
+    .product-row.warning {
+      background-color: #FFFF00 !important;
+    }
+
+    .product-row.danger {
+      background-color: #ff7376 !important;
+    }
+
+    /* Small badge for expiry count */
+    .expiry-badge {
+      font-size: 0.7rem;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* Add these to your existing CSS */
+    .expiry-badge-modal {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+      display: inline-block;
+    }
+
+    .expiry-badge-modal.safe {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .expiry-badge-modal.warning {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .expiry-badge-modal.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .expiry-badge-modal.expired {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    /* Row coloring for purchase price modal */
+    .table-row-expired {
+      background-color: #ffdddd !important;
+    }
+
+    .table-row-warning {
+      background-color: #fff3cd !important;
+    }
+
+    .table-row-danger {
+      background-color: #ffcccc !important;
+    }
+
+    #contactsHeader {
+      display: flex;
+      background: #333;
+      color: white;
+      padding: 2px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .contact-row {
+      display: flex;
+      padding: 2px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      align-items: center;
+    }
+
+    .contact-cell {
+      flex: 1;
+      padding: 5px;
+      text-align: left;
+      min-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-row.active {
+      background-color: blue !important;
+      color: white;
+    }
+
+    .modal-dialog {
+      max-width: 75%;
+      margin: 1.75rem auto;
+    }
+
+    .modal-content {
+      font-size: 1.2rem;
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .modal-header {
+      font-size: 1.5rem;
+    }
+
+    .contact-cell {
+      font-size: 1.1rem;
+    }
+
+    #contactsContainer {
+      max-height: 400px;
+    }
+
+    #contactsList {
+      list-style-type: none;
+      padding: 0;
+    }
+  </style>
+
+</body>
+<!--end::Body-->
+
+</html>

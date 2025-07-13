@@ -1,0 +1,401 @@
+<%- include('../layouts/boilerplate', { title: 'Stock Transfer' , body: '' }) %>
+
+    <div class="container mt-4">
+        <div class="card shadow-lg p-4 animate__animated animate__fadeInUp">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="bi bi-truck me-2"></i>Transfer Stock Between Stores</h2>
+                </div>
+                <div class="card-body">
+                    <form id="transferStockForm">
+                        <div class="row g-3 mb-4">
+                            <% if (companyDateFormat==='nepali' ) { %>
+                                <div class="col">
+                                    <label for="issueDateNepali" class="form-label fw-bold">Issue Date:</label>
+                                    <input type="text" name="issueDateNepali" id="issueDateNepali" class="form-control"
+                                        value="<%= issueDateNepali ||'' %>" autofocus required>
+                                </div>
+                                <% } else { %>
+                                    <div class="col">
+                                        <label for="issueDateRoman" class="form-label fw-bold">IssueDate Date:</label>
+                                        <input type="date" name="issueDateRoman" id="issueDateRoman"
+                                            class="form-control" value="<%= new Date().toISOString().split('T')[0]%>"
+                                            onblur="validateDate(this)" autofocus required>
+                                        <span class="error-message" style="color: red; display: none;"></span>
+                                    </div>
+                                    <% } %>
+
+                                        <div class="col">
+                                            <label for="fromStore" class="form-label fw-bold">From Store</label>
+                                            <select class="form-select" id="fromStore" autofocus required>
+                                                <option value="">Select Source Store</option>
+                                                <% stores.forEach(store=> { %>
+                                                    <option value="<%= store._id %>">
+                                                        <%= store.name %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <label for="toStore" class="form-label fw-bold">To Store</label>
+                                            <select class="form-select" id="toStore" required>
+                                                <option value="">Select Destination Store</option>
+                                                <% stores.forEach(store=> { %>
+                                                    <option value="<%= store._id %>" class="store-option">
+                                                        <%= store.name %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                        </div>
+
+                        </div>
+
+                        <div class="card mb-4 border-primary">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Items to Transfer</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="transferItemsContainer">
+                                    <!-- Transfer items will be added here -->
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-10">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <label for="notes" class="form-label fw-bold">Notes</label>
+                                        <input type="text" class="form-control" id="notes"
+                                            placeholder="Any additional information" style="width: 80%;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-center justify-content-end">
+                                    <button type="button" class="btn btn-sm btn-primary" id="addItemBtn">
+                                        <i class="bi bi-plus-circle me-1"></i>Add Item
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-success px-4" id="submitTransferBtn"
+                                    onclick="submitBillForm(true)">
+                                    <i class="bi bi-check-circle me-2"></i>Transfer Stock
+                                </button>
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for transfer item row -->
+    <template id="transferItemTemplate">
+        <div class="transfer-item card mb-3">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Item</label>
+                        <select class="form-select item-select" required>
+                            <option value="">Select Item</option>
+                            <% items.forEach(item=> { %>
+                                <option value="<%= item._id %>">
+                                    <%= item.name %>
+                                </option>
+                                <% }); %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Available Stock</label>
+                        <div class="available-stock-container">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Quantity to Transfer</label>
+                        <input type="number" class="form-control transfer-qty" min="1" value="1" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger remove-item-btn">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fromStoreSelect = document.getElementById('fromStore');
+            const toStoreSelect = document.getElementById('toStore');
+            const transferItemsContainer = document.getElementById('transferItemsContainer');
+            const transferStockForm = document.getElementById('transferStockForm');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const transferItemTemplate = document.getElementById('transferItemTemplate');
+
+            // Add new item row
+            addItemBtn.addEventListener('click', function () {
+                const newItemRow = transferItemTemplate.content.cloneNode(true);
+                transferItemsContainer.appendChild(newItemRow);
+
+                // Initialize the new row
+                const newRow = transferItemsContainer.lastElementChild;
+                initializeTransferItemRow(newRow);
+            });
+
+            // Initialize a transfer item row
+            function initializeTransferItemRow(row) {
+                const itemSelect = row.querySelector('.item-select');
+                const availableStockContainer = row.querySelector('.available-stock-container');
+                const transferQty = row.querySelector('.transfer-qty');
+                const removeBtn = row.querySelector('.remove-item-btn');
+
+                // Set up item select change handler
+                itemSelect.addEventListener('change', async function () {
+                    const itemId = this.value;
+                    const storeId = fromStoreSelect.value;
+
+                    if (!itemId || !storeId) return;
+
+                    try {
+                        availableStockContainer.innerHTML = `<div class="spinner-border spinner-border-sm text-primary" role="status"></div>`;
+
+                        const response = await fetch(`/retailer/available/${itemId}?storeId=${storeId}`);
+                        const data = await response.json();
+
+                        if (data.stockEntries.length === 0) {
+                            availableStockContainer.innerHTML = `<div class="text-danger">No stock available</div>`;
+                            return;
+                        }
+
+                        // Create dropdown for stock entries
+                        availableStockContainer.innerHTML = `
+                    <select class="form-select stock-entry-select" required>
+                        <option value="">Select Batch</option>
+                        ${data.stockEntries.map(entry => `
+                            <option value="${entry._id}" 
+                                    data-quantity="${entry.quantity}"
+                                    data-batch="${entry.batchNumber || 'N/A'}">
+                                ${entry.batchNumber || 'N/A'} (Available: ${entry.quantity})
+                            </option>
+                        `).join('')}
+                    </select>
+                `;
+
+                        // Set max quantity when stock entry is selected
+                        const stockEntrySelect = availableStockContainer.querySelector('.stock-entry-select');
+                        stockEntrySelect.addEventListener('change', function () {
+                            const selectedOption = this.options[this.selectedIndex];
+                            if (selectedOption && selectedOption.value) {
+                                const maxQty = parseFloat(selectedOption.dataset.quantity);
+                                transferQty.max = maxQty;
+                                if (transferQty.value > maxQty) {
+                                    transferQty.value = maxQty;
+                                }
+                            }
+                        });
+
+                    } catch (error) {
+                        console.error('Error loading stock entries:', error);
+                        availableStockContainer.innerHTML = `<div class="text-danger">Error loading stock</div>`;
+                    }
+                });
+
+                // Set up remove button
+                removeBtn.addEventListener('click', function () {
+                    row.remove();
+                });
+
+                // Trigger change if store is already selected
+                if (fromStoreSelect.value) {
+                    itemSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // When store changes, update all item rows
+            fromStoreSelect.addEventListener('change', function () {
+                document.querySelectorAll('.transfer-item').forEach(row => {
+                    const itemSelect = row.querySelector('.item-select');
+                    if (itemSelect.value) {
+                        itemSelect.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+
+            // Handle form submission
+            transferStockForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+            })
+            // Add click handler specifically for your submit button
+            document.querySelector('.btn-success').addEventListener('click', async function (e) {
+                e.preventDefault(); // Prevent default button behavior
+
+                // Validate at least one item
+                const itemRows = document.querySelectorAll('.transfer-item');
+                if (itemRows.length === 0) {
+                    alert('Please add at least one item to transfer');
+                    return;
+                }
+
+                // Collect all transfer items
+                const transferItems = [];
+                let isValid = true;
+
+                itemRows.forEach(row => {
+                    const itemSelect = row.querySelector('.item-select');
+                    const stockEntrySelect = row.querySelector('.stock-entry-select');
+                    const transferQty = row.querySelector('.transfer-qty');
+
+                    // Validate each row
+                    if (!itemSelect.value || !stockEntrySelect || !stockEntrySelect.value || !transferQty.value) {
+                        isValid = false;
+                        row.classList.add('border', 'border-danger');
+                        return;
+                    }
+
+                    transferItems.push({
+                        itemId: itemSelect.value,
+                        stockEntryId: stockEntrySelect.value,
+                        quantity: parseFloat(transferQty.value)
+                    });
+                });
+
+                if (!isValid) {
+                    alert('Please fill all required fields for each item');
+                    return;
+                }
+
+                const transferData = {
+                    items: transferItems,
+                    fromStore: fromStoreSelect.value,
+                    toStore: toStoreSelect.value,
+                    notes: document.getElementById('notes').value
+                };
+
+                try {
+                    const response = await fetch('/retailer/transfer-stock', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(transferData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('Stock transferred successfully!');
+                        window.location.href = '/retailer/transfer-stock'; // Redirect to transfers list
+                    } else {
+                        alert(result.message || 'Failed to transfer stock');
+                    }
+                } catch (error) {
+                    console.error('Error transferring stock:', error);
+                    alert('Failed to transfer stock');
+                }
+            });
+
+            // Add one empty item row by default
+            addItemBtn.click();
+        });
+
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fromStoreSelect = document.getElementById('fromStore');
+            const toStoreSelect = document.getElementById('toStore');
+            const storeOptions = document.querySelectorAll('.store-option');
+
+            fromStoreSelect.addEventListener('change', function () {
+                const selectedStoreId = this.value;
+
+                // Enable all options first
+                storeOptions.forEach(option => {
+                    option.disabled = false;
+                    option.style.display = '';
+                });
+
+                // Disable the selected "From Store" in "To Store" dropdown
+                if (selectedStoreId) {
+                    storeOptions.forEach(option => {
+                        if (option.value === selectedStoreId) {
+                            option.disabled = true;
+                            option.style.display = 'none';
+                        }
+                    });
+
+                    // Reset "To Store" selection if it matches the "From Store"
+                    if (toStoreSelect.value === selectedStoreId) {
+                        toStoreSelect.value = '';
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        
+        function showPrintModal() {
+            $('#printModal').modal('show');
+        }
+        
+        function submitBillForm(print) {
+            shouldPrint = print;
+            const transferStockForm = document.getElementById('transferStockForm');
+            const saveButton = document.getElementById('saveBill');
+
+            // Change button text and disable it
+            saveButton.innerText = 'Saving...';
+            saveButton.disabled = true;
+
+            if (print) {
+                const url = new URL(transferStockForm.action);
+                url.searchParams.append('print', 'true');
+                transferStockForm.action = url.toString();
+            }
+
+            // Simulate form submission (replace this with actual form submission logic)
+            transferStockForm.submit();
+
+            // Reset button text and enable it after submission
+            saveButton.disabled = false;
+        }
+
+        document.getElementById('transferStockForm').addEventListener('submit', function (event) {
+            if (!shouldPrint && event.submitter && event.submitter.innerText === 'Save & Print Bill') {
+                event.preventDefault();
+                showPrintModal();
+            }
+        });
+    </script>
+
+    <style>
+        .transfer-item {
+            border-left: 4px solid #0d6efd;
+        }
+
+        .remove-item-btn {
+            height: 38px;
+        }
+
+        .available-stock-container .form-select {
+            font-size: 0.875rem;
+        }
+    </style>

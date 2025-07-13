@@ -1,0 +1,336 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <style>
+        .progress-bar {
+            width: 0%;
+            transition: width 1s;
+        }
+
+        .step {
+            display: inline-block;
+            width: 33%;
+            text-align: center;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .step.complete {
+            color: green;
+        }
+
+        .step.incomplete {
+            color: gray;
+        }
+
+        .tick-mark {
+            display: none;
+        }
+
+        .step.complete .tick-mark {
+            display: inline;
+        }
+    </style>
+    </head>
+
+    <div class="container mt-5">
+        <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+            <h2>Create New Fiscal Year</h2>
+            <!-- Current Fiscal Year Display -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Latest Fiscal Year</h5>
+                    <p class="card-text">Fiscal Year: <%= currentFiscalYear.name %>
+                    </p>
+                    <p class="card-text">Start Date:
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <%= currentFiscalYear.startDate.toLocaleDateString() %>
+                                <% } else { %>
+                                    <%= new Date(currentFiscalYear.startDate).toDateString() %>
+                                        <% } %>
+                    </p>
+                    <p class="card-text">End Date:
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <%= currentFiscalYear.endDate.toLocaleDateString() %>
+                                <% } else { %>
+                                    <%= new Date(currentFiscalYear.endDate).toDateString() %>
+                                        <% } %>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-3">
+                <h4>Process Progress</h4>
+                <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" id="progressBar"></div>
+                </div>
+            </div>
+
+            <!-- Step Indicators -->
+            <div class="steps mt-3">
+                <div class="step incomplete" id="step1">
+                    <span class="step-label">Step 1: Create Fiscal Year</span>
+                    <span class="tick-mark">✔</span>
+                </div>
+                <div class="step incomplete" id="step2">
+                    <span class="step-label">Step 2: Create Items</span>
+                    <span class="tick-mark">✔</span>
+                </div>
+                <div class="step incomplete" id="step3">
+                    <span class="step-label">Step 3: Create Accounts</span>
+                    <span class="tick-mark">✔</span>
+                </div>
+            </div>
+
+            <!-- Switch Fiscal Year Form -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Switch to New Fiscal Year</h5>
+                    <form id="switchFiscalYearForm" action="/change-fiscal-year" method="POST">
+
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <div class="form-group">
+                                <label for="dateFormat" class="form-label">Preferred Date Format:</label>
+                                <select id="dateFormat" class="form-select" name="dateFormat">
+                                    <option value="nepali">Nepali Date</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="startDateNepali">Start Date:</label>
+                                <input type="date" class="form-control" id="startDateNepali" name="startDateNepali"
+                                    value="<%= nextFiscalYearStartDate || '' %>" placeholder="YYYY/MM/DD" readonly
+                                    required>
+                                <br>
+                            </div>
+                            <% } else { %>
+                                <div class="form-group">
+                                    <label for="dateFormat" class="form-label">Preferred Date
+                                        Format:</label>
+                                    <select id="dateFormat" class="form-select" name="dateFormat">
+                                        <option value="english">English Date</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="startDateEnglish">Start Date:</label>
+                                    <input type="date" class="form-control" id="startDateEnglish"
+                                        name="startDateEnglish" value="<%= nextFiscalYearStartDate || '' %>" readonly
+                                        required>
+                                </div>
+                                <% } %>
+
+                                <a href="#">
+                                    <button type="submit" class="btn btn-primary" id="createFiscalYear"
+                                        onclick="createFiscalYear()">Create New Fiscal Year</button>
+                                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirm New Fiscal Year</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to create a new fiscal year with the selected dates?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmFiscalYear">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Success message will be injected here -->
+                    <p id="successMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal" autofocus>Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        
+        document.getElementById('switchFiscalYearForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    // Show the confirmation modal
+    const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    confirmationModal.show();
+
+    // Handle the confirm button click
+    document.getElementById('confirmFiscalYear').onclick = function () {
+        confirmationModal.hide();
+
+        // Change the text of the button and disable it
+        const createButton = document.getElementById('createFiscalYear');
+        const originalText = createButton.innerText;
+        createButton.innerText = 'Creating...';
+        createButton.disabled = true;
+
+        // Create a console output container
+        const consoleContainer = document.createElement('div');
+        consoleContainer.className = 'console-output mt-3 p-3 bg-dark text-light rounded';
+        consoleContainer.style.maxHeight = '300px';
+        consoleContainer.style.overflowY = 'auto';
+        consoleContainer.innerHTML = '<h5 class="text-white">Process Log:</h5><div id="processLog" class="font-monospace small"></div>';
+        document.querySelector('.card-body').appendChild(consoleContainer);
+
+        // Start the process with form data
+        startFiscalYearSwitch(originalText, consoleContainer);
+    };
+});
+
+function updateProgressBar(progress) {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = `${progress}%`;
+    progressBar.setAttribute('aria-valuenow', progress);
+    progressBar.innerHTML = `${progress}%`;
+
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((step, index) => {
+        if (progress >= (index + 1) * 33) {
+            step.classList.add('complete');
+            step.classList.remove('incomplete');
+        } else {
+            step.classList.add('incomplete');
+            step.classList.remove('complete');
+        }
+    });
+}
+
+function logProcessMessage(container, message) {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString();
+    const logElement = document.createElement('div');
+    logElement.className = 'log-entry border-bottom border-secondary pb-1 mb-1';
+    logElement.innerHTML = `<span class="text-muted">[${timestamp}]</span> ${message}`;
+    container.querySelector('#processLog').appendChild(logElement);
+    container.scrollTop = container.scrollHeight;
+}
+
+function startFiscalYearSwitch(originalButtonText, consoleContainer) {
+    // Get form data
+    const formData = new FormData(document.getElementById('switchFiscalYearForm'));
+    const params = new URLSearchParams();
+    
+    // Add all form data to URL params
+    for (const pair of formData.entries()) {
+        params.append(pair[0], pair[1]);
+    }
+
+    // Create SSE connection with form data as query params
+    const eventSource = new EventSource(`/change-fiscal-year-stream?${params.toString()}`);
+
+    // Initial log message
+    logProcessMessage(consoleContainer, "Starting fiscal year creation process...");
+
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'progress') {
+            updateProgressBar(data.value);
+            logProcessMessage(consoleContainer, `Progress: ${data.value}% complete`);
+        } 
+        else if (data.type === 'log') {
+            logProcessMessage(consoleContainer, data.message);
+        }
+        else if (data.type === 'complete') {
+            // Process completed
+            eventSource.close();
+            
+            // Reset the button state
+            const createButton = document.getElementById('createFiscalYear');
+            createButton.innerText = originalButtonText;
+            createButton.disabled = false;
+            
+            // Show success modal
+            document.getElementById('successMessage').innerText = data.message;
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+            
+            // Update the current fiscal year display
+            updateCurrentFiscalYearDisplay();
+            
+            document.querySelector('#successModal .btn-success').addEventListener('click', function() {
+                successModal.hide();
+                // Optional: Refresh the page or update UI
+                // window.location.reload();
+            });
+        }
+        else if (data.type === 'error') {
+            // Handle error
+            eventSource.close();
+            
+            // Reset the button state
+            const createButton = document.getElementById('createFiscalYear');
+            createButton.innerText = originalButtonText;
+            createButton.disabled = false;
+            
+            // Show error in console
+            logProcessMessage(consoleContainer, `Error: ${data.message}`);
+            
+            // Show error to user
+            alert(`Error: ${data.message}`);
+        }
+    };
+
+    eventSource.onerror = function() {
+        eventSource.close();
+        logProcessMessage(consoleContainer, "Connection to server interrupted");
+        
+        // Reset the button state
+        const createButton = document.getElementById('createFiscalYear');
+        createButton.innerText = originalButtonText;
+        createButton.disabled = false;
+        
+        alert("Connection to server was interrupted. Please try again.");
+    };
+}
+
+function updateCurrentFiscalYearDisplay() {
+    // This function would fetch and update the current fiscal year display
+    // You can implement this based on your application's needs
+    fetch('/api/current-fiscal-year')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('.card-text:nth-of-type(1)').textContent = `Fiscal Year: ${data.fiscalYear.name}`;
+                document.querySelector('.card-text:nth-of-type(2)').textContent = `Start Date: ${formatDate(data.fiscalYear.startDate, data.fiscalYear.dateFormat)}`;
+                document.querySelector('.card-text:nth-of-type(3)').textContent = `End Date: ${formatDate(data.fiscalYear.endDate, data.fiscalYear.dateFormat)}`;
+            }
+        })
+        .catch(error => console.error('Error updating fiscal year display:', error));
+}
+
+function formatDate(dateString, dateFormat) {
+    // Implement your date formatting logic here
+    if (dateFormat === 'nepali') {
+        return new Date(dateString).toLocaleDateString('ne-NP');
+    } else {
+        return new Date(dateString).toLocaleDateString();
+    }
+}
+    </script>

@@ -1,0 +1,363 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
+<style id="printStyles">
+    .card-title {
+        text-decoration: underline;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        margin: 10px;
+        font-size: 36px;
+    }
+
+    .details-container {
+        display: flex;
+        justify-content: space-between;
+        /* width: 100%; */
+        /* margin-bottom: 10px; */
+    }
+
+    .left,
+    .right {
+        width: 48%;
+    }
+
+    .left {
+        /* text-align: left; */
+        margin-left: 20px;
+    }
+
+    .right {
+        flex: 1;
+    }
+
+    .right {
+        text-align: right;
+        margin-right: 20px;
+    }
+
+    .user-details {
+        text-decoration: overline;
+        text-align: center;
+        display: block;
+        margin-top: 10px;
+        white-space: nowrap;
+        /* Prevent text from wrapping */
+    }
+
+    #row-container {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 80px;
+        text-align: center;
+    }
+
+    #row-container .col {
+        flex: 1;
+        text-align: center;
+    }
+</style>
+
+<div class="container">
+    <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+        <div class="container mt-3">
+            <div class="row">
+                <a href="/stockAdjustments" style="text-decoration: none; color: white;">
+                <button id="backButton" class="btn btn-secondary back-button">
+                        <span class="icon">←</span> Back
+                </button>
+                </a>
+                <div class="col d-flex justify-content-end align-items-start">
+                    <a href="#" class="btn btn-primary ml-2"><i class="bi bi-file-pdf"></i></a>
+                    <button class="btn btn-info ml-2" onclick="printBill()"><i class="bi bi-printer"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="printableContent">
+
+            <div class="card mt-4">
+                <div class="header">
+                    <h1>
+                        <%= currentCompanyName %>
+                    </h1>
+                    <%= currentCompany.address %>-<%=currentCompany.ward%>, <%=currentCompany.city%>,
+                                <%=currentCompany.country%>
+                                    Tel.: <%=currentCompany.phone%>,
+                                        <h3>Stock Adjustment</h3>
+                                        </span>
+                                        <hr style="border: 0.5px solid gray;">
+                </div>
+                <div class="details-container">
+
+                    <div class="right">
+                        <br>
+                        <strong>Vch. No:</strong>
+                        <%= stockAdjustment.billNumber %>
+                            |
+                            <strong>Adjustment Type:</strong>
+                            <%= stockAdjustment.adjustmentType %>
+                                |
+                                <% if (companyDateFormat==='english' ) { %>
+                                    <strong>Date:</strong>
+                                    <%= new Date(stockAdjustment.date).toLocaleDateString()%>
+                                        <% } else { %>
+                                            <strong>Date:</strong>
+                                            <%= new Date(stockAdjustment.date).toLocaleDateString() %>
+                                                <% } %>
+                    </div>
+                </div>
+
+                <div class="container">
+                    <table class="table items-table">
+                        <thead>
+                            <tr>
+                                <th>S.N.</th>
+                                <th>#</th>
+                                <th>HSN</th>
+                                <th>Description of Goods</th>
+                                <th>Batch</th>
+                                <th>Expiry</th>
+                                <th>Quantity</th>
+                                <th>Reason</th>
+                                <th>Unit</th>
+                                <th>Rate (Rs.)</th>
+                                <th>Total (Rs.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% for (let i=0; i < stockAdjustment.items.length; i++) { %>
+
+                                <tr>
+                                    <td>
+                                        <%= i + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.items[i].item.uniqueNumber%>
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.items[i].item.hscode %>
+                                    </td>
+                                    <td>
+                                        <% if(stockAdjustment.items[i].item.vatStatus==='vatExempt' ){%>
+                                            <%=stockAdjustment.items[i].item.name %> *
+                                                <%}else{%>
+                                                    <%= stockAdjustment.items[i].item.name %>
+                                                        <%}%>
+                                    </td>
+                                    <td>
+                                        <%=stockAdjustment.items[i].batchNumber%>
+                                    </td>
+                                    <td>
+                                        <%=stockAdjustment.items[i].expiryDate.toLocaleDateString()%>
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.items[i].quantity.toFixed(2) %>
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.items[i].reason %> 
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.items[i].item.unit ? stockAdjustment.items[i].item.unit.name
+                                            : '' %>
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.items[i].puPrice.toFixed(2) %>
+                                    </td>
+                                    <td>
+                                        <%= (stockAdjustment.items[i].quantity *
+                                            stockAdjustment.items[i].puPrice).toFixed(2) %>
+                                    </td>
+                                </tr>
+                                <% } %>
+                        </tbody>
+                    </table>
+                    <table style="float: right;">
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-right"><strong>Sub Total :</strong></td>
+                                <td>
+                                    <%= stockAdjustment.subTotal.toFixed(2) %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="text-right"><strong>Discount :</strong></td>
+                                <td>
+                                    <%= stockAdjustment.discountAmount.toFixed(2) %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="text-right"><strong>Non Taxable :</strong>
+                                <td>
+                                    <%=stockAdjustment.nonVatAdjustment.toFixed(2) %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="text-right"><strong>Taxable Amount :</strong></td>
+                                <td>
+                                    <%= stockAdjustment.taxableAmount.toFixed(2) %>
+                                </td>
+                            </tr>
+                            <% if (!stockAdjustment.isVatExempt) { %>
+                                <tr>
+                                    <td colspan="6" class="text-right"><strong>VAT <%= stockAdjustment.vatPercentage %>
+                                                % :</strong>
+                                    </td>
+                                    <td>
+                                        <%= (stockAdjustment.taxableAmount * stockAdjustment.vatPercentage /
+                                            100).toFixed(2) %>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-right"><strong>Round Off :</strong></td>
+                                    <td>
+                                        <%= stockAdjustment.roundOffAmount.toFixed(2) %>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-right"><strong>Grand Total :</strong>
+                                    </td>
+                                    <td>
+                                        <%= stockAdjustment.totalAmount.toFixed(2) %>
+                                    </td>
+                                </tr>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" class="text-right"><strong>Round Off :</strong>
+                                        </td>
+                                        <td>
+                                            <%= stockAdjustment.roundOffAmount.toFixed(2) %>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6" class="text-right"><strong>Grand Total :</strong>
+                                        </td>
+                                        <td>
+                                            <%= stockAdjustment.totalAmount.toFixed(2) %>
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                        </tbody>
+                        <hr style="border: 0.5px solid gray;">
+                    </table>
+                    <td class="text-left"><strong>In Words:</strong>
+                        <span id="amountInWords"></span> Only.
+                    </td>
+                </div>
+                <hr style="border: 0.5px solid gray;">
+
+                <div>
+                    <p>Note: <%=stockAdjustment.note%>
+                    </p>
+                </div>
+
+                <div class="row container" id="row-container">
+                    <div class="col">
+                        <br>
+                        <br>
+                        <p><strong class="user-details">Received By:</strong></p>
+                    </div>
+                    <div class="col">
+                        <br>
+                        <p>
+                            <%= stockAdjustment.user.name %>
+                        </p>
+                        <p><strong class="user-details">Prepared By:</strong></p>
+                    </div>
+                    <div class="col">
+                        <br>
+                        <br>
+                        <strong class="user-details">For: <%=currentCompanyName%></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function printBill() {
+        var printContents = document.getElementById('printableContent').innerHTML;
+        var styles = document.getElementById('printStyles').innerHTML;
+        var originalContents = document.body.innerHTML;
+        document.body.innerHTML = '<style>' + styles + '</style>' + printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+    }
+
+    function numberToWords(num) {
+        const ones = [
+            '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+            'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+            'Seventeen', 'Eighteen', 'Nineteen'
+        ];
+
+        const tens = [
+            '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+        ];
+
+        const scales = ['', 'Thousand', 'Million', 'Billion'];
+
+        function convertHundreds(num) {
+            let words = '';
+
+            if (num > 99) {
+                words += ones[Math.floor(num / 100)] + ' Hundred ';
+                num %= 100;
+            }
+
+            if (num > 19) {
+                words += tens[Math.floor(num / 10)] + ' ';
+                num %= 10;
+            }
+
+            if (num > 0) {
+                words += ones[num] + ' ';
+            }
+
+            return words.trim();
+        }
+
+        if (num === 0) return 'Zero';
+
+        if (num < 0) return 'Negative ' + numberToWords(Math.abs(num));
+
+        let words = '';
+
+        for (let i = 0; i < scales.length; i++) {
+            let unit = Math.pow(1000, scales.length - i - 1);
+            let currentNum = Math.floor(num / unit);
+
+            if (currentNum > 0) {
+                words += convertHundreds(currentNum) + ' ' + scales[scales.length - i - 1] + ' ';
+            }
+
+            num %= unit;
+        }
+
+        return words.trim();
+    }
+
+    function numberToWordsWithPaisa(amount) {
+        // Split the amount into rupees and paisa
+        const rupees = Math.floor(amount);
+        const paisa = Math.round((amount - rupees) * 100);
+
+        let result = numberToWords(rupees) + ' Rupees';
+
+        if (paisa > 0) {
+            result += ' and ' + numberToWords(paisa) + ' Paisa';
+        }
+
+        return result;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var netTotal = <%= stockAdjustment.totalAmount %>;
+        document.getElementById("amountInWords").textContent = numberToWordsWithPaisa(netTotal);
+    });
+</script>

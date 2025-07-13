@@ -1,0 +1,148 @@
+#selectedProductName {
+  font-weight: bold;
+  color: #0d6efd;
+  /* Bootstrap primary color */
+  text-transform: capitalize;
+}
+
+.composition-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.composition-section h6 {
+  margin-bottom: 10px;
+  color: #495057;
+}
+
+#compositionList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Composition Modal Styles */
+#compositionDetailsContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+#compositionDetailsHeader {
+  display: flex;
+  padding: 0px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.composition-row {
+  display: flex;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.composition-row:hover {
+  background-color: #f8f9fa;
+}
+
+.composition-row.active {
+  background-color: #518ce8 !important;
+  color: white !important;
+}
+
+.composition-cell {
+  padding: 0px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composition-name {
+  flex: 2;
+}
+
+.view-items-btn {
+  white-space: nowrap;
+}
+
+/* Related Items Modal Styles */
+#relatedItemsContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+#relatedItemsHeader {
+  display: flex;
+  padding: 0px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.item-row {
+  display: flex;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.item-row:hover {
+  background-color: #f8f9fa;
+}
+
+.item-cell {
+  padding: 0px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-name {
+  flex: 2;
+}
+
+/* Composition and Item Rows */
+.composition-row,
+.item-row {
+  display: flex;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  outline: none;
+  /* Remove default focus outline */
+}
+
+.composition-row:hover,
+.item-row:hover {
+  background-color: #f8f9fa;
+}
+
+.composition-row.active,
+.item-row.active {
+  background-color: #518ce8 !important;
+  color: white !important;
+}
+
+/* Focus styles for keyboard navigation */
+.composition-row:focus,
+.item-row:focus {
+  box-shadow: 0 0 0 2px rgba(81, 140, 232, 0.5);
+}
+
+/* Cells */
+.composition-cell,
+.item-cell {
+  padding: 0px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composition-name,
+.item-name {
+  flex: 2;
+}

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval';
+               script-src * 'unsafe-inline' 'unsafe-eval';
+               connect-src * 'unsafe-inline';
+               img-src * data: 'unsafe-inline';
+               frame-src * 'unsafe-inline';">
+
+    <title>Create New Company</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4895ef;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+
+            /* font-family: Arial, sans-serif; */
+            background-image: url('/logo/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 1rem;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+
+        .container-main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 15px;
+        }
+
+        .create-card {
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+            overflow: hidden;
+            background-color: white;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        .form-control,
+        .form-select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+
+        .invalid-feedback {
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            font-weight: 500;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .form-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
+            cursor: pointer;
+        }
+
+        .form-switch .form-check-label {
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* Loader styles */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(67, 97, 238, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        #loader-percentage-text {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Select2 customization */
+        .select2-container--default .select2-selection--single {
+            height: auto;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .create-card {
+                padding: 1.5rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Message modal styling */
+        .message-modal .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .message-modal .modal-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .message-modal .modal-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard | <%= user.name %>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <% if (isAdminOrSupervisor) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/company/new">
+                                <i class="fas fa-plus-circle me-1"></i>Create Company
+                            </a>
+                        </li>
+                        <% } %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/logout">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                </a>
+                            </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="create-card animate__animated animate__fadeInUp">
+            <h1 class="page-title">
+                <i class="fas fa-building"></i>Create New Company
+            </h1>
+
+            <!-- Loader -->
+            <div id="loader" style="display: none;">
+                <div class="spinner"></div>
+                <p id="loader-percentage-text">Creating company... <span id="loader-percentage">0%</span></p>
+            </div>
+
+            <!-- Message Modal -->
+            <div class="modal fade message-modal" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="messageModalLabel">
+                                <i class="fas fa-info-circle me-2"></i>Notification
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <% if (messages && messages.length) { %>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <%= messages %>
+                                </div>
+                                <% } %>
+                                    <% if (error && error.length) { %>
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            <%= error %>
+                                        </div>
+                                        <% } %>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                <i class="fas fa-check me-2"></i>OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form action="/company" method="POST" class="needs-validation" novalidate>
+                <div class="row g-3 mb-4">
+                    <!-- Company Name -->
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="invalid-feedback">Please enter the company name</div>
+                    </div>
+
+                    <!-- Country -->
+                    <div class="col-md-6">
+                        <label for="country" class="form-label">Country</label>
+                        <select class="form-select select2" id="country" name="country" required>
+                            <option value="" disabled selected>Select country</option>
+                            <option value="Nepal">Nepal</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a country</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- State -->
+                    <div class="col-md-6">
+                        <label for="state" class="form-label">State/Province</label>
+                        <input type="text" class="form-control" id="state" name="state" required>
+                        <div class="invalid-feedback">Please enter the state/province</div>
+                    </div>
+
+                    <!-- City -->
+                    <div class="col-md-6">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="city" name="city" required>
+                        <div class="invalid-feedback">Please enter the city</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- Address -->
+                    <div class="col-md-6">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address" name="address" required>
+                        <div class="invalid-feedback">Please enter the address</div>
+                    </div>
+
+                    <!-- PAN -->
+                    <div class="col-md-6">
+                        <label for="pan" class="form-label">PAN Number</label>
+                        <input type="text" class="form-control" id="pan" name="pan" maxlength="9" minlength="9"
+                            placeholder="Enter 9-digit PAN number" required>
+                        <div class="invalid-feedback">Please enter a valid 9-digit PAN number</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- Phone -->
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone"
+                            pattern="^\+?[0-9]{1,4}[- ]?[0-9]{7,10}$" required
+                            placeholder="+977-9801234567 or 9801234567">
+                        <div class="invalid-feedback">Please enter a valid phone number</div>
+                    </div>
+
+                    <!-- Ward -->
+                    <div class="col-md-6">
+                        <label for="ward" class="form-label">Ward Number</label>
+                        <input type="number" class="form-control" id="ward" name="ward" required>
+                        <div class="invalid-feedback">Please enter the ward number</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Company Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="invalid-feedback">Please enter a valid email address</div>
+                    </div>
+
+                    <!-- Trade Type -->
+                    <div class="col-md-6">
+                        <label for="tradeType" class="form-label">Business Type</label>
+                        <select class="form-select select2" id="tradeType" name="tradeType" required>
+                            <option value="" disabled selected>Select business type</option>
+                            <option value="retailer">retailer</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a business type</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- Date Format -->
+                    <div class="col-md-6">
+                        <label for="dateFormat" class="form-label">Date Format</label>
+                        <select class="form-select select2" id="dateFormat" name="dateFormat" required>
+                            <option value="" disabled selected>Select date format</option>
+                            <option value="nepali">Nepali Date</option>
+                            <option value="english">English Date</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a date format</div>
+                    </div>
+
+                    <!-- Fiscal Year Start Date (dynamic based on date format) -->
+                    <div class="col-md-6">
+                        <div class="english-date-fields" style="display:none;">
+                            <label for="startDateEnglish" class="form-label">Fiscal Year Start Date (English)</label>
+                            <input type="date" class="form-control" id="startDateEnglish" name="startDateEnglish"
+                                value="<%= new Date().toISOString().split('T')[0] %>">
+                        </div>
+
+                        <div class="nepali-date-fields" style="display:none;">
+                            <label for="startDateNepali" class="form-label">Fiscal Year Start Date (Nepali)</label>
+                            <input type="date" class="form-control" id="startDateNepali" name="startDateNepali"
+                                value="<%= nepaliDate || '' %>" placeholder="YYYY/MM/DD">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VAT Enabled Toggle -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="vatEnabled" name="vatEnabled"
+                                value="true">
+                            <label class="form-check-label" for="vatEnabled">Enable VAT</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Create Company
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
+    <!-- Select2 JS -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
+
+    <!-- At the BOTTOM of your body, RIGHT BEFORE your custom scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            $(function () {
+                $(document).ready(function () {
+                    // Initialize Select2 for dropdowns
+                    $('.select2').select2({
+                        placeholder: "Select an option",
+                        allowClear: false,
+                        width: '100%'
+                    });
+
+                    // Handle Date Format change
+                    $('#dateFormat').change(function () {
+                        var selectedFormat = $(this).val();
+                        if (selectedFormat === 'english') {
+                            $('.english-date-fields').show();
+                            $('.nepali-date-fields').hide();
+                        } else if (selectedFormat === 'nepali') {
+                            $('.nepali-date-fields').show();
+                            $('.english-date-fields').hide();
+                        }
+                    });
+
+                    // Form validation
+                    (function () {
+                        'use strict'
+                        var forms = document.querySelectorAll('.needs-validation')
+
+                        Array.from(forms).forEach(function (form) {
+                            form.addEventListener('submit', function (event) {
+                                if (!form.checkValidity()) {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                } else {
+                                    showLoader();
+                                }
+
+                                form.classList.add('was-validated')
+                            }, false)
+                        })
+                    })();
+
+            // Show message modal if there are messages
+            <% if (messages && messages.length || error && error.length) { %>
+                var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+                        messageModal.show();
+            <% } %>
+        });
+
+                // Loader functionality
+                function showLoader() {
+                    document.getElementById("loader").style.display = "flex";
+                    updateLoaderPercentage();
+                }
+
+                function hideLoader() {
+                    document.getElementById("loader").style.display = "none";
+                }
+
+                function updateLoaderPercentage() {
+                    let percentage = 0;
+                    const loaderPercentage = document.getElementById("loader-percentage");
+                    const interval = setInterval(() => {
+                        percentage += 10;
+                        loaderPercentage.textContent = `${percentage}%`;
+                        if (percentage >= 100) clearInterval(interval);
+                    }, 100);
+                }
+
+                // Handle back button navigation
+                window.onpageshow = function (event) {
+                    if (event.persisted) {
+                        hideLoader();
+                    }
+                };
+
+                // Function to move focus to the next input field
+                function moveToNextInput(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault(); // Prevent form submission
+                        const form = event.target.form;
+                        const index = Array.prototype.indexOf.call(form, event.target);
+                        form.elements[index + 1].focus();
+                    }
+                }
+
+                // Get all the input elements within the form
+                const inputs = document.querySelectorAll('form input, form select');
+
+                // Attach the moveToNextInput function to the keydown event for each input field
+                inputs.forEach(input => {
+                    input.addEventListener('keydown', moveToNextInput);
+                });
+
+            });
+        });
+    </script>
+</body>
+
+</html>

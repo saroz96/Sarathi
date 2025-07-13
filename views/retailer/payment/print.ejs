@@ -1,0 +1,245 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
+
+<div class="mt-4" style="float: right; margin-right: 100px;">
+    <a href="#" class="btn btn-secondary" id="backButton"><i class="bi bi-back"></i></a>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="bi bi-printer"></i></button>
+    <a href="/payments" class="btn btn-primary"><i class="bi bi-receipt"></i></a>
+</div>
+
+<br>
+
+<div class="container">
+    <div class="card shadow-lg p-4 animate__animated animate__fadeInUp">
+        <div class="voucher" id="voucher">
+            <!-- Print Header -->
+            <div id="printHeader" class="text-center" style="text-align: center;">
+                <div class="header">
+                    <h2 class="card-subtitle">
+                        <%= currentCompanyName %>
+                    </h2>
+                    <h4>
+                        <b>
+                            <%= currentCompany.address %>-<%= currentCompany.ward %>, <%= currentCompany.city %>,
+                                        <%= currentCompany.country %>
+                        </b>
+                        <br>
+                        TPIN.: <span id="pan-vat-container"></span>
+                    </h4>
+                    <hr style="border: 0.5px solid;">
+                </div>
+            </div>
+
+            <div class="voucher-header">
+                <h1 class="text-center" style="text-decoration: underline; letter-spacing: 3px;">Payment Voucher</h1>
+                <div class="invoice-details text-right">
+                    <p><strong>Vch. No:</strong>
+                        <%= payment.billNumber %>
+                    </p>
+                    <p><strong>Date:</strong>
+                        <%= payment.date.toLocaleDateString() %>
+                    </p>
+                </div>
+            </div>
+
+            <table class="voucher-table">
+                <thead>
+                    <tr>
+                        <th>S.N</th>
+                        <th>Particular</th>
+                        <th>Debit Amount</th>
+                        <th>Credit Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>
+                            <% if (payment.isActive) { %>
+                                <%= payment.account.name %>
+                                    <% } else { %>
+                                        <span class="text-danger">Canceled</span>
+                                        <% } %>
+                        </td>
+                        <td>
+                            <% if (payment.isActive) { %>
+                                <%= payment.debit.toFixed(2) %>
+                                    <% } else { %>
+                                        <span class="text-danger">0.00</span>
+                                        <% } %>
+                        </td>
+                        <td>0.00</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>
+                            <% if (payment.isActive) { %>
+                                <%= payment.paymentAccount.name %>
+                                    <% } else { %>
+                                        <span class="text-danger">Canceled</span>
+                                        <% } %>
+                        </td>
+                        <td>0.00</td>
+                        <td>
+                            <% if (payment.isActive) { %>
+                                <%= payment.debit.toFixed(2) %>
+                                    <% } else { %>
+                                        <span class="text-danger">0.00</span>
+                                        <% } %>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2">Total</th>
+                        <th>
+                            <%= payment.debit.toFixed(2) %>
+                        </th>
+                        <th>
+                            <%= payment.debit.toFixed(2) %>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+            <p>
+                Note: <%=payment.description%>
+            </p>
+            <div class="row">
+                <div class="col-6">
+                    <label for="modeOfPayment">Mode of Payment: <%= payment.InstType%>
+                    </label>
+                </div>
+                <div class="col-6">
+                    <label for="InstNo">Inst No: <%=payment.InstNo%></label>
+                </div>
+            </div>
+            <br>
+
+            <div class="signature-section" style="display: flex; justify-content: space-between;margin-top:5px;">
+                <div class="signature">
+                    <p style="margin-bottom: 0;"><strong>
+                            <%= payment.user ? payment.user.name : 'N/A' %>
+                        </strong></p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Prepared By:</p>
+                </div>
+                <div class="signature">
+                    <p style="margin-bottom: 0;">&nbsp;</p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Checked By:</p>
+                </div>
+                <div class="signature">
+                    <p style="margin-bottom: 0;">&nbsp;</p>
+                    <p style="text-decoration: overline; margin-top: 5px;">Approved By:</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* @page {
+            size: A5 portrait;
+            margin: 10mm;
+        } */
+
+        body * {
+            visibility: hidden;
+        }
+
+        #voucher,
+        #voucher * {
+            visibility: visible;
+        }
+
+        #voucher {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 260mm;
+            height: 150mm;
+            margin: auto;
+        }
+
+        .text-center button,
+        .text-center a {
+            display: none;
+        }
+    }
+
+    .voucher {
+        width: 250mm;
+        /* A5 portrait width */
+        height: 150mm;
+        /* A5 portrait height */
+        padding: 10mm;
+        margin: auto;
+        border: 1px solid black;
+        background-color: white;
+        font-family: Arial, sans-serif;
+    }
+
+
+    .voucher-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .invoice-details {
+        text-align: right;
+    }
+
+    .voucher-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+
+    .voucher-table th,
+    .voucher-table td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .voucher-table th {
+        background-color: #f2f2f2;
+    }
+
+    .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .signature {
+        width: 30%;
+        text-align: center;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+</style>
+
+<script>
+    const panVatNo = '<%= currentCompany.pan %>';
+    const container = document.getElementById('pan-vat-container');
+
+    for (let i = 0; i < panVatNo.length; i++) {
+        const digit = document.createElement('span');
+        digit.className = 'bordered-digit';
+        digit.textContent = panVatNo[i];
+        container.appendChild(digit);
+    }
+</script>
+
+<script>
+    document.getElementById('backButton').addEventListener('click', function () {
+        // Navigate back twice to skip the success message page
+        window.history.go(-1);
+    });
+</script>

@@ -1,0 +1,690 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <!-- Nepali Datepicker -->
+    <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
+        rel="stylesheet" type="text/css" />
+    <style>
+        /* Main container styling */
+        .wider-container {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .highlight-row {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+        .highlight-row td {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+
+
+        #billsList thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f2f2f2;
+            z-index: 1;
+        }
+
+        .only-print {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 5mm;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .only-print {
+                display: block !important;
+            }
+
+            body {
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+            }
+
+            .wider-container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .card-body {
+                padding: 0;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            th,
+            td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+            }
+
+            th {
+                background-color: #f2f2f2;
+            }
+
+            .report-container {
+                page-break-after: always;
+            }
+
+            .totals-row {
+                display: none;
+            }
+
+            /* Display the totals row only on the last page */
+            .totals-row:last-of-type {
+                display: table-row;
+            }
+
+            .report-container:last-of-type .totals-row {
+                display: table-row;
+                page-break-before: always;
+            }
+        }
+
+        /* Improved button styling */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        /* Better table styling */
+        #billsList {
+            font-size: 0.85rem;
+        }
+
+        #billsList th {
+            white-space: nowrap;
+        }
+
+        /* Numeric columns right-aligned */
+        .numeric-cell {
+            text-align: right !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .wider-container {
+                max-width: 100%;
+            }
+
+            .action-buttons {
+                flex-wrap: wrap;
+            }
+
+            .action-buttons .btn {
+                flex: 1 0 45%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons .btn {
+                flex: 1 0 100%;
+            }
+        }
+    </style>
+
+    <div class="wider-container mt-4 wow-form">
+        <div class="card mt-4 shadow-lg p-4 animate_animated animate_fadeInUp expanded-card">
+            <h1 class="text-center mb-4">Purchase Return VAT Report</h1>
+            <div class="card-body">
+                <form action="/purchaseReturn-vat-report" method="get" class="mb-4">
+                    <div class="row g-3">
+                        <% if (companyDateFormat==='english' ) { %>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="fromDate">From Date</label>
+                                    <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
+                                        value="<%= fromDate ? fromDate : '2023-07-17' %>" autofocus>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="toDate">To Date</label>
+                                    <input type="date" name="toDate" id="toDate" class="form-control datepicker"
+                                        value="<%= new Date().toISOString().split('T')[0] %>">
+                                </div>
+                            </div>
+                            <% } else { %>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="fromDate">From Date</label>
+                                        <input type="date" name="fromDate" id="fromDate" class="form-control datepicker"
+                                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                                            autofocus>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="toDate">To Date</label>
+                                        <input type="text" name="toDate" id="toDate" class="form-control datepicker"
+                                            value="<%= toDate ? toDate : (currentFiscalYear ? new Date(currentFiscalYear.endDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>">
+                                    </div>
+                                </div>
+                                <% } %>
+
+                                    <div class="col-md-6">
+                                        <div class="action-buttons">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-chart-line me-2"></i>Generate Report
+                                            </button>
+                                            <button type="button" class="btn btn-success no-print"
+                                                onclick="exportToExcel()" <%=purchaseReturnVatReport.length===0
+                                                ? 'disabled' : '' %>>
+                                                <i class="fas fa-file-excel me-2"></i>Export Excel
+                                            </button>
+                                            <button type="button" class="btn btn-info no-print" onclick="printReport()"
+                                                <%=purchaseReturnVatReport.length===0 ? 'disabled' : '' %>>
+                                                <i class="fas fa-print me-2"></i>Print Report
+                                            </button>
+                                            <button type="button" class="btn btn-secondary no-print"
+                                                onclick="refreshPage()">
+                                                <i class="fas fa-sync-alt me-2"></i>Refresh
+                                            </button>
+                                        </div>
+                                    </div>
+                    </div>
+                </form>
+
+                <% if (purchaseReturnVatReport.length===0) { %>
+                    <div class="alert alert-info text-center py-3">
+                        <i class="fas fa-info-circle me-2"></i>Please select date range and click "Generate Report" to
+                        view data
+                    </div>
+                    <% } else { %>
+                        <div class="report-container" style="width: 100%;">
+                            <div class="only-print">
+                                <h1>
+                                    <%= currentCompanyName %>
+                                </h1>
+                                <span>
+                                    <%= currentCompany.address %>-<%= currentCompany.ward %>, <%= currentCompany.city %>
+                                                , <%= currentCompany.country %>
+                                </span>
+                                <p><strong>Purchase Return Register</strong></p>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center print-row">
+                                <div>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        <strong>Period of Purchase Return:</strong>
+                                        <% const date=new Date(fromDate); const month=date.getMonth(); // 0-based index
+                                            const englishMonths=["January", "February" , "March" , "April" , "May"
+                                            , "June" , "July" , "August" , "September" , "October" , "November"
+                                            , "December" ]; const nepaliMonths=["Baishakh", "Jestha" , "Ashadh"
+                                            , "Shrawan" , "Bhadra" , "Ashwin" , "Kartik" , "Mangsir" , "Poush" , "Magh"
+                                            , "Falgun" , "Chaitra" ]; const displayMonth=companyDateFormat==="nepali" ?
+                                            nepaliMonths[month] : englishMonths[month]; %>
+                                            <%= displayMonth %>
+                                    </span>
+                                    <br>
+                                    <strong>From:
+                                        <%= fromDate %> to:
+                                            <%= toDate %>
+                                    </strong>
+                                </div>
+                                <div class="only-print">
+                                    <p class="mb-0">
+                                        <strong>Year: </strong>
+                                        <%= fromDate.split('-')[0] %> | <strong>PAN:</strong>
+                                            <%= currentCompany.pan %>
+                                    </p>
+
+                                </div>
+                            </div>
+
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-bordered table-hover" id="billsList">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Vch. No.</th>
+                                            <th>Supplier's Name</th>
+                                            <th>Supplier's PAN</th>
+                                            <th class="numeric-cell">Total Purchase Return</th>
+                                            <th class="numeric-cell">Discount Amt</th>
+                                            <th class="numeric-cell">Non VAT Purchase Return</th>
+                                            <th class="numeric-cell">Taxable Amount</th>
+                                            <th class="numeric-cell">VAT Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (purchaseReturnVatReport.length> 0) { %>
+                                            <% purchaseReturnVatReport.forEach(report=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= new Date(report.date).toLocaleDateString() %>
+                                                    </td>
+                                                    <td>
+                                                        <%= report.billNumber %>
+                                                    </td>
+                                                    <td style="white-space: nowrap;">
+                                                        <%= report.account %>
+                                                    </td>
+                                                    <td>
+                                                        <%= report.panNumber %>
+                                                    </td>
+                                                    <td class="numeric-cell">
+                                                        <%= report.totalAmount.toFixed(2) %>
+                                                    </td>
+                                                    <td class="numeric-cell">
+                                                        <%= report.discountAmount.toFixed(2) %>
+                                                    </td>
+                                                    <td class="numeric-cell">
+                                                        <%= report.nonVatPurchaseReturn.toFixed(2) %>
+                                                    </td>
+                                                    <td class="numeric-cell">
+                                                        <%= report.taxableAmount.toFixed(2) %>
+                                                    </td>
+                                                    <td class="numeric-cell">
+                                                        <%= report.vatAmount.toFixed(2) %>
+                                                    </td>
+                                                </tr>
+                                                <% }) %>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="9">No transactions found for the selected date
+                                                                range.</td>
+                                                        </tr>
+                                                        <% } %>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="totals-row">
+                                            <td colspan="4"><strong>Total:</strong></td>
+                                            <td class="numeric-cell"><strong
+                                                    id="totalPurchaseReturnAmount">0.00</strong></td>
+                                            <td class="numeric-cell"><strong id="totalDiscountAmount">0.00</strong></td>
+                                            <td class="numeric-cell"><strong
+                                                    id="totalNonVatPurchaseReturn">0.00</strong></td>
+                                            <td class="numeric-cell"><strong id="totalTaxableAmount">0.00</strong></td>
+                                            <td class="numeric-cell"><strong id="totalVatAmount">0.00</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="alert alert-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Showing <%= purchaseReturnVatReport.length %> records
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary no-print"
+                                        onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                                        <i class="fas fa-arrow-up me-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script
+        src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"></script>
+
+
+    <script>
+        // Initialize Nepali date pickers
+        $('#fromDate').nepaliDatePicker({
+            ndpYear: true,
+            ndpMonth: true,
+            ndpYearCount: 10,
+            dateFormat: "YYYY-MM-DD",
+            language: "english"
+        });
+
+        $('#toDate').nepaliDatePicker({
+            ndpYear: true,
+            ndpMonth: true,
+            ndpYearCount: 10,
+            dateFormat: "YYYY-MM-DD",
+            language: "english"
+        });
+
+        function refreshPage() {
+            window.location.href = '/purchaseReturn-vat-report';
+        }
+
+        function exportToExcel() {
+            // Get the table element
+            const table = document.getElementById('billsList');
+
+            // Clone the table to modify for export
+            const tableClone = table.cloneNode(true);
+
+            // Remove any existing totals row
+            const totalsRow = tableClone.querySelector('.totals-row');
+            if (totalsRow) {
+                totalsRow.remove();
+            }
+
+            function calculateTotals() {
+                let totalPurchaseReturn = 0;
+                let totalDiscount = 0;
+                let totalNonVat = 0;
+                let totalTaxable = 0;
+                let totalVat = 0;
+
+                const rows = document.querySelectorAll('#billsList tbody tr');
+
+                rows.forEach(row => {
+                    const total = parseFloat(row.dataset.total) || parseFloat(row.cells[4].textContent.replace(/,/g, '')) || 0;
+                    const discount = parseFloat(row.dataset.discount) || parseFloat(row.cells[5].textContent.replace(/,/g, '')) || 0;
+                    const nonVat = parseFloat(row.dataset.nonvat) || parseFloat(row.cells[6].textContent.replace(/,/g, '')) || 0;
+                    const taxable = parseFloat(row.dataset.taxable) || parseFloat(row.cells[7].textContent.replace(/,/g, '')) || 0;
+                    const vat = parseFloat(row.dataset.vat) || parseFloat(row.cells[8].textContent.replace(/,/g, '')) || 0;
+
+                    totalPurchaseReturn += total;
+                    totalDiscount += discount;
+                    totalNonVat += nonVat;
+                    totalTaxable += taxable;
+                    totalVat += vat;
+                });
+
+                return {
+                    totalPurchaseReturn,
+                    totalDiscount,
+                    totalNonVat,
+                    totalTaxable,
+                    totalVat
+                };
+            }
+
+            // Create a new totals row with calculated values
+            const totals = calculateTotals();
+            const newTotalsRow = document.createElement('tr');
+            newTotalsRow.innerHTML = `
+            <td colspan="4" style="text-align: right; font-weight: bold;">Total:</td>
+            <td style="text-align: right; font-weight: bold;">${totals.totalPurchaseReturn.toFixed(2)}</td>
+            <td style="text-align: right; font-weight: bold;">${totals.totalDiscount.toFixed(2)}</td>
+            <td style="text-align: right; font-weight: bold;">${totals.totalNonVat.toFixed(2)}</td>
+            <td style="text-align: right; font-weight: bold;">${totals.totalTaxable.toFixed(2)}</td>
+            <td style="text-align: right; font-weight: bold;">${totals.totalVat.toFixed(2)}</td>
+        `;
+            tableClone.querySelector('tbody').appendChild(newTotalsRow);
+
+            // Create a workbook
+            const wb = XLSX.utils.table_to_book(tableClone, { sheet: "Purchase Return VAT Report" });
+
+            // Generate a file name with date range
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const fileName = `Purchase_Return_VAT_Report_${fromDate}_to_${toDate}.xlsx`;
+
+            // Export to Excel
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function updateTotals() {
+            try {
+                let totalPurchaseReturnAmount = 0;
+                let totalDiscountAmount = 0;
+                let totalNonVatPurchaseReturn = 0;
+                let totalTaxableAmount = 0;
+                let totalVatAmount = 0;
+
+                const rows = document.querySelectorAll('#billsList tbody tr');
+
+                rows.forEach(row => {
+                    totalPurchaseReturnAmount += parseFloat(row.cells[4]?.textContent.replace(/,/g, '') || 0);
+                    totalDiscountAmount += parseFloat(row.cells[5]?.textContent.replace(/,/g, '') || 0);
+                    totalNonVatPurchaseReturn += parseFloat(row.cells[6]?.textContent.replace(/,/g, '') || 0);
+                    totalTaxableAmount += parseFloat(row.cells[7]?.textContent.replace(/,/g, '') || 0);
+                    totalVatAmount += parseFloat(row.cells[8]?.textContent.replace(/,/g, '') || 0);
+                });
+
+                document.getElementById('totalPurchaseReturnAmount').textContent = totalPurchaseReturnAmount.toFixed(2);
+                document.getElementById('totalDiscountAmount').textContent = totalDiscountAmount.toFixed(2);
+                document.getElementById('totalNonVatPurchaseReturn').textContent = totalNonVatPurchaseReturn.toFixed(2);
+                document.getElementById('totalTaxableAmount').textContent = totalTaxableAmount.toFixed(2);
+                document.getElementById('totalVatAmount').textContent = totalVatAmount.toFixed(2);
+            } catch (error) {
+                console.error('Error calculating totals:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateTotals();
+
+            setTimeout(() => {
+                setupRowNavigation();
+            }, 100); // slight delay to ensure rows render
+        });
+        function setupRowNavigation() {
+            let selectedRowIndex = 0;
+            const tableRows = Array.from(document.querySelectorAll('#billsList tbody tr'));
+
+            if (!tableRows.length) return;
+
+            // Initial highlight
+            highlightRow(selectedRowIndex);
+
+            function highlightRow(index) {
+                tableRows.forEach(row => row.classList.remove('highlight-row'));
+
+                if (index < 0) index = 0;
+                if (index >= tableRows.length) index = tableRows.length - 1;
+
+                tableRows[index].classList.add('highlight-row');
+                selectedRowIndex = index;
+
+                // Scroll into view
+                tableRows[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            tableRows.forEach((row, index) => {
+                row.addEventListener('click', () => {
+                    highlightRow(index);
+                });
+            });
+
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (selectedRowIndex < tableRows.length - 1) {
+                        highlightRow(selectedRowIndex + 1);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (selectedRowIndex > 0) {
+                        highlightRow(selectedRowIndex - 1);
+                    }
+                }
+            });
+
+        }
+
+        function showToast(message, type = 'info') {
+            // Implement your toast notification system here
+            // Example: using Bootstrap toasts
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+            document.body.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // document.addEventListener('DOMContentLoaded', function () {
+        //     updateTotals();
+
+        //     // Handle Nepali date conversion if needed
+        //     const companyDateFormat = "<%= companyDateFormat %>";
+        //     if (companyDateFormat === "nepali") {
+        //         const fromDateInput = document.getElementById('fromDate');
+        //         const toDateInput = document.getElementById('toDate');
+
+        //         if (fromDateInput.value) {
+        //             const nepaliFromDate = new NepaliDate(new Date(fromDateInput.value)).format('YYYY-MM-DD');
+        //             fromDateInput.value = nepaliFromDate;
+        //         }
+
+        //         if (toDateInput.value) {
+        //             const nepaliToDate = new NepaliDate(new Date(toDateInput.value)).format('YYYY-MM-DD');
+        //             toDateInput.value = nepaliToDate;
+        //         }
+        //     }
+        // });
+
+        function printReport() {
+            // Create a popup window centered on the screen
+            const width = 1000;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+
+            const printWindow = window.open('', '_blank',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
+                
+            const reportContent = document.querySelector('.report-container').innerHTML;
+            const companyName = '<%= currentCompanyName %>';
+
+            printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Purchase Return VAT Report - ${companyName}</title>
+                    <style>
+                        body {
+                        font-family: Arial, sans-serif;
+                        font-size: 9pt;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        width: 100%;
+                        margin: 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 5px;
+                        font-size: 8pt;
+                    }
+                    th, td {
+                        border: 1px solid #000;
+                        padding: 4px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                    .totals-row {
+                        font-weight: bold;
+                    }
+                    h1, h2 {
+                        font-size: 12pt;
+                        margin: 5px 0;
+                    }
+                    .report-dates {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 5px;
+                        font-size: 9pt;
+                    }
+                    .only-print {
+                        display: block !important;
+                        text-align: center;
+                        margin: 0 auto;
+                    }
+                    .print-row {
+                        display: flex !important;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 100%;
+                    }
+                    .print-row > div {
+                        flex: 1;
+                    }
+                    .print-row .only-print {
+                        text-align: right;
+                    }
+                    @page {
+                        size: A4 landscape;
+                        margin: 5mm;
+                    }
+                    </style>
+                </head>
+                <body>
+                    ${reportContent}
+                    <script>
+                    // Automatically trigger print when window loads
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            // Close the window after printing if user agrees
+                            if (confirm('Close print window?')) {
+                                window.close();
+                            }
+                        }, 200);
+                    };
+                <\/script>
+                </body>
+            </html>
+        `);
+
+            printWindow.document.close();
+        }
+
+        // Form navigation with Enter key
+        function moveToNextVisibleInput(currentElement) {
+            const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+            const currentIndex = formElements.indexOf(currentElement);
+
+            for (let i = currentIndex + 1; i < formElements.length; i++) {
+                if (formElements[i].offsetParent !== null) {
+                    formElements[i].focus();
+                    break;
+                }
+            }
+        }
+
+        // Attach event listeners for form navigation
+        document.querySelectorAll('form input, form select').forEach(input => {
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    moveToNextVisibleInput(event.target);
+                }
+            });
+        });
+    </script>

@@ -1,0 +1,43 @@
+[
+  {
+    "_id": "67f76d4feb8d3acd123f5c05",
+    "name": "EDTA VIAL",
+    "hscode": null,
+    "category": "67f76cc1eb8d3acd123f5b47",
+    "price": null,
+    "puPrice": null,
+    "mainUnitPuPrice": 0,
+    "mainUnit": "67f76cc2eb8d3acd123f5b5d",
+    "WSUnit": 100,
+    "unit": "67f76cc1eb8d3acd123f5b53",
+    "vatStatus": "vatable",
+    "stock": null,
+    "openingStock": null,
+    "openingStockByFiscalYear": [
+      {
+        "fiscalYear": "67f76cbceb8d3acd123f5a62",
+        "openingStock": null,
+        "openingStockBalance": "0.00",
+        "purchasePrice": "",
+        "salesPrice": null,
+        "_id": "67f76d4feb8d3acd123f5c06"
+      }
+    ],
+    "minStock": 0,
+    "maxStock": 10,
+    "reorderLevel": 10,
+    "sales": [],
+    "salesReturn": [],
+    "purchase": [],
+    "PurchaseReturn": [],
+    "stockAdjustments": [],
+    "stockEntries": [],
+    "company": "67f76cbceb8d3acd123f5a60",
+    "fiscalYear": "67f76cbceb8d3acd123f5a62",
+    "createdAt": "2025-04-10T06:56:59.716Z",
+    "date": "2025-04-10T06:56:59.716Z",
+    "uniqueNumber": 9410,
+    "__v": 0,
+    "status": "active"
+  }
+]

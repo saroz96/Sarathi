@@ -1,0 +1,647 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+
+    <style>
+        .card {
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 2px;
+            text-align: left;
+            white-space: nowrap;
+            /* Prevents line breaks */
+
+        }
+
+        .table td {
+            font-size: 15px
+        }
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+        .searchClass strong {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            /* Ensures long names are truncated with "..." */
+        }
+
+        .searchClass small {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 200px;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Add this hidden input at the top of your template -->
+    <input type="hidden" id="isInitialFiscalYear" value="<%= isInitialFiscalYear %>">
+    <div class="container-fluid mt-4 wow-form">
+        <div class="row">
+            <div class="col">
+                <!-- Add Company Form -->
+                <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp">
+                    <h1 style="text-align: center;text-decoration: underline;">Create Accounts</h1>
+                    <div class="card-body">
+                        <form action="/companies" method="post" class="wow-form">
+                            <div class="form-group row">
+                                <div class="form-group col-md-5">
+                                    <label for="name">Account Name <i style="color: red;">*</i></label>
+                                    <input type="text" class="form-control" name="name" placeholder="Enter account name"
+                                        autocomplete="off" id="searchValue" autofocus required>
+                                </div>
+                                <div class="form-group col-4">
+                                    <label for="companyGroup">Account Group <i style="color: red;">*</i></label>
+                                    <select class="form-control w-100" id="companyGroup" name="companyGroups"
+                                        onfocus="selectValue(this)" required>
+                                        <% if (companyGroups && companyGroups.length> 0) { %>
+                                            <option value="" disabled selected>Select a Group</option>
+                                            <% companyGroups.forEach(companyGroup=> { %>
+                                                <option value="<%= companyGroup._id %>">
+                                                    <%= companyGroup.name %>
+                                                </option>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <option disabled>No companies groups available</option>
+                                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="form-group col-3">
+                                    <label for="openingBalance">Op. Balance</label>
+                                    <input type="number" id="openingBalance" name="openingBalance[amount]"
+                                        class="form-control" step="any" <%=!isInitialFiscalYear ? 'readonly' : '' %>>
+                                    <select id="balanceType" name="openingBalance[type]" class="form-control"
+                                        <%=!isInitialFiscalYear ? 'readonly' : '' %>>
+                                        <option value="Dr">Dr.</option>
+                                        <option value="Cr">Cr.</option>
+                                    </select>
+                                    <% if (!isInitialFiscalYear) { %>
+                                        <small class="text-muted">Op. can only be set in init. F.Y
+                                            year</small>
+                                        <% } %>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="pan">Pan No.:</label>
+                                    <input type="text" class="form-control" id="pan" name="pan" minlength="9"
+                                        maxlength="9" placeholder="Enter pan/vat number" autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="address">Address</label>
+                                    <input type="text" class="form-control" id="address" name="address"
+                                        placeholder="Enter account address" autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="ward">Ward No.:</label>
+                                    <input type="number" class="form-control" id="ward" name="ward"
+                                        placeholder="Enter ward number" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="phone">Phone</label>
+                                    <input type="text" class="form-control" id="phone" name="phone"
+                                        placeholder="Enter account phone" autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        placeholder="Enter email" autocomplete="off" style="text-transform: lowercase;">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="contactperson">Contact Person</label>
+                                    <input type="text" class="form-control" id="contactperson" name="contactperson"
+                                        placeholder="Enter contact person" autocomplete="off">
+                                </div>
+                            </div>
+                            <!-- <input type="hidden" name="companyId" value="<%= companyId %>"> -->
+                            <button type="submit" class="btn btn-primary">Add A/c</button>
+                            <i>To Save Press Alt+S</i>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp">
+                    <h2 style="text-align: center;text-decoration: underline;">Existing Accounts</h2>
+                    <!--print buttons-->
+                    <div class="row">
+                        <div class="col-1">
+                            <div class="btn btn-primary" onclick="printAccounts()"><i class="bi bi-printer"></i></div>
+                        </div>
+                        <div class="col">
+                            <form class="mb-4">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="searchInput"
+                                        placeholder="Search accounts by name..." autocomplete="off">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Account Name</th>
+                                    <th>Account Group</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsList">
+                                <% if (accounts && accounts.length> 0) { %>
+                                    <% accounts.sort((a, b)=> a.name.localeCompare(b.name)); %>
+                                        <% accounts.forEach((account, index)=> { %>
+                                            <tr class="searchClass">
+                                                <td>
+                                                    <strong>
+                                                        <%= index + 1 %>. <%= account.name %>
+                                                    </strong> <!-- Serial Number displayed here -->
+                                                </td>
+                                                <td>
+                                                    <small>
+                                                        <%= account.companyGroups ? account.companyGroups.name
+                                                            : 'No Group' %>
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <a href="/companies/<%=account._id%>"><button
+                                                            class="btn btn-sm btn-info"><i
+                                                                class="fas fa-eye"></i></button></a>
+                                                    <button class="btn btn-sm btn-warning"
+                                                        onclick="editCompany('<%= account._id %>', '<%= account.name %>', '<%= account.address %>', '<%= account.phone %>', '<%= account.contactperson %>', '<%= account.companyGroups._id %>', '<%= account.pan %>', '<%= account.ward %>', '<%= account.email %>', '<%= account.openingBalance.amount %>', '<%= account.openingBalance.type %>')">
+                                                        <i class="fas fa-edit"></i></button>
+                                                    <form action="/companies/<%= account._id %>?_method=DELETE"
+                                                        method="post" class="d-inline"
+                                                        onsubmit="return confirmDeletion()">
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i
+                                                                class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <li class="list-group-item">No accounts available</li>
+                                                    <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Account Modal -->
+        <div class="modal fade" id="editCompanyModal" tabindex="-1" aria-labelledby="editCompanyModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editCompanyModalLabel">Edit Account</h5>
+                        <button type="button" class="close text-danger" data-bs-dismiss="modal"><span
+                                aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editCompanyForm" method="post">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="editName">Account Name <i style="color: red;">*</i></label>
+                                    <input type="text" class="form-control" id="editName" name="name" required
+                                        autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="editCompanyGroup">Account Group <i style="color: red;">*</i></label>
+                                    <select class="form-control" id="editCompanyGroup" name="companyGroups" required>
+                                        <% if (companyGroups && companyGroups.length> 0) { %>
+                                            <% companyGroups.forEach(companyGroup=> { %>
+                                                <option value="<%= companyGroup._id %>">
+                                                    <%= companyGroup.name %>
+                                                </option>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <option disabled>No companies groups available</option>
+                                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="editOpeningBalance">Op. Balance</label>
+                                    <input type="number" id="editOpeningBalance" name="openingBalance[amount]"
+                                        class="form-control" value="0.00" step="any" <%=!isInitialFiscalYear
+                                        ? 'readonly' : '' %>>
+                                    <select id="editBalanceType" name="openingBalance[type]" class="form-control"
+                                        <%=!isInitialFiscalYear ? 'readonly' : '' %>>
+                                        <option value="Dr">Dr.</option>
+                                        <option value="Cr">Cr.</option>
+                                    </select>
+                                    <% if (!isInitialFiscalYear) { %>
+                                        <small class="text-muted">Op. can only be set in init. F.Y
+                                            year</small>
+                                        <% } %>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="editPan">Pan No:</label>
+                                    <input type="number" class="form-control" id="editPan" name="pan" minlength="9"
+                                        autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="editAddress">Address:</label>
+                                    <input type="text" class="form-control" id="editAddress" name="address"
+                                        autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="editWard">Ward No:</label>
+                                    <input type="number" class="form-control" id="editWard" name="ward"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label for="editPhone">Phone:</label>
+                                    <input type="tel" class="form-control" id="editPhone" name="phone"
+                                        autocomplete="off">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="editEmail">Email:</label>
+                                    <input type="email" class="form-control" id="editEmail" name="email"
+                                        autocomplete="off" style="text-transform: lowercase;">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="editContactPerson">Contact Person</label>
+                                    <input type="text" class="form-control" id="editContactPerson" name="contactperson"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <!-- <input type="hidden" id="companyId" name="companyId" value="<%= companyId %>"> -->
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Add this modal for save confirmation -->
+    <div class="modal fade" id="saveConfirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-save me-2"></i>Confirm Save</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to save this account?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelSaveButton"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmSaveButton">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+
+        function selectValue(input) {
+            input.select(); // Select the value of the input field when it is focused
+        }
+
+        function editCompany(id, name, address, phone, contactperson, companyGroupId, pan, ward, email, openingBalance, balanceType) {
+            // const isInitial = document.getElementById('isInitialFiscalYear').value === 'true';
+            $('#editCompanyModal').modal('show');
+            $('#editCompanyForm').attr('action', '/companies/' + id + '?_method=PUT');
+            $('#editName').val(name);
+            $('#editAddress').val(address);
+            $('#editPhone').val(phone);
+            $('#editContactPerson').val(contactperson);
+            $('#editCompanyGroup').val(companyGroupId);
+            $('#editPan').val(pan);
+            $('#editWard').val(ward);
+            $('#editEmail').val(email);
+            $('#companyId').val(id); // Ensure companyId is set correctly
+            $('#editOpeningBalance').val(openingBalance);
+            $('#editBalanceType').val(balanceType);
+            // Handle opening balance fields
+            // $('#editOpeningBalance').prop('disabled', !isInitial);
+            // $('#editBalanceType').prop('disabled', !isInitial);
+
+            // if (!isInitial) {
+            //     $('#editOpeningBalance').val('');
+            //     $('#editBalanceType').val('Dr');
+            // }
+        }
+
+        // Disable opening balance in create form if not initial year
+        document.addEventListener('DOMContentLoaded', function () {
+            const isInitial = document.getElementById('isInitialFiscalYear').value === 'true';
+            if (!isInitial) {
+                document.getElementById('openingBalance').disabled = true;
+                document.getElementById('balanceType').disabled = true;
+            }
+        });
+
+        $(document).ready(function () {
+            $('#editCompanyModal').on('hidden.bs.modal', function () {
+                $('#editCompanyForm').trigger('reset');
+                $('#editCompanyForm').attr('action', '');
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const accountsList = document.querySelectorAll('.searchClass');
+            let hasResults = false;
+
+            accountsList.forEach(item => {
+                const itemName = item.querySelector('td strong').textContent.toLowerCase();
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                    hasResults = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Handle "No items found" row
+            let noAccountsRow = document.getElementById('noAccountsRow');
+
+            if (!hasResults) {
+                if (!noAccountsRow) {
+                    noAccountsRow = document.createElement('tr');
+                    noAccountsRow.id = 'noAccountsRow';
+                    noAccountsRow.innerHTML = `<td colspan="6" class="text-center"><strong>No accounts found</strong></td>`;
+                    document.getElementById('accountsList').appendChild(noAccountsRow);
+                }
+            } else {
+                if (noAccountsRow) {
+                    noAccountsRow.remove(); // Remove "No items found" if results exist
+                }
+            }
+        });
+
+
+        document.getElementById('searchValue').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const accountsList = document.querySelectorAll('.searchClass');
+            let hasResults = false;
+
+            accountsList.forEach(item => {
+                const itemName = item.querySelector('td strong').textContent.toLowerCase();
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                    hasResults = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            // Handle "No items found" row
+            let noAccountsRow = document.getElementById('noAccountsRow');
+
+            if (!hasResults) {
+                if (!noAccountsRow) {
+                    noAccountsRow = document.createElement('tr');
+                    noAccountsRow.id = 'noAccountsRow';
+                    noAccountsRow.innerHTML = `<td colspan="6" class="text-center"><strong>No accounts found</strong></td>`;
+                    document.getElementById('accountsList').appendChild(noAccountsRow);
+                }
+            } else {
+                if (noAccountsRow) {
+                    noAccountsRow.remove(); // Remove "No items found" if results exist
+                }
+            }
+        });
+
+        // document.addEventListener('DOMContentLoaded', function () {
+        //     // Function to move focus to the next form element or submit if it's a button
+        //     function moveToNextInput(event) {
+        //         if (event.key === 'Enter') {
+        //             const form = event.target.form;
+        //             const elements = Array.from(form.elements); // Get all elements in the form as an array
+        //             const index = elements.indexOf(event.target);
+
+        //             // If the current element is a button, allow form submission
+        //             if (event.target.tagName === 'BUTTON') {
+        //                 return; // Let the form submit naturally
+        //             }
+
+        //             event.preventDefault(); // Prevent form submission if not a button
+
+        //             // Move to the next focusable element if it exists
+        //             if (index > -1 && index < elements.length - 1) {
+        //                 const nextElement = elements[index + 1];
+        //                 if (nextElement) {
+        //                     nextElement.focus();
+        //                 }
+        //             }
+        //         }
+        //     }
+
+        //     // Get all input, select, textarea, and button elements within the form
+        //     const inputs = document.querySelectorAll('form input, form select, form textarea, form button');
+
+        //     // Attach the moveToNextInput function to the keydown event for each input field
+        //     inputs.forEach(input => {
+        //         input.addEventListener('keydown', moveToNextInput);
+        //     });
+        // });
+
+
+        // Function to print the list of accounts in table format
+        function printAccounts() {
+            // Create a table structure for printing
+            let printContent = `
+            <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>S.N.</th> <!-- Serial Number Column -->
+                        <th>Account Name</th>
+                        <th>Group</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        <% accounts.forEach((account, index) => { %>
+                printContent += `
+                <tr>
+                    <td><%= index + 1 %></td> <!-- Serial Number for Printing -->
+                    <td><%= account.name %></td>
+                    <td><%= account.companyGroups ? account.companyGroups.name : 'No Group' %></td>
+                </tr>`;
+        <% }); %>
+
+                printContent += `</tbody></table>`;
+
+            // Temporarily replace body content with the table for printing
+            const originalContent = document.body.innerHTML;
+            document.body.innerHTML = `
+            <html>
+            <head>
+                <title>Print Accounts</title>
+                <style>
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        padding: 8px;
+                        text-align: left;
+                        border: 1px solid #ddd;
+                    }
+                </style>
+            </head>
+            <body>
+                 <h2 class="card-subtitle mb-2 text-center">
+                            <%= currentCompanyName %>
+                        </h2>
+                <h2 class="text-center">Accounts List</h2>
+                ${printContent}
+            </body>
+            </html>
+        `;
+
+            // Trigger the print dialog
+            window.print();
+
+            // Restore the original content after printing
+            document.body.innerHTML = originalContent;
+            window.location.reload();  // Reload the page to restore event listeners
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Function to move focus to the next form element or submit if it's a button
+            function moveToNextInput(event) {
+                if (event.key === 'Enter') {
+                    const form = event.target.form;
+                    const elements = Array.from(form.elements)
+                        .filter(el =>
+                            !el.disabled &&
+                            !el.readOnly &&
+                            el.tabIndex >= 0 &&
+                            el.offsetParent !== null
+                        );
+
+                    const index = elements.indexOf(event.target);
+
+                    if (index > -1) {
+                        event.preventDefault();
+
+                        // Find next focusable element
+                        let nextIndex = index + 1;
+                        while (nextIndex < elements.length) {
+                            const nextElement = elements[nextIndex];
+                            if (nextElement &&
+                                nextElement.tabIndex >= 0 &&
+                                !nextElement.disabled &&
+                                !nextElement.readOnly
+                            ) {
+                                nextElement.focus();
+                                break;
+                            }
+                            nextIndex++;
+                        }
+
+                        // If at end, focus first element
+                        if (nextIndex >= elements.length) {
+                            elements[0]?.focus();
+                        }
+                    }
+                }
+            }
+
+            // Get all focusable elements within the form
+            const inputs = document.querySelectorAll('form input:not([disabled]):not([readonly]), form select:not([disabled]):not([readonly]), form textarea:not([disabled]):not([readonly])');
+
+            // Attach the moveToNextInput function to the keydown event
+            inputs.forEach(input => {
+                input.addEventListener('keydown', moveToNextInput);
+            });
+        });
+    </script>
+
+
+    <script>
+        // Add Alt+S shortcut handler
+        document.addEventListener('keydown', function (e) {
+            // Check for Alt+S
+            if (e.altKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+
+                // Check which form is active
+                const isEditModalOpen = $('#editCompanyModal').hasClass('show');
+
+                // Store the form type
+                $('#saveConfirmationModal').data('formType', isEditModalOpen ? 'edit' : 'add');
+
+                // Show confirmation modal
+                $('#saveConfirmationModal').modal('show');
+            }
+        });
+
+        // Focus the save button when confirmation modal appears
+        $('#saveConfirmationModal').on('shown.bs.modal', function () {
+            $('#confirmSaveButton').focus();
+        });
+
+        // Handle save confirmation
+        $('#confirmSaveButton').click(function () {
+            const formType = $('#saveConfirmationModal').data('formType');
+
+            if (formType === 'edit') {
+                $('#editCompanyForm').submit();
+            } else {
+                document.querySelector('form.wow-form').submit();
+            }
+
+            $('#saveConfirmationModal').modal('hide');
+        });
+
+        // Add keyboard navigation for buttons
+        $('#saveConfirmationModal').on('keydown', function (e) {
+            const confirmButton = document.getElementById('confirmSaveButton');
+            const cancelButton = document.getElementById('cancelSaveButton');
+
+            // Enter key submits form
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (document.activeElement === confirmButton) {
+                    confirmButton.click();
+                } else if (document.activeElement === cancelButton) {
+                    cancelButton.click();
+                }
+            }
+
+            // Arrow key navigation
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+
+                if (document.activeElement === confirmButton) {
+                    cancelButton.focus();
+                } else if (document.activeElement === cancelButton) {
+                    confirmButton.focus();
+                }
+            }
+        });
+
+        // Add ID to the add item form
+        document.querySelector('form.wow-form').id = 'addCompanyForm';
+    </script>

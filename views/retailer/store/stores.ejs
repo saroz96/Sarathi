@@ -1,0 +1,278 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+        .back-button {
+            background-color: #007bff;
+            /* Blue background */
+            color: white;
+            /* White text */
+            border: none;
+            /* No border */
+            padding: 10px 20px;
+            /* Padding */
+            font-size: 16px;
+            /* Font size */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+            border-radius: 5px;
+            /* Rounded corners */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Space between icon and text */
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+            /* Darker blue on hover */
+        }
+
+        .icon {
+            font-size: 20px;
+            /* Icon size */
+        }
+    </style>
+    <div class="container-fluid mt-4 wow-form">
+        <div class="row">
+            <div class="col">
+                <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+                    <h1 class="mt-5">Store Management</h1>
+
+                    <!-- Add Store Form -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            Add New Store
+                        </div>
+                        <div class="card-body">
+                            <form action="/retailer/store/management" method="post">
+
+                                <div class="form-group">
+                                    <label for="name">Name <i style="color: red;">*</i></label>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                        placeholder="Enter store name (e.g., Store-A)" autocomplete="off" autofocus
+                                        required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <input type="text" class="form-control" id="description" name="description"
+                                        placeholder="Enter description" autocomplete="off">
+                                </div>
+                                <br>
+                                <button type="submit" class="btn btn-primary">Add Store</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Store List -->
+            <div class="col">
+                <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp" style="height: 600px;">
+                    <h1 style="text-align: center; text-decoration: underline;">Existing Stores</h1>
+                    <!-- Print and Back Buttons -->
+                    <div class="row">
+                        <div class="col-2">
+                            <button id="backButton" class="back-button">
+                                <span class="icon">←</span> Back
+                            </button>
+                        </div>
+                        <div class="col-1">
+                            <div class="btn btn-primary" onclick="printStore()"><i class="bi bi-printer"></i></div>
+                        </div>
+                        <div class="col">
+                            <!-- Search Form -->
+                            <form class="mb-4">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="searchStoreInput"
+                                        placeholder="Search stores by name..." autocomplete="off">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Store Name</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storeList">
+                                <% if (stores && stores.length> 0) { %>
+                                    <% stores.sort((a, b)=> a.name.localeCompare(b.name)); %>
+                                        <!-- Sorting store alphabetically -->
+                                        <% stores.forEach((store, index)=> { %>
+                                            <tr class="searchStoreClass">
+                                                <td>
+                                                    <strong>
+                                                        <%=index +1 %>. <%= store.name %>
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    <%= store.description %>
+                                                </td>
+                                                <td>
+                                                    <a href="/retailer/store/management/<%= store._id %>"><button
+                                                            class="btn-sm btn-info"><i
+                                                                class="fas fa-eye"></i></button></a>
+                                                    <button class="btn btn-sm btn-warning"
+                                                        onclick="editStore('<%= store._id %>', '<%= store.name %>', '<%= store.description %>')"><i
+                                                            class="fas fa-edit"></i></button>
+                                                    <form
+                                                        action="/retailer/stores/delete/<%= store._id %>?_method=DELETE"
+                                                        method="post" class="d-inline"
+                                                        onsubmit="return confirmDeletion()">
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i
+                                                                class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="2">No stores available</td>
+                                                    </tr>
+                                                    <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Store Modal -->
+        <div class="modal fade" id="editStoreModal" tabindex="-1" aria-labelledby="editStoreModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editStoreModalLabel">Edit Store</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editStoreForm" method="post">
+                            <div class="form-group">
+                                <label for="editName">Name <i style="color: red;">*</i></label>
+                                <input type="text" class="form-control" id="editName" name="name" autocomplete="off"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editDescription">Description</label>
+                                <input type="text" class="form-control" id="editDescription" name="description"
+                                    placeholder="Enter description" autocomplete="off">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editStore(id, name, description) {
+            $('#editStoreModal').modal('show');
+            $('#editStoreForm').attr('action', '/retailer/store/management/' + id + '?_method=PUT');
+            $('#editName').val(name);
+            $('#editDescription').val(description);
+        }
+
+        $(document).ready(function () {
+            $('#editStoreModal').on('hidden.bs.modal', function () {
+                $('#editStoreForm').trigger('reset');
+                $('#editStoreForm').attr('action', '');
+            });
+        });
+
+
+        function confirmDeletion() {
+            // return confirm("Are you sure you want to delete this store?");
+        }
+
+        document.getElementById('backButton').addEventListener('click', function () {
+            // Navigate back twice to skip the success message page
+            window.history.go(-2);
+        });
+
+        function moveToNextVisibleInput(currentElement) {
+            const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+
+            // Find the current element's index in the form
+            const currentIndex = formElements.indexOf(currentElement);
+
+            // Iterate through the remaining elements to find the next visible one
+            for (let i = currentIndex + 1; i < formElements.length; i++) {
+                if (formElements[i].offsetParent !== null) { // Check if the element is visible
+                    formElements[i].focus();
+                    break;
+                }
+            }
+        }
+
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+
+                // Move to the next visible input
+                moveToNextVisibleInput(event.target);
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select form group');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+
+        // Search functionality for store
+        document.getElementById('searchStoreInput').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#storeList .searchStoreClass');
+            rows.forEach(row => {
+                const storeName = row.querySelector('td').textContent.toLowerCase();
+                if (storeName.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Search functionality for store from add input
+        document.getElementById('name').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#storeList .searchStoreClass');
+            rows.forEach(row => {
+                const storeName = row.querySelector('td').textContent.toLowerCase();
+                if (storeName.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Print functionality for store
+        function printStore() {
+            const printContents = document.querySelector('.card').innerHTML;
+            const originalContents = document.body.innerHTML;
+            document.body.innerHTML = printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+            window.location.reload(); // Reload to restore the original content
+        }
+    </script>

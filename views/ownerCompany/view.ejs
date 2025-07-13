@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= company.name %> - Company Details
+    </title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+
+            background-image: url('/logo/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+
+        .container-main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 15px;
+        }
+
+        .company-card {
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+            overflow: hidden;
+            background-color: white;
+        }
+
+        .company-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .company-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .company-section {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .detail-item {
+            margin-bottom: 1rem;
+            display: flex;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #6c757d;
+            min-width: 120px;
+        }
+
+        .detail-value {
+            flex: 1;
+        }
+
+        .btn {
+            font-weight: 500;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+            transform: translateY(-2px);
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-active {
+            background-color: #28a745;
+        }
+
+        .status-inactive {
+            background-color: #dc3545;
+        }
+
+        .animate__animated {
+            animation-duration: 0.5s;
+        }
+
+        @media (max-width: 768px) {
+            .detail-item {
+                flex-direction: column;
+            }
+
+            .detail-label {
+                margin-bottom: 0.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard | <%= user.name %>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <% if (isAdminOrSupervisor) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/company/new">
+                                <i class="fas fa-plus-circle me-1"></i>Create Company
+                            </a>
+                        </li>
+                        <% } %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/logout">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                </a>
+                            </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="company-card animate__animated animate__fadeInUp">
+            <!-- Company Header -->
+            <div class="company-header d-flex justify-content-between align-items-center">
+                <h1 class="company-title">
+                    <i class="fas fa-building me-2"></i>
+                    <%= company.name %>
+                </h1>
+                <% if (isAdminOrSupervisor) { %>
+                    <div class="action-buttons">
+                        <a href="/company/edit/<%= company._id %>" class="btn btn-primary me-2">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <form action="/company/delete/<%= company._id %>?_method=DELETE" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger" onclick="return confirmDeletion()">
+                                <i class="fas fa-trash-alt me-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                    <% } %>
+            </div>
+
+            <!-- Company Details Sections -->
+            <div class="row">
+                <!-- General Information -->
+                <div class="col-md-6">
+                    <div class="company-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle me-2"></i>General Information
+                        </h3>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span class="detail-value">
+                                <%= company.name %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Address:</span>
+                            <span class="detail-value">
+                                <%= company.address %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value">
+                                <%= company.country %>, <%= company.state %>, <%= company.city %>, <%= company.ward %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">PAN:</span>
+                            <span class="detail-value">
+                                <%= company.pan %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Contact:</span>
+                            <span class="detail-value">
+                                <i class="fas fa-phone me-1"></i>
+                                <%= company.phone %><br>
+                                    <i class="fas fa-envelope me-1"></i>
+                                    <%= company.email %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Trade Type:</span>
+                            <span class="detail-value badge bg-primary">
+                                <%= company.tradeType %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Date Format:</span>
+                            <span class="detail-value badge bg-info text-dark">
+                                <%= company.dateFormat.charAt(0).toUpperCase() + company.dateFormat.slice(1) %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value status-badge">
+                                <span
+                                    class="status-indicator <%= company.renewalDate ? 'status-active' : 'status-inactive' %>"></span>
+                                <%= company.renewalDate ? 'Active until ' + company.renewalDate : 'Demo Version' %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner Information -->
+                <div class="col-md-6">
+                    <div class="company-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-user-tie me-2"></i>Owner Information
+                        </h3>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span class="detail-value">
+                                <%= company.owner.name %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">
+                                <%= company.owner.email %>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Fiscal Year & Data Size -->
+                    <div class="company-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-calendar-alt me-2"></i>System Information
+                        </h3>
+
+                        <% if (company.fiscalYear) { %>
+                            <div class="detail-item">
+                                <span class="detail-label">Fiscal Year:</span>
+                                <span class="detail-value">
+                                    <%= company.fiscalYear._id %>
+                                </span>
+                            </div>
+                            <% } else { %>
+                                <div class="detail-item">
+                                    <span class="detail-label">Fiscal Year:</span>
+                                    <span class="detail-value text-muted">Not set</span>
+                                </div>
+                                <% } %>
+
+                                    <div class="detail-item">
+                                        <span class="detail-label">Data Size:</span>
+                                        <span class="detail-value">
+                                            <%= companyDataSizes[company._id] ? companyDataSizes[company._id] + ' KB'
+                                                : 'N/A' %>
+                                        </span>
+                                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function confirmDeletion() {
+            return confirm("Are you sure you want to delete this company? This action cannot be undone.");
+        }
+
+        // Add animation to elements when they come into view
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.company-section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate__fadeInUp');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,256 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+        .back-button {
+            background-color: #007bff;
+            /* Blue background */
+            color: white;
+            /* White text */
+            border: none;
+            /* No border */
+            padding: 10px 20px;
+            /* Padding */
+            font-size: 16px;
+            /* Font size */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+            border-radius: 5px;
+            /* Rounded corners */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Space between icon and text */
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+            /* Darker blue on hover */
+        }
+
+        .icon {
+            font-size: 20px;
+            /* Icon size */
+        }
+    </style>
+    <div class="container-fluid mt-4 wow-form">
+        <div class="row">
+            <div class="col">
+                <div class=" card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+                    <h1 class="mt-5">Compositions</h1>
+
+                    <!-- Add compositions Form -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            Add New Composition
+                        </div>
+                        <div class="card-body">
+                            <form action="/compositions" method="post">
+                                <div class="form-group">
+                                    <label for="name">Composition Name <i style="color: red;">*</i></label>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                        placeholder="Enter composition" autocomplete="off" autofocus required>
+                                </div>
+                                <br>
+                                <button type="submit" class="btn btn-primary">Add Composition</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing compositions List -->
+            <div class="col">
+                <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp" style="height: 600px;">
+                    <h1 style="text-align: center; text-decoration: underline;">Existing compositions</h1>
+                    <!-- Print and Back Buttons -->
+                    <div class="row">
+                        <div class="col-2">
+                            <button id="backButton" class="back-button">
+                                <span class="icon">←</span> Back
+                            </button>
+                        </div>
+                        <div class="col-1">
+                            <div class="btn btn-primary" onclick="printcompositions()"><i class="bi bi-printer"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <!-- Search Form -->
+                            <form class="mb-4">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="searchCompositionInput"
+                                        placeholder="Search compositions by name..." autocomplete="off">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Composition Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="compositionsList">
+                                <% if (compositions && compositions.length> 0) { %>
+                                    <% compositions.sort((a, b)=> a.name.localeCompare(b.name)); %>
+                                        <!-- Sorting compositions alphabetically -->
+                                        <% compositions.forEach((composition, index)=> { %>
+                                            <tr class="searchCompositionClass">
+                                                <td><strong>
+                                                        <%=index +1 %>. <%= composition.name %>
+                                                    </strong></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-warning"
+                                                        onclick="editComposition('<%= composition._id %>', '<%= composition.name %>')"><i
+                                                            class="fas fa-edit"></i></button>
+                                                    <form action="/compositions/<%= composition._id %>?_method=DELETE"
+                                                        method="post" class="d-inline"
+                                                        onsubmit="return confirmDeletion()">
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i
+                                                                class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="2">No compositions available</td>
+                                                    </tr>
+                                                    <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Unit Modal -->
+        <div class="modal fade" id="editCompositionModal" tabindex="-1" aria-labelledby="editCompositionModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editCompositionModalLabel">Edit Composition</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editCompositionForm" method="post">
+                            <div class="form-group">
+                                <label for="editName">Composition Name <i style="color: red;">*</i></label>
+                                <input type="text" class="form-control" id="editName" name="name" autocomplete="off"
+                                    required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editComposition(id, name) {
+            $('#editCompositionModal').modal('show');
+            $('#editCompositionForm').attr('action', '/compositions/' + id + '?_method=PUT');
+            $('#editName').val(name);
+        }
+
+        $(document).ready(function () {
+            $('#editCompositionModal').on('hidden.bs.modal', function () {
+                $('#editCompositionForm').trigger('reset');
+                $('#editCompositionForm').attr('action', '');
+            });
+        });
+
+
+        function confirmDeletion() {
+            // return confirm("Are you sure you want to delete this unit?");
+        }
+
+        document.getElementById('backButton').addEventListener('click', function () {
+            // Navigate back twice to skip the success message page
+            window.history.go(-2);
+        });
+
+        function moveToNextVisibleInput(currentElement) {
+            const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+
+            // Find the current element's index in the form
+            const currentIndex = formElements.indexOf(currentElement);
+
+            // Iterate through the remaining elements to find the next visible one
+            for (let i = currentIndex + 1; i < formElements.length; i++) {
+                if (formElements[i].offsetParent !== null) { // Check if the element is visible
+                    formElements[i].focus();
+                    break;
+                }
+            }
+        }
+
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+
+                // Move to the next visible input
+                moveToNextVisibleInput(event.target);
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select form group');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+
+        // Search functionality for compositions
+        document.getElementById('searchCompositionInput').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#compositionsList .searchCompositionClass');
+            rows.forEach(row => {
+                const unitName = row.querySelector('td').textContent.toLowerCase();
+                if (unitName.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Search functionality for compositions from add input
+        document.getElementById('name').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#compositionsList .searchCompositionClass');
+            rows.forEach(row => {
+                const unitName = row.querySelector('td').textContent.toLowerCase();
+                if (unitName.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Print functionality for compositions
+        function printcompositions() {
+            const printContents = document.querySelector('.card').innerHTML;
+            const originalContents = document.body.innerHTML;
+            document.body.innerHTML = printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+            window.location.reload(); // Reload to restore the original content
+        }
+    </script>

@@ -1,0 +1,149 @@
+<%- include('../layouts/boilerplate', { title: 'Daily Profit Analysis' , body: '' }) %>
+
+  <div class="content-wrapper">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card shadow-lg mt-4 animate__animated animate__fadeInUp">
+            <div class="card-header bg-primary text-white text-center">
+              <h3 class="mb-0">
+                <i class="fas fa-chart-line"></i> Daily Profit/Sales Analysis
+              </h3>
+            </div>
+            <div class="card-body">
+              <section class="content-header text-center mb-4">
+                <h4>Select Date Range</h4>
+              </section>
+
+              <form action="/retailer/daily-profit/sales-analysis" method="POST">
+                <div class="row justify-content-center">
+                  <% if (companyDateFormat==='english' ) { %>
+                    <div class="col-md-5 mb-3">
+                      <div class="form-group text-center">
+                        <label for="fromDate" class="form-label">From Date</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                          <input type="text" name="fromDate" id="fromDate" class="form-control datepicker text-center"
+                            value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                            autofocus autocomplete="off">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-5 mb-3">
+                      <div class="form-group text-center">
+                        <label for="toDate" class="form-label">To Date</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                          <input type="text" name="toDate" id="toDate" class="form-control datepicker text-center"
+                            value="<%= new Date().toISOString().split('T')[0] %>" autocomplete="off">
+                        </div>
+                      </div>
+                    </div>
+                    <% } else { %>
+                      <div class="col-md-5 mb-3">
+                        <div class="form-group text-center">
+                          <label for="fromDate" class="form-label">From Date</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                            <input type="text" name="fromDate" id="fromDate" class="form-control datepicker text-center"
+                              value="<%= fromDate ? fromDate : (currentFiscalYear ? new Date(currentFiscalYear.startDate).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10)) %>"
+                              autofocus autocomplete="off">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-5 mb-3">
+                        <div class="form-group text-center">
+                          <label for="toDate" class="form-label">To Date</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                            <input type="text" name="toDate" id="toDate" class="form-control datepicker text-center"
+                              value="<%= nepaliDate %>" autocomplete="off">
+                          </div>
+                        </div>
+                      </div>
+                      <% } %>
+                </div>
+
+                <div class="form-group text-center mt-4">
+                  <button type="submit" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-eye"></i> View Report
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .card {
+      border-radius: 10px;
+      border: none;
+    }
+
+    .card-header {
+      border-radius: 10px 10px 0 0 !important;
+      padding: 1rem;
+    }
+
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-group-text {
+      background-color: #f8f9fa;
+    }
+
+    .datepicker {
+      cursor: pointer;
+    }
+
+    .animate__animated {
+      animation-duration: 0.5s;
+    }
+
+    .shadow-lg {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+  </style>
+
+  <script>
+    $(document).ready(function () {
+      // Initialize datepicker if needed
+      if ($('.datepicker').length) {
+        $('.datepicker').datepicker({
+          format: 'yyyy-mm-dd',
+          autoclose: true,
+          todayHighlight: true
+        });
+      }
+    });
+  </script>
+
+  <script>
+    // Form navigation with Enter key
+    function moveToNextVisibleInput(currentElement) {
+      const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+      const currentIndex = formElements.indexOf(currentElement);
+
+      for (let i = currentIndex + 1; i < formElements.length; i++) {
+        if (formElements[i].offsetParent !== null) {
+          formElements[i].focus();
+          break;
+        }
+      }
+    }
+
+    // Attach event listeners for form navigation
+    document.querySelectorAll('form input, form select').forEach(input => {
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          moveToNextVisibleInput(event.target);
+        }
+      });
+    });
+  </script>

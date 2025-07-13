@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="<%= theme %>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <!-- Optional: Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> -->
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+        integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous" />
+    <!--end::Fonts-->
+    <!--begin::Third Party Plugin(OverlayScrollbars)-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
+        integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg=" crossorigin="anonymous" />
+    <!--end::Third Party Plugin(OverlayScrollbars)-->
+    <!--begin::Third Party Plugin(Bootstrap Icons)-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous" />
+    <!--end::Third Party Plugin(Bootstrap Icons)-->
+    <!--begin::Required Plugin(AdminLTE)-->
+    <!-- <link rel="stylesheet" href="../../dist/css/adminlte.css" /> -->
+    <link rel="stylesheet" href="/css/adminlte.css">
+    <!--end::Required Plugin(AdminLTE)-->
+    <!-- apexcharts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
+        integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0=" crossorigin="anonymous" />
+    <!-- jsvectormap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css"
+        integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4=" crossorigin="anonymous" />
+
+    <link rel="stylesheet" href="../../stylesheet/themes.css">
+
+    <style>
+        body {
+            background-image: url('/logo/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        #global-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            flex-direction: column;
+            /* Stack spinner and percentage */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        #loader-percentage {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Add theme toggle button in your header/navigation -->
+    <!-- <div class="theme-toggle">
+        <button id="theme-switcher">
+            <span class="light-icon">☀️</span>
+            <span class="dark-icon">🌙</span>
+        </button>
+    </div> -->
+
+    <%- include('../partials/footer') %>
+        <%- include('../partials/header') %>
+            <main class="main-content" id="content">
+                <%- include('../partials/flash') %>
+                    <!-- Your main content goes here -->
+                    <div id="global-loader" style="display: none;">
+                        <div class="spinner"></div>
+                        <!-- <div id="loader-percentage">0%</div> -->
+                    </div>
+                    <%-body%>
+            </main>
+
+            <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+            <!-- Include Select2 JS -->
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+            <script
+                src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
+                integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
+            <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
+            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+                integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+                crossorigin="anonymous"></script>
+            <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+                integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+                crossorigin="anonymous"></script>
+
+            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+            <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
+            <script src="/javascript/theme.js"></script>
+            <script>
+                function showLoader() {
+                    document.getElementById("global-loader").style.display = "flex";
+                    updateLoaderPercentage();
+                }
+
+                function hideLoader() {
+                    document.getElementById("global-loader").style.display = "none";
+                }
+
+                function updateLoaderPercentage() {
+                    let percentage = 0;
+                    const loaderPercentage = document.getElementById("loader-percentage");
+
+                    // Simulate loading progress
+                    const interval = setInterval(() => {
+                        percentage += 10; // Increment by 10%
+                        loaderPercentage.textContent = `${percentage}%`;
+
+                        if (percentage >= 100) {
+                            clearInterval(interval); // Stop when 100% is reached
+                        }
+                    }, 100); // Update every 100ms
+                }
+
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Prevent loader on reload
+                    if (performance.navigation.type === 1) {
+                        hideLoader();
+                        return;
+                    }
+
+                    // Handle form submissions
+                    const forms = document.querySelectorAll("form");
+
+                    forms.forEach(function (form) {
+
+                        if (form.id === "ledgerFilterForm") {
+                            form.addEventListener("submit", function (event) {
+                                // No showLoader() call here - this is what disables the loader
+                            });
+                            return; // Skip the rest of the form handling for this form
+                        }
+
+                        // Skip the loader for the fiscal year switch form
+                        if (form.id === "switchFiscalYearForm") {
+                            form.addEventListener("submit", function (event) {
+                                // Check if the form has a delete action (though unlikely for this form)
+                                if (form.action.includes("_method=DELETE")) {
+                                    event.preventDefault();
+                                    let userConfirmed = confirm("Are you sure you want to delete?");
+                                    if (userConfirmed) {
+                                        form.submit();
+                                    }
+                                }
+                                // No showLoader() call here - this is what disables the loader
+                            });
+                            return; // Skip the rest of the form handling for this form
+                        }
+
+                        // Normal form handling for all other forms
+                        form.addEventListener("submit", function (event) {
+                            // Check if the form has a delete action
+                            if (form.action.includes("_method=DELETE")) {
+                                event.preventDefault(); // Stop immediate submission
+                                let userConfirmed = confirm("Are you sure you want to delete?");
+
+                                if (userConfirmed) {
+                                    showLoader(); // Show spinner only after confirmation
+                                    form.submit(); // Now submit the form
+                                }
+                            } else {
+                                showLoader(); // Normal forms should display loader
+                            }
+                        });
+                    });
+
+                    // Handle link clicks (unchanged - loader will still show for links)
+                    const links = document.querySelectorAll("a[href]");
+                    links.forEach(function (link) {
+                        link.addEventListener("click", function (event) {
+                            const href = link.getAttribute("href");
+
+                            if (
+                                href !== "#" &&
+                                href !== "#!" &&
+                                (!link.hasAttribute("target") || link.getAttribute("target") !== "_blank") &&
+                                link.hostname === window.location.hostname
+                            ) {
+                                showLoader();
+                            }
+                        });
+                    });
+                });
+
+                // Hide loader if the page is restored from cache
+                window.onpageshow = function (event) {
+                    if (event.persisted) {
+                        hideLoader();
+                    }
+                };
+
+                // Show loader on page navigation
+                window.addEventListener("beforeunload", function () {
+                    showLoader();
+                });
+
+            </script>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Handle Escape key press
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape') {
+                            // Check if any Bootstrap modal is currently open
+                            const openModals = document.querySelectorAll('.modal.show' || '.modal');
+
+                            if (openModals.length > 0) {
+                                // Close all open modals without confirmation
+                                openModals.forEach(modal => {
+                                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                                    if (modalInstance) {
+                                        modalInstance.hide();
+                                    }
+                                });
+                            } else {
+                                // Only show confirmation if no modals were open
+                                const shouldGoBack = confirm('Do you want to go back to the previous page?');
+
+                                if (shouldGoBack && window.history.length > 1) {
+                                    // Show feedback to user
+                                    const feedback = document.createElement('div');
+                                    feedback.textContent = 'Navigating back...';
+                                    feedback.style.position = 'fixed';
+                                    feedback.style.bottom = '20px';
+                                    feedback.style.right = '20px';
+                                    feedback.style.padding = '10px 20px';
+                                    feedback.style.backgroundColor = '#333';
+                                    feedback.style.color = '#fff';
+                                    feedback.style.borderRadius = '5px';
+                                    feedback.style.zIndex = '9999';
+                                    document.body.appendChild(feedback);
+
+                                    // Remove feedback after 1.5 seconds
+                                    setTimeout(() => {
+                                        document.body.removeChild(feedback);
+                                    }, 1500);
+
+                                    // Go back after small delay
+                                    setTimeout(() => {
+                                        window.history.back();
+                                    }, 300);
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+
+</body>
+
+</html>

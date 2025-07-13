@@ -1,0 +1,659 @@
+<%- include('../layouts/boilerplate', { title: 'Stock Management' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .expanded-container {
+            max-width: 95%;
+            margin: 0 auto;
+        }
+
+        .expanded-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.25rem;
+            border-bottom: none;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .compact-table {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .compact-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border-top: none;
+        }
+
+        .compact-table td,
+        .compact-table th {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+            border-color: #eceeef;
+        }
+
+        .compact-table tr:hover td {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .text-danger {
+            color: var(--danger-color) !important;
+            font-weight: 600;
+        }
+
+        .text-success {
+            color: var(--success-color) !important;
+        }
+
+        .badge-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .badge-danger {
+            background-color: var(--danger-color);
+        }
+
+        .badge-success {
+            background-color: var(--success-color);
+        }
+
+        .filter-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .action-buttons .btn {
+            margin-left: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-card {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 8px;
+            background: white;
+            margin: 0 0.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-card h5 {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-card .count {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .status-card.reorder {
+            border-top: 3px solid var(--danger-color);
+        }
+
+        .status-card.overstock {
+            border-top: 3px solid var(--warning-color);
+        }
+
+        .status-card.total {
+            border-top: 3px solid var(--primary-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+
+            body {
+                font-size: 12px;
+                margin: 10mm;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .compact-table {
+                font-size: 10px;
+            }
+
+            .status-summary,
+            .filter-card {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .status-summary {
+                flex-direction: column;
+            }
+
+            .status-card {
+                margin: 0.5rem 0;
+            }
+        }
+
+        #itemsTable tbody tr:focus {
+            outline: 2px solid var(--primary-color);
+            background-color: rgba(27, 11, 252, 0.1);
+        }
+
+        #itemsTable tbody tr:focus td {
+            background-color: #3498DB;
+            color: #eceeef;
+        }
+    </style>
+
+    <div class="container wow-form expanded-container">
+        <div class="card mt-4 expanded-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">Stock Management</h2>
+                    <div class="action-buttons no-print">
+                        <button class="btn btn-light" onclick="printItems()">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                        <button class="btn btn-light" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- Status Summary Cards -->
+                <div class="status-summary no-print">
+                    <div class="status-card reorder">
+                        <h5>Items Need Reorder</h5>
+                        <div class="count text-danger" id="reorderCount">0</div>
+                    </div>
+                    <div class="status-card overstock">
+                        <h5>Overstock Items</h5>
+                        <div class="count text-warning" id="overstockCount">0</div>
+                    </div>
+                    <div class="status-card total">
+                        <h5>Total Items</h5>
+                        <div class="count text-primary" id="totalCount">0</div>
+                    </div>
+                </div>
+
+                <!-- Filter Card -->
+                <div class="filter-card no-print">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="reorderLevelFilter" class="font-weight-bold">Filter Items</label>
+                                <select class="form-control" id="reorderLevelFilter" onchange="filterItems()">
+                                    <option value="reorderLevel">Items Need Reorder</option>
+                                    <option value="maxStock">Overstock Items</option>
+                                    <option value="all">All Items</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="searchInput" class="font-weight-bold">Search Items</label>
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Search by item name..." onkeyup="searchItems()" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="table-container">
+                    <table class="table table-bordered compact-table" id="itemsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="30%">Item Name</th>
+                                <th width="10%">Unit</th>
+                                <th width="15%">Current Stock</th>
+                                <th width="15%" id="dynamicHeader">Reorder Level</th>
+                                <th width="15%" id="neededStockHeader">Needed Stock</th>
+                                <th width="10%" class="no-print">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% items.forEach((item, index)=> { %>
+                                <tr data-current="<%= item.currentStock %>" data-reorder="<%= item.reorderLevel %>"
+                                    data-max="<%= item.maxStock %>" data-name="<%= item.name.toLowerCase() %>"
+                                    style="display: none;">
+                                    <td>
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= item.name %>
+                                    </td>
+                                    <td>
+                                        <%= item.unit %>
+                                    </td>
+                                    <td>
+                                        <%= item.currentStock %>
+                                    </td>
+                                    <td>
+                                        <%= item.reorderLevel %>
+                                    </td>
+                                    <td
+                                        class="needed-stock <%= item.neededStock > 0 ? 'text-danger' : 'text-success' %>">
+                                        <%= item.neededStock %>
+                                    </td>
+                                    <td class="no-print">
+                                        <% if (item.neededStock> 0) { %>
+                                            <span class="badge badge-danger">Reorder</span>
+                                            <% } else if (item.currentStock> item.maxStock) { %>
+                                                <span class="badge badge-warning">Overstock</span>
+                                                <% } else { %>
+                                                    <span class="badge badge-success">Normal</span>
+                                                    <% } %>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No items found</h4>
+                        <p>Try adjusting your filters or search criteria</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial filter when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            updateSummaryCounts();
+            filterItems();
+            setupKeyboardNavigation(); // Initialize keyboard navigation
+        });
+
+        function updateSummaryCounts() {
+            const items = document.querySelectorAll('#itemsTable tbody tr');
+            let reorderCount = 0;
+            let overstockCount = 0;
+
+            items.forEach(row => {
+                const current = parseFloat(row.dataset.current);
+                const reorder = parseFloat(row.dataset.reorder);
+                const max = parseFloat(row.dataset.max);
+
+                if (reorder - current > 0) reorderCount++;
+                if (current - max > 0) overstockCount++;
+            });
+
+            document.getElementById('reorderCount').textContent = reorderCount;
+            document.getElementById('overstockCount').textContent = overstockCount;
+            document.getElementById('totalCount').textContent = items.length;
+        }
+
+        function filterItems() {
+            const filterType = document.getElementById('reorderLevelFilter').value;
+            const rows = document.querySelectorAll('#itemsTable tbody tr');
+            const dynamicHeader = document.getElementById('dynamicHeader');
+            const neededHeader = document.getElementById('neededStockHeader');
+            const emptyState = document.getElementById('emptyState');
+
+            // Update table headers
+            if (filterType === 'maxStock') {
+                dynamicHeader.textContent = 'Max Stock';
+                neededHeader.textContent = 'Over Stock';
+            } else {
+                dynamicHeader.textContent = 'Reorder Level';
+                neededHeader.textContent = 'Needed Stock';
+            }
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const current = parseFloat(row.dataset.current);
+                const reorder = parseFloat(row.dataset.reorder);
+                const max = parseFloat(row.dataset.max);
+                const neededCell = row.querySelector('.needed-stock');
+
+                let value, shouldDisplay;
+
+                if (filterType === 'maxStock') {
+                    value = current - max;
+                    shouldDisplay = value > 0;  // Only show overstocked items
+                } else if (filterType === 'reorderLevel') {
+                    value = reorder - current;
+                    shouldDisplay = value > 0;  // Only show understocked items
+                } else {
+                    // Show all items
+                    value = reorder - current;
+                    shouldDisplay = true;
+                }
+
+                // Update display and styling
+                if (neededCell) {
+                    neededCell.textContent = value;
+                    neededCell.className = `needed-stock ${value > 0 ? 'text-danger' : 'text-success'}`;
+                }
+
+                if (shouldDisplay) {
+                    row.style.display = '';
+                    visibleCount++;
+                    // Update serial number
+                    row.cells[0].textContent = visibleCount;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show empty state if no items match
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        function setupKeyboardNavigation() {
+            const table = document.getElementById('itemsTable');
+            let currentRowIndex = -1;
+            let visibleRows = [];
+
+            // Function to update visible rows array
+            function updateVisibleRows() {
+                visibleRows = Array.from(table.querySelectorAll('tbody tr'))
+                    .filter(row => row.style.display !== 'none');
+            }
+
+            // Update visible rows whenever filtering changes
+            document.getElementById('reorderLevelFilter').addEventListener('change', updateVisibleRows);
+            document.getElementById('searchInput').addEventListener('input', updateVisibleRows);
+
+            // Handle keyboard events
+            document.addEventListener('keydown', function (e) {
+                // Only handle arrow keys when table has focus
+                if (!table.contains(document.activeElement)) return;
+
+                updateVisibleRows();
+                if (visibleRows.length === 0) return;
+
+                // Find current row index if not set
+                if (currentRowIndex === -1) {
+                    const activeRow = document.activeElement.closest('tr');
+                    if (activeRow) {
+                        currentRowIndex = visibleRows.indexOf(activeRow);
+                    } else {
+                        currentRowIndex = 0;
+                    }
+                }
+
+                switch (e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (currentRowIndex > 0) {
+                            currentRowIndex--;
+                            focusRow();
+                        }
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (currentRowIndex < visibleRows.length - 1) {
+                            currentRowIndex++;
+                            focusRow();
+                        }
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        currentRowIndex = 0;
+                        focusRow();
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        currentRowIndex = visibleRows.length - 1;
+                        focusRow();
+                        break;
+                    case 'Enter':
+                        // You can add action on Enter if needed
+                        break;
+                }
+            });
+
+            function focusRow() {
+                if (currentRowIndex >= 0 && currentRowIndex < visibleRows.length) {
+                    const row = visibleRows[currentRowIndex];
+                    const firstInput = row.querySelector('input, select, button, a');
+                    if (firstInput) {
+                        firstInput.focus();
+                    } else {
+                        row.focus();
+                    }
+
+                    // Scroll to row if needed
+                    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+
+            // Make rows focusable
+            table.querySelectorAll('tbody tr').forEach(row => {
+                row.setAttribute('tabindex', '0');
+            });
+
+            // Update current row index when clicking or tabbing
+            table.addEventListener('focusin', function (e) {
+                const row = e.target.closest('tr');
+                if (row) {
+                    currentRowIndex = visibleRows.indexOf(row);
+                }
+            });
+        }
+
+        function searchItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#itemsTable tbody tr');
+            const filterType = document.getElementById('reorderLevelFilter').value;
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const itemName = row.dataset.name;
+                const current = parseFloat(row.dataset.current);
+                const reorder = parseFloat(row.dataset.reorder);
+                const max = parseFloat(row.dataset.max);
+
+                // First apply filter logic
+                let shouldDisplay;
+
+                if (filterType === 'maxStock') {
+                    shouldDisplay = (current - max) > 0;
+                } else if (filterType === 'reorderLevel') {
+                    shouldDisplay = (reorder - current) > 0;
+                } else {
+                    shouldDisplay = true;
+                }
+
+                // Then apply search filter
+                if (shouldDisplay && searchTerm) {
+                    shouldDisplay = itemName.includes(searchTerm);
+                }
+
+                if (shouldDisplay) {
+                    row.style.display = '';
+                    visibleCount++;
+                    // Update serial number
+                    row.cells[0].textContent = visibleCount;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show empty state if no items match
+            const emptyState = document.getElementById('emptyState');
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        function printItems() {
+            const filterType = document.getElementById('reorderLevelFilter').value;
+            let title = 'Stock Report';
+
+            if (filterType === 'maxStock') {
+                title = 'Overstock Items Report';
+            } else if (filterType === 'reorderLevel') {
+                title = 'Reorder Level Report';
+            }
+
+            // Clone the table
+            const tableClone = document.getElementById('itemsTable').cloneNode(true);
+
+            // Remove hidden rows and action columns from the clone
+            Array.from(tableClone.querySelectorAll('tbody tr')).forEach(row => {
+                if (row.style.display === 'none') {
+                    row.remove();
+                }
+            });
+
+            // Remove no-print columns
+            Array.from(tableClone.querySelectorAll('.no-print')).forEach(el => {
+                el.remove();
+            });
+
+            // Open print window
+            const printWindow = window.open('', '', 'width=1200, height=600');
+            printWindow.document.write(`
+            <html>
+                <head>
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                        th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .text-danger { color: #e74c3c; }
+                        .text-success { color: #2ecc71; }
+                        h2 { color: #3498db; text-align: center; }
+                        @page { size: landscape; margin: 10mm; }
+                    </style>
+                </head>
+                <body>
+                    <h2>${title}</h2>
+                    <p>Generated on: ${new Date().toLocaleString()}</p>
+                    ${tableClone.outerHTML}
+                    <script>
+                        window.onload = function() { 
+                            window.print(); 
+                            setTimeout(function() { window.close(); }, 1000);
+                        }
+                    <\/script>
+                </body>
+            </html>
+        `);
+            printWindow.document.close();
+        }
+
+        function exportToExcel() {
+            // This is a simplified version - in a real app you might use a library like SheetJS
+            const filterType = document.getElementById('reorderLevelFilter').value;
+            let title = 'Stock_Report';
+
+            if (filterType === 'maxStock') {
+                title = 'Overstock_Items_Report';
+            } else if (filterType === 'reorderLevel') {
+                title = 'Reorder_Level_Report';
+            }
+
+            // Create CSV content
+            let csv = 'No,Item Name,Unit,Current Stock,Reorder Level,Needed Stock,Status\n';
+
+            const rows = document.querySelectorAll('#itemsTable tbody tr');
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cells = row.querySelectorAll('td');
+                    const rowData = [
+                        cells[0].textContent,
+                        `"${cells[1].textContent}"`, // Wrap in quotes in case item name has commas
+                        cells[2].textContent,
+                        cells[3].textContent,
+                        cells[4].textContent,
+                        cells[5].textContent,
+                        row.querySelector('.badge')?.textContent || 'Normal'
+                    ];
+                    csv += rowData.join(',') + '\n';
+                }
+            });
+
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${title}_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>

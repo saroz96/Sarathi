@@ -1,0 +1,232 @@
+#productDetailsHeader {
+  display: flex;
+  background: #333;
+  color: white;
+  padding: 2px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.product-row {
+  display: flex;
+  padding: 2px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  align-items: center;
+}
+
+.product-cell {
+  flex: 1;
+  padding: 2px;
+  text-align: left;
+  min-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-name {
+  min-width: 30ch;
+  max-width: 40ch;
+}
+
+.product-row.active {
+  background-color: blue !important;
+  color: white;
+}
+
+.vatable {
+  background-color: lightgreen;
+}
+
+.vatExempt {
+  background-color: lightyellow;
+}
+
+.modal-dialog {
+  max-width: 75%;
+  margin: 1.75rem auto;
+}
+
+.modal-content {
+  font-size: 1.2rem;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modal-header {
+  font-size: 1.5rem;
+}
+
+.product-cell {
+  font-size: 1.1rem;
+}
+
+#productsContainer {
+  max-height: 400px;
+  /* Adjust this height as needed */
+  overflow-y: auto;
+  /* Enable vertical scrolling */
+}
+
+#productDetailsList {
+  list-style-type: none;
+  padding: 0;
+}
+
+/* Add these to your existing CSS */
+.expiry-status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.expiry-status.safe {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.expiry-status.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.expiry-status.danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.expiry-status.expired {
+  background-color: #ee1a22;
+  color: white;
+}
+
+/* Row coloring based on expiry status */
+.product-row.expired {
+  background-color: #ee1a22 !important;
+}
+
+.product-row.warning {
+  background-color: #ffff00 !important;
+}
+
+.product-row.danger {
+  background-color: #ff7376 !important;
+}
+
+/* Small badge for expiry count */
+.expiry-badge {
+  font-size: 0.7rem;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* Add these to your existing CSS */
+.expiry-badge-modal {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.expiry-badge-modal.safe {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.expiry-badge-modal.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.expiry-badge-modal.danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.expiry-badge-modal.expired {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Row coloring for purchase price modal */
+.table-row-expired {
+  background-color: #ffdddd !important;
+}
+
+.table-row-warning {
+  background-color: #fff3cd !important;
+}
+
+.table-row-danger {
+  background-color: #ffcccc !important;
+}
+
+#contactsHeader {
+  display: flex;
+  background: #333;
+  color: white;
+  padding: 2px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.contact-row {
+  display: flex;
+  padding: 2px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  align-items: center;
+}
+
+.contact-cell {
+  flex: 1;
+  padding: 2px;
+  text-align: left;
+  min-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contact-row.active {
+  background-color: blue !important;
+  color: white;
+}
+
+.modal-dialog {
+  max-width: 75%;
+  margin: 1.75rem auto;
+}
+
+.modal-content {
+  font-size: 1.2rem;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modal-header {
+  font-size: 1.5rem;
+}
+
+.contact-cell {
+  font-size: 1.1rem;
+}
+
+#contactsContainer {
+  max-height: 400px;
+}
+
+#contactsList {
+  list-style-type: none;
+  padding: 0;
+}

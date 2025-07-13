@@ -1,0 +1,656 @@
+<%- include('../layouts/boilerplate', { title: 'Stock Adjustments' , body: '' }) %>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+    rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #f8f9fc;
+            --accent-color: #2e59d9;
+            --text-color: #5a5c69;
+            --border-color: #e3e6f0;
+        }
+
+        body {
+            background-color: #f8f9fc;
+            color: var(--text-color);
+        }
+
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+
+        .card-header {
+            background-color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.35rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            background: white;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+
+        #adjustmentList {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        #adjustmentList thead th {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            font-weight: 600;
+            border-bottom-width: 1px;
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+        }
+
+        #adjustmentList tbody td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #adjustmentList tbody tr:hover {
+            background-color: rgba(78, 115, 223, 0.05);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            color: #d1d3e2;
+        }
+
+        .search-box input {
+            padding-left: 2.5rem;
+            border-radius: 0.35rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-box select {
+            border-radius: 0.35rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .action-buttons .btn {
+            margin-right: 0.5rem;
+            border-radius: 0.35rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-info {
+            background-color: #36b9cc;
+            border-color: #36b9cc;
+        }
+
+        .btn-warning {
+            background-color: #f6c23e;
+            border-color: #f6c23e;
+        }
+
+        .badge-xcess {
+            background-color: #1cc88a;
+            color: white;
+        }
+
+        .badge-short {
+            background-color: #e74a3b;
+            color: white;
+        }
+
+        .total-row {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .vat-note {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons .btn {
+                margin-bottom: 0.5rem;
+            }
+
+            .filter-controls {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Print-specific styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printSection,
+            #printSection * {
+                visibility: visible;
+            }
+
+            #printSection {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <div class="container-fluid">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <!-- Print Header -->
+                <div id="printHeader" class="d-none text-center">
+                    <div class="header" style="text-align: center;">
+                        <h2 class="card-subtitle mb-2">
+                            <%= currentCompanyName %>
+                        </h2>
+                        <b>
+                            <h4>
+                                <%= currentCompany.address %>-<%=currentCompany.ward%>, <%=currentCompany.city%>,
+                                            <%=currentCompany.country%> <br>
+                                                Tel.: <%=currentCompany.phone%>, Email: <%=currentCompany.email%>
+                                                        <br>
+                                                        VAT NO.: <span id="pan-vat-container"></span>
+                            </h4>
+                        </b>
+                        <hr style="border: 0.5px solid;">
+                    </div>
+                </div>
+
+                <h4 class="m-0 font-weight-bold text-primary">Stock Adjustments</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4 no-print">
+                    <div class="col-md-6 search-box filter-controls">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="searchInput"
+                            placeholder="Search by item, reason or user...">
+                    </div>
+                    <div class="col-md-4 filter-box filter-controls">
+                        <select class="form-control" id="adjustmentTypeFilter">
+                            <option value="">All Adjustment Types</option>
+                            <option value="xcess">Xcess</option>
+                            <option value="short">Short</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 text-right no-print">
+                        <a href="/stockAdjustments/new" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus mr-1"></i> New Adjustment
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="row">
+                        <div class="col">
+                            <a href="/stockAdjustments/new" class="btn btn-primary mb-3"><i
+                                    class="bi bi-receipt"></i></a>
+                            <button id="printAllBills" class="btn btn-secondary mb-3"><i class="bi bi-printer">
+                                    All</i></button>
+                            <button id="printFilteredBills" class="btn btn-secondary mb-3"><i class="bi bi-printer">
+                                    Filtered</i></button>
+                        </div>
+                    </div>
+                    <table class="table table-bordered" id="adjustmentList">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Vch. No.</th>
+                                <th>Item Description</th>
+                                <th>Qty</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
+                                <th>Type</th>
+                                <th>Reason</th>
+                                <th>User</th>
+                                <th class="no-print">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (stockAdjustments && stockAdjustments.length> 0) { %>
+                                <% stockAdjustments.forEach(adjustment=> { %>
+                                    <tr class="searchClass" data-adjustment-type="<%= adjustment.adjustmentType %>">
+                                        <td>
+                                            <%= new Date(adjustment.date).toLocaleDateString() %>
+                                        </td>
+                                        <td>
+                                            <%= adjustment.billNumber %>
+                                        </td>
+                                        <td>
+                                            <% if(adjustment.vatStatus==='vatExempt' ){%>
+                                                <span class="font-weight-bold">
+                                                    <%= adjustment.itemName %>
+                                                </span> *
+                                                <%}else{%>
+                                                    <span class="font-weight-bold">
+                                                        <%= adjustment.itemName %>
+                                                    </span>
+                                                    <%}%>
+                                        </td>
+                                        <td class="quantity">
+                                            <%= adjustment.quantity.toFixed(2) %>
+                                        </td>
+                                        <td>
+                                            <%= adjustment.unitName %>
+                                        </td>
+                                        <td>
+                                            <%= adjustment.puPrice.toFixed(2) %>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge <%= adjustment.adjustmentType === 'xcess' ? 'badge-xcess' : 'badge-short' %>">
+                                                <%= adjustment.adjustmentType %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <%= adjustment.reason %>
+                                        </td>
+                                        <td>
+                                            <%= adjustment.userName %>
+                                        </td>
+                                        <td class="no-print action-buttons">
+                                            <a href="/stockAdjustments/<%= adjustment.adjustmentId %>/print"
+                                                class="btn btn-info btn-sm" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/stockAdjustments/edit/<%= adjustment.adjustmentId %>"
+                                                class="btn btn-warning btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="10" class="text-center py-4">No stock adjustments found
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3" class="text-right font-weight-bold">Total Quantity:</td>
+                                <td id="totalQuantity" class="font-weight-bold">0.00</td>
+                                <td colspan="6"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <p class="vat-note">* Items marked with asterisk are VAT exempt.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize elements
+            const searchInput = document.getElementById('searchInput');
+            const adjustmentTypeFilter = document.getElementById('adjustmentTypeFilter');
+            const adjustmentList = document.getElementById('adjustmentList');
+
+            // Add event listeners
+            searchInput.addEventListener('input', filterAdjustments);
+            adjustmentTypeFilter.addEventListener('change', filterAdjustments);
+
+            // Initial calculation of total quantity
+            filterAdjustments();
+
+            function filterAdjustments() {
+                const searchQuery = searchInput.value.trim().toLowerCase();
+                const selectedAdjustmentType = adjustmentTypeFilter.value.trim().toLowerCase();
+                const rows = adjustmentList.querySelectorAll('tbody tr.searchClass');
+                let totalQuantity = 0;
+
+                rows.forEach(row => {
+                    const itemName = row.querySelector('td:nth-child(3)').textContent.trim().toLowerCase();
+                    const adjustmentType = row.getAttribute('data-adjustment-type').toLowerCase();
+                    const adjustmentReason = row.querySelector('td:nth-child(8)').textContent.trim().toLowerCase();
+                    const userName = row.querySelector('td:nth-child(9)').textContent.trim().toLowerCase();
+                    const quantity = parseFloat(row.querySelector('.quantity').textContent);
+
+                    const matchesSearch = searchQuery === '' ||
+                        itemName.includes(searchQuery) ||
+                        adjustmentReason.includes(searchQuery) ||
+                        userName.includes(searchQuery);
+                    const matchesAdjustmentType = selectedAdjustmentType === '' ||
+                        adjustmentType === selectedAdjustmentType;
+
+                    if (matchesSearch && matchesAdjustmentType) {
+                        row.style.display = '';
+                        totalQuantity += quantity;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                document.getElementById('totalQuantity').textContent = totalQuantity.toFixed(2);
+            }
+        });
+    </script>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('input', filterAdjustment);
+        document.getElementById('adjustmentTypeFilter').addEventListener('change', filterAdjustment);
+
+        function filterAdjustment() {
+            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            const selectedAdjustmentType = document.getElementById('adjustmentTypeFilter').value.trim().toLowerCase();
+            const adjustmentList = document.getElementById('adjustmentList');
+            const rows = adjustmentList.querySelectorAll('tbody tr.searchClass');
+            let totalQuantity = 0;
+
+            rows.forEach(row => {
+                const itemName = row.querySelector('td:nth-child(3)').textContent.trim().toLowerCase();
+                const adjustmentType = row.querySelector('td:nth-child(7)').textContent.trim().toLowerCase();
+                const adjustmentReason = row.querySelector('td:nth-child(8)').textContent.trim().toLocaleLowerCase();
+                const userName = row.querySelector('td:nth-child(9)').textContent.trim().toLocaleLowerCase();
+                const quantity = parseFloat(row.querySelector('.quantity').textContent);
+
+                const matchesSearch = itemName.includes(searchQuery) || adjustmentReason.includes(searchQuery) || userName.includes(searchQuery);
+                const matchesAdjustmentType = selectedAdjustmentType === '' || adjustmentType === selectedAdjustmentType;
+
+                if (matchesSearch && matchesAdjustmentType) {
+                    row.style.display = '';
+                    totalQuantity += quantity;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.getElementById('totalQuantity').textContent = totalQuantity.toFixed(2);
+        }
+
+        // Initial calculation of total quantity
+        filterAdjustment();
+
+        // Function to print the selected stock adjustments
+        function printStockAdjustments(adjustmentRows) {
+            const printWindow = window.open('', '_blank');
+
+            // Basic HTML and styling for the print view
+            const headerHTML = `
+    <html>
+        <head>
+            <title>Print Stock Adjustments</title>
+            <style>
+                @page { size: A4 landscape; margin: 10mm; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { padding: 8px; text-align: left; border: 1px solid black; white-space: nowrap; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+                  <div id="printHeader" class="d-none text-center">
+        <div class="header" style="text-align: center;">
+            <h2 class="card-subtitle mb-2">
+                <%= currentCompanyName %>
+            </h2>
+            <h1>Stock Adjustments</h1>
+        </div>
+    </div>
+`;
+
+            // Table header for the printed adjustments
+            const tableHeaderHTML = `
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Vch. No.</th>
+                <th>Description of Goods</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>C.P</th>
+                <th>Adj. Type</th>
+                <th>Reason</th>
+                <th>User</th>
+            </tr>
+        </thead>
+        <tbody>
+`;
+
+            // Initialize variables for total quantity
+            let totalQuantity = 0;
+
+            // Construct table rows and calculate total quantity
+            let tableRowsHTML = '';
+            adjustmentRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                tableRowsHTML += '<tr>';
+
+                for (let i = 0; i < cells.length - 1; i++) {
+                    const cellText = cells[i]?.textContent || '';
+                    tableRowsHTML += `<td>${cellText}</td>`;
+
+                    // Calculate total quantity for visible rows
+                    if (i === 3 && row.style.display !== 'none') {
+                        totalQuantity += parseFloat(cellText) || 0;
+                    }
+                }
+
+                tableRowsHTML += '</tr>';
+            });
+
+            // Add a totals row at the end of the table
+            const totalsRowHTML = `
+    <tr style="font-weight: bold; background-color: #f9f9f9;">
+        <td colspan="3">Total Quantity</td>
+        <td>${totalQuantity.toFixed(2)}</td>
+        <td colspan="5"></td> <!-- Empty cell for the User column -->
+    </tr>
+                            <p>Items with (*) is vat free.</p>
+
+`;
+
+            // Construct the final HTML for printing
+            const finalHTML = `
+    ${headerHTML}
+    ${tableHeaderHTML}
+    ${tableRowsHTML}
+    ${totalsRowHTML}
+    </tbody></table>
+    </body></html>
+`;
+
+            // Write to the print window and initiate print
+            printWindow.document.write(finalHTML);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+
+        // Click event for "Print All" button
+        document.getElementById('printAllBills').addEventListener('click', () => {
+            const allRows = document.querySelectorAll('#adjustmentList tbody tr');
+            printStockAdjustments(Array.from(allRows));
+        });
+
+        // Click event for "Print Filtered" button
+        document.getElementById('printFilteredBills').addEventListener('click', () => {
+            const filteredRows = Array.from(document.querySelectorAll('#adjustmentList tbody tr')).filter(row => row.style.display !== 'none');
+            printStockAdjustments(filteredRows);
+        });
+    </script>
+
+<style>
+    /* Add this to your existing styles */
+    .table-container {
+        position: relative;
+    }
+    
+    #adjustmentList tr.selected-row {
+        background-color: #e1f0ff !important; /* Light blue background */
+        outline: 2px solid #4e73df; /* Primary blue outline */
+    }
+    
+    #adjustmentList tr.selected-row:hover {
+        background-color: #d0e6ff !important; /* Slightly darker blue on hover */
+    }
+    
+    /* Make the table focusable for keyboard navigation */
+    #adjustmentList {
+        outline: none;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('adjustmentList');
+        let selectedRowIndex = -1;
+        
+        // Make table focusable
+        table.tabIndex = 0;
+        
+        // Function to get all visible rows
+        function getVisibleRows() {
+            return Array.from(table.querySelectorAll('tbody tr.searchClass:not([style*="display: none"])'));
+        }
+        
+        // Function to select first row by default
+        function selectFirstRow() {
+            const rows = getVisibleRows();
+            if (rows.length > 0) {
+                selectedRowIndex = 0;
+                updateSelectedRow(rows);
+            }
+        }
+        
+        // Handle keyboard navigation
+        table.addEventListener('keydown', function(e) {
+            const rows = getVisibleRows();
+            
+            if (rows.length === 0) return;
+            
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (selectedRowIndex < rows.length - 1) {
+                        selectedRowIndex++;
+                        updateSelectedRow(rows);
+                    }
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (selectedRowIndex > 0) {
+                        selectedRowIndex--;
+                        updateSelectedRow(rows);
+                    }
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    selectedRowIndex = 0;
+                    updateSelectedRow(rows);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    selectedRowIndex = rows.length - 1;
+                    updateSelectedRow(rows);
+                    break;
+                case 'Enter':
+                    if (selectedRowIndex >= 0) {
+                        const viewBtn = rows[selectedRowIndex].querySelector('.btn-info');
+                        if (viewBtn) viewBtn.click();
+                    }
+                    break;
+                case 'Escape':
+                    selectedRowIndex = -1;
+                    clearSelection();
+                    break;
+            }
+        });
+        
+        // Handle mouse clicks
+        table.addEventListener('click', function(e) {
+            const row = e.target.closest('tbody tr.searchClass');
+            if (!row) {
+                selectedRowIndex = -1;
+                clearSelection();
+                return;
+            }
+            
+            const rows = getVisibleRows();
+            selectedRowIndex = rows.indexOf(row);
+            updateSelectedRow(rows);
+        });
+        
+        function updateSelectedRow(rows) {
+            clearSelection();
+            if (selectedRowIndex >= 0 && selectedRowIndex < rows.length) {
+                rows[selectedRowIndex].classList.add('selected-row');
+                // Scroll into view if needed
+                rows[selectedRowIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }
+        }
+        
+        function clearSelection() {
+            document.querySelectorAll('#adjustmentList tr.selected-row').forEach(row => {
+                row.classList.remove('selected-row');
+            });
+        }
+        
+        // Handle filter changes to reset selection
+        const filterInputs = [
+            document.getElementById('searchInput'),
+            document.getElementById('adjustmentTypeFilter')
+        ];
+        
+        filterInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                // Use setTimeout to ensure the filter has been applied
+                setTimeout(() => {
+                    selectFirstRow();
+                }, 0);
+            });
+        });
+        
+        // Initial selection of first row
+        selectFirstRow();
+        
+        // Focus the table for keyboard navigation
+        table.focus();
+    });
+</script>

@@ -1,0 +1,413 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <div class="container mt-4 wow-form">
+        <div class="card shadow-lg p-4 animate__animated animate__fadeInUp">
+            <div class="card-header">
+                <h2 style="text-align: center;text-decoration: underline;">Items Details</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5 class="card-title">Details:</h5>
+                        <br>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Name:</strong>
+                                <%= items.name %>
+                            </li>
+                            <li class="list-group-item"><strong>HSN: </strong>
+                                <%=items.hscode%>
+                            </li>
+                            <li class="list-group-item"><strong>VAT Status:</strong>
+                                <%= items.vatStatus %>
+                            </li>
+                            <li class="list-group-item"><strong>Main Unit:</strong>
+                                <%= items.mainUnit? items.mainUnit.name : 'No Main Unit' %>
+                            </li>
+                            <li class="list-group-item"><strong>WS Unit:</strong>
+                                <%= items.WSUnit %>
+                            </li>
+
+                            <li class="list-group-item"><strong>Unit:</strong>
+                                <%= items.unit ? items.unit.name : 'No Unit' %>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="card-title">
+                            <%=items._id%>
+                        </h5>
+                        <br>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Sales Price:</strong>
+                                <%= salesPrice %>
+                            </li>
+                            <li class="list-group-item"><strong>Purchase Price:</strong>
+                                <%= purchasePrice %>
+                            </li>
+                            <li class="list-group-item"><strong>Opening Stock:</strong>
+                                <%= openingStock %>
+                            </li>
+                            <li class="list-group-item"><strong>Opening Stock Value:</strong>
+                                <%= openingStockBalance || 0.00 %>
+                            </li>
+                            <li class="list-group-item"><strong>Re-Order Level:</strong>
+                                <%=items.reorderLevel %>
+                            </li>
+                            <li class="list-group-item"><strong>Category:</strong>
+                                <%= items.category ? items.category.name : 'No Category' %>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn <%= items.status === 'active' ? 'btn-danger' : 'btn-success' %> status-btn"
+                            onclick="toggleStatus('<%= items._id %>', '<%= items.status %>')">
+                            <%= items.status==='active' ? 'Deactivate' : 'Activate' %>
+                        </button>
+                        <br>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Status:</strong>
+                                <span class="badge <%= items.status === 'active' ? 'bg-success' : 'bg-danger' %>">
+                                    <%= items.status.toUpperCase() %>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <h5 class="card-title"><strong>Composition: </strong></h5>
+                    <ul class="list-group list-group-flush">
+                        <% if (items.composition && items.composition.length) { %>
+                            <% items.composition.forEach(comp=> { %>
+                                <li class="list-group-item">
+                                    <%= comp.uniqueNumber %> - <%= comp.name %>
+                                </li>
+                                <% }); %>
+                                    <% } else { %>
+                                        <li class="list-group-item">No Composition</li>
+                                        <% } %>
+                    </ul>
+                </div>
+            </div>
+            <div class="col">
+                <button id="backButton" class="back-button">
+                    <span class="icon">←</span> Back
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Add print section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Barcode Printing</h5>
+            </div>
+            <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Barcode Printing</h5>
+        </div>
+        <div class="card-body">
+            <% stockEntries.forEach((entry, index)=> { %>
+                <div class="stock-entry mb-3 p-3 border rounded">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Batch:</strong> <%= entry.batchNumber %><br>
+                            <strong>Expiry:</strong> <%= entry.expiryDate %><br>
+                            <strong>MRP:</strong> <%= entry.mrp.toFixed(2) %>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-primary btn-print-barcode" 
+                                    data-item-id="<%= items._id %>"
+                                    data-entry-id="<%= entry._id %>"
+                                    data-company="<%= items.company.name %>"
+                                    data-item-name="<%= items.name %>"
+                                    data-mrp="<%= entry.mrp.toFixed(2) %>"
+                                    data-expiry="<%= entry.expiryDate %>">
+                                <i class="fas fa-barcode"></i> Print Barcode
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+
+                        <!-- Print Modal -->
+                        <div class="modal fade" id="printModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Print Settings</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Label Width (mm)</label>
+                                                <input type="number" id="labelWidth" class="form-control" min="20"
+                                                    max="200" value="<%= printPreferences?.labelWidth || 70 %>" autocomplete="off">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Label Height (mm)</label>
+                                                <input type="number" id="labelHeight" class="form-control" min="20"
+                                                    max="200" value="<%= printPreferences?.labelHeight || 40 %>" autocomplete="off">
+
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Barcode Type</label>
+                                                <select id="barcodeType" class="form-select">
+                                                    <option value="code128" <%=(printPreferences?.barcodeType
+                                                        || 'code128' )==='code128' ? 'selected' : '' %>>Code 128
+                                                    </option>
+                                                    <option value="code39" <%=(printPreferences?.barcodeType
+                                                        || 'code128' )==='code39' ? 'selected' : '' %>>Code 39</option>
+                                                    <option value="qr" <%=(printPreferences?.barcodeType || 'code128'
+                                                        )==='qr' ? 'selected' : '' %>>QR Code</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Labels per Row</label>
+                                                <input type="number" id="labelsPerRow" class="form-control" min="1"
+                                                    max="6" value="<%= printPreferences?.labelsPerRow || 3 %>" autocomplete="off">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Quantity</label>
+                                                <input type="number" id="printQuantity" class="form-control" min="1"
+                                                    max="100" value="<%= printPreferences?.defaultQuantity || 1 %>" autocomplete="off">
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-check">
+                                                    <input type="checkbox" id="saveSettings" class="form-check-input"
+                                                        <%=printPreferences?.saveSettings ? 'checked' : '' %>>
+                                                    <label class="form-check-label">Save these settings as
+                                                        default</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-primary" id="confirmPrint">Print</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <!-- Add print styles -->
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .barcode-sheet,
+            .barcode-sheet * {
+                visibility: visible;
+            }
+
+            .barcode-sheet {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            .barcode-label {
+                width: 3.5in;
+                height: 2in;
+                border: 1px dotted #ccc;
+                padding: 10px;
+                margin: 0.1in;
+                float: left;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+
+    <style>
+        .back-button {
+            background-color: #007bff;
+            /* Blue background */
+            color: white;
+            /* White text */
+            border: none;
+            /* No border */
+            padding: 10px 20px;
+            /* Padding */
+            font-size: 16px;
+            /* Font size */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+            border-radius: 5px;
+            /* Rounded corners */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Space between icon and text */
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+            /* Darker blue on hover */
+        }
+
+        .icon {
+            font-size: 20px;
+            /* Icon size */
+        }
+    </style>
+
+    <script>
+        document.getElementById('backButton').addEventListener('click', function () {
+            window.history.back(); // Navigate to the previous page
+        });
+    </script>
+
+    <script>
+        function toggleStatus(itemId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            fetch(`/items/${itemId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus }),
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update status. Please try again.');
+                });
+        }
+    </script>
+
+    <!-- Status Button Style -->
+    <style>
+        .status-btn {
+            min-width: 100px;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize elements
+    const elements = {
+        printModal: document.getElementById('printModal'),
+        confirmPrint: document.getElementById('confirmPrint'),
+        labelWidth: document.getElementById('labelWidth'),
+        labelHeight: document.getElementById('labelHeight'),
+        labelsPerRow: document.getElementById('labelsPerRow'),
+        barcodeType: document.getElementById('barcodeType'),
+        printQuantity: document.getElementById('printQuantity'),
+        saveSettings: document.getElementById('saveSettings')
+    };
+
+    // Initialize modal
+    let printModal = null;
+    if (elements.printModal) {
+        printModal = new bootstrap.Modal(elements.printModal);
+    }
+
+    let currentItemId = null;
+    let currentEntryId = null;
+    let currentCompany = null;
+    let currentItemName = null;
+    let currentMRP = null;
+    let currentExpiry = null;
+
+    // Handle print buttons
+    document.querySelectorAll('.btn-print-barcode').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            currentItemId = btn.dataset.itemId;
+            currentEntryId = btn.dataset.entryId;
+            currentCompany = btn.dataset.company;
+            currentItemName = btn.dataset.itemName;
+            currentMRP = btn.dataset.mrp;
+            currentExpiry = new Date(btn.dataset.expiry);
+            
+            if (printModal) printModal.show();
+        });
+    });
+
+    // Handle print confirmation
+    if (elements.confirmPrint) {
+        elements.confirmPrint.addEventListener('click', () => {
+            const settings = {
+                labelWidth: parseFloat(elements.labelWidth.value) || 70,
+                labelHeight: parseFloat(elements.labelHeight.value) || 40,
+                labelsPerRow: parseInt(elements.labelsPerRow.value) || 3,
+                barcodeType: elements.barcodeType.value || 'code128',
+                quantity: parseInt(elements.printQuantity.value) || 1,
+                saveSettings: elements.saveSettings.checked || false
+            };
+
+            // Save settings logic (keep existing)
+
+            // Generate print content with correct URL structure
+            const printWindow = window.open('', '_blank');
+            const baseUrl = `/item/${currentItemId}/barcode/${currentEntryId}`;
+
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Barcode Labels</title>
+                    <style>
+                        @page { size: A4; margin: 0; }
+                        .label-grid {
+                            display: grid;
+                            grid-template-columns: repeat(${settings.labelsPerRow}, 1fr);
+                            gap: 0.1in;
+                            padding: 0.25in;
+                        }
+                        .barcode-container {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            page-break-inside: avoid;
+                            height: ${settings.labelHeight * 0.0393701}in;
+                            padding: 0.1in;
+                        }
+                        .barcode-image {
+                            width: 100%;
+                            height: 70%;
+                            object-fit: contain;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="label-grid">
+                        ${Array.from({ length: settings.quantity }, (_, i) => `
+                            <div class="barcode-container">
+                                <img src="${baseUrl}/${settings.labelWidth}/${settings.labelHeight}/${settings.barcodeType}"
+                                     class="barcode-image"
+                                     onload="window.imagesLoaded = (window.imagesLoaded || 0) + 1">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <script>
+                        let checkInterval = setInterval(() => {
+                            if (window.imagesLoaded >= ${settings.quantity}) {
+                                clearInterval(checkInterval);
+                                window.print();
+                                setTimeout(() => window.close(), 500);
+                            }
+                        }, 100);
+                    <\/script>
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+            if (printModal) printModal.hide();
+        });
+    }
+});
+</script>

@@ -1,0 +1,273 @@
+
+[data-theme="dark"] {
+    /* Dark Theme */
+    --primary-bg: #1a1a1a;
+    --primary-text: #ffffff;
+    --secondary-bg: #2d2d2d;
+    --accent-color: #6b8cff;
+    --border-color: #444444;
+    --card-bg: #2d2d2d;
+    --input-bg: #2d2d2d;
+    --table-bg: #2d2d2d;
+    --modal-bg: #2d2d2d;
+    --background-overlay: rgba(0, 0, 0, 0.7); /* Dark overlay */
+}
+
+/* Make ONLY form labels white in dark mode (excluding tables) */
+[data-theme="dark"] label:not(td label):not(.table label),
+[data-theme="dark"] .form-label:not(td .form-label):not(.table .form-label),
+[data-theme="dark"] .input-group-text:not(td .input-group-text):not(.table .input-group-text) {
+    color: white !important;
+}
+
+/* Ensure table cells maintain black text */
+[data-theme="dark"] td,
+[data-theme="dark"] td label,
+[data-theme="dark"] td .form-label,
+[data-theme="dark"] .table label,
+[data-theme="dark"] .table .form-label {
+    color: inherit !important; /* This will keep the original text color */
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-overlay);
+    z-index: -1;
+}
+
+/* Component Styles */
+.card-body {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.form-control, .input-group-text {
+    background-color: var(--input-bg);
+    color: var(--primary-text);
+    border-color: var(--border-color);
+}
+
+.table {
+    background-color: var(--table-bg);
+    color: var(--primary-text);
+}
+
+.modal-content {
+    background-color: var(--modal-bg);
+}
+
+.navbar, .footer {
+    background-color: var(--secondary-bg);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Theme Toggle Styles */
+[data-theme="light"] .dark-icon,
+[data-theme="dark"] .light-icon {
+    display: none;
+}
+
+.theme-toggle {
+    cursor: pointer;
+}
+
+
+/* Apply white text to most elements in dark mode */
+[data-theme="dark"] {
+    color: var(--primary-text);
+}
+
+/* Modal specific styles */
+[data-theme="dark"] .modal-content {
+    background-color: var(--modal-bg);
+    color: var(--modal-text);
+}
+
+[data-theme="dark"] .modal-content .form-label,
+[data-theme="dark"] .modal-content label,
+[data-theme="dark"] .modal-content .input-group-text {
+    color: var(--modal-text) !important;
+}
+
+/* Background overlay */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-overlay);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Component Styles */
+.card-body {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.form-control, .input-group-text, .form-select {
+    background-color: var(--input-bg);
+    color: var(--primary-text);
+    border-color: var(--border-color);
+}
+
+.table {
+    background-color: var(--table-bg);
+}
+
+.navbar, .footer {
+    background-color: var(--secondary-bg);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Theme Toggle Styles */
+[data-theme="light"] .dark-icon,
+[data-theme="dark"] .light-icon {
+    display: none;
+}
+
+.theme-toggle {
+    cursor: pointer;
+}
+/*from here*/
+/* Specific styles for selected rows in table */
+[data-theme="dark"] .ledger-table tbody tr.selected-row {
+    background-color: #5897FB !important;
+    color: white !important;
+}
+
+/* Type colors should still work in dark mode */
+[data-theme="dark"] .type-xcess { color: #28a745 !important; }
+[data-theme="dark"] .type-short { color: #dc3545 !important; }
+[data-theme="dark"] .type-Sale { color: #17a2b8 !important; }
+[data-theme="dark"] .type-SlRt { color: #ffc107 !important; }
+[data-theme="dark"] .type-Purc { color: #007bff !important; }
+[data-theme="dark"] .type-PrRt { color: #6f42c1 !important; }
+
+/* Modal specific styles */
+[data-theme="dark"] .modal-content {
+    background-color: var(--modal-bg);
+    color: var(--modal-text);
+}
+
+[data-theme="dark"] .modal-content .form-label,
+[data-theme="dark"] .modal-content label,
+[data-theme="dark"] .modal-content .input-group-text {
+    color: var(--modal-text) !important;
+}
+
+/* Background overlay */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-overlay);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Component Styles */
+.card-body {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.form-control, .input-group-text, .form-select {
+    background-color: var(--input-bg);
+    color: var(--primary-text);
+    border-color: var(--border-color);
+}
+
+.navbar, .footer {
+    background-color: var(--secondary-bg);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Theme Toggle Styles */
+[data-theme="light"] .dark-icon,
+[data-theme="dark"] .light-icon {
+    display: none;
+}
+
+.theme-toggle {
+    cursor: pointer;
+}
+
+/* Original table styles (preserved) */
+.ledger-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+    font-size: 0.9rem;
+}
+
+.ledger-table th {
+    position: sticky;
+    top: 0;
+    background-color: #4a6fdc;
+    color: white;
+    font-weight: 500;
+    padding: 12px 8px;
+    border: none;
+    z-index: 10;
+}
+
+.ledger-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+}
+
+.ledger-table tbody tr:hover {
+    background-color: #f5f8ff;
+}
+
+.ledger-table tbody tr.selected-row {
+    background-color: #5897FB !important;
+    box-shadow: inset 3px 0 0 #4a6fdc;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Table footer styling */
+.ledger-table tfoot tr {
+    position: sticky;
+    bottom: 0;
+    background-color: #f8f9fa;
+    z-index: 5;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Table container */
+.table-container {
+    max-height: 600px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    position: relative;
+    background-color: white; /* Ensure container is white */
+}

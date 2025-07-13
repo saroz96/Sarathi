@@ -1,0 +1,959 @@
+<%- include('../layouts/boilerplate', { title: 'Profit Analysis Results' , body: '' }) %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    /* Main Layout */
+    .expanded-container {
+      width: 95%;
+      max-width: 100%;
+      margin: 20px auto;
+    }
+
+    .expanded-card {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      padding: 20px;
+      background-color: #fff;
+    }
+
+    /* Summary Cards */
+    .summary-card {
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 0.15rem 0.5rem 0 rgba(58, 59, 69, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0.5rem 1rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .summary-icon {
+      font-size: 1.8rem;
+      opacity: 0.9;
+    }
+
+    /* Table Styling */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+      width: 100%;
+      margin-bottom: 1rem;
+      color: #212529;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table thead th {
+      vertical-align: bottom;
+      border-bottom: 2px solid #dee2e6;
+      background-color: #f8f9fa;
+      font-weight: 600;
+      padding: 12px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+
+    .table tbody tr {
+      transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .table td {
+      padding: 10px;
+      vertical-align: middle;
+      border-top: 1px solid #dee2e6;
+      white-space: nowrap;
+    }
+
+    /* Color Coding */
+    .text-profit {
+      color: #28a745 !important;
+    }
+
+    .text-loss {
+      color: #dc3545 !important;
+    }
+
+    /* Search and Filter */
+    .search-filter-container {
+      margin-bottom: 20px;
+    }
+
+    /* Highlighting */
+    .selected-row {
+      background-color: #5897FB !important;
+      color: white !important;
+    }
+
+    .selected-row td {
+      background-color: #5897FB !important;
+      color: white !important;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        font-size: 12px;
+        margin: 10mm;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid #000 !important;
+        padding: 6px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2 !important;
+      }
+
+      .print-header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      .summary-card {
+        break-inside: avoid;
+      }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+
+      .table td,
+      .table th {
+        padding: 6px;
+        font-size: 0.8rem;
+      }
+
+      .action-buttons .btn {
+        margin-right: 3px;
+        padding: 5px 8px;
+        font-size: 0.8rem;
+      }
+
+      .summary-card {
+        margin-bottom: 10px;
+      }
+    }
+
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 20px;
+    }
+  </style>
+
+  <div class="container expanded-container">
+    <div class="card expanded-card">
+      <!-- Print Header (hidden on screen) -->
+      <div id="printHeader" class="d-none print-only">
+        <div class="print-header">
+          <h2>Profit Analysis Report</h2>
+          <p>
+            Date Range: <%= moment(fromDate).format('MMMM D, YYYY') %> to <%= moment(toDate).format('MMMM D, YYYY') %>
+                <br>
+                Generated on: <%= moment().format('MMMM D, YYYY h:mm A') %>
+          </p>
+          <hr>
+        </div>
+      </div>
+
+      <h1 class="mb-4 text-center" style="text-decoration: underline;">Profit Analysis Results</h1>
+      <h4 class="text-center mb-4">Date: <%= fromDate %> to <%= toDate %>
+      </h4>
+
+      <!-- Search and Filter Section -->
+      <div class="row search-filter-container no-print">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" id="searchInput"
+              placeholder="Search by date or transaction details..." aria-label="Search" autofocus autocomplete="off">
+            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="d-flex align-items-center">
+            <label for="profitFilter" class="form-label me-2 mb-0">Filter:</label>
+            <select class="form-select" id="profitFilter" aria-label="Filter by Profit Status">
+              <option value="">All Days</option>
+              <option value="profit">Profit Days Only</option>
+              <option value="loss">Loss Days Only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons no-print mb-3">
+        <a href="/retailer/daily-profit/sales-analysis" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back to Form
+        </a>
+        <button id="printReport" class="btn btn-primary">
+          <i class="fas fa-print"></i> Print Report
+        </button>
+        <button id="exportExcel" class="btn btn-success">
+          <i class="fas fa-file-excel"></i> Export to Excel
+        </button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3 col-sm-6">
+          <div class="card summary-card border-left-success">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-muted mb-0">Total Net Sales</h6>
+                  <h3
+                    class="mb-0 text-success text-end <%= summary.totalNetSales >= 0 ? 'text-success' : 'text-danger' %>">
+                    Rs. <%= summary.totalNetSales.toFixed(2) %>
+                  </h3>
+                </div>
+                <div class="summary-icon text-success">
+                  <i class="fas fa-line-chart"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card summary-card border-left-danger">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-muted mb-0">Total Net Purchases</h6>
+                  <h3 class="mb-0 text-danger">Rs. <%= summary.totalNetPurchases.toFixed(2) %>
+                  </h3>
+                </div>
+                <div class="summary-icon text-danger">
+                  <i class="fas fa-shopping-cart"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card summary-card border-left-<%= summary.totalNetProfit >= 0 ? 'primary' : 'danger' %>">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-muted mb-0">Total Net Profit</h6>
+                  <h3 class="mb-0 text-<%= summary.totalNetProfit >= 0 ? 'primary' : 'danger' %>">
+                    Rs. <%= summary.totalNetProfit.toFixed(2) %>
+                  </h3>
+                  <small class="text-muted">
+                    <%= ((summary.totalNetProfit/summary.totalNetSales)*100).toFixed(2) %>% On S.P
+                      <% const totalCOGS=dailyProfit.reduce((sum, day)=> sum + (day.netCost || 0), 0);
+                        const profitMargin = totalCOGS > 0 ? (summary.totalNetProfit/totalCOGS)*100 : 0;
+                        %>
+                        <%= profitMargin.toFixed(2) %>% On COGS
+                  </small>
+                </div>
+                <div class="summary-icon text-<%= summary.totalNetProfit >= 0 ? 'primary' : 'danger' %>">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card summary-card border-left-warning">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-muted mb-0">Profit/Loss Days</h6>
+                  <h3 class="mb-0">
+                    <span class="text-success">
+                      <%= summary.daysWithProfit %>
+                    </span> /
+                    <span class="text-danger">
+                      <%= summary.daysWithLoss %>
+                    </span>
+                  </h3>
+                  <small class="text-muted">
+                    <%= ((summary.daysWithProfit/(summary.daysWithProfit+summary.daysWithLoss))*100).toFixed(2) %>%
+                      Profitable
+                  </small>
+                </div>
+                <div class="summary-icon text-warning">
+                  <i class="fas fa-calendar-alt"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="row mb-4 no-print">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h3 class="card-title">Daily Profit Trend</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="position: relative; height:300px; width:100%">
+                <canvas id="profitTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-info text-white">
+              <h3 class="card-title">Revenue Composition</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="position: relative; height:300px; width:100%">
+                <canvas id="revenueCompositionChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Daily Profit Table
+      <div class="card">
+        <div class="card-header bg-gray-light">
+          <h3 class="card-title">Daily Profit Details</h3>
+          <div class="card-tools no-print">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover" id="profitTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="text-end">Gross Sales</th>
+                <th class="text-end">Sales Returns</th>
+                <th class="text-end">Net Sales</th>
+                <th class="text-end">Gross Purchases</th>
+                <th class="text-end">Purchase Returns</th>
+                <th class="text-end">Net Purchases</th>
+                <th class="text-end">Net Profit</th>
+                <th class="text-end">S.P (%)</th>
+                <th class="text-end">C.P (%)</th>
+                <th>Transactions</th>
+                <th class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% dailyProfit.forEach(day=> { %>
+                <tr class="profit-row" data-profit-status="<%= day.netProfit >= 0 ? 'profit' : 'loss' %>">
+                  <td>
+                    <%= day.date %>
+                  </td>
+                  <td class="text-end text-success">Rs. <%= day.grossSales ? day.grossSales.toFixed(2) : '0.00' %>
+                  </td>
+                  <td class="text-end text-danger">Rs. <%= day.returns ? day.returns.toFixed(2) : '0.00' %>
+                  </td>
+                  <td class="text-end <%= day.netSales >= 0 ? 'text-success' : 'text-danger' %>">
+                    Rs. <%= day.netSales.toFixed(2) %>
+                  </td>
+                  <td class="text-end text-success">Rs. <%= day.grossPurchases ? day.grossPurchases.toFixed(2) : '0.00'
+                      %>
+                  </td>
+                  <td class="text-end text-danger">Rs. <%= day.costReturns ? day.costReturns.toFixed(2) : '0.00' %>
+                  </td>
+                  <td class="text-end <%= day.netPurchases >= 0 ? 'text-success' : 'text-danger' %>">
+                    Rs. <%= day.netPurchases.toFixed(2) %>
+                  </td>
+                  <td class="text-end <%= day.netProfit >= 0 ? 'text-success' : 'text-danger' %>">
+                    <strong>Rs. <%= day.netProfit.toFixed(2) %></strong>
+                    <% if (day.netProfit>= 0) { %>
+                      <i class="fas fa-caret-up text-success ms-1"></i>
+                      <% } else { %>
+                        <i class="fas fa-caret-down text-danger ms-1"></i>
+                        <% } %>
+                  </td>
+                  <td class="text-end <%= (day.netProfit / day.netSales) >= 0 ? 'text-success' : 'text-danger' %>">
+                    <strong>
+                      <% if (day.netSales !=0) { %>
+                        <%= ((day.netProfit / day.netSales) * 100).toFixed(2) %>%
+                          <% } else { %>
+                            0.00%
+                            <% } %>
+                    </strong>
+                  </td>
+                  <td class="text-end <%= (day.netProfit / day.netCost) >= 0 ? 'text-success' : 'text-danger' %>">
+                    <strong>
+                      <% if (day.netCost !=0) { %>
+                        <%= ((day.netProfit / day.netCost) * 100).toFixed(2) %>%
+                          <% } else { %>
+                            0.00%
+                            <% } %>
+                    </strong>
+                  </td>
+                  <td>
+                    <% if (day.salesCount> 0) { %>
+                      <span class="badge bg-success me-1">
+                        <i class="fas fa-arrow-up"></i>
+                        <%= day.salesCount %> sales
+                      </span>
+                      <% } %>
+                        <% if (day.purchaseCount> 0) { %>
+                          <span class="badge bg-danger me-1">
+                            <i class="fas fa-arrow-down"></i>
+                            <%= day.purchaseCount %> purchases
+                          </span>
+                          <% } %>
+                            <% if (day.returnCount> 0) { %>
+                              <span class="badge bg-warning">
+                                <i class="fas fa-exchange-alt"></i>
+                                <%= day.returnCount %> returns
+                              </span>
+                              <% } %>
+                  </td>
+                  <td class="no-print">
+                    <a href="/transactions?date=<%= moment(day.date).format('YYYY-MM-DD') %>"
+                      class="btn btn-sm btn-info" title="View Transactions">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                <% }); %>
+            </tbody>
+            <tfoot class="bg-gray-light">
+              <tr>
+                <th>Totals</th>
+                <th class="text-end text-success">Rs. <%= summary.totalGrossSales.toFixed(2) %>
+                </th>
+                <th class="text-end text-danger">Rs. <%= summary.totalSalesReturns.toFixed(2) %>
+                </th>
+                <th class="text-end <%= summary.totalNetSales >= 0 ? 'text-success' : 'text-danger' %>">
+                  Rs. <%= summary.totalNetSales.toFixed(2) %>
+                </th>
+                <th class="text-end text-success">Rs. <%= summary.totalGrossPurchases.toFixed(2) %>
+                </th>
+                <th class="text-end text-danger">Rs. <%= summary.totalPurchaseReturns.toFixed(2) %>
+                </th>
+                <th class="text-end <%= summary.totalNetPurchases >= 0 ? 'text-success' : 'text-danger' %>">
+                  Rs. <%= summary.totalNetPurchases.toFixed(2) %>
+                </th>
+                <th class="text-end <%= summary.totalNetProfit >= 0 ? 'text-success' : 'text-danger' %>">
+                  Rs. <%= summary.totalNetProfit.toFixed(2) %>
+                </th>
+                <th
+                  class="text-end <%= (summary.totalNetProfit / summary.totalNetSales) >= 0 ? 'text-success' : 'text-danger' %>">
+                  <% if (summary.totalNetSales !=0) { %>
+                    <%= ((summary.totalNetProfit / summary.totalNetSales) * 100).toFixed(2) %>%
+                      <% } else { %>
+                        0.00%
+                        <% } %>
+                </th>
+                <th class="text-end <%= (summary.totalNetProfit/totalCOGS) >= 0 ? 'text-success' : 'text-danger' %>">
+                  <% if (summary.totalNetPurchases !=0) { %>
+                    <% const totalCOGS=dailyProfit.reduce((sum, day)=> sum + (day.netCost || 0), 0);
+                      const profitMargin = totalCOGS > 0 ? (summary.totalNetProfit/totalCOGS)*100 : 0;
+                      %>
+                      <%= profitMargin.toFixed(2) %>% <% } else { %>
+                          0.00%
+                          <% } %>
+
+                </th>
+                <th>
+                  <span class="badge bg-secondary">
+                    <%= dailyProfit.reduce((sum, day)=> sum + day.salesCount + day.purchaseCount + day.returnCount, 0)
+                      %>
+                  </span>
+                </th>
+                <th class="no-print"></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div> -->
+
+      <!-- Daily Profit Table -->
+<div class="card">
+  <div class="card-header bg-gray-light d-flex justify-content-between align-items-center">
+    <h3 class="card-title">Daily Profit Details</h3>
+    <div class="card-tools no-print">
+      <button type="button" class="btn btn-tool" data-card-widget="collapse">
+        <i class="fas fa-minus"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover" id="profitTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th class="text-end">Gross Sales</th>
+          <th class="text-end">Sales Returns</th>
+          <th class="text-end">Net Sales</th>
+          <th class="text-end">Gross Purchases</th>
+          <th class="text-end">Purchase Returns</th>
+          <th class="text-end">Net Purchases</th>
+          <th class="text-end">Net Profit</th>
+          <th class="text-end">S.P (%)</th>
+          <th class="text-end">C.P (%)</th>
+          <th>Transactions</th>
+        </tr>
+      </thead>
+      <tbody id="profitTableBody">
+        <!-- Table body will be populated by JavaScript -->
+      </tbody>
+      <tfoot class="bg-gray-light">
+        <tr>
+          <th>Totals</th>
+          <th class="text-end text-success">Rs. <%= summary.totalGrossSales.toFixed(2) %></th>
+          <th class="text-end text-danger">Rs. <%= summary.totalSalesReturns.toFixed(2) %></th>
+          <th class="text-end <%= summary.totalNetSales >= 0 ? 'text-success' : 'text-danger' %>">
+            Rs. <%= summary.totalNetSales.toFixed(2) %>
+          </th>
+          <th class="text-end text-success">Rs. <%= summary.totalGrossPurchases.toFixed(2) %></th>
+          <th class="text-end text-danger">Rs. <%= summary.totalPurchaseReturns.toFixed(2) %></th>
+          <th class="text-end <%= summary.totalNetPurchases >= 0 ? 'text-success' : 'text-danger' %>">
+            Rs. <%= summary.totalNetPurchases.toFixed(2) %>
+          </th>
+          <th class="text-end <%= summary.totalNetProfit >= 0 ? 'text-success' : 'text-danger' %>">
+            Rs. <%= summary.totalNetProfit.toFixed(2) %>
+          </th>
+          <th class="text-end <%= (summary.totalNetProfit / summary.totalNetSales) >= 0 ? 'text-success' : 'text-danger' %>">
+            <% if (summary.totalNetSales != 0) { %>
+              <%= ((summary.totalNetProfit / summary.totalNetSales) * 100).toFixed(2) %>%
+            <% } else { %>
+              0.00%
+            <% } %>
+          </th>
+          <th class="text-end <%= (summary.totalNetProfit/totalCOGS) >= 0 ? 'text-success' : 'text-danger' %>">
+            <% if (summary.totalNetPurchases != 0) { %>
+              <% const totalCOGS = dailyProfit.reduce((sum, day) => sum + (day.netCost || 0), 0);
+                 const profitMargin = totalCOGS > 0 ? (summary.totalNetProfit/totalCOGS)*100 : 0; %>
+              <%= profitMargin.toFixed(2) %>%
+            <% } else { %>
+              0.00%
+            <% } %>
+          </th>
+          <th>
+            <span class="badge bg-secondary">
+              <%= dailyProfit.reduce((sum, day) => sum + day.salesCount + day.purchaseCount + day.returnCount, 0) %>
+            </span>
+          </th>
+        </tr>
+      </tfoot>
+    </table>
+    
+    <!-- Pagination Controls -->
+    <div class="row mt-3">
+      <div class="col-sm-12 col-md-5">
+        <div class="dataTables_info" id="profitTableInfo" role="status" aria-live="polite">
+          Showing 0 to 0 of 0 entries
+        </div>
+      </div>
+      <div class="col-sm-12 col-md-7">
+        <div class="dataTables_paginate paging_simple_numbers" id="profitTablePaginate">
+          <ul class="pagination justify-content-end">
+            <li class="paginate_button page-item previous disabled" id="profitTablePrevious">
+              <a href="#" aria-controls="profitTable" data-dt-idx="0" tabindex="0" class="page-link">Previous</a>
+            </li>
+            <li class="paginate_button page-item next disabled" id="profitTableNext">
+              <a href="#" aria-controls="profitTable" data-dt-idx="1" tabindex="0" class="page-link">Next</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <!-- Report Footer -->
+      <div class="mt-3 text-muted text-end no-print">
+        <small>Report generated on <%= moment().format('MMMM D, YYYY h:mm A') %></small>
+      </div>
+    </div>
+  </div>
+<!-- JavaScript for Pagination -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dailyProfitData = <%- JSON.stringify(dailyProfit) %>;
+  const itemsPerPage = 10;
+  let currentPage = 1;
+  
+  // Initialize the table
+  function renderTable() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, dailyProfitData.length);
+    const tableBody = document.getElementById('profitTableBody');
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // Add new rows
+    for (let i = startIndex; i < endIndex; i++) {
+      const day = dailyProfitData[i];
+      const row = document.createElement('tr');
+      row.className = `profit-row ${day.netProfit >= 0 ? 'profit' : 'loss'}`;
+      
+      row.innerHTML = `
+        <td>${day.date}</td>
+        <td class="text-end text-success">Rs. ${day.grossSales ? day.grossSales.toFixed(2) : '0.00'}</td>
+        <td class="text-end text-danger">Rs. ${day.returns ? day.returns.toFixed(2) : '0.00'}</td>
+        <td class="text-end ${day.netSales >= 0 ? 'text-success' : 'text-danger'}">
+          Rs. ${day.netSales.toFixed(2)}
+        </td>
+        <td class="text-end text-success">Rs. ${day.grossPurchases ? day.grossPurchases.toFixed(2) : '0.00'}</td>
+        <td class="text-end text-danger">Rs. ${day.costReturns ? day.costReturns.toFixed(2) : '0.00'}</td>
+        <td class="text-end ${day.netPurchases >= 0 ? 'text-success' : 'text-danger'}">
+          Rs. ${day.netPurchases.toFixed(2)}
+        </td>
+        <td class="text-end ${day.netProfit >= 0 ? 'text-success' : 'text-danger'}">
+          <strong>Rs. ${day.netProfit.toFixed(2)}</strong>
+          ${day.netProfit >= 0 ? 
+            '<i class="fas fa-caret-up text-success ms-1"></i>' : 
+            '<i class="fas fa-caret-down text-danger ms-1"></i>'}
+        </td>
+        <td class="text-end ${(day.netProfit / day.netSales) >= 0 ? 'text-success' : 'text-danger'}">
+          <strong>
+            ${day.netSales != 0 ? 
+              ((day.netProfit / day.netSales) * 100).toFixed(2) + '%' : 
+              '0.00%'}
+          </strong>
+        </td>
+        <td class="text-end ${(day.netProfit / day.netCost) >= 0 ? 'text-success' : 'text-danger'}">
+          <strong>
+            ${day.netCost != 0 ? 
+              ((day.netProfit / day.netCost) * 100).toFixed(2) + '%' : 
+              '0.00%'}
+          </strong>
+        </td>
+        <td>
+          ${day.salesCount > 0 ? 
+            `<span class="badge bg-success me-1">
+              <i class="fas fa-arrow-up"></i>
+              ${day.salesCount} sales
+            </span>` : ''}
+          ${day.purchaseCount > 0 ? 
+            `<span class="badge bg-danger me-1">
+              <i class="fas fa-arrow-down"></i>
+              ${day.purchaseCount} purchases
+            </span>` : ''}
+          ${day.returnCount > 0 ? 
+            `<span class="badge bg-warning">
+              <i class="fas fa-exchange-alt"></i>
+              ${day.returnCount} returns
+            </span>` : ''}
+        </td>
+      `;
+      
+      tableBody.appendChild(row);
+    }
+    
+    // Update pagination info
+    document.getElementById('profitTableInfo').textContent = 
+      `Showing ${startIndex + 1} to ${endIndex} of ${dailyProfitData.length} entries`;
+    
+    // Update pagination buttons
+    document.getElementById('profitTablePrevious').classList.toggle('disabled', currentPage === 1);
+    document.getElementById('profitTableNext').classList.toggle(
+      'disabled', 
+      currentPage * itemsPerPage >= dailyProfitData.length
+    );
+  }
+  
+  // Event listeners for pagination
+  document.getElementById('profitTablePrevious').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable();
+    }
+  });
+  
+  document.getElementById('profitTableNext').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (currentPage * itemsPerPage < dailyProfitData.length) {
+      currentPage++;
+      renderTable();
+    }
+  });
+  
+  // Initial render
+  renderTable();
+});
+</script>
+
+  <!-- ChartJS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- DataTables -->
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+  <!-- Chart.js Script -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Prepare data for charts
+    const dates = [];
+    const netProfits = [];
+    const netSales = [];
+    const returns = [];
+
+  <% dailyProfit.forEach(day => { %>
+      dates.push('<%= moment(day.date).format("MMM D") %>');
+      netProfits.push(<%= day.netProfit || 0 %>);
+      netSales.push(<%= day.netSales || 0 %>);
+      returns.push(<%= day.returns || 0 %>);
+  <% }); %>
+
+  // Daily Profit Trend Chart (Line Chart)
+  const profitTrendCtx = document.getElementById('profitTrendChart').getContext('2d');
+    new Chart(profitTrendCtx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Net Profit',
+            data: netProfits,
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return 'Profit: Rs. ' + context.raw.toFixed(2);
+              }
+            }
+          },
+          legend: {
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function (value) {
+                return 'Rs. ' + value.toFixed(2);
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Revenue Composition Chart (Doughnut Chart)
+    const revenueCompCtx = document.getElementById('revenueCompositionChart').getContext('2d');
+    new Chart(revenueCompCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Net Sales', 'Returns'],
+        datasets: [{
+          data: [
+          <%= summary.totalNetSales || 0 %>,
+          <%= summary.totalSalesReturns || 0 %>
+        ],
+          backgroundColor: [
+            '#007bff',
+            '#dc3545'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `${label}: Rs. ${value.toFixed(2)} (${percentage}%)`;
+              }
+            }
+          },
+          legend: {
+            position: 'right'
+          }
+        },
+        cutout: '70%'
+      }
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Initialize DataTable
+      $('#profitTable').DataTable({
+        'paging': true,
+        'lengthChange': true,
+        'searching': true,
+        'ordering': true,
+        'info': true,
+        'autoWidth': false,
+        'order': [[0, 'desc']],
+        'responsive': true
+      });
+
+      // Filter functionality
+      function filterProfitData() {
+        const searchQuery = $('#searchInput').val().trim().toLowerCase();
+        const profitFilter = $('#profitFilter').val();
+
+        $('.profit-row').each(function () {
+          const row = $(this);
+          const date = row.find('td:first').text().toLowerCase();
+          const profitStatus = row.data('profit-status');
+          const matchesSearch = date.includes(searchQuery);
+          const matchesFilter = profitFilter === '' || profitStatus === profitFilter;
+
+          if (matchesSearch && matchesFilter) {
+            row.show();
+          } else {
+            row.hide();
+          }
+        });
+      }
+
+      $('#searchInput').on('input', filterProfitData);
+      $('#profitFilter').on('change', filterProfitData);
+      $('#clearSearch').click(function () {
+        $('#searchInput').val('');
+        filterProfitData();
+      });
+
+      // Print functionality
+      $('#printReport').click(function () {
+        window.print();
+      });
+
+      // Export to Excel
+      $('#exportExcel').click(function () {
+        // This would typically be implemented with a server-side export endpoint
+        alert('Export to Excel functionality would be implemented here');
+      });
+
+      // Initialize charts
+      const ctx1 = document.getElementById('profitTrendChart').getContext('2d');
+      const profitTrendChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: [<%= dailyProfit.map(day => `'${moment(day.date).format("MMM D")}'`).join(',') %>],
+          datasets: [{
+            label: 'Daily Net Profit',
+            data: [<%= dailyProfit.map(day => day.netProfit).join(',') %>],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderWidth: 2,
+            tension: 0.1,
+            pointBackgroundColor: function (context) {
+              const value = context.dataset.data[context.dataIndex];
+              return value >= 0 ? 'rgba(40, 167, 69, 1)' : 'rgba(220, 53, 69, 1)';
+            }
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                callback: function (value) {
+                  return 'Rs. ' + value.toLocaleString();
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return context.dataset.label + ': Rs. ' + context.raw.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('revenueCompositionChart').getContext('2d');
+      const revenueCompositionChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Net Sales', 'Net Purchases', 'Net Profit'],
+          datasets: [{
+            data: [
+          <%= summary.totalNetSales %>,
+          <%= Math.abs(summary.totalNetPurchases) %>,
+          <%= Math.abs(summary.totalNetProfit) %>
+        ],
+            backgroundColor: [
+              'rgba(40, 167, 69, 0.8)',
+              'rgba(220, 53, 69, 0.8)',
+              'rgba(23, 162, 184, 0.8)'
+            ],
+            borderColor: [
+              'rgba(40, 167, 69, 1)',
+              'rgba(220, 53, 69, 1)',
+              'rgba(23, 162, 184, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: Rs. ${value.toLocaleString()} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>

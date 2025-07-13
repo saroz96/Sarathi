@@ -1,0 +1,321 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+
+    <style>
+        .card {
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 2px;
+            text-align: left;
+            white-space: nowrap;
+            /* Prevents line breaks */
+
+        }
+
+        .table td {
+            font-size: 15px
+        }
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+        .searchClass strong {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            /* Ensures long names are truncated with "..." */
+        }
+
+        .searchClass small {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 200px;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <div class="container-fluid mt-4 wow-form">
+        <div class="row">
+            <div class="col">
+                <!-- Add Company Form -->
+                <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp">
+                    <h2 style="text-align: center;text-decoration: underline;">A/C Groups</h2>
+                    <div class="card-header">
+                        Add New A/c Group
+                    </div>
+                    <div class="card-body">
+                        <form action="/account-group" method="post" class="wow-form">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="name">Group Name <i style="color: red;">*</i></label>
+                                        <input type="text" class="form-control" id="name" name="name"
+                                            placeholder="Enter group name" autofocus required autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="type">Group Type <i style="color: red;">*</i></label>
+                                        <select name="type" id="type" class="form-control" required>
+                                            <option value="" disabled selected>Select a type</option>
+                                            <option value="Current Assets">Current Assets</option>
+                                            <option value="Current Liabilities">Current Liabilities</option>
+                                            <option value="Fixed Assets">Fixed Assets</option>
+                                            <option value="Loans(Liability)">Loans(Liability)</option>
+                                            <option value="Capital Account">Capital Account</option>
+                                            <option value="Revenue Accounts">Revenue Accounts</option>
+                                            <option value="Primary">Primary</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add A/c Group</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp">
+                    <h2 style="text-align: center;text-decoration: underline;">Existing Groups</h2>
+                    <!--print buttons-->
+                    <div class="row">
+                        <div class="col-1">
+                            <div class="btn btn-primary" onclick="printGroups()"><i class="bi bi-printer"></i></div>
+                        </div>
+                        <div class="col">
+                            <form class="mb-4">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="searchGroupsInput"
+                                        placeholder="Search groups by name..." autocomplete="off">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Group Name</th>
+                                    <th>Group Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="groupsList">
+                                <% if (companiesGroups && companiesGroups.length> 0) { %>
+                                    <% companiesGroups.sort((a, b)=> a.name.localeCompare(b.name)); %>
+                                        <% companiesGroups.forEach((companiesGroup, index)=> { %>
+                                            <tr class="searchGroupsClass">
+                                                <td>
+                                                    <strong>
+                                                        <%= index + 1 %>. <%= companiesGroup.name %>
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    <strong>
+                                                        <%= companiesGroup.type %>
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-warning"
+                                                        onclick="editCompanyGroup('<%= companiesGroup._id %>', '<%= companiesGroup.name %>','<%= companiesGroup.type %>')">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <form
+                                                        action="/account-group/<%= companiesGroup._id %>?_method=DELETE"
+                                                        method="post" class="d-inline"
+                                                        onsubmit="return confirmDeletion()">
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="3" class="text-center">No groups available</td>
+                                                    </tr>
+                                                    <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Edit Company Modal -->
+            <div class="modal fade" id="editCompanyGroupModal" tabindex="-1"
+                aria-labelledby="editCompanyGroupModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editCompanyGroupModalLabel">Edit Group</h5>
+                            <button type="button" class="close text-danger" data-bs-dismiss="modal"><span
+                                    aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editCompanyGroupForm" method="post">
+                                <div class="form-group">
+                                    <label for="editName">Group Name <i style="color: red;">*</i></label>
+                                    <input type="text" class="form-control" id="editName" name="name" autocomplete="off"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editType">Group Type <i style="color: red;">*</i></label>
+                                    <select name="type" id="editType" class="form-control" required>
+                                        <option value="Current Assets">Current Assets</option>
+                                        <option value="Current Liabilities">Current Liabilities</option>
+                                        <option value="Fixed Assets">Fixed Assets</option>
+                                        <option value="Loans(Liability)">Loans(Liability)</option>
+                                        <option value="Capital Account">Capital Account</option>
+                                        <option value="Revenue Accounts">Revenue Accounts</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+        <script>
+            $(document).ready(function () {
+                // Initialize Select2 for searchable dropdown
+                $('#type').select2({
+                    placeholder: "Select a Group",
+                    allowClear: true,
+                    width: '100%', // Ensure it takes the full width of the container
+                });
+            });
+
+            function editCompanyGroup(id, name, type) {
+                $('#editCompanyGroupModal').modal('show');
+                $('#editCompanyGroupForm').attr('action', '/account-group/' + id + '?_method=PUT');
+                $('#editName').val(name);
+                $('#editType').val(type);
+            }
+
+            $(document).ready(function () {
+                $('#editCompanyGroupModal').on('hidden.bs.modal', function () {
+                    $('#editCompanyGroupForm').trigger('reset');
+                    $('#editCompanyGroupForm').attr('action', '');
+                });
+            });
+
+
+            function confirmDeletion() {
+                return confirm("Are you sure you want to delete this account group?");
+            }
+
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Function to move focus to the next form element or submit if it's a button
+                function moveToNextInput(event) {
+                    if (event.key === 'Enter') {
+                        const form = event.target.form;
+                        const elements = Array.from(form.elements); // Get all elements in the form as an array
+                        const index = elements.indexOf(event.target);
+
+                        // If the current element is a button, allow form submission
+                        if (event.target.tagName === 'BUTTON') {
+                            return; // Let the form submit naturally
+                        }
+
+                        event.preventDefault(); // Prevent form submission if not a button
+
+                        // Move to the next focusable element if it exists
+                        if (index > -1 && index < elements.length - 1) {
+                            const nextElement = elements[index + 1];
+                            if (nextElement) {
+                                nextElement.focus();
+                            }
+                        }
+                    }
+                }
+
+                // Get all input, select, textarea, and button elements within the form
+                const inputs = document.querySelectorAll('form input, form select, form textarea, form button');
+
+                // Attach the moveToNextInput function to the keydown event for each input field
+                inputs.forEach(input => {
+                    input.addEventListener('keydown', moveToNextInput);
+                });
+            });
+            // Function to print the list of accounts in table format
+            function printGroups() {
+                // Create a table structure for printing
+                let printContent = `
+            <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>S.N.</th> <!-- Serial Number Column -->
+                        <th>Group Name</th>
+                        <th>Sub Group</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        <% companiesGroups.forEach((companiesGroup, index) => { %>
+                    printContent += `
+                <tr>
+                    <td><%= index + 1 %></td> <!-- Serial Number for Printing -->
+                    <td><%= companiesGroup.name %></td>
+                    <td><%= companiesGroup.type %></td>
+                </tr>`;
+        <% }); %>
+
+                    printContent += `</tbody></table>`;
+
+                // Temporarily replace body content with the table for printing
+                const originalContent = document.body.innerHTML;
+                document.body.innerHTML = `
+            <html>
+            <head>
+                <title>Print Groups</title>
+                <style>
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        padding: 8px;
+                        text-align: left;
+                        border: 1px solid #ddd;
+                    }
+                </style>
+            </head>
+            <body>
+                <h2 class="card-subtitle mb-2 text-center">
+                            <%= currentCompanyName %>
+                        </h2>
+                <h2 class="text-center">Groups List</h2>
+                ${printContent}
+            </body>
+            </html>
+        `;
+
+                // Trigger the print dialog
+                window.print();
+
+                // Restore the original content after printing
+                document.body.innerHTML = originalContent;
+                window.location.reload();  // Reload the page to restore event listeners
+            }
+        </script>

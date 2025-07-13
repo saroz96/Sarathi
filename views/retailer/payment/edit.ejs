@@ -1,0 +1,640 @@
+<%- include('../layouts/boilerplate', { title: 'Edit Payment' , body: '' }) %>
+
+    <!-- Nepali Datepicker -->
+    <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
+        rel="stylesheet" type="text/css" />
+
+    <style>
+        .wow-form {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #ffffff, #e0e0e0);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .btn {
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .wow-form {
+                padding: 15px;
+            }
+        }
+
+        #paymentAccountModal .modal-body {
+            min-height: 300px;
+            /* Ensures modal stays the same size */
+            max-height: 400px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+
+        #accountModal .modal-body {
+            min-height: 400px;
+            /* Ensures modal stays the same size */
+            max-height: 500px;
+            /* Limits height */
+            overflow-y: auto;
+            /* Allows scrolling */
+        }
+    </style>
+
+    <div class="container mt-4 wow-form">
+        <div class="card shadow-lg p-4 animate__animated animate__fadeInUp">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title">Edit Payment</h5>
+                        <span id="transactionDateError" style="color: red; display: none;">Invalid date!</span>
+                        <span id="nepaliDateError" style="color: red; display: none;">Invalid date!</span>
+                    </div>
+                    <!-- Action buttons for voucher status -->
+                    <div class="col-6">
+                        <!-- Visual indicator for canceled vouchers -->
+                        <% if (payments.status==='canceled' ) { %>
+                            <span class="text-danger" style="margin-left: 10px;">
+                                <strong>Voucher is canceled. All related transactions are inactive.</strong>
+                            </span>
+                            <% } %>
+                    </div>
+                    <div class="col">
+                        <% if (payments.status==='active' ) { %>
+                            <form action="/payments/cancel/<%= payments.billNumber %>" method="post"
+                                style="display: inline;" onsubmit="return confirmCancel()">
+                                <button type="submit" class="btn btn-danger">Cancel Voucher</button>
+                            </form>
+                            <% } else { %>
+                                <form action="/payments/reactivate/<%= payments.billNumber %>" method="post"
+                                    style="display: inline;" onsubmit="return confirmReactivate()">
+                                    <button type="submit" class="btn btn-success">Reactivate Voucher</button>
+                                </form>
+                                <% } %>
+                    </div>
+
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="editPaymentForm" action="/payments/<%= payments._id %>?_method=PUT" method="post"
+                    class="wow-form">
+                    <!-- Date Input -->
+                    <div class="form-group row mb-3">
+                        <% if (companyDateFormat==='nepali' ) { %>
+                            <div class="col">
+                                <label for="nepaliDate">Date:</label>
+                                <input type="date" name="nepaliDate" id="nepaliDate" class="form-control"
+                                    onkeydown="handleDateKeydown(event)" autofocus required
+                                    value="<%= payments.date ? payments.date.toISOString().split('T')[0] : '' %>"
+                                     autocomplete="off" <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                            </div>
+                            <% } else { %>
+                                <div class="col">
+                                    <label for="billDate">Date:</label>
+                                    <input type="date" name="billDate" id="billDate" class="form-control"
+                                        onkeydown="handleDateKeydown(event)" autofocus required autocomplete="off"
+                                        value="<%= payments.date.toISOString().split('T')[0] %>"
+                                        <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                                </div>
+                                <% } %>
+                                    <div class="col">
+                                        <label for="billNumber">Vch. No:</label>
+                                        <input type="text" name="billNumber" id="billNumber" class="form-control"
+                                            value="<%= payments.billNumber %>"
+                                            oninput="this.value='<%=payments.billNumber%>'"
+                                            onkeydown="handleBillNumberKeydown(event)" autocomplete="off" required
+                                            <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="accountType">Account Type:</label>
+                                        <input type="text" name="accountType" id="accountType" class="form-control"
+                                            value="Payment" oninput="this.value='Payment'" autocomplete="off"
+                                            onkeydown="handleAccountTypeKeydown(event)" <%=payments.status==='canceled'
+                                            ? 'disabled' : '' %>>
+                                    </div>
+
+                    </div>
+
+                    <!-- Payment Mode Selector with data-type attributes -->
+                    <div class="form-group">
+                        <label for="paymentAccount">Payment Mode:</label>
+                        <select class="form-control" id="paymentAccount" name="paymentAccount"
+                            onkeydown="handlePaymentAccountKeydown(event)" required <%=payments.status==='canceled'
+                            ? 'disabled' : '' %>>
+                            <optgroup label="Cash">
+                                <% cashAccounts.forEach(account=> { %>
+                                    <option value="<%= account._id %>" data-type="cash"
+                                        <%=account._id.equals(payments.paymentAccount._id) ? 'selected' : '' %>>
+                                        <%= account.name %>
+                                    </option>
+                                    <% }); %>
+                            </optgroup>
+                            <optgroup label="Bank">
+                                <% bankAccounts.forEach(account=> { %>
+                                    <option value="<%= account._id %>" data-type="bank"
+                                        <%=account._id.equals(payments.paymentAccount._id) ? 'selected' : '' %>>
+                                        <%= account.name %>
+                                    </option>
+                                    <% }); %>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!--Dynamic Rows for Account and Amount-->
+                    <div id="rowsContainer" class="mb-3">
+                        <div class="row payment-row g-2 align-items-end">
+                            <div class="col-md-5 col-12">
+                                <!-- Account Selection Input -->
+                                <label for="account">Party Name:</label>
+                                <input type="text" id="account" name="account" class="form-control"
+                                    placeholder="Search party..."
+                                    value="<%= payments.account ? payments.account.name : '' %>" autocomplete="off"
+                                    required <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                                <input type="hidden" id="accountId" name="accountId"
+                                    value="<%= payments.account ? payments.account._id : '' %>" autocomplete="off">
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <label for="debit">Amount:</label>
+                                <input type="number" name="debit" id="debit" class="form-control"
+                                    value="<%= payments.debit %>" placeholder="debit-amount"
+                                    onkeydown="handleDebitAmountKeydown(event)" autocomplete="off" required <%=payments.status==='canceled'
+                                    ? 'disabled' : '' %>>
+                            </div>
+
+                            <!-- Institution Type and Number (initially hidden) -->
+                            <div
+                                class="bank-details col-md-5 col-12 <%= (payments.InstType && payments.InstType !== 'N/A') ? '' : 'd-none' %>">
+                                <div class="row g-2">
+                                    <!-- Institution Type -->
+                                    <div class="col-md-6 col-6">
+                                        <label for="InstType">Inst. Type</label>
+                                        <select name="InstType" id="InstType" class="form-control"
+                                            onkeydown="handleInstTypeKeydown(event)" <%=payments.status==='canceled'
+                                            ? 'disabled' : '' %>>
+                                            <option value="N/A">N/A</option>
+                                            <option value="RTGS" <%=payments.InstType==='RTGS' ? 'selected' : '' %>>RTGS
+                                            </option>
+                                            <option value="Fonepay" <%=payments.InstType==='Fonepay' ? 'selected' : ''
+                                                %>
+                                                >Fonepay</option>
+                                            <option value="Cheque" <%=payments.InstType==='Cheque' ? 'selected' : '' %>
+                                                >Cheque
+                                            </option>
+                                            <option value="Connect-Ips" <%=payments.InstType==='Connect-Ips'
+                                                ? 'selected' : '' %>
+                                                >Connect-Ips</option>
+                                            <option value="Esewa" <%=payments.InstType==='Esewa' ? 'selected' : '' %>
+                                                >Esewa
+                                            </option>
+                                            <option value="Khalti" <%=payments.InstType==='Khalti' ? 'selected' : '' %>
+                                                >Khalti
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 col-6">
+                                        <label for="InstNo">Inst. No.</label>
+                                        <input type="text" name="InstNo" id="InstNo" class="form-control"
+                                            onkeydown="handleInstNoKeydown(event)" value="<%= payments.InstNo %>"
+                                            autocomplete="off" <%=payments.status==='canceled' ? 'disabled' : '' %>>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <div class="col">
+                            <input type="text" class="form-control" name="description" id="description"
+                                placeholder="Description" value="<%=payments.description%>" autocomplete="off"
+                                onkeydown="handleDescriptionKeydown(event)" <%=payments.status==='canceled' ? 'disabled'
+                                : '' %>>
+                        </div>
+                        <div style="float: right;">
+                            <button type="submit" class="btn btn-primary" id="saveBill" onclick="submitBillForm(false)"
+                                <%=payments.status==='canceled' ? 'disabled' : '' %>
+                                >
+                                <i class="fas fa-save"></i> Update
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="submitBillForm(true)"
+                                <%=payments.status==='canceled' ?'disabled':''%>>
+                                <i class="fas fa-print"></i> Update & Print
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal for account -->
+    <div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountModalLabel">Select an Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Fixed Search Input -->
+                <div class="p-3 bg-white sticky-top">
+                    <input type="text" id="searchAccount" class="form-control" placeholder="Search Account"
+                        onfocus="selectValue(this)" autocomplete="off">
+                </div>
+                <div class="modal-body p-0">
+
+                    <!-- Scrollable Account List -->
+                    <div class="overflow-auto" style="max-height: 400px;">
+                        <ul id="accountList" class="list-group">
+                            <!-- Accounts will be dynamically loaded here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/js/nepali.datepicker.v4.0.7.min.js"
+        type="text/javascript"></script>
+
+    <script>
+        window.onload = function () {
+
+            var nepaliDate = document.getElementById("nepaliDate");
+
+            nepaliDate.nepaliDatePicker();
+
+            // Add validation for Invoice Date
+            nepaliDate.addEventListener("blur", function (event) {
+                validateNepaliDate(this, "nepaliDateError", event);
+            });
+        };
+
+        // Function to validate Nepali date
+        function validateNepaliDate(inputField, errorSpanId, event) {
+            var errorSpan = document.getElementById(errorSpanId);
+            var dateString = inputField.value.trim();
+
+            // Check if the date is blank
+            if (!dateString) {
+                errorSpan.textContent = "Date cannot be blank!"; // Set error message
+                errorSpan.style.display = "inline"; // Show error message
+                event.preventDefault(); // Prevent moving to the next field
+                inputField.focus(); // Keep focus on the current input field
+                return;
+            }
+
+            // Check if the date is valid
+            if (!isValidNepaliDate(dateString)) {
+                errorSpan.textContent = "Invalid date!"; // Set error message
+                errorSpan.style.display = "inline"; // Show error message
+                event.preventDefault(); // Prevent moving to the next field
+                inputField.focus(); // Keep focus on the current input field
+            } else {
+                errorSpan.style.display = "none"; // Hide error message
+            }
+        }
+
+        // Function to check if the Nepali date is valid
+        function isValidNepaliDate(dateString) {
+            // Regular expression to match the Nepali date format (YYYY-MM-DD)
+            var datePattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+            if (!datePattern.test(dateString)) return false;
+
+            // Split the date string into year, month, and day
+            var parts = dateString.split("-");
+            var year = parseInt(parts[0], 10);
+            var month = parseInt(parts[1], 10);
+            var day = parseInt(parts[2], 10);
+
+            // Check if the month and day are valid
+            if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+            if (month < 1 || month > 12 || day < 1 || day > 32) return false;
+
+            // Manually validate the number of days in the month
+            var maxDays = getMaxDaysInNepaliMonth(year, month);
+            if (day > maxDays) return false;
+
+            return true;
+        }
+
+        // Function to get the maximum number of days in a Nepali month
+        function getMaxDaysInNepaliMonth(year, month) {
+            // Define the number of days in each month for a given year
+            // This is a simplified example and may not cover all edge cases
+            var nepaliMonths = [
+                31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30 // Example for year 2080
+            ];
+
+            // Adjust for leap years if necessary
+            if (year % 4 === 0 && month === 1) { // Check if it's a leap year and the month is Baisakh
+                nepaliMonths[0] = 31; // Baisakh has 31 days in a leap year
+            }
+
+            return nepaliMonths[month - 1]; // Return the number of days for the given month
+        }
+
+        //for english date validation
+        function validateDate(input) {
+            const errorMessage = input.nextElementSibling; // Get the error message span
+            const dateValue = input.value;
+
+            // Check if the date is valid
+            if (!dateValue || isNaN(new Date(dateValue).getTime())) {
+                errorMessage.textContent = "Invalid date!";
+                errorMessage.style.display = "block";
+                input.focus(); // Prevent moving to the next field
+            } else {
+                errorMessage.style.display = "none"; // Hide error if valid
+            }
+        }
+
+
+        //for account
+        $(document).ready(function () {
+
+            let selectedIndex = 0;
+            let allAccounts = [];
+
+            const $accountInput = $("#account");
+            const $accountIdInput = $("#accountId"); // Hidden input field to store account ID
+            const $accountModal = $("#accountModal");
+            const $searchInput = $("#searchAccount");
+            const $accountList = $("#accountList");
+            const $modalBody = $accountList.parent();
+
+            // Open modal when input is focused
+            $accountInput.focus(function () {
+                $accountModal.modal("show");
+                fetchAccounts();
+            });
+
+            // Focus on search input when modal opens
+            $accountModal.on("shown.bs.modal", function () {
+                $searchInput.focus();
+            });
+
+            // Fetch accounts from server
+            function fetchAccounts() {
+                $.ajax({
+                    url: "/api/accounts",
+                    method: "GET",
+                    success: function (data) {
+                        allAccounts = data;
+
+                        // Sort the accounts alphabetically by name (assuming `name` is the field you want to sort by)
+                        allAccounts.sort(function (a, b) {
+                            const nameA = a.name.toLowerCase(); // Convert to lowercase to handle case-insensitive comparison
+                            const nameB = b.name.toLowerCase();
+
+                            if (nameA < nameB) {
+                                return -1; // a should come before b
+                            }
+                            if (nameA > nameB) {
+                                return 1; // b should come before a
+                            }
+                            return 0; // a and b are equal
+                        });
+
+                        renderAccounts(); // Now render the accounts after sorting
+                    },
+                    error: function (err) {
+                        console.error("Error fetching accounts:", err);
+                        $accountList.html('<li class="list-group-item text-danger">Failed to load accounts</li>');
+                    }
+                });
+            }
+
+            // Render accounts dynamically
+            function renderAccounts(filtered = allAccounts) {
+                $accountList.empty();
+
+                if (filtered.length === 0) {
+                    $accountList.html('<li class="list-group-item text-muted">No accounts found</li>');
+                    return;
+                }
+
+                filtered.forEach((account, index) => {
+                    const isActive = index === 0 ? "active" : "";
+                    $accountList.append(`
+<li class="list-group-item account-item ${isActive}" 
+data-uniqueNumber="${account.uniqueNumber || 'N/A'}"
+data-id="${account._id}" 
+data-name="${account.name}" 
+data-address="${account.address || 'N/A'}" 
+data-pan="${account.pan || 'N/A'}"
+data-index="${index}">
+<div class="d-flex justify-content-between">
+<strong> ${account.uniqueNumber || 'N/A'} ${account.name}</strong>
+<span>📍 ${account.address || 'N/A'} | 🆔 PAN: ${account.pan || 'N/A'}</span>
+</div>
+</li>
+`);
+                });
+
+                selectedIndex = 0;
+            }
+
+            // Search accounts dynamically
+            $searchInput.on("input", function () {
+                let searchText = $(this).val().toLowerCase();
+                let filteredAccounts = allAccounts.filter(account =>
+                    account.name.toLowerCase().includes(searchText)
+                );
+
+                renderAccounts(filteredAccounts);
+            });
+
+            // Handle keyboard navigation & scrolling
+            $searchInput.on("keydown", function (e) {
+                let visibleItems = $(".account-item");
+
+                if (e.key === "ArrowDown") {
+                    if (selectedIndex < visibleItems.length - 1) {
+                        selectedIndex++;
+                    }
+                } else if (e.key === "ArrowUp") {
+                    if (selectedIndex > 0) {
+                        selectedIndex--;
+                    }
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (visibleItems.length > 0) {
+                        selectAccount(visibleItems.eq(selectedIndex));
+                    }
+                }
+
+                // Highlight the selected item
+                visibleItems.removeClass("active");
+                let selectedItem = visibleItems.eq(selectedIndex);
+                selectedItem.addClass("active");
+
+                adjustScroll(selectedItem);
+            });
+
+            // Click to select account
+            $(document).on("click", ".account-item", function () {
+                selectAccount($(this));
+            });
+
+            // Function to select account and populate fields
+            function selectAccount(element) {
+                let accountId = element.data("id"); // Get account ID
+                let accountName = element.data("name");
+                let accountAddress = element.data("address");
+                let accountPan = element.data("pan");
+
+                $accountInput.val(accountName);
+                $accountIdInput.val(accountId); // Store account ID in hidden input
+                $("#address").val(accountAddress);
+                $("#pan").val(accountPan);
+                $accountModal.modal("hide");
+
+                // Move focus to the next input field
+                setTimeout(() => {
+                    $("#debit").focus();
+                }, 300);
+            }
+
+            // Function to adjust scroll position
+            function adjustScroll(selectedItem) {
+                let itemTop = selectedItem.position().top;
+                let itemHeight = selectedItem.outerHeight();
+                let modalHeight = $modalBody.innerHeight();
+
+                if (itemTop + itemHeight > modalHeight) {
+                    $modalBody.scrollTop($modalBody.scrollTop() + itemHeight);
+                } else if (itemTop < 0) {
+                    $modalBody.scrollTop($modalBody.scrollTop() - itemHeight);
+                }
+            }
+        });
+
+        function submitBillForm(print) {
+            shouldPrint = print;
+            const billForm = document.getElementById('editPaymentForm');
+            const saveButton = document.getElementById('saveBill');
+
+            // Change button text and disable it
+            saveButton.innerText = 'Saving...';
+            saveButton.disabled = true;
+
+            if (print) {
+                const url = new URL(billForm.action);
+                url.searchParams.append('print', 'true');
+                billForm.action = url.toString();
+            }
+
+            // Simulate form submission (replace this with actual form submission logic)
+            billForm.submit();
+
+            // Reset button text and enable it after submission
+            saveButton.disabled = false;
+        }
+
+
+        document.getElementById('editPaymentForm').addEventListener('submit', function (event) {
+            if (!shouldPrint && event.submitter && event.submitter.innerText === 'Save & Print Bill') {
+                event.preventDefault();
+            }
+        });
+
+        function confirmCancel() {
+            return confirm("Are you sure you want to cancel this voucher?");
+        }
+
+        function confirmReactivate() {
+            return confirm("Are you sure you want to reactivate this voucher?");
+        }
+
+        // Show/hide institution type and number based on payment account selection
+        const paymentAccountSelect = document.getElementById('paymentAccount');
+        const bankDetailsContainer = document.querySelector('.bank-details');
+
+        paymentAccountSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.parentElement.label === 'Cash') {
+                bankDetailsContainer.classList.add('d-none');
+            } else {
+                bankDetailsContainer.classList.remove('d-none');
+            }
+        });
+
+        // Modified keydown handlers to prevent form submission
+        function handleDateKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('billNumber').focus();
+            }
+        }
+
+        function handleBillNumberKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('accountType').focus();
+            }
+        }
+
+        function handleAccountTypeKeydown(event) {
+            if (event.key === 'Enter') {
+                const paymentAccountInput = document.getElementById('paymentAccount');
+                paymentAccountInput.focus();
+                paymentAccountInput.select();
+
+            }
+        }
+        function handlePaymentAccountKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const accountInput = document.getElementById('account');
+                accountInput.focus();
+                accountInput.select();
+
+            }
+        }
+
+        function handleDebitAmountKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const bankDetails = document.querySelector('.bank-details');
+                if (bankDetails && !bankDetails.classList.contains('d-none')) {
+                    document.getElementById('InstType').focus();
+                } else {
+                    document.getElementById('description').focus();
+                }
+            }
+        }
+
+        function handleInstTypeKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('InstNo').focus();
+            }
+        }
+
+        function handleInstNoKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('description').focus();
+            }
+        }
+
+        function handleDescriptionKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('saveBill').focus();
+            }
+        }
+    </script>

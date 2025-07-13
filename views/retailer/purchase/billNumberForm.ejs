@@ -1,0 +1,28 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="/stylesheet/purchase/billNumberForm.css">
+
+    <div class="container centered-container">
+        <div class="card shadow-lg p-4 animate__animated animate__fadeInUp expanded-card">
+            <h1 class="text-center mb-4">Enter Voucher Number</h1>
+            <form action="/purchase-bills/edit/billNumber" method="get" class="needs-validation" novalidate>
+                <div class="form-group">
+                    <input type="text" name="billNumber" id="billNumber" class="form-control" required
+                        placeholder="Enter your voucher number" aria-describedby="billHelp" autocomplete="off"
+                        autofocus value="<%= latestBillNumber %>">
+                    <small id="billHelp" class="form-text text-muted">
+                        Please enter a valid voucher number to find the purchase invoice.
+                    </small>
+                    <div class="invalid-feedback">
+                        Please enter a voucher number.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Find Voucher</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/javascript/purchase/billNumberForm.js"></script>

@@ -1,0 +1,43 @@
+[
+  {
+    "_id": "67e2173870f1d4e04463aae4",
+    "name": "Yuwell Gluco Strips",
+    "hscode": null,
+    "category": "67e216e170f1d4e04463aabe",
+    "price": null,
+    "puPrice": null,
+    "mainUnitPuPrice": 0,
+    "mainUnit": "67e1446be64cce43d274026e",
+    "WSUnit": 50,
+    "unit": "67e1446be64cce43d2740264",
+    "vatStatus": "vatable",
+    "stock": null,
+    "openingStock": null,
+    "openingStockByFiscalYear": [
+      {
+        "fiscalYear": "67e14466e64cce43d2740175",
+        "openingStock": null,
+        "openingStockBalance": "0.00",
+        "purchasePrice": "",
+        "salesPrice": null,
+        "_id": "67e2173870f1d4e04463aae5"
+      }
+    ],
+    "minStock": 0,
+    "maxStock": null,
+    "reorderLevel": null,
+    "sales": [],
+    "salesReturn": [],
+    "purchase": [],
+    "PurchaseReturn": [],
+    "stockAdjustments": [],
+    "stockEntries": [],
+    "company": "67e14466e64cce43d2740173",
+    "fiscalYear": "67e14466e64cce43d2740175",
+    "createdAt": "2025-03-25T02:12:16.425Z",
+    "date": "2025-03-25T02:12:16.425Z",
+    "uniqueNumber": 5253,
+    "__v": 0,
+    "status": "active"
+  }
+]
