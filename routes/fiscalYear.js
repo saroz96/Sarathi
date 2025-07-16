@@ -57,6 +57,7 @@ router.get('/switch-fiscal-year', isLoggedIn, ensureAuthenticated, ensureFiscalY
             title: '',
             body: '',
             user: req.user,
+            theme: req.user.preferences?.theme || 'light', // Default to light if not set
             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });
     } catch (err) {
@@ -164,6 +165,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
                 user: req.user,
                 title: '',
                 body: '',
+                                theme: req.user.preferences?.theme || 'light', // Default to light if not set
                 isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
             });
         } catch (err) {

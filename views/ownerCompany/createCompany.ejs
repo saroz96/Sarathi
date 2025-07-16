@@ -259,7 +259,7 @@
             <!-- Loader -->
             <div id="loader" style="display: none;">
                 <div class="spinner"></div>
-                <p id="loader-percentage-text">Creating company... <span id="loader-percentage">0%</span></p>
+                <p id="loader-percentage-text">Creating company...</span></p>
             </div>
 
             <!-- Message Modal -->
@@ -505,16 +505,6 @@
 
                 function hideLoader() {
                     document.getElementById("loader").style.display = "none";
-                }
-
-                function updateLoaderPercentage() {
-                    let percentage = 0;
-                    const loaderPercentage = document.getElementById("loader-percentage");
-                    const interval = setInterval(() => {
-                        percentage += 10;
-                        loaderPercentage.textContent = `${percentage}%`;
-                        if (percentage >= 100) clearInterval(interval);
-                    }, 100);
                 }
 
                 // Handle back button navigation
