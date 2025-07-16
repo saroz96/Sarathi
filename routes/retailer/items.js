@@ -29,7 +29,7 @@ const moment = require('moment');
 const MainUnit = require('../../models/retailer/MainUnit');
 const Composition = require('../../models/retailer/Composition');
 const BarcodePreference = require('../../models/retailer/barcodePreference');
-const { createCanvas, loadImage } = require('canvas');
+// const { createCanvas, loadImage } = require('canvas');
 const itemsCompany = require('../../models/retailer/itemsCompany');
 
 // Configure Multer for file uploads
@@ -51,7 +51,7 @@ async function runMigration() {
         const result = await Item.initializeItemStatus();
 
         if (result.nModified > 0) {
-            console.log('Item status migration completed successfully');
+            ('Item status migration completed successfully');
         }
     } catch (error) {
         console.error('Item status migration failed:', error);
@@ -66,7 +66,7 @@ async function initializeDataMigrations() {
         const result = Item.initializeOriginalFiscalYear();
 
         if (result.nModified > 0) {
-            console.log('Item original fiscal year migration completed successfully');
+            ('Item original fiscal year migration completed successfully');
         }
 
         // Add other migrations here if needed
@@ -81,7 +81,7 @@ initializeDataMigrations()
 
 //     try {
 //         // Step 1: Convert fiscalYear to array format
-//         console.log('Converting fiscalYear to arrays...');
+//         ('Converting fiscalYear to arrays...');
 //         await Item.updateMany(
 //             { fiscalYear: { $type: 'objectId' } },
 //             [{ $set: { fiscalYear: ["$fiscalYear"] } }],
@@ -89,7 +89,7 @@ initializeDataMigrations()
 //         );
 
 //         // Step 2: Process each document individually
-//         console.log('Processing individual items...');
+//         ('Processing individual items...');
 //         const items = await Item.find();
 
 //         for (const item of items) {
@@ -115,7 +115,7 @@ initializeDataMigrations()
 //             await item.save();
 //         }
 
-//         console.log('Migration completed successfully');
+//         ('Migration completed successfully');
 //         process.exit(0);
 //     } catch (error) {
 //         console.error('Migration failed:', error);
@@ -136,7 +136,7 @@ router.get('/generate-missing-barcodes', async (req, res) => {
 });
 
 Item.assignGeneralItemsCompany()
-    .then(result => console.log(`Updated ${result.nModified} items`))
+    .then(result => (`Updated ${result.nModified} items`))
     .catch(console.error);
 
 // Import items page
@@ -325,11 +325,11 @@ router.get('/items/search/get', ensureAuthenticated, ensureCompanySelected, ensu
             const companyId = req.session.currentCompany
             const searchQuery = req.query.q;
 
-            console.log('Company ID:', companyId);
-            console.log('Search Query:', searchQuery);
+            ('Company ID:', companyId);
+            ('Search Query:', searchQuery);
 
             const items = await Item.find({ name: { $regex: new RegExp(searchQuery, 'i') }, company: companyId }).populate('category').populate('unit');
-            console.log('Items found:', items);
+            ('Items found:', items);
             res.json({ items });
         } catch (error) {
             console.error('Error searching items:', error);
@@ -501,10 +501,10 @@ router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelecte
 //             const vatExempt = req.query.isVatExempt; // Query parameter for VAT selection
 //             const excludeIds = req.query.exclude ? req.query.exclude.split(',') : []; // Exclude these item IDs
 
-//             console.log('Company ID:', companyId);
-//             console.log('Search Query:', searchQuery);
-//             console.log('VAT Exempt:', vatExempt);
-//             console.log('Exclude IDs:', excludeIds);
+//             ('Company ID:', companyId);
+//             ('Search Query:', searchQuery);
+//             ('VAT Exempt:', vatExempt);
+//             ('Exclude IDs:', excludeIds);
 //             // Fetch the current fiscal year from the session
 //             const fiscalYear = req.session.currentFiscalYear.id;
 
@@ -537,11 +537,11 @@ router.get('/items/search/getFetched', ensureAuthenticated, ensureCompanySelecte
 //                 delete searchConditions.vatStatus;
 //             }
 
-//             console.log('Search Conditions:', searchConditions);
+//             ('Search Conditions:', searchConditions);
 
 //             const items = await Item.find(searchConditions).populate('category').populate('unit').populate('itemsCompany');
 
-//             console.log('Items found:', items);
+//             ('Items found:', items);
 
 //             res.json(items);
 //         } catch (error) {
@@ -602,7 +602,7 @@ router.get('/items/search', ensureAuthenticated, ensureCompanySelected, ensureTr
                 searchConditions.$and = [searchCondition];
             }
 
-            console.log('Final Search Conditions:', searchConditions);
+            ('Final Search Conditions:', searchConditions);
             const items = await Item.find(searchConditions).populate('category').populate('unit').populate('itemsCompany');
             res.json(items);
         } catch (error) {
@@ -915,7 +915,7 @@ router.get('/items/average-reorder-level', ensureAuthenticated, ensureCompanySel
                 const item = await Item.findById(data._id);
 
                 if (!item) {
-                    console.log(`Item not found for ID: ${data._id}`);
+                    (`Item not found for ID: ${data._id}`);
                     return {
                         itemName: 'Unknown Item',
                         totalQuantitySold: data.totalQuantity,
@@ -943,7 +943,7 @@ router.get('/items/average-reorder-level', ensureAuthenticated, ensureCompanySel
                 };
             }));
 
-            console.log("Average Monthly Quantities:", averageMonthlyQuantities);
+            ("Average Monthly Quantities:", averageMonthlyQuantities);
 
             res.render('retailer/item/averageReorderLevel', {
                 company,
@@ -1010,7 +1010,7 @@ router.get('/items/reorder', ensureAuthenticated, ensureCompanySelected, ensureT
             .populate('stockEntries') // Optional: populate stockEntries if you need details
             .select('name reorderLevel stockEntries unit maxStock'); // Select only the fields you need
 
-        console.log("Items fetched:", items);
+        ("Items fetched:", items);
 
         const itemsWithNeededStock = items.map(item => {
             // Calculate current stock by summing the quantity from stockEntries
@@ -1191,7 +1191,7 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
         await newItem.save();
 
         // Log the new item for debugging purposes
-        console.log(newItem);
+        (newItem);
 
         // Flash success message and redirect
         req.flash('success', 'Item added successfully!');
@@ -1320,7 +1320,7 @@ router.post('/create-items', ensureAuthenticated, ensureCompanySelected, ensureT
         await newItem.save();
 
         // Log the new item for debugging purposes
-        console.log(newItem);
+        (newItem);
 
         // Flash success message and redirect
         req.flash('success', 'Item added successfully!');
@@ -1425,7 +1425,7 @@ router.post('/create-items-from-bills-track-batch-open', ensureAuthenticated, en
         await newItem.save();
 
         // Log the new item for debugging purposes
-        console.log(newItem);
+        (newItem);
 
         // Flash success message and redirect
         req.flash('success', 'Item added successfully!');
@@ -1657,9 +1657,9 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 updatedOpeningStockBalance = openingStockBal;
 
                 // Debugging: Log the values to check for NaN or undefined
-                console.log('itemStock:', itemStock);
-                console.log('oldOpeningStock:', oldOpeningStock);
-                console.log('newOpeningStock:', newOpeningStock);
+                ('itemStock:', itemStock);
+                ('oldOpeningStock:', oldOpeningStock);
+                ('newOpeningStock:', newOpeningStock);
 
                 // Calculate the updated stock by adjusting opening stock
                 // const currentStock = itemStock - oldOpeningStock + newOpeningStock;
@@ -2316,144 +2316,144 @@ router.post('/items/:id/status', isLoggedIn, ensureCompanySelected, async (req, 
 //         }
 //     });
 
-router.get('/item/:itemId/barcode/:stockEntryId/:width/:height/:type',
-    isLoggedIn, ensureAuthenticated, async (req, res) => {
-        try {
-            const item = await Item.findById(req.params.itemId)
-                .populate('stockEntries._id')
-                .populate('company');
+// router.get('/item/:itemId/barcode/:stockEntryId/:width/:height/:type',
+//     isLoggedIn, ensureAuthenticated, async (req, res) => {
+//         try {
+//             const item = await Item.findById(req.params.itemId)
+//                 .populate('stockEntries._id')
+//                 .populate('company');
 
-            const stockEntry = item.stockEntries.id(req.params.stockEntryId);
+//             const stockEntry = item.stockEntries.id(req.params.stockEntryId);
 
-            if (!item || !stockEntry) {
-                return res.status(404).send('Item or stock entry not found');
-            }
+//             if (!item || !stockEntry) {
+//                 return res.status(404).send('Item or stock entry not found');
+//             }
 
-            const { width, height, type } = req.params;
-            const numericWidth = parseInt(width);  // Should be 50 (mm)
-            const numericHeight = parseInt(height); // Should be 30 (mm)
+//             const { width, height, type } = req.params;
+//             const numericWidth = parseInt(width);  // Should be 50 (mm)
+//             const numericHeight = parseInt(height); // Should be 30 (mm)
 
-            // Validate dimensions for 50x30mm
-            if (isNaN(numericWidth) || isNaN(numericHeight) || numericWidth !== 50 || numericHeight !== 30) {
-                return res.status(400).send('Invalid dimensions - must be 50x30mm');
-            }
+//             // Validate dimensions for 50x30mm
+//             if (isNaN(numericWidth) || isNaN(numericHeight) || numericWidth !== 50 || numericHeight !== 30) {
+//                 return res.status(400).send('Invalid dimensions - must be 50x30mm');
+//             }
 
-            // Convert mm to pixels (1mm = 3.78px @ 96dpi)
-            const pixelWidth = Math.round(50 * 3.78);  // ≈189px
-            const pixelHeight = Math.round(30 * 3.78); // ≈113px
+//             // Convert mm to pixels (1mm = 3.78px @ 96dpi)
+//             const pixelWidth = Math.round(50 * 3.78);  // ≈189px
+//             const pixelHeight = Math.round(30 * 3.78); // ≈113px
 
-            // Text configuration
-            const textElements = {
-                companyName: item.company.name,
-                itemName: item.name,
-                barcodeNumber: item.barcodeNumber.toString(),
-                batchExpiry: `MRP: ${stockEntry.mrp.toFixed(2)} | EXP: ${stockEntry.expiryDate.toLocaleDateString()}`
-            };
+//             // Text configuration
+//             const textElements = {
+//                 companyName: item.company.name,
+//                 itemName: item.name,
+//                 barcodeNumber: item.barcodeNumber.toString(),
+//                 batchExpiry: `MRP: ${stockEntry.mrp.toFixed(2)} | EXP: ${stockEntry.expiryDate.toLocaleDateString()}`
+//             };
 
-            // Barcode configuration
-            const options = {
-                bcid: type.toLowerCase(),
-                text: textElements.barcodeNumber,
-                includetext: false,
-                textsize: 8,
-                textxalign: 'center',
-                textfont: 'Arial',
-                backgroundcolor: 'FFFFFF',
-                barcolor: '000000',
-                scale: type === 'qr' ? 3 : 2,
-                height: 12, // Barcode bar height
-                paddingwidth: 5,
-                paddingheight: 5
-            };
+//             // Barcode configuration
+//             const options = {
+//                 bcid: type.toLowerCase(),
+//                 text: textElements.barcodeNumber,
+//                 includetext: false,
+//                 textsize: 8,
+//                 textxalign: 'center',
+//                 textfont: 'Arial',
+//                 backgroundcolor: 'FFFFFF',
+//                 barcolor: '000000',
+//                 scale: type === 'qr' ? 3 : 2,
+//                 height: 12, // Barcode bar height
+//                 paddingwidth: 5,
+//                 paddingheight: 5
+//             };
 
-            // Generate barcode
-            bwipjs.toBuffer(options, (err, png) => {
-                if (err) {
-                    console.error('Barcode Generation Error:', err);
-                    return res.status(500).send(`Barcode generation failed: ${err.message}`);
-                }
+//             // Generate barcode
+//             bwipjs.toBuffer(options, (err, png) => {
+//                 if (err) {
+//                     console.error('Barcode Generation Error:', err);
+//                     return res.status(500).send(`Barcode generation failed: ${err.message}`);
+//                 }
 
-                // Create canvas with exact dimensions
-                const canvas = createCanvas(pixelWidth, pixelHeight);
-                const ctx = canvas.getContext('2d');
+//                 // Create canvas with exact dimensions
+//                 const canvas = createCanvas(pixelWidth, pixelHeight);
+//                 const ctx = canvas.getContext('2d');
 
-                // Load barcode image
-                loadImage(png).then((barcodeImage) => {
-                    // Set up text styling
-                    ctx.fillStyle = '#000000';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'top';
+//                 // Load barcode image
+//                 loadImage(png).then((barcodeImage) => {
+//                     // Set up text styling
+//                     ctx.fillStyle = '#000000';
+//                     ctx.textAlign = 'center';
+//                     ctx.textBaseline = 'top';
 
-                    // Calculate layout
-                    const textAreaHeight = 40; // Total text area (px)
-                    const barcodeAreaHeight = pixelHeight - textAreaHeight;
+//                     // Calculate layout
+//                     const textAreaHeight = 40; // Total text area (px)
+//                     const barcodeAreaHeight = pixelHeight - textAreaHeight;
 
-                    // Company Name (top)
-                    ctx.font = 'bold 8px Arial';
-                    ctx.fillText(textElements.companyName, pixelWidth / 2, 4);
+//                     // Company Name (top)
+//                     ctx.font = 'bold 8px Arial';
+//                     ctx.fillText(textElements.companyName, pixelWidth / 2, 4);
 
-                    // Item Name (below company)
-                    ctx.font = '7px Arial';
-                    ctx.fillText(textElements.itemName, pixelWidth / 2, 16);
+//                     // Item Name (below company)
+//                     ctx.font = '7px Arial';
+//                     ctx.fillText(textElements.itemName, pixelWidth / 2, 16);
 
-                    // Draw barcode image (center)
-                    const barcodeY = textAreaHeight / 2;
-                    ctx.drawImage(
-                        barcodeImage,
-                        10, // left margin
-                        barcodeY,
-                        pixelWidth - 20, // width with margins
-                        barcodeAreaHeight - 10
-                    );
+//                     // Draw barcode image (center)
+//                     const barcodeY = textAreaHeight / 2;
+//                     ctx.drawImage(
+//                         barcodeImage,
+//                         10, // left margin
+//                         barcodeY,
+//                         pixelWidth - 20, // width with margins
+//                         barcodeAreaHeight - 10
+//                     );
 
-                    // Barcode Number (below barcode)
-                    ctx.font = 'bold 8px Arial';
-                    ctx.fillText(textElements.barcodeNumber, pixelWidth / 2, barcodeY + barcodeAreaHeight - 4);
+//                     // Barcode Number (below barcode)
+//                     ctx.font = 'bold 8px Arial';
+//                     ctx.fillText(textElements.barcodeNumber, pixelWidth / 2, barcodeY + barcodeAreaHeight - 4);
 
-                    // Batch/Expiry (bottom line)
-                    ctx.font = '6px Arial';
-                    ctx.fillText(textElements.batchExpiry, pixelWidth / 2, pixelHeight - 12);
+//                     // Batch/Expiry (bottom line)
+//                     ctx.font = '6px Arial';
+//                     ctx.fillText(textElements.batchExpiry, pixelWidth / 2, pixelHeight - 12);
 
-                    // Convert to buffer and send
-                    const finalBuffer = canvas.toBuffer('image/png');
-                    res.set({
-                        'Content-Type': 'image/png',
-                        'Cache-Control': 'no-store, no-cache, must-revalidate',
-                        'Pragma': 'no-cache'
-                    });
-                    res.send(finalBuffer);
-                });
-            });
+//                     // Convert to buffer and send
+//                     const finalBuffer = canvas.toBuffer('image/png');
+//                     res.set({
+//                         'Content-Type': 'image/png',
+//                         'Cache-Control': 'no-store, no-cache, must-revalidate',
+//                         'Pragma': 'no-cache'
+//                     });
+//                     res.send(finalBuffer);
+//                 });
+//             });
 
-        } catch (error) {
-            console.error('Barcode Endpoint Crash:', error);
-            res.status(500).send('Internal server error');
-        }
-    });
+//         } catch (error) {
+//             console.error('Barcode Endpoint Crash:', error);
+//             res.status(500).send('Internal server error');
+//         }
+//     });
 
-router.post('/user/barcode-preferences', isLoggedIn, async (req, res) => {
-    try {
-        const preferences = await BarcodePreference.findOneAndUpdate(
-            { user: req.user._id },
-            {
-                $set: {
-                    labelWidth: req.body.labelWidth,
-                    labelHeight: req.body.labelHeight,
-                    labelsPerRow: req.body.labelsPerRow,
-                    barcodeType: req.body.barcodeType,
-                    defaultQuantity: req.body.quantity,
-                    saveSettings: req.body.saveSettings // Add this line
-                }
-            },
-            { upsert: true, new: true, runValidators: true }
-        );
-        res.json({ success: true, preferences });
-    } catch (error) {
-        console.error('Preferences Save Error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to save settings. ' + error.message
-        });
-    }
-});
+// router.post('/user/barcode-preferences', isLoggedIn, async (req, res) => {
+//     try {
+//         const preferences = await BarcodePreference.findOneAndUpdate(
+//             { user: req.user._id },
+//             {
+//                 $set: {
+//                     labelWidth: req.body.labelWidth,
+//                     labelHeight: req.body.labelHeight,
+//                     labelsPerRow: req.body.labelsPerRow,
+//                     barcodeType: req.body.barcodeType,
+//                     defaultQuantity: req.body.quantity,
+//                     saveSettings: req.body.saveSettings // Add this line
+//                 }
+//             },
+//             { upsert: true, new: true, runValidators: true }
+//         );
+//         res.json({ success: true, preferences });
+//     } catch (error) {
+//         console.error('Preferences Save Error:', error);
+//         res.status(500).json({
+//             success: false,
+//             error: 'Failed to save settings. ' + error.message
+//         });
+//     }
+// });
 module.exports = router;

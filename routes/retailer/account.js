@@ -19,7 +19,7 @@ async function initializeDataMigrations() {
         const result = await Account.initializeOriginalFiscalYear(); // Added await
 
         if (result.nModified > 0) {
-            console.log(`Account migration: Set originalFiscalYear for ${result.nModified} documents`);
+            (`Account migration: Set originalFiscalYear for ${result.nModified} documents`);
         }
 
         // Add other migrations here if needed
@@ -249,7 +249,6 @@ router.post('/companies', isLoggedIn, ensureAuthenticated, ensureCompanySelected
             });
 
             await newCompany.save();
-            console.log(newCompany);
 
             req.flash('success', 'Successfully created an account!');
             res.redirect('/companies');
@@ -347,7 +346,6 @@ router.post('/create-account', isLoggedIn, ensureAuthenticated, ensureCompanySel
             });
 
             await newCompany.save();
-            console.log(newCompany);
 
             req.flash('success', 'Successfully created an account!');
             res.redirect('/bills');
@@ -446,7 +444,6 @@ router.post('/create-account-from-bills-track-batch-open', isLoggedIn, ensureAut
             });
 
             await newCompany.save();
-            console.log(newCompany);
 
             req.flash('success', 'Successfully created an account!');
             res.redirect('/billsTrackBatchOpen');
@@ -739,9 +736,6 @@ router.get('/api/contacts', async (req, res) => {
         if (!fiscalYear) {
             return res.status(400).json({ error: 'No fiscal year found in session or company.' });
         }
-        // const accountContacts = await Account.find({})
-        //     .select('name address phone email contactperson')
-        //     .sort({ name: 1 });
 
         // Fetch only the required company groups: Cash in Hand, Sundry Debtors, Sundry Creditors
         const relevantGroups = await CompanyGroup.find({

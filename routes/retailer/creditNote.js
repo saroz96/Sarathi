@@ -60,20 +60,6 @@ router.get('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensur
 
         const accounts = await Account.find({ company: req.session.currentCompany, fiscalYear: fiscalYear });
 
-        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        // let billCounter = await BillCounter.findOne({
-        //     company: companyId,
-        //     fiscalYear: fiscalYear,
-        //     transactionType: 'CreditNote' // Specify the transaction type for sales bill
-        // });
-
-        // let nextBillNumber;
-        // if (billCounter) {
-        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        // } else {
-        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        // }
-
         // Get last counter without incrementing
         const lastCounter = await BillCounter.findOne({
             company: companyId,
@@ -114,13 +100,6 @@ router.post('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensu
         const userId = req.user._id;
 
         try {
-            // let billCounter = await BillCounter.findOne({ company: companyId });
-            // if (!billCounter) {
-            //     billCounter = new BillCounter({ company: companyId });
-            // }
-            // billCounter.count += 1;
-            // await billCounter.save();
-
             const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'creditNote')
 
             // Create the Journal Voucher
@@ -138,13 +117,10 @@ router.post('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensu
             });
 
             await creditNote.save();
-            console.log(creditNote);
 
             // Process Credit Accounts
             for (let credit of creditAccounts) {
                 // Fetch the account details to get the account name
-                // const accountDetails = await Account.findById(credit.account);
-
                 let previousCreditBalance = 0;
                 const lastCreditTransaction = await Transaction.findOne({ account: credit.account }).sort({ transactionDate: -1 });
                 if (lastCreditTransaction) {
@@ -175,14 +151,11 @@ router.post('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensu
                 });
 
                 await creditTransaction.save();
-                console.log(creditTransaction);
                 await Account.findByIdAndUpdate(credit.account, { $push: { transactions: creditTransaction._id } });
             }
 
             // Process Debit Accounts
             for (let debit of debitAccounts) {
-                // // Fetch the account details to get the account name
-                // const accountDetails = await Account.findById(debit.account);
                 let previousDebitBalance = 0;
                 const lastDebitTransaction = await Transaction.findOne({ account: debit.account }).sort({ transactionDate: -1 });
                 if (lastDebitTransaction) {
@@ -214,7 +187,6 @@ router.post('/credit-note/new', ensureAuthenticated, ensureCompanySelected, ensu
                 });
 
                 await debitTransaction.save();
-                console.log(debitTransaction);
                 await Account.findByIdAndUpdate(debit.account, { $push: { transactions: debitTransaction._id } });
             }
 
@@ -657,7 +629,6 @@ router.get('/credit-note/:id/print', ensureAuthenticated, ensureCompanySelected,
             const creditNoteId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -701,7 +672,6 @@ router.get('/credit-note/:id/print', ensureAuthenticated, ensureCompanySelected,
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -770,7 +740,6 @@ router.get('/credit-note/:id/direct-print', ensureAuthenticated, ensureCompanySe
             const creditNoteId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -814,7 +783,6 @@ router.get('/credit-note/:id/direct-print', ensureAuthenticated, ensureCompanySe
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -883,7 +851,6 @@ router.get('/credit-note/:id/direct-print-edit', ensureAuthenticated, ensureComp
             const creditNoteId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -927,7 +894,6 @@ router.get('/credit-note/:id/direct-print-edit', ensureAuthenticated, ensureComp
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -994,18 +960,16 @@ router.post('/credit-note/cancel/:billNumber', ensureAuthenticated, ensureCompan
         try {
             const { billNumber } = req.params;
             //Update the journal Voucher status to 'canceled'
-            const updateCreditNoteStatus = await CreditNote.updateOne(
+            await CreditNote.updateOne(
                 { billNumber },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Credit Note Canceled Update Result: ', updateCreditNoteStatus);
 
             //Mark related transactions as 'canceled' and set isActive to false
-            const updateTransactionsStatus = await Transaction.updateMany(
+            await Transaction.updateMany(
                 { billNumber, type: 'CrNt' },
                 { status: 'canceled', isActive: false }
             )
-            console.log('Related transaction update result: ', updateTransactionsStatus);
             req.flash('success', 'Credit note and related transactions have been canceled.');
             res.redirect(`/credit-note/edit/billNumber?billNumber=${billNumber}`);
         } catch (error) {
@@ -1024,16 +988,14 @@ router.post('/credit-note/reactivate/:billNumber', ensureAuthenticated, ensureCo
             const { billNumber } = req.params;
 
             // Update the receipt status to 'active'
-            const updateCreditNoteStatus = await CreditNote.updateOne({ billNumber }, { status: 'active', isActive: true });
-            console.log('Update debit note status:', updateCreditNoteStatus);
+            await CreditNote.updateOne({ billNumber }, { status: 'active', isActive: true });
             // Reactivate related transactions and set isActive to true
-            const updateTransactionsStatus = await Transaction.updateMany(
+            await Transaction.updateMany(
                 {
                     billNumber, type: 'CrNt',
                 },
                 { status: 'active', isActive: true }  // Add isActive: true if you have added this field
             );
-            console.log('Update Transactions Status:', updateTransactionsStatus);
 
             req.flash('success', 'Credit note and related transactions have been reactivated.');
             res.redirect(`/credit-note/edit/billNumber?billNumber=${billNumber}`);

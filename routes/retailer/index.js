@@ -50,7 +50,7 @@ router.get('/retailerDashboard/indexv1', isLoggedIn, ensureAuthenticated, ensure
         }
 
         // Log the current fiscal year for debugging purposes
-        console.log('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
+        ('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
 
         // Fetch total sales amount (excluding VAT) within the fiscal year date range
         const totalSalesResult = await SalesBill.aggregate([
@@ -259,7 +259,7 @@ router.get('/retailerDashboard/indexv1', isLoggedIn, ensureAuthenticated, ensure
         ]);
 
         const totalStockValue = totalStockValueResult.length > 0 ? totalStockValueResult[0].totalStockValue : 0;
-        console.log('Total Stock Value for Current Fiscal Year:', totalStockValue);
+        ('Total Stock Value for Current Fiscal Year:', totalStockValue);
 
 
 
@@ -268,11 +268,11 @@ router.get('/retailerDashboard/indexv1', isLoggedIn, ensureAuthenticated, ensure
         const totalSalesReturn = totalSalesReturnResult.length > 0 ? totalSalesReturnResult[0].totalAmount : 0;
         const totalPurchaseReturn = totalPurchaseReturnResult.length > 0 ? totalPurchaseReturnResult[0].totalAmount : 0;
 
-        console.log('Total Sales (excluding VAT):', totalSales);
-        console.log('Total Sales Return (excluding VAT):', totalSalesReturn);
-        console.log('Total Purchase (excluding VAT):', totalPurchase);
-        console.log('Total Purchase Return (excluding VAT):', totalPurchaseReturn);
-        console.log('Cash in Hand Balance:', cashBalance);
+        ('Total Sales (excluding VAT):', totalSales);
+        ('Total Sales Return (excluding VAT):', totalSalesReturn);
+        ('Total Purchase (excluding VAT):', totalPurchase);
+        ('Total Purchase Return (excluding VAT):', totalPurchaseReturn);
+        ('Cash in Hand Balance:', cashBalance);
 
         // Deduct sales returns and purchase returns
         const netSales = totalSales - totalSalesReturn;
@@ -416,7 +416,7 @@ router.get('/retailerDashboard/indexv2', isLoggedIn, ensureAuthenticated, ensure
             };
         }
 
-        console.log('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
+        ('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
 
         // Fetch total sales amount (excluding VAT) within the fiscal year date range
         const totalSalesResult = await SalesBill.aggregate([
@@ -487,10 +487,10 @@ router.get('/retailerDashboard/indexv2', isLoggedIn, ensureAuthenticated, ensure
         const totalSalesReturn = totalSalesReturnResult.length > 0 ? totalSalesReturnResult[0].totalAmount : 0;
         const totalPurchaseReturn = totalPurchaseReturnResult.length > 0 ? totalPurchaseReturnResult[0].totalAmount : 0;
 
-        console.log('Total Sales (excluding VAT):', totalSales);
-        console.log('Total Sales Return (excluding VAT):', totalSalesReturn);
-        console.log('Total Purchase (excluding VAT):', totalPurchase);
-        console.log('Total Purchase Return (excluding VAT):', totalPurchaseReturn);
+        ('Total Sales (excluding VAT):', totalSales);
+        ('Total Sales Return (excluding VAT):', totalSalesReturn);
+        ('Total Purchase (excluding VAT):', totalPurchase);
+        ('Total Purchase Return (excluding VAT):', totalPurchaseReturn);
 
         // Deduct sales returns and purchase returns
         const netSales = totalSales - totalSalesReturn;
@@ -601,7 +601,7 @@ router.get('/retailerDashboard/indexv2', isLoggedIn, ensureAuthenticated, ensure
         // const currentFiscalYear = await FiscalYear.findOne({ startDate: { $lte: new Date() }, endDate: { $gte: new Date() } });
 
         if (!currentFiscalYear) {
-            console.log('No current fiscal year found');
+            ('No current fiscal year found');
             return;
         }
 
@@ -631,7 +631,7 @@ router.get('/retailerDashboard/indexv2', isLoggedIn, ensureAuthenticated, ensure
         ]);
 
         const totalStockValue = totalStockValueResult.length > 0 ? totalStockValueResult[0].totalStockValue : 0;
-        console.log('Total Stock Value for Current Fiscal Year:', totalStockValue);
+        ('Total Stock Value for Current Fiscal Year:', totalStockValue);
 
 
         //----------------------------------------------------------------------------------------------------------------        
@@ -652,7 +652,7 @@ router.get('/retailerDashboard/indexv2', isLoggedIn, ensureAuthenticated, ensure
             });
         }
 
-        console.log('Total Sundry Debtors:', sundryDebtorsCount);
+        ('Total Sundry Debtors:', sundryDebtorsCount);
 
         //------------------------------------------------------------------
 
@@ -690,9 +690,9 @@ router.get('/retailerDashboard/indexv2', isLoggedIn, ensureAuthenticated, ensure
 
         const totalUniqueItemsSold = soldItemsCount.length > 0 ? soldItemsCount[0].totalUniqueItemsSold : 0;
 
-        console.log('Total Unique Items Sold:', totalUniqueItemsSold);
+        ('Total Unique Items Sold:', totalUniqueItemsSold);
 
-        console.log('Total Sales Count:', salesCount);
+        ('Total Sales Count:', salesCount);
 
         res.render('retailer/index/indexv2', {
             netSales,
@@ -746,7 +746,7 @@ router.get('/retailerDashboard/indexv3', isLoggedIn, ensureAuthenticated, ensure
             };
         }
 
-        console.log('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
+        ('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
 
         // Fetch total sales amount (excluding VAT) within the fiscal year date range
         const totalSalesResult = await SalesBill.aggregate([
@@ -817,10 +817,10 @@ router.get('/retailerDashboard/indexv3', isLoggedIn, ensureAuthenticated, ensure
         const totalSalesReturn = totalSalesReturnResult.length > 0 ? totalSalesReturnResult[0].totalAmount : 0;
         const totalPurchaseReturn = totalPurchaseReturnResult.length > 0 ? totalPurchaseReturnResult[0].totalAmount : 0;
 
-        console.log('Total Sales (excluding VAT):', totalSales);
-        console.log('Total Sales Return (excluding VAT):', totalSalesReturn);
-        console.log('Total Purchase (excluding VAT):', totalPurchase);
-        console.log('Total Purchase Return (excluding VAT):', totalPurchaseReturn);
+        ('Total Sales (excluding VAT):', totalSales);
+        ('Total Sales Return (excluding VAT):', totalSalesReturn);
+        ('Total Purchase (excluding VAT):', totalPurchase);
+        ('Total Purchase Return (excluding VAT):', totalPurchaseReturn);
 
         // Deduct sales returns and purchase returns
         const netSales = totalSales - totalSalesReturn;

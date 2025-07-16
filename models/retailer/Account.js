@@ -159,7 +159,7 @@ accountSchema.statics.initializeOriginalFiscalYear = async function () {
             { originalFiscalYear: { $exists: false } }, // Find docs without originalFiscalYear
             [{ $set: { originalFiscalYear: "$fiscalYear" } }] // Set to fiscalYear's value
         );
-        //  console.log(`Migrated ${migrationResult.nModified} accounts`);
+        //  (`Migrated ${migrationResult.nModified} accounts`);
         return migrationResult;
     } catch (error) {
         console.error('Original fiscal year migration failed:', error);

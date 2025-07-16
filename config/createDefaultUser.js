@@ -4,7 +4,7 @@ const User = require('../models/User'); // Adjust the path as needed
 
 // Connect to your MongoDB
 mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi')
-    .then(() => console.log('MongoDB connected successfully'))
+    .then(() => ('MongoDB connected successfully'))
     .catch(err => console.error('MongoDB connection error:', err));
 
 const createDefaultUser = async () => {
@@ -12,7 +12,7 @@ const createDefaultUser = async () => {
         // Check if default admin user already exists
         const existingUser = await User.findOne({ email: 'admin@example.com' });
         if (existingUser) {
-            console.log('Default admin user already exists.');
+            ('Default admin user already exists.');
             return;
         }
 
@@ -31,7 +31,7 @@ const createDefaultUser = async () => {
 
         // Save the user to the database
         await defaultUser.save();
-        console.log('Default admin user created successfully.');
+        ('Default admin user created successfully.');
 
         // Disconnect from the database
         mongoose.disconnect();

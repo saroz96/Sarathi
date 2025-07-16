@@ -11,12 +11,12 @@ const { ensureTradeType } = require('../../middleware/tradeType');
 router.get('/transactions/:itemId/:accountId/:purchaseSalesType', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const { itemId, accountId, purchaseSalesType } = req.params;
-        console.log(`Fetching transactions for item: ${itemId} and account: ${accountId} and purchaseSalesType:${purchaseSalesType}`);
+        (`Fetching transactions for item: ${itemId} and account: ${accountId} and purchaseSalesType:${purchaseSalesType}`);
         const companyId = req.session.currentCompany;
-        console.log(`Current company in session: ${companyId}`);
+        (`Current company in session: ${companyId}`);
         const currentFiscalYear = req.session.currentFiscalYear;
-        console.log('Current fiscal year in session:', JSON.stringify(currentFiscalYear, null, 2));
-        console.log('company date format in session:', JSON.stringify(companyId, null, 2));
+        ('Current fiscal year in session:', JSON.stringify(currentFiscalYear, null, 2));
+        ('company date format in session:', JSON.stringify(companyId, null, 2));
         const userId = req.user._id;
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed

@@ -61,26 +61,26 @@ const app = express();
 initializePassport(passport);
 
 
-// const mongoUri = process.env.MONGO_URI; // Access MongoDB URI from the .env file
+const mongoUri = process.env.MONGO_URI; // Access MongoDB URI from the .env file
 
-// mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-// const db = mongoose.connection;
-
-// db.on("error", console.error.bind(console, "connection error:"));
-// db.once("open", () => {
-//     console.log("Database connected");
-// });
-
-// Connect with database
-// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
-mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
-// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi?retryWrites=true&w=majority&appName=Cluster0')
 const db = mongoose.connection;
+
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => {
     console.log("Database connected");
 });
+
+// Connect with database
+// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/sales-bill-system');
+// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi');
+// mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi?retryWrites=true&w=majority&appName=Cluster0')
+// const db = mongoose.connection;
+// db.on("error", console.error.bind(console, "connection error:"));
+// db.once("open", () => {
+//     console.log("Database connected");
+// });
 
 const sessionConfig = {
     secret: 'thisisnotagoodsecret',
@@ -179,33 +179,20 @@ const Item = require('./models/retailer/Item');
 const moment = require('moment');
 const { transporter } = require('./config/email');
 
-
-// The cron schedule '0 11 * * *' breaks down as:
-
-// 0 - At minute 0
-
-// 11 - At hour 11 (11 AM in 24-hour format)
-
-// * - Every day of the month
-
-// * - Every month
-
-// * - Every day of the week
-
 // Run every day at 11 AM
 cron.schedule('0 11 * * *', async () => {
-    console.log('Running daily expiry notification check...');
+    ('Running daily expiry notification check...');
     try {
         const companies = await Company.find({ notificationEmails: { $exists: true, $ne: [] } });
 
         if (companies.length === 0) {
-            console.log('No companies with notification emails configured');
+            ('No companies with notification emails configured');
             return;
         }
 
         for (const company of companies) {
             try {
-                console.log(`Processing notifications for company: ${company.name}`);
+                (`Processing notifications for company: ${company.name}`);
                 await processCompanyNotifications(company);
             } catch (error) {
                 console.error(`Error processing company ${company.name}:`, error);
@@ -289,7 +276,7 @@ async function processCompanyNotifications(company) {
     ]);
 
     if (items.length === 0) {
-        console.log(`No expiring items found for company: ${company.name}`);
+        (`No expiring items found for company: ${company.name}`);
         return;
     }
 
@@ -443,25 +430,12 @@ async function sendExpiryNotification(company, items) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Notification sent for company ${company.name}: ${info.messageId}`);
+        (`Notification sent for company ${company.name}: ${info.messageId}`);
     } catch (error) {
         console.error(`Error sending email for company ${company.name}:`, error);
         throw error;
     }
 }
-
-// Test the notification system immediately on startup
-// (async () => {
-//     console.log('Running test notification...');
-//     const testCompany = await Company.findOne({ notificationEmails: { $exists: true, $ne: [] } });
-
-//     if (testCompany) {
-//         console.log(`Sending test notification to ${testCompany.name}`);
-//         await processCompanyNotifications(testCompany);
-//     } else {
-//         console.log('No company with notification emails found for testing');
-//     }
-// })();
 
 app.use((req, res, next) => {
     res.setHeader(
@@ -476,10 +450,17 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
+
+
 // Start the server
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+// app.listen(3000, () => {
+//     console.log('Server is running on port 3000');
+// });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
 
-// module.exports = app;
+
 

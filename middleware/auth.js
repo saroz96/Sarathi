@@ -1,7 +1,7 @@
 module.exports = {
 
     isLoggedIn: function (req, res, next) {
-        console.log('REQ.USER', req.user);
+        ('REQ.USER', req.user);
         if (!req.isAuthenticated()) {
             req.flash('error', 'You must be sign in first!');
             return res.redirect('/login')

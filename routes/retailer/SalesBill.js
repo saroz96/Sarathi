@@ -247,7 +247,7 @@ router.get('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
         const transactionDateNepali = new NepaliDate(today).format('YYYY-MM-DD');
-        console.log(company.renewalDate); // Debugging to see if renewalDate exists
+        (company.renewalDate); // Debugging to see if renewalDate exists
 
         const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
         const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
@@ -451,7 +451,7 @@ router.get('/sales-bills/edit/billNumber', isLoggedIn, ensureAuthenticated, ensu
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
             .populate('transactions')
             .populate('companyGroups');
-        console.log('Accounts:', accounts);
+        ('Accounts:', accounts);
 
         const bill = await SalesBill.findOne({ billNumber: billNumber, company: companyId, fiscalYear: fiscalYear })
             .populate('items.item')
@@ -655,7 +655,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             if (!companyId) {
                 await session.abortTransaction();
@@ -764,7 +764,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
 
             // Handle case where settings is null
             if (!roundOffForSales) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForSales = { roundOffSales: false };
             }
             let roundOffAmount = 0;
@@ -967,7 +967,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                         fiscalYear: currentFiscalYear
                     });
                     await salesTransaction.save({ session });
-                    console.log('Sales Transaction: ', salesTransaction);
+                    ('Sales Transaction: ', salesTransaction);
                 }
             }
 
@@ -998,7 +998,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -1029,7 +1029,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -1059,7 +1059,7 @@ router.post('/bills', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -1255,7 +1255,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             if (!companyId) {
                 await session.abortTransaction();
@@ -1375,7 +1375,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
 
             // Handle case where settings is null
             if (!roundOffForSales) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForSales = { roundOffSales: false };
             }
             let roundOffAmount = 0;
@@ -1546,7 +1546,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                 });
 
                 await transaction.save({ session });
-                console.log('Transaction amount:', correctTotalAmount);
+                ('Transaction amount:', correctTotalAmount);
 
             }
             // Create a transaction for the default Sales Account
@@ -1576,7 +1576,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                         fiscalYear: currentFiscalYear
                     });
                     await salesTransaction.save({ session });
-                    console.log('Sales Transaction: ', salesTransaction);
+                    ('Sales Transaction: ', salesTransaction);
                 }
             }
 
@@ -1607,7 +1607,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -1638,7 +1638,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -1668,7 +1668,7 @@ router.post('/billsTrackBatchOpen', isLoggedIn, ensureAuthenticated, ensureCompa
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -1730,7 +1730,7 @@ router.get('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySele
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
         const transactionDateNepali = new NepaliDate(today).format('YYYY-MM-DD');
-        console.log(company.renewalDate); // Debugging to see if renewalDate exists
+        (company.renewalDate); // Debugging to see if renewalDate exists
 
         const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
         const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
@@ -1855,7 +1855,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             if (!companyId) {
                 await session.abortTransaction();
@@ -1980,7 +1980,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
 
             // Handle case where settings is null
             if (!roundOffForSales) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForSales = { roundOffSales: false };
             }
             let roundOffAmount = 0;
@@ -2181,7 +2181,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                         fiscalYear: currentFiscalYear
                     });
                     await salesTransaction.save({ session });
-                    console.log('Sales Transaction: ', salesTransaction);
+                    ('Sales Transaction: ', salesTransaction);
                 }
             }
 
@@ -2206,7 +2206,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -2231,7 +2231,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -2255,7 +2255,7 @@ router.post('/cash/bills/add', isLoggedIn, ensureAuthenticated, ensureCompanySel
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -2451,7 +2451,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             if (!companyId) {
                 await session.abortTransaction();
@@ -2576,7 +2576,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
 
             // Handle case where settings is null
             if (!roundOffForSales) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForSales = { roundOffSales: false };
             }
             let roundOffAmount = 0;
@@ -2753,7 +2753,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                 });
 
                 await transaction.save({ session });
-                console.log('Transaction amount:', correctTotalAmount);
+                ('Transaction amount:', correctTotalAmount);
             }
 
             // Update bill with items
@@ -2781,7 +2781,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                         fiscalYear: currentFiscalYear
                     });
                     await salesTransaction.save({ session });
-                    console.log('Sales Transaction: ', salesTransaction);
+                    ('Sales Transaction: ', salesTransaction);
                 }
             }
 
@@ -2806,7 +2806,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -2831,7 +2831,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -2855,7 +2855,7 @@ router.post('/cash/bills/addOpen', isLoggedIn, ensureAuthenticated, ensureCompan
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -2921,7 +2921,7 @@ router.get('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
             const currentCompany = await Company.findById(new ObjectId(companyId));
             const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
 
-            console.log(company.renewalDate); // Debugging to see if renewalDate exists
+            (company.renewalDate); // Debugging to see if renewalDate exists
 
             const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
 
@@ -2960,7 +2960,7 @@ router.get('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
             const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
                 .populate('transactions')
                 .populate('companyGroups');
-            console.log('Accounts:', accounts);
+            ('Accounts:', accounts);
 
             // Find the bill by ID and populate relevant data
             const bill = await SalesBill.findById({ _id: billId, company: companyId, fiscalYear: fiscalYear })
@@ -2972,14 +2972,14 @@ router.get('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                 req.flash('error', 'Bill not found or does not belong to the selected company');
                 return res.redirect('/billsTrackBatchOpen');
             }
-            console.log('Bill Account:', bill.account);
+            ('Bill Account:', bill.account);
 
             // Ensure selectedAccountId is set to the ID of the account linked to the bill
             const selectedAccountId = bill.account ? bill.account._id.toString() : null;
 
-            console.log('Fetched Accounts:', accounts);
-            console.log('Fetched Bill:', bill);
-            console.log('Selected Account ID:', selectedAccountId);
+            ('Fetched Accounts:', accounts);
+            ('Fetched Bill:', bill);
+            ('Selected Account ID:', selectedAccountId);
 
 
             // Render the edit page with the bill data
@@ -3039,7 +3039,7 @@ router.get('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             const currentCompany = await Company.findById(new ObjectId(companyId));
             const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
 
-            console.log(company.renewalDate); // Debugging to see if renewalDate exists
+            (company.renewalDate); // Debugging to see if renewalDate exists
 
             const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
 
@@ -3078,7 +3078,7 @@ router.get('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             // const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
             //     .populate('transactions')
             //     .populate('companyGroups');
-            // console.log('Accounts:', accounts);
+            // ('Accounts:', accounts);
 
             // Find the bill by ID and populate relevant data
             const bill = await SalesBill.findById({ _id: billId, company: companyId, fiscalYear: fiscalYear })
@@ -3089,14 +3089,14 @@ router.get('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                 req.flash('error', 'Bill not found or does not belong to the selected company');
                 return res.redirect('/billsTrackBatchOpen');
             }
-            // console.log('Bill Account:', bill.account);
+            // ('Bill Account:', bill.account);
 
             // Ensure selectedAccountId is set to the ID of the account linked to the bill
             // const selectedAccountId = bill.account ? bill.account._id.toString() : null;
 
-            // console.log('Fetched Accounts:', accounts);
-            // console.log('Fetched Bill:', bill);
-            // console.log('Selected Account ID:', selectedAccountId);
+            // ('Fetched Accounts:', accounts);
+            // ('Fetched Bill:', bill);
+            // ('Selected Account ID:', selectedAccountId);
 
 
             // Render the edit page with the bill data
@@ -3243,11 +3243,11 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                 );
             }
 
-            console.log('Stock successfully restored for removed items.');
+            ('Stock successfully restored for removed items.');
 
             // Delete all associated transactions
             await Transaction.deleteMany({ billId: existingBill._id }).session(session);
-            console.log('Existing transactions deleted successfully');
+            ('Existing transactions deleted successfully');
 
 
             // Calculate amounts based on the updated items
@@ -3293,7 +3293,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
 
             // Handle case where settings is null
             if (!roundOffForSales) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForSales = { roundOffSales: false };
             }
             let roundOffAmount = 0;
@@ -3477,7 +3477,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                         fiscalYear: currentFiscalYear
                     });
                     await salesTransaction.save({ session });
-                    console.log('Sales Transaction: ', salesTransaction);
+                    ('Sales Transaction: ', salesTransaction);
                 }
             }
 
@@ -3501,7 +3501,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('VAT Transaction: ', vatTransaction);
+                    ('VAT Transaction: ', vatTransaction);
                 }
             }
 
@@ -3525,7 +3525,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -3549,7 +3549,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -3572,7 +3572,7 @@ router.put('/bills/edit/:id', isLoggedIn, ensureAuthenticated, ensureCompanySele
                         fiscalYear: currentFiscalYear
                     });
                     await cashTransaction.save({ session });
-                    console.log('Cash Transaction: ', cashTransaction);
+                    ('Cash Transaction: ', cashTransaction);
                 }
             }
 
@@ -3681,7 +3681,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             }
 
 
-            // console.log('Stock successfully reversed for existing bill items.');
+            // ('Stock successfully reversed for existing bill items.');
             // Step 1: Identify removed items and restore stock
             const removedItems = existingBill.items.filter(existingItem =>
                 !items.some(item =>
@@ -3736,17 +3736,17 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
             //         // Restore stock for the old quantity
             //         batchEntry.quantity += updatedItem.quantity;
             //         await product.save({ session });
-            //         console.log(`Stock restored for batch ${updatedItem.batchNumber} with uniqueUuId ${updatedItem.uniqueUuId} for product: ${product.name}`);
+            //         (`Stock restored for batch ${updatedItem.batchNumber} with uniqueUuId ${updatedItem.uniqueUuId} for product: ${product.name}`);
             //     } else {
             //         console.warn(`Batch number ${updatedItem.batchNumber} with uniqueUuId ${updatedItem.uniqueUuId} not found for product: ${product.name}`);
             //     }
             // }
 
-            // console.log('Stock successfully reversed for updated items.');
+            // ('Stock successfully reversed for updated items.');
 
             // Delete all associated transactions
             await Transaction.deleteMany({ billId: existingBill._id }).session(session);
-            console.log('Existing transactions deleted successfully');
+            ('Existing transactions deleted successfully');
 
             // Calculate amounts based on the updated POST route logic
             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
@@ -3966,7 +3966,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                         fiscalYear: currentFiscalYear
                     });
                     await salesTransaction.save({ session });
-                    console.log('Sales Transaction: ', salesTransaction);
+                    ('Sales Transaction: ', salesTransaction);
                 }
             }
 
@@ -3991,7 +3991,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -4016,7 +4016,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -4040,7 +4040,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -4066,7 +4066,7 @@ router.put('/bills/editCashAccount/:id', isLoggedIn, ensureAuthenticated, ensure
                     });
 
                     await cashTransaction.save({ session });
-                    console.log('Cash transaction created:', cashTransaction);
+                    ('Cash transaction created:', cashTransaction);
                 }
             }
 
@@ -4104,7 +4104,7 @@ router.get('/bills/:id/print', isLoggedIn, ensureAuthenticated, ensureCompanySel
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -4154,7 +4154,7 @@ router.get('/bills/:id/print', isLoggedIn, ensureAuthenticated, ensureCompanySel
         // }
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -4252,7 +4252,7 @@ router.get('/bills/:id/direct-print', isLoggedIn, ensureAuthenticated, ensureCom
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -4268,7 +4268,7 @@ router.get('/bills/:id/direct-print', isLoggedIn, ensureAuthenticated, ensureCom
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -4364,7 +4364,7 @@ router.get('/bills/:id/direct-print/credit-open', isLoggedIn, ensureAuthenticate
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -4380,7 +4380,7 @@ router.get('/bills/:id/direct-print/credit-open', isLoggedIn, ensureAuthenticate
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -4477,7 +4477,7 @@ router.get('/bills/:id/cash/direct-print', isLoggedIn, ensureAuthenticated, ensu
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -4493,7 +4493,7 @@ router.get('/bills/:id/cash/direct-print', isLoggedIn, ensureAuthenticated, ensu
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -4589,7 +4589,7 @@ router.get('/bills/:id/direct-print/cash-open', isLoggedIn, ensureAuthenticated,
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -4605,7 +4605,7 @@ router.get('/bills/:id/direct-print/cash-open', isLoggedIn, ensureAuthenticated,
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -4702,7 +4702,7 @@ router.get('/bills/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, ensu
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -4718,7 +4718,7 @@ router.get('/bills/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, ensu
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -4831,7 +4831,7 @@ router.get('/bills/:id/pdf', ensureAuthenticated, ensureCompanySelected, async (
             }
 
             // Log the bill object for debugging
-            console.log('Bill Object:', bill);
+            ('Bill Object:', bill);
 
             // Create a new PDF document with A4 size
             const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -5060,7 +5060,7 @@ router.get('/sales-vat-report', isLoggedIn, ensureAuthenticated, ensureCompanySe
         let toDate = req.query.toDate ? req.query.toDate : null;
 
         // Log the query parameters
-        console.log('Query Parameters:', req.query);
+        ('Query Parameters:', req.query);
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD');
@@ -5128,7 +5128,7 @@ router.get('/sales-vat-report', isLoggedIn, ensureAuthenticated, ensureCompanySe
             query.date = { $lte: toDate };
         }
 
-        console.log('Query:', query);
+        ('Query:', query);
 
         const Bills = await SalesBill.find(query)
             .populate('account')

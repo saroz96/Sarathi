@@ -23,7 +23,7 @@ const collectionCompanyFieldMap = {
     const db = client.db(dbName);
 
     const companies = await db.collection('companies').find().toArray();
-    console.log(`Found ${companies.length} companies.`);
+    (`Found ${companies.length} companies.`);
 
     for (const company of companies) {
       const companyId = company._id;
@@ -37,7 +37,7 @@ const collectionCompanyFieldMap = {
         const collection = db.collection(collectionName);
         
         try {
-          console.log(`Exporting ${collectionName} for ${companyName}...`);
+          (`Exporting ${collectionName} for ${companyName}...`);
           const documents = await collection.find({
             [config.field]: companyId
           }).toArray();
@@ -58,7 +58,7 @@ const collectionCompanyFieldMap = {
       }
     }
 
-    console.log('✅ Backup completed for all companies.');
+    ('✅ Backup completed for all companies.');
   } catch (err) {
     console.error('❌ Backup failed:', err);
     process.exit(1);

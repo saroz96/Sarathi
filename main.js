@@ -29,21 +29,21 @@ app.whenReady().then(() => {
   // You can remove or customize this if you're using a cloud DB like MongoDB Atlas
   mongoose.connect('mongodb+srv://saroj:12345@cluster0.vgu4kmg.mongodb.net/Sarathi', { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
-      console.log('MongoDB connected');
+      ('MongoDB connected');
       // Start the Express server
       exec('npm start', (err, stdout, stderr) => {
         if (err) {
           console.error(`Error starting server: ${err}`);
           return;
         }
-        console.log(stdout);
+        (stdout);
       });
 
       // Create the Electron window
       createWindow();
     })
     .catch(err => {
-      console.log('MongoDB connection error:', err);
+      ('MongoDB connection error:', err);
     });
 });
 

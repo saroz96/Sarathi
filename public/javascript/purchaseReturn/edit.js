@@ -7,7 +7,7 @@ async function fetchItems(query, vatStatus, existingItemIds) {
         const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
         const data = await response.json();
 
-        console.log('Fetched items:', data);
+        ('Fetched items:', data);
 
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format');
@@ -94,7 +94,7 @@ async function showAllItems(input) {
 
     // Fetch all items with an empty query
     const items = await fetchItems('', vatStatus, existingItemIds);
-    console.log('All items:', items);
+    ('All items:', items);
 
     // Clear existing dropdown items
     dropdownMenu.innerHTML = '';
@@ -881,7 +881,7 @@ async function shouldDisplayTransactions() {
 
 //         const transactions = await response.json();
 //         // const { transactions, companyDateFormat } = await response.json();
-//         console.log('Fetched Transactions:', transactions);
+//         ('Fetched Transactions:', transactions);
 
 //         // Check if transactions are empty
 //         if (transactions.length === 0) {
@@ -938,7 +938,7 @@ async function shouldDisplayTransactions() {
 
 //         // Set the innerHTML of the transaction list container
 //         transactionList.innerHTML = tableHtml;
-//         console.log('Transactions:', transactions);
+//         ('Transactions:', transactions);
 
 //         // Show the modal
 //         $('#transactionModal').modal('show');
@@ -957,12 +957,12 @@ async function fetchLastTransactions(itemId) {
         return;
     }
 
-    console.log('Fetching transactions for:', { itemId, accountId, purchaseSalesType });
+    ('Fetching transactions for:', { itemId, accountId, purchaseSalesType });
 
     try {
         const response = await fetch(`/api/transactions/${itemId}/${accountId}/${purchaseSalesType}`);
         const { transactions, companyDateFormat, nepaliDate } = await response.json();
-        console.log('Fetched Transactions:', transactions);
+        ('Fetched Transactions:', transactions);
 
         // Check if transactions are empty
         if (!transactions || transactions.length === 0) {

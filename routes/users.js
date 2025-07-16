@@ -537,7 +537,7 @@ router.get('/admin/users/list', ensureAuthenticated, async (req, res) => {
         }
 
         // Log the current user's data for debugging
-        console.log('Authenticated User:', req.user);
+        ('Authenticated User:', req.user);
 
         // Fetch the company ID from the authenticated user's data
         const companyId = req.session.currentCompany;
@@ -591,7 +591,7 @@ router.get('/admin/users/list', ensureAuthenticated, async (req, res) => {
         }
 
         // Log the company document to verify the owner
-        console.log('Company Document:', company);
+        ('Company Document:', company);
 
         // Fetch users associated with the company, including the owner
         const users = await User.find({ company: companyId });
@@ -612,7 +612,7 @@ router.get('/admin/users/list', ensureAuthenticated, async (req, res) => {
         }
 
         // Log the fetched users to check if any results are returned
-        console.log('Fetched Users:', users);
+        ('Fetched Users:', users);
 
         // Sort users array to place the owner at the top
         users.sort((a, b) => {

@@ -46,13 +46,13 @@ const checkDemoPeriod = async (req, res, next) => {
                 return res.status(400).json({ error: 'Invalid date format' });
             }
 
-            console.log('Company createdAt:', createdAt); // Debugging log
-            console.log('SalesBill billDate:', salesBillDate); // Debugging log
+            ('Company createdAt:', createdAt); // Debugging log
+            ('SalesBill billDate:', salesBillDate); // Debugging log
 
             // Calculate one month after the company's createdAt date
             const oneMonthLater = new Date(createdAt);
             oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-            console.log('One month later:', oneMonthLater); // Debugging log
+            ('One month later:', oneMonthLater); // Debugging log
 
             // Validate the billDate based on the date format
             if (dateFormat === 'nepali') {

@@ -15,7 +15,7 @@ async function fetchItems(query, vatStatus, existingItemIds) {
         const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
         const data = await response.json();
 
-        console.log('Fetched items:', data);
+        ('Fetched items:', data);
 
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format');
@@ -101,7 +101,7 @@ async function showAllItems(input) {
 
     // Fetch all items with an empty query
     const items = await fetchItems('', vatStatus, existingItemIds);
-    console.log('All items:', items);
+    ('All items:', items);
 
     // Clear existing dropdown items
     dropdownMenu.innerHTML = '';
@@ -424,21 +424,6 @@ function renumberRows() {
 }
 
 
-function updateItemTotal(input) {
-    const row = input.closest('tr');
-    const quantity = parseFloat(row.querySelector('input.item-quantity').value) || 0;
-    const puPrice = parseFloat(row.querySelector('input.item-puPrice').value) || 0;
-    const amount = quantity * puPrice;
-
-    // Update the item's total amount
-    row.querySelector('.item-amount').textContent = amount.toFixed(2);
-
-    // Recalculate total, discounts, and update live
-    calculateTotal();
-    updateDiscountFromPercentage(); // Ensure discount is updated live
-}
-
-
 function updateDiscountFromPercentage() {
     const subTotal = calculateSubTotal();
     const discountPercentage = parseFloat(document.getElementById('discountPercentage').value) || 0;
@@ -551,27 +536,36 @@ function convertToRupeesAndPaisa(amount) {
     return words || 'Zero Rupees';
 }
 
-// Updated DOM manipulation for displaying total amount in words
 function calculateTotal() {
     const rows = document.querySelectorAll('#items tr.item');
     let subTotal = calculateSubTotal();
+    let vatAmount = 0;
     let totalTaxableAmount = 0;
     let totalNonTaxableAmount = 0;
-    let vatAmount = 0;
+    let totalCCAmount = 0;
+    let taxableCCAmount = 0;
+    let nonTaxableCCAmount = 0;
 
     const vatPercentage = parseFloat(document.getElementById('vatPercentage').value) || 13;
-    const vatSelection = document.getElementById('isVatExempt').value; // 'all', 'false', or 'true'
+    const vatSelection = document.getElementById('isVatExempt').value;
 
-    // Separate taxable and non-taxable items
     rows.forEach(row => {
         const amount = parseFloat(row.querySelector('.item-amount').textContent) || 0;
-        const vatStatus = row.querySelector('input[name$="[vatStatus]"]');
-        const isVatable = vatStatus && vatStatus.value === 'vatable';
+        const vatStatusInput = row.querySelector('input[name$="[vatStatus]"]');
+        const isVatable = vatStatusInput && vatStatusInput.value === 'vatable';
+
+        // Get CC values
+        const ccAmountInput = row.querySelector('input[name$="[itemCCAmount]"]');
+        const itemCCAmount = ccAmountInput ? parseFloat(ccAmountInput.value) || 0 : 0;
+
+        totalCCAmount += itemCCAmount;
 
         if (isVatable) {
             totalTaxableAmount += amount;
+            taxableCCAmount += itemCCAmount;
         } else {
             totalNonTaxableAmount += amount;
+            nonTaxableCCAmount += itemCCAmount;
         }
     });
 
@@ -583,27 +577,31 @@ function calculateTotal() {
     const finalTaxableAmount = totalTaxableAmount - discountForTaxable;
     const finalNonTaxableAmount = totalNonTaxableAmount - discountForNonTaxable;
 
-    // Calculate VAT only for vatable items
+    // Include CC amounts
+    const displayTaxableAmount = finalTaxableAmount + taxableCCAmount;
+    const displayNonTaxableAmount = finalNonTaxableAmount + nonTaxableCCAmount;
+
+    // Calculate VAT
     if (vatSelection === 'false' || vatSelection === 'all') {
-        vatAmount = (finalTaxableAmount * vatPercentage) / 100;
-    } else {
-        vatAmount = 0;
+        vatAmount = (displayTaxableAmount * vatPercentage) / 100;
     }
 
     const roundOffAmount = parseFloat(document.getElementById('roundOffAmount').value) || 0;
-    const totalAmount = finalTaxableAmount + finalNonTaxableAmount + vatAmount + roundOffAmount;
+    const totalAmount = displayTaxableAmount + displayNonTaxableAmount + vatAmount + roundOffAmount;
 
-    // Update the DOM with calculated values
+    // Update the DOM
     document.getElementById('subTotal').textContent = subTotal.toFixed(2);
-    document.getElementById('taxableAmount').textContent = finalTaxableAmount.toFixed(2);
+    document.getElementById('taxableAmount').textContent = displayTaxableAmount.toFixed(2);
     document.getElementById('vatAmount').textContent = vatAmount.toFixed(2);
     document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
 
-    // Convert total amount to words including paisa
+    // Show total CC amount in bill details
+    document.getElementById('CCAmount').value = totalCCAmount.toFixed(2);
+
+    // Convert to words
     const amountInWords = convertToRupeesAndPaisa(totalAmount) + ' Only.';
     document.getElementById('amountInWords').textContent = amountInWords;
 }
-
 
 // Attach event listeners for live updates
 document.addEventListener('DOMContentLoaded', () => {
@@ -612,19 +610,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('discountAmount').addEventListener('input', updateDiscountFromAmount);
 
     // Ensure item inputs update totals live
-    document.querySelectorAll('input.item-quantity, input.item-puPrice').forEach(input => {
+    document.querySelectorAll('input.item-quantity, input.item-puPrice, input.item-bonus').forEach(input => {
         input.addEventListener('input', () => updateItemTotal(input));
     });
 });
 
-
-function toggleCreditPartyOptions() {
-    const paymentMode = document.getElementById('paymentMode').value;
-    const creditPartyOptions = document.querySelectorAll('.credit-party');
-    creditPartyOptions.forEach(option => {
-        option.style.display = paymentMode === 'credit' ? 'block' : 'none';
-    });
-}
 
 function toggleVatInputs() {
     const isVatExempt = document.getElementById('isVatExempt').value === 'true';
@@ -636,15 +626,8 @@ function toggleVatInputs() {
     // Toggle display based on VAT exemption
     if (isVatExempt) {
         taxableAmountRow.style.display = 'none';
-        // vatPercentageRow.style.display = 'none';
-        // vatAmountRow.style.display = 'none';
-        // Move focus to the next available input field
-        // moveToNextVisibleInput(document.getElementById('isVatExempt'));
     } else {
         taxableAmountRow.style.display = 'table-row'; // Show taxable amount row
-        // vatPercentageRow.style.display = 'table-row'; // Show VAT 13% row
-        // vatAmountRow.style.display = 'table-row'; // Show VAT amount row
-
     }
 
     // Recalculate total when toggling VAT
@@ -652,17 +635,32 @@ function toggleVatInputs() {
 }
 
 function moveToNextVisibleInput(currentElement) {
-    const formElements = Array.from(document.querySelectorAll('input, select, textarea, button'));
+    // Get all focusable elements (including selects) in tab order
+    const focusableElements = Array.from(document.querySelectorAll(
+        'input:not([type="hidden"]), select, textarea, button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(el => {
+        // Filter only visible elements
+        return el.offsetParent !== null &&
+            window.getComputedStyle(el).visibility !== 'hidden' &&
+            window.getComputedStyle(el).display !== 'none';
+    });
 
-    // Find the current element's index in the form
-    const currentIndex = formElements.indexOf(currentElement);
+    // Find current element's index
+    const currentIndex = focusableElements.indexOf(currentElement);
 
-    // Iterate through the remaining elements to find the next visible one
-    for (let i = currentIndex + 1; i < formElements.length; i++) {
-        if (formElements[i].offsetParent !== null) { // Check if the element is visible
-            formElements[i].focus();
-            break;
-        }
+    // If current element not found or is last element, do nothing
+    if (currentIndex === -1 || currentIndex === focusableElements.length - 1) {
+        return;
+    }
+
+    // Focus next visible element
+    const nextElement = focusableElements[currentIndex + 1];
+    nextElement.focus();
+
+    // For select elements, ensure the dropdown doesn't open automatically
+    if (nextElement.tagName === 'SELECT') {
+        nextElement.blur(); // Remove immediate focus to prevent dropdown opening
+        setTimeout(() => nextElement.focus(), 10); // Refocus after slight delay
     }
 }
 
@@ -1203,10 +1201,6 @@ async function handleFetchLastTransactions(itemId) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    const itemSearchInput = document.getElementById('itemSearch'); // Initial focus on item search input
-});
-
 function openModalAndFocusCloseButton() {
     // Open the modal
     $('#transactionModal').modal('show');
@@ -1330,7 +1324,6 @@ function attachEventListenersToLastRow() {
         const quantityInput = lastRow.querySelector('.item-quantity');
         const batchNumberInput = lastRow.querySelector('.item-batchNumber');
         const expDateInput = lastRow.querySelector('.item-expiryDate');
-        const priceInput = lastRow.querySelector('.item-puPrice');
 
         if (quantityInput) {
             quantityInput.addEventListener('keydown', handleQuantityKeydown);
@@ -1361,160 +1354,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// function handlePriceKeydown(event, itemIndex) {
-//     if (event.key === 'Enter') {
-//         // Select the `puPrice` input of the row where the Enter key was pressed
-//         const puPriceInput = document.getElementById(`puPrice-${itemIndex}`);
-
-//         // Proceed if the `puPrice` input exists and has a value
-//         if (puPriceInput && puPriceInput.value) {
-//             // Fetch saved values from hidden fields (for existing items)
-//             const marginPercentage = document.getElementById(`marginPercentage-${itemIndex}`)?.value || '';
-//             const mrp = document.getElementById(`mrp-${itemIndex}`)?.value || '';
-//             const salesPrice = document.getElementById(`salesPrice-${itemIndex}`)?.value || '';
-//             const puPrice = puPriceInput.value; // Get the PU Price from the input field
-
-//             // Debugging: Log the fetched values
-//             console.log('marginPercentage:', marginPercentage);
-//             console.log('mrp:', mrp);
-//             console.log('salesPrice:', salesPrice);
-//             console.log('puPrice:', puPrice);
-
-//             // Set the PU Price in the modal
-//             document.getElementById('puPrice').value = puPrice;
-
-//             // Populate saved values in the modal (for existing items)
-//             document.getElementById('marginPercentage').value = marginPercentage;
-//             document.getElementById('mrp').value = mrp;
-//             document.getElementById('salesPrice').value = salesPrice;
-
-//             // Show the sales price modal
-//             $('#setSalesPriceModal').modal('show');
-
-//             // Handle modal shown event to focus on the margin percentage input
-//             $('#setSalesPriceModal').on('shown.bs.modal', function () {
-//                 document.getElementById('marginPercentage').focus();
-//             });
-
-//             // Handle margin percentage input
-//             const marginPercentageInput = document.getElementById('marginPercentage');
-//             marginPercentageInput.oninput = function () {
-//                 updateSalesPriceFromMargin(puPrice);
-//             };
-
-//             // Handle MRP input
-//             const mrpInput = document.getElementById('mrp');
-//             mrpInput.oninput = function () {
-//                 updateSalesPriceFromMRP(mrpInput.value);
-//                 updateMarginFromMRPAndSalesPrice(mrpInput.value, puPrice);
-//             };
-
-//             // Handle sales price input
-//             const salesPriceInput = document.getElementById('salesPrice');
-//             salesPriceInput.oninput = function () {
-//                 updateMarginFromMRPAndSalesPrice(mrpInput.value, puPrice);
-//             };
-
-//             // Handle currency change
-//             const currencySelect = document.getElementById('currency');
-//             currencySelect.onchange = function () {
-//                 updateSalesPriceFromMRP(mrpInput.value);
-//             };
-
-//             // Handle sales price save action
-//             const saveSalesPriceButton = document.getElementById('saveSalesPrice');
-//             saveSalesPriceButton.onclick = function () {
-//                 const salesPrice = document.getElementById('salesPrice').value;
-//                 const mrpValue = document.getElementById('mrp').value;
-//                 const marginPercentage = document.getElementById('marginPercentage').value;
-
-//                 if (salesPrice) {
-//                     // Store sales price in a hidden input within the current row
-//                     const tr = puPriceInput.closest('tr');
-//                     const salesPriceInput = document.createElement('input');
-//                     salesPriceInput.type = 'hidden';
-//                     salesPriceInput.name = `items[${itemIndex}][price]`;
-//                     salesPriceInput.value = salesPrice;
-//                     tr.appendChild(salesPriceInput);
-
-//                     // Store MRP in a hidden input within the current row
-//                     const mrpInputHidden = document.createElement('input');
-//                     mrpInputHidden.type = 'hidden';
-//                     mrpInputHidden.name = `items[${itemIndex}][mrp]`;
-//                     mrpInputHidden.value = mrpValue;
-//                     tr.appendChild(mrpInputHidden);
-
-//                     // Store marginPercentage in a hidden input within the current row
-//                     const marginPercentageInputHidden = document.createElement('input');
-//                     marginPercentageInputHidden.type = 'hidden';
-//                     marginPercentageInputHidden.name = `items[${itemIndex}][marginPercentage]`;
-//                     marginPercentageInputHidden.value = marginPercentage;
-//                     tr.appendChild(marginPercentageInputHidden);
-
-//                     // Close the modal
-//                     $('#setSalesPriceModal').modal('hide');
-
-//                     // Focus back on the item search input field
-//                     const itemSearchInput = document.getElementById('itemSearch');
-//                     itemSearchInput.focus();
-//                 } else {
-//                     alert('Please enter a valid sales price.');
-//                 }
-//             };
-//         }
-//     }
-// }
-
-// Function to fetch last transactions for the selected item
-// async function fetchLastItemsData(itemId) {
-//     try {
-//         const response = await fetch(`/api/last-item-values/${itemId}`);
-//         if (!response.ok) {
-//             throw new Error('Failed to fetch last item values');
-//         }
-//         const lastValues = await response.json();
-//         return lastValues;
-//     } catch (error) {
-//         console.error('Error fetching last item values:', error);
-//         return null;
-//     }
-// }
-
 // Function to handle Enter key press on the PU Price input
 async function handlePriceKeydown(event, itemIndex) {
     if (event.key === 'Enter') {
-        // Select the `puPrice` input of the row where the Enter key was pressed
         const puPriceInput = document.getElementById(`puPrice-${itemIndex}`);
+        const tr = puPriceInput.closest('tr');
+        const bonusInput = tr.querySelector('.item-bonus');
 
-        // Proceed if the `puPrice` input exists and has a value
+        // Get current values
+        let puPrice = parseFloat(puPriceInput.value) || 0;
+        let bonusQuantity = parseFloat(bonusInput.value) || 0;
+
         if (puPriceInput && puPriceInput.value) {
-            const puPrice = puPriceInput.value; // Get the PU Price from the input field
+            // Check if this is an existing item
+            const isExistingItem = document.querySelector(`input[name="items[${itemIndex}][CCPercentage]"]`) !== null;
 
-            // Check if this is an existing item (editing) or a new item
-            const isExistingItem = document.getElementById(`marginPercentage-${itemIndex}`) !== null;
+            // Set default CC percentage (7.5) or use existing value
+            const defaultCCPercentage = isExistingItem ?
+                (document.querySelector(`input[name="items[${itemIndex}][CCPercentage]"]`)?.value || 7.5) :
+                7.5;
 
+            document.getElementById('CCPercentage').value = defaultCCPercentage;
+
+            // Calculate initial CC Amount with current values
+            const ccPercentage = parseFloat(defaultCCPercentage);
+            let itemCCAmount = (puPrice * ccPercentage / 100) * bonusQuantity;
+            document.getElementById('itemCCAmount').value = itemCCAmount.toFixed(2);
+
+            // Populate modal with existing or default values
             if (isExistingItem) {
-                // For existing items, fetch saved values from hidden fields
-                const marginPercentage = document.getElementById(`marginPercentage-${itemIndex}`)?.value || '';
-                const mrp = document.getElementById(`mrp-${itemIndex}`)?.value || 0;
-                const salesPrice = document.getElementById(`salesPrice-${itemIndex}`)?.value || '';
-                const currency = document.getElementById(`currency-${itemIndex}`)?.value || '';
-
-                console.log("Currency:", currency);
-
-                // Populate saved values in the modal
-                document.getElementById('marginPercentage').value = marginPercentage;
-                document.getElementById('mrp').value = mrp;
-                document.getElementById('salesPrice').value = salesPrice;
-                document.getElementById('currency').value = currency;
-
+                document.getElementById('marginPercentage').value =
+                    document.getElementById(`marginPercentage-${itemIndex}`)?.value || '';
+                document.getElementById('mrp').value =
+                    document.getElementById(`mrp-${itemIndex}`)?.value || 0;
+                document.getElementById('salesPrice').value =
+                    document.getElementById(`salesPrice-${itemIndex}`)?.value || '';
+                document.getElementById('currency').value =
+                    document.getElementById(`currency-${itemIndex}`)?.value || '';
             } else {
-                // For new items, fetch the latest values from the database
                 const itemId = document.querySelector(`input[name="items[${itemIndex}][item]"]`).value;
                 const lastValues = await fetchLastItemsData(itemId);
-
                 if (lastValues) {
-                    // Populate the modal fields with the last values
                     document.getElementById('marginPercentage').value = lastValues.marginPercentage || 0;
                     document.getElementById('mrp').value = lastValues.mrp || 0;
                     document.getElementById('salesPrice').value = lastValues.price || 0;
@@ -1522,16 +1402,24 @@ async function handlePriceKeydown(event, itemIndex) {
                 }
             }
 
-            // Set the PU Price in the modal
             document.getElementById('puPrice').value = puPrice;
-
-            // Show the sales price modal
             $('#setSalesPriceModal').modal('show');
 
-            // Handle modal shown event to focus on the margin percentage input
+            // Focus on CCPercentage when modal opens
             $('#setSalesPriceModal').on('shown.bs.modal', function () {
-                document.getElementById('marginPercentage').focus();
+                document.getElementById('CCPercentage').focus();
             });
+
+            // Function to update CC amount whenever puPrice, bonus, or CC% changes
+            const updateCCAmount = () => {
+                puPrice = parseFloat(puPriceInput.value) || 0;
+                bonusQuantity = parseFloat(bonusInput.value) || 0;
+                const currentCCPercentage = parseFloat(document.getElementById('CCPercentage').value) || 0;
+                itemCCAmount = (puPrice * currentCCPercentage / 100) * bonusQuantity;
+                document.getElementById('itemCCAmount').value = itemCCAmount.toFixed(2);
+            };
+
+
 
             // Handle margin percentage input
             const marginPercentageInput = document.getElementById('marginPercentage');
@@ -1565,50 +1453,55 @@ async function handlePriceKeydown(event, itemIndex) {
                 updateSalesPriceFromMRP(mrpInput.value);
             };
 
-            // Handle sales price save action
+            // Set up event listeners
+            document.getElementById('CCPercentage').oninput = updateCCAmount;
+
+            // Add listeners for puPrice and bonus changes while modal is open
+            const modalPuPriceInput = document.getElementById('puPrice');
+            const modalBonusInput = bonusInput;
+
+            modalPuPriceInput.addEventListener('input', updateCCAmount);
+            modalBonusInput.addEventListener('input', updateCCAmount);
+
+            // Handle save action
             const saveSalesPriceButton = document.getElementById('saveSalesPrice');
             saveSalesPriceButton.onclick = function () {
+                // Remove event listeners
+                modalPuPriceInput.removeEventListener('input', updateCCAmount);
+                modalBonusInput.removeEventListener('input', updateCCAmount);
+
                 const salesPrice = document.getElementById('salesPrice').value;
-                const mrpValue = document.getElementById('mrp').value;
-                const marginPercentage = document.getElementById('marginPercentage').value;
-                const currency = document.getElementById('currency').value;
-
                 if (salesPrice) {
-                    // Store sales price in a hidden input within the current row
-                    const tr = puPriceInput.closest('tr');
-                    const salesPriceInput = document.createElement('input');
-                    salesPriceInput.type = 'hidden';
-                    salesPriceInput.name = `items[${itemIndex}][price]`;
-                    salesPriceInput.value = salesPrice;
-                    tr.appendChild(salesPriceInput);
+                    // First remove any existing hidden inputs
+                    ['price', 'mrp', 'marginPercentage', 'currency', 'CCPercentage', 'itemCCAmount'].forEach(field => {
+                        const existingInput = tr.querySelector(`input[name="items[${itemIndex}][${field}]"]`);
+                        if (existingInput) existingInput.remove();
+                    });
 
-                    // Store MRP in a hidden input within the current row
-                    const mrpInputHidden = document.createElement('input');
-                    mrpInputHidden.type = 'hidden';
-                    mrpInputHidden.name = `items[${itemIndex}][mrp]`;
-                    mrpInputHidden.value = mrpValue;
-                    tr.appendChild(mrpInputHidden);
+                    // Create new hidden inputs
+                    const createHiddenInput = (name, value) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `items[${itemIndex}][${name}]`;
+                        input.value = value;
+                        tr.appendChild(input);
+                        return input;
+                    };
 
-                    // Store marginPercentage in a hidden input within the current row
-                    const marginPercentageInputHidden = document.createElement('input');
-                    marginPercentageInputHidden.type = 'hidden';
-                    marginPercentageInputHidden.name = `items[${itemIndex}][marginPercentage]`;
-                    marginPercentageInputHidden.value = marginPercentage;
-                    tr.appendChild(marginPercentageInputHidden);
+                    createHiddenInput('price', document.getElementById('salesPrice').value);
+                    createHiddenInput('mrp', document.getElementById('mrp').value);
+                    createHiddenInput('marginPercentage', document.getElementById('marginPercentage').value);
+                    createHiddenInput('currency', document.getElementById('currency').value);
+                    createHiddenInput('CCPercentage', document.getElementById('CCPercentage').value);
+                    createHiddenInput('itemCCAmount', document.getElementById('itemCCAmount').value);
 
-                    //Store current in a hidden input within the current row
-                    const currencyInputHidden = document.createElement('input');
-                    currencyInputHidden.type = 'hidden';
-                    currencyInputHidden.name = `items[${itemIndex}][currency]`;
-                    currencyInputHidden.value = currency;
-                    tr.appendChild(currencyInputHidden);
-
-                    // Close the modal
+                    // Close modal and update totals
                     $('#setSalesPriceModal').modal('hide');
+                    document.getElementById('itemSearch').focus();
 
-                    // Focus back on the item search input field
-                    const itemSearchInput = document.getElementById('itemSearch');
-                    itemSearchInput.focus();
+                    // Explicitly update the item total and recalculate
+                    updateItemTotal(puPriceInput);
+                    calculateTotal();
                 } else {
                     alert('Please enter a valid sales price.');
                 }
@@ -1617,11 +1510,32 @@ async function handlePriceKeydown(event, itemIndex) {
     }
 }
 
-// function updateSalesPriceFromMargin(puPrice) {
-//     const marginPercentage = parseFloat(document.getElementById('marginPercentage').value) || 0;
-//     const salesPriceFromMargin = parseFloat(puPrice) + (parseFloat(puPrice) * marginPercentage / 100);
-//     document.getElementById('salesPrice').value = salesPriceFromMargin.toFixed(2); // Set calculated sales price from margin
-// }
+function updateItemTotal(input) {
+    const tr = input.closest('tr');
+    const quantity = parseFloat(tr.querySelector('input.item-quantity').value) || 0;
+    const bonus = parseFloat(tr.querySelector('.item-bonus').value) || 0;
+    const puPrice = parseFloat(tr.querySelector('input.item-puPrice').value) || 0;
+
+    const amount = quantity * puPrice;
+    // Update the item's total amount
+    tr.querySelector('.item-amount').textContent = amount.toFixed(2);
+
+
+    // Recalculate CC if exists
+    const ccPercentageInput = tr.querySelector('input[name$="[CCPercentage]"]');
+    if (ccPercentageInput) {
+        const ccPercentage = parseFloat(ccPercentageInput.value) || 0;
+        const itemCCAmount = (puPrice * ccPercentage / 100) * bonus;
+        const itemCCAmountInput = tr.querySelector('input[name$="[itemCCAmount]"]');
+        if (itemCCAmountInput) {
+            itemCCAmountInput.value = itemCCAmount.toFixed(2);
+        }
+    }
+
+    // Recalculate total, discounts, and update live
+    calculateTotal();
+    updateDiscountFromPercentage(); // Ensure discount is updated live
+}
 
 // Function to update sales price based on margin percentage
 function updateSalesPriceFromMargin(puPrice) {
@@ -1679,16 +1593,6 @@ function focusOnLastRow(fieldClass) {
         }
     }
 }
-
-// Function to move focus to the next input field
-// function moveToNextInput(event) {
-//     if (event.key === 'Enter') {
-//         event.preventDefault(); // Prevent form submission
-//         const form = event.target.form;
-//         const index = Array.prototype.indexOf.call(form, event.target);
-//         form.elements[index + 1].focus();
-//     }
-// }
 
 function moveToNextInput(event) {
     if (event.key === 'Enter') {
@@ -1766,6 +1670,13 @@ function moveToNextField(event, nextFieldId) {
 }
 
 // Add event listeners for each input field (except the read-only ones and select elements)
+document.getElementById('CCPercentage').addEventListener('keypress', function (event) {
+    moveToNextField(event, 'itemCCAmount'); // Focus on 'currency' select when Enter is pressed
+});
+document.getElementById('itemCCAmount').addEventListener('keypress', function (event) {
+    moveToNextField(event, 'marginPercentage'); // Focus on 'currency' select when Enter is pressed
+});
+
 document.getElementById('marginPercentage').addEventListener('keypress', function (event) {
     moveToNextField(event, 'currency'); // Focus on 'currency' select when Enter is pressed
 });

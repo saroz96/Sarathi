@@ -25,7 +25,7 @@ async function seedItems() {
 
         await testItem.save();
 
-        console.log('Test item data inserted successfully');
+        ('Test item data inserted successfully');
 
         // Close the connection
         await mongoose.disconnect();

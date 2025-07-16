@@ -120,7 +120,7 @@ router.post('/roundoff-sales', ensureAuthenticated, ensureCompanySelected, ensur
                 settingsForSales.roundOffSales = roundOffBoolean;
             }
             await settingsForSales.save();
-            console.log(settingsForSales);
+            (settingsForSales);
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
         } catch (error) {
@@ -247,7 +247,7 @@ router.post('/roundoff-sales-return', ensureAuthenticated, ensureCompanySelected
                 settingsForSalesReturn.roundOffSalesReturn = roundOffBoolean;
             }
             await settingsForSalesReturn.save();
-            console.log(settingsForSalesReturn);
+            (settingsForSalesReturn);
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
         } catch (error) {
@@ -336,7 +336,7 @@ router.post('/roundoff-purchase', ensureAuthenticated, ensureCompanySelected, en
                 settingsForPurchase.roundOffPurchase = roundOffBoolean;
             }
             await settingsForPurchase.save();
-            console.log(settingsForPurchase);
+            (settingsForPurchase);
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
         } catch (error) {
@@ -458,7 +458,7 @@ router.post('/roundoff-purchase-return', ensureAuthenticated, ensureCompanySelec
                 settingsForPurchaseReturn.roundOffPurchaseReturn = roundOffBoolean;
             }
             await settingsForPurchaseReturn.save();
-            console.log(settingsForPurchaseReturn);
+            (settingsForPurchaseReturn);
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
         } catch (error) {
@@ -548,7 +548,7 @@ router.post('/update', ensureAuthenticated, ensureCompanySelected, ensureTradeTy
             }
 
             // Log the request body
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             // Validate companyId and userId
             if (!companyId || !userId) {
@@ -563,7 +563,7 @@ router.post('/update', ensureAuthenticated, ensureCompanySelected, ensureTradeTy
             );
 
             // Log the updated settings
-            console.log('Updated Settings:', updatedSettings);
+            ('Updated Settings:', updatedSettings);
 
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
@@ -641,7 +641,7 @@ router.post('/updateDisplayTransactionsForSalesReturn', ensureAuthenticated, ens
             }
 
             // Log the request body
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             // Validate companyId and userId
             if (!companyId || !userId) {
@@ -656,7 +656,7 @@ router.post('/updateDisplayTransactionsForSalesReturn', ensureAuthenticated, ens
             );
 
             // Log the updated settings
-            console.log('Updated Settings:', updatedSettings);
+            ('Updated Settings:', updatedSettings);
 
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
@@ -764,7 +764,7 @@ router.post('/PurchaseTransactionDisplayUpdate', ensureAuthenticated, ensureComp
             }
 
             // Log the request body
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             // Validate companyId and userId
             if (!companyId || !userId) {
@@ -779,7 +779,7 @@ router.post('/PurchaseTransactionDisplayUpdate', ensureAuthenticated, ensureComp
             );
 
             // Log the updated settings
-            console.log('Updated Settings:', updatedSettings);
+            ('Updated Settings:', updatedSettings);
 
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');
@@ -855,7 +855,7 @@ router.post('/PurchaseReturnTransactionDisplayUpdate', ensureAuthenticated, ensu
             }
 
             // Log the request body
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             // Validate companyId and userId
             if (!companyId || !userId) {
@@ -870,7 +870,7 @@ router.post('/PurchaseReturnTransactionDisplayUpdate', ensureAuthenticated, ensu
             );
 
             // Log the updated settings
-            console.log('Updated Settings:', updatedSettings);
+            ('Updated Settings:', updatedSettings);
 
             req.flash('success', 'Settings updated successfully');
             res.redirect('/settings');

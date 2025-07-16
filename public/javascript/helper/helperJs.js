@@ -468,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectContact(contact) {
         // Handle contact selection here
-        console.log('Selected contact:', contact);
+        ('Selected contact:', contact);
         // You might want to fill some form fields with this contact's data
         bootstrap.Modal.getInstance(document.getElementById('contactsModal')).hide();
     }

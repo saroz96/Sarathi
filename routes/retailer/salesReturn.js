@@ -333,7 +333,7 @@ router.get('/sales-return/edit/billNumber', isLoggedIn, ensureAuthenticated, ens
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
             .populate('transactions')
             .populate('companyGroups');
-        console.log('Accounts:', accounts);
+        ('Accounts:', accounts);
 
         // Find the stock adjustment by billNumber
         const salesReturnBill = await SalesReturn.findOne({ billNumber: billNumber, company: companyId, fiscalYear: fiscalYear })
@@ -485,7 +485,7 @@ router.get('/cash-sales-return/sales-return/edit/billNumber', isLoggedIn, ensure
         const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
             .populate('transactions')
             .populate('companyGroups');
-        console.log('Accounts:', accounts);
+        ('Accounts:', accounts);
 
         // Find the stock adjustment by billNumber
         const salesReturnBill = await SalesReturn.findOne({ billNumber: billNumber, company: companyId, fiscalYear: fiscalYear })
@@ -538,7 +538,7 @@ router.post('/sales-return', ensureAuthenticated, ensureCompanySelected, ensureT
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
             const isVatAll = isVatExempt === 'all';
@@ -1037,7 +1037,7 @@ router.post('/cash/sales-return/add', ensureAuthenticated, ensureCompanySelected
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
             const isVatAll = isVatExempt === 'all';
@@ -1457,7 +1457,7 @@ router.get('/sales-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureComp
             const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
                 .populate('transactions')
                 .populate('companyGroups');
-            console.log('Accounts:', accounts);
+            ('Accounts:', accounts);
 
             //Find the bill by ID and populate relevant data
             const salesReturnBill = await SalesReturn.findById({ _id: billId, company: companyId, fiscalYear: fiscalYear })
@@ -1471,14 +1471,14 @@ router.get('/sales-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureComp
                 return res.redirect('/sales-return/list');
             }
 
-            console.log('Sales Return Bill Account: ', salesReturnBill.account);
+            ('Sales Return Bill Account: ', salesReturnBill.account);
 
             //Ensure selectedAccountId is set to the ID of the account linked to the bill
             const selectedAccountId = salesReturnBill.account ? salesReturnBill.account._id.toString() : null;
 
-            console.log('Fetched Accounts:', accounts);
-            console.log('Fetched Bill:', salesReturnBill);
-            console.log('Selected Account ID:', selectedAccountId);
+            ('Fetched Accounts:', accounts);
+            ('Fetched Bill:', salesReturnBill);
+            ('Selected Account ID:', selectedAccountId);
 
             // Render the edit page with the bill data
             res.render('retailer/salesReturn/edit', {
@@ -2134,7 +2134,7 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                             fiscalYear: currentFiscalYear
                         });
                         await roundOffTransaction.save();
-                        console.log('Round-off Transaction: ', roundOffTransaction);
+                        ('Round-off Transaction: ', roundOffTransaction);
                     }
                 }
 
@@ -2162,7 +2162,7 @@ router.put('/sales-return/edit/:id', ensureAuthenticated, ensureCompanySelected,
                             fiscalYear: currentFiscalYear
                         });
                         await roundOffTransaction.save();
-                        console.log('Round-off Transaction: ', roundOffTransaction);
+                        ('Round-off Transaction: ', roundOffTransaction);
                     }
                 }
 
@@ -2726,7 +2726,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                             fiscalYear: currentFiscalYear
                         });
                         await roundOffTransaction.save();
-                        console.log('Round-off Transaction: ', roundOffTransaction);
+                        ('Round-off Transaction: ', roundOffTransaction);
                     }
                 }
 
@@ -2754,7 +2754,7 @@ router.put('/sales-return/editCashAccount/:id', ensureAuthenticated, ensureCompa
                             fiscalYear: currentFiscalYear
                         });
                         await roundOffTransaction.save();
-                        console.log('Round-off Transaction: ', roundOffTransaction);
+                        ('Round-off Transaction: ', roundOffTransaction);
                     }
                 }
 
@@ -2808,7 +2808,7 @@ router.get('/sales-return/:id/print', isLoggedIn, ensureAuthenticated, ensureCom
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -2851,7 +2851,7 @@ router.get('/sales-return/:id/print', isLoggedIn, ensureAuthenticated, ensureCom
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -2944,7 +2944,7 @@ router.get('/sales-return/:id/direct-print', isLoggedIn, ensureAuthenticated, en
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -2987,7 +2987,7 @@ router.get('/sales-return/:id/direct-print', isLoggedIn, ensureAuthenticated, en
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -3080,7 +3080,7 @@ router.get('/sales-return/:id/cash/direct-print', isLoggedIn, ensureAuthenticate
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -3123,7 +3123,7 @@ router.get('/sales-return/:id/cash/direct-print', isLoggedIn, ensureAuthenticate
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -3216,7 +3216,7 @@ router.get('/sales-return/:id/edit/direct-print', isLoggedIn, ensureAuthenticate
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -3259,7 +3259,7 @@ router.get('/sales-return/:id/edit/direct-print', isLoggedIn, ensureAuthenticate
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');

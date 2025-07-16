@@ -23,7 +23,7 @@ async function checkFiscalYearDateRange(req, res, next) {
             };
         }
         // Log the current fiscal year
-        console.log('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
+        ('Current fiscal year in session:', JSON.stringify(req.session.currentFiscalYear, null, 2));
         // Destructure the start and end dates along with the date format from the session
         const { startDate, endDate, dateFormat } = req.session.currentFiscalYear;
 

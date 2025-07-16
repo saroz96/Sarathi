@@ -106,9 +106,9 @@ async function transferDataToNewFiscalYear(company, newFiscalYearId) {
         );
 
         if (result.nModified > 0) {
-            console.log(`Account ${account.name} has been updated with a new opening balance for the fiscal year.`);
+            (`Account ${account.name} has been updated with a new opening balance for the fiscal year.`);
         } else {
-            console.log(`Account ${account.name} could not be updated.`);
+            (`Account ${account.name} could not be updated.`);
         }
     }
 
@@ -133,9 +133,9 @@ async function transferDataToNewFiscalYear(company, newFiscalYearId) {
         );
 
         if (result.nModified > 0) {
-            console.log(`Item ${item.name} updated with new opening stock for fiscal year ${newFiscalYearId}.`);
+            (`Item ${item.name} updated with new opening stock for fiscal year ${newFiscalYearId}.`);
         } else {
-            console.log(`Item ${item.name} could not be updated.`);
+            (`Item ${item.name} could not be updated.`);
         }
     }
 }

@@ -26,7 +26,7 @@ async function seedDatabase() {
 
         await testStock.save();
 
-        console.log('Test stock data inserted successfully');
+        ('Test stock data inserted successfully');
 
         // Close the connection
         await mongoose.disconnect();

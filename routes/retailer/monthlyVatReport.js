@@ -131,7 +131,7 @@ router.get('/monthly-vat-report', isLoggedIn, async (req, res) => {
                 $lte: toDate
             }
         };
-        console.log('QUERY:', query);
+        ('QUERY:', query);
         // Get all documents
         const [salesBills, salesReturns, purchaseBills, purchaseReturns] = await Promise.all([
             SalesBill.find(query).lean(),

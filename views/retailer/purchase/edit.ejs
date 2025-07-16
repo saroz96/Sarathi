@@ -108,7 +108,8 @@
                                     <div class="col">
                                         <label for="paymentMode">Payment Mode:</label>
                                         <select class="form-control" id="paymentMode" name="paymentMode"
-                                            autocomplete="off">
+                                            autocomplete="off" onkeydown="if(event.key === 'Enter') {
+                                                 event.preventDefault(); moveToNextVisibleInput(this); }">
                                             <option value="credit" <%=purchaseInvoice.paymentMode==='credit'
                                                 ? 'selected' : '' %>>credit</option>
                                             <option value="cash" <%=purchaseInvoice.paymentMode==='cash' ? 'selected'
@@ -126,7 +127,8 @@
                                     <div class="col">
                                         <label for="isVatExempt">VAT</label>
                                         <select name="isVatExempt" id="isVatExempt" class="form-control"
-                                            onchange="toggleVatInputs()" autocomplete="off">
+                                            onchange="toggleVatInputs()" autocomplete="off" onkeydown="if(event.key === 'Enter') {
+                                                 event.preventDefault(); moveToNextVisibleInput(this); }">
                                             <% if (vatEnabled) {%>
                                                 <option value="all"
                                                     <%=purchaseInvoice.isVatExempt===false&&purchaseInvoice.isVatAll==='true'
@@ -267,20 +269,25 @@
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </td>
-                                        <input type="hidden" name="items[<%= index %>][vatStatus]"
-                                            value="<%= item.vatStatus %>">
-
-                                        <input type="hidden" id="marginPercentage-<%= index %>"
+                                        <!-- Inside each item row -->
+                                        <td class="hidden">
+                                            <input type="hidden" name="items[<%= index %>][CCPercentage]"
+                                                value="<%= item.CCPercentage || '7.5' %>">
+                                            <input type="hidden" name="items[<%= index %>][itemCCAmount]"
+                                                value="<%= item.itemCCAmount || '0' %>">
+                                            <input type="hidden" id="marginPercentage-<%= index %>"
                                             value="<%= item.marginPercentage || '' %>">
                                         <input type="hidden" id="mrp-<%= index %>" value="<%= item.mrp || '' %>">
                                         <input type="hidden" id="salesPrice-<%= index %>"
                                             value="<%= item.price || '' %>">
                                         <input type="hidden" id="currency-<%= index %>"
                                             value="<%= item.currency || '' %>">
+                                        </td>
+                                        <input type="hidden" name="items[<%= index %>][vatStatus]"
+                                            value="<%= item.vatStatus %>">
                                         <td class="hidden">
                                             <input type="text" name="items[<%=index%>][uniqueUuId]"
                                                 value="<%=item.uniqueUuId%>">
-
                                         </td>
                                     </tr>
                                     <% }); %>
@@ -334,6 +341,11 @@
 
                                 <!-- VAT Rows (Initially visible) -->
                                 <tr id="taxableAmountRow">
+                                        <td><label for="CCAmount">CC Charge:</label></td>
+                                    <td>
+                                        <input type="number" name="CCAmount" id="CCAmount"
+                                            class="form-control" value="<%=purchaseInvoice.totalCCAmount%>">
+                                    </td>
                                     <td><label for="taxableAmount">Taxable Amount:</label></td>
                                     <td class="text-right">
                                         <p class="form-control-plaintext">Rs. <span id="taxableAmount">
@@ -341,8 +353,7 @@
                                             </span>
                                         </p>
                                     </td>
-                                    <td><label for="vatPercentage">VAT (13%):</label></td>
-                                    <td>
+                                    <td class="hidden">
                                         <input type="number" name="vatPercentage" id="vatPercentage"
                                             class="form-control" value="13.00" readonly>
                                     </td>
@@ -452,6 +463,7 @@
             </div>
         </div>
     </div>
+    
     <!-- Sales Price Modal -->
     <div class="modal fade" id="setSalesPriceModal" tabindex="-1" aria-labelledby="setSalesPriceModalLabel"
         aria-hidden="true">
@@ -459,17 +471,35 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="setSalesPriceModalLabel">Set Sales Price for New Batch</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="puPrice" class="form-label">Purchase Price</label>
-                        <input type="number" class="form-control" id="puPrice" step="any" autocomplete="off" readonly>
+                    <div class="row">
+                        <div class="col">
+                            <label for="prevPuPrice" class="form-label">Prev. Price</label>
+                            <input type="number" class="form-control" id="prePuPrice" step="any" autocomplete="off"
+                                readonly>
+                        </div>
+                        <div class="col">
+                            <label for="puPrice" class="form-label">New Price</label>
+                            <input type="number" class="form-control" id="puPrice" step="any" autocomplete="off"
+                                readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="CCPercentage" class="form-label">CC (%)</label>
+                            <input type="number" class="form-control" id="CCPercentage" step="any" autocomplete="off">
+                        </div>
+                        <div class="col">
+                            <label for="itemCCAmount" class="form-label">CC Charge</label>
+                            <input type="number" class="form-control" id="itemCCAmount" step="any" autocomplete="off">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="marginPercentage" class="form-label">Margin Percentage (%)</label>
                         <input type="number" class="form-control" id="marginPercentage" min="0" step="any"
-                            placeholder="Enter margin percentage" onfocus="selectValue(this)" autocomplete="off">
+                            onfocus="selectValue(this)" placeholder="Enter margin percentage" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label for="currency" class="form-label">Currency</label>
@@ -485,8 +515,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="salesPrice" class="form-label">Sales Price</label>
-                        <input type="number" class="form-control" id="salesPrice" step="any" autocomplete="off"
-                            onfocus="selectValue(this)" required>
+                        <input type="number" class="form-control" id="salesPrice" step="any" onfocus="selectValue(this)"
+                            autocomplete="off" required>
                     </div>
                 </div>
                 <div class="modal-footer">

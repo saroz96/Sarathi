@@ -459,7 +459,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
             const isVatAll = isVatExempt === 'all';
@@ -598,7 +598,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
 
             // Handle case where settings is null
             if (!roundOffForPurchaseReturn) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForPurchaseReturn = { roundOffPurchaseReturn: false }; // Provide default settings or handle as needed
             }
             let roundOffAmount = 0;
@@ -742,7 +742,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                 });
 
                 await transaction.save();
-                console.log('Transaction', transaction);
+                ('Transaction', transaction);
             }
 
             // Create a transaction for the default Purchase Account
@@ -771,7 +771,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                         fiscalYear: currentFiscalYear
                     });
                     await purchaseRtnTransaction.save();
-                    console.log('Purchase Return Transaction: ', purchaseRtnTransaction);
+                    ('Purchase Return Transaction: ', purchaseRtnTransaction);
                 }
             }
 
@@ -801,7 +801,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save();
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -831,7 +831,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save();
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -860,7 +860,7 @@ router.post('/purchase-return', isLoggedIn, ensureAuthenticated, ensureCompanySe
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save();
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -926,7 +926,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             const currentCompany = await Company.findById(new ObjectId(companyId));
             const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
             const today = new Date();
-            console.log(company.renewalDate); // Debugging to see if renewalDate exists
+            (company.renewalDate); // Debugging to see if renewalDate exists
 
             const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
 
@@ -988,14 +988,14 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 return res.redirect('/purchase-return/list');
             }
 
-            console.log('Bill Account:', purchaseReturn.account);
+            ('Bill Account:', purchaseReturn.account);
 
             // Ensure selectedAccountId is set to the ID of the account linked to the purchaseReturn
             const selectedAccountId = purchaseReturn.account ? purchaseReturn.account._id.toString() : null;
 
-            console.log('Fetched Accounts:', accounts);
-            console.log('Fetched Bill:', purchaseReturn);
-            console.log('Selected Account ID:', selectedAccountId);
+            ('Fetched Accounts:', accounts);
+            ('Fetched Bill:', purchaseReturn);
+            ('Selected Account ID:', selectedAccountId);
 
             // Render the edit page with the bill data
             res.render('retailer/purchaseReturn/edit', {
@@ -1152,7 +1152,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                 await product.save(); // Save updated stock
 //             }
 
-//             console.log('Stock successfully reversed for existing bill items.');
+//             ('Stock successfully reversed for existing bill items.');
 
 //             // Delete removed items from the PurchaseBill
 //             existingBill.items = existingBill.items.filter(existingItem => {
@@ -1162,7 +1162,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 
 //             // Delete all associated transactions
 //             await Transaction.deleteMany({ purchaseReturnBillId: billId });
-//             console.log('Existing transactions deleted successfully');
+//             ('Existing transactions deleted successfully');
 
 //             // Calculate amounts based on the updated POST route logic
 //             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
@@ -1249,7 +1249,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 
 //             // Handle case where settings is null
 //             if (!roundOffForPurchaseReturn) {
-//                 console.log('No settings found, using default settings or handling as required');
+//                 ('No settings found, using default settings or handling as required');
 //                 roundOffForPurchaseReturn = { roundOffPurchaseReturn: false }; // Provide default settings or handle as needed
 //             }
 //             let roundOffAmount = 0;
@@ -1347,7 +1347,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                 });
 
 //                 await transaction.save();
-//                 console.log('Transaction created:', transaction);
+//                 ('Transaction created:', transaction);
 
 //                 await reduceStockBatchWise(product, item.batchNumber, item.quantity);
 
@@ -1392,7 +1392,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                         fiscalYear: currentFiscalYear
 //                     });
 //                     await purchaseRtnTransaction.save();
-//                     console.log('Purchase Return Transaction: ', purchaseRtnTransaction);
+//                     ('Purchase Return Transaction: ', purchaseRtnTransaction);
 //                 }
 //             }
 
@@ -1422,7 +1422,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                         fiscalYear: currentFiscalYear
 //                     });
 //                     await vatTransaction.save();
-//                     console.log('Vat Transaction: ', vatTransaction);
+//                     ('Vat Transaction: ', vatTransaction);
 //                 }
 //             }
 
@@ -1452,7 +1452,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                         fiscalYear: currentFiscalYear
 //                     });
 //                     await roundOffTransaction.save();
-//                     console.log('Round-off Transaction: ', roundOffTransaction);
+//                     ('Round-off Transaction: ', roundOffTransaction);
 //                 }
 //             }
 
@@ -1481,11 +1481,11 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                         fiscalYear: currentFiscalYear
 //                     });
 //                     await roundOffTransaction.save();
-//                     console.log('Round-off Transaction: ', roundOffTransaction);
+//                     ('Round-off Transaction: ', roundOffTransaction);
 //                 }
 //             }
 
-//             console.log('All transactions successfully created for updated bill.');
+//             ('All transactions successfully created for updated bill.');
 //             await existingBill.save();
 
 //             // If payment mode is cash, also create a transaction for the "Cash in Hand" account
@@ -1511,7 +1511,7 @@ router.get('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 //                         fiscalYear: currentFiscalYear,
 //                     });
 //                     await cashTransaction.save();
-//                     console.log('Cash transaction created:', cashTransaction);
+//                     ('Cash transaction created:', cashTransaction);
 //                 }
 //             }
 
@@ -1657,7 +1657,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 await product.save({ session }); // Save updated stock
             }
 
-            console.log('Stock successfully reversed for existing bill items.');
+            ('Stock successfully reversed for existing bill items.');
 
             // Delete removed items from the PurchaseBill
             existingBill.items = existingBill.items.filter(existingItem => {
@@ -1670,7 +1670,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 
             // Delete all associated transactions
             await Transaction.deleteMany({ purchaseReturnBillId: billId }).session(session);
-            console.log('Existing transactions deleted successfully');
+            ('Existing transactions deleted successfully');
 
             // Calculate amounts based on the updated POST route logic
             const isVatExemptBool = isVatExempt === 'true' || isVatExempt === true;
@@ -1741,7 +1741,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
 
             // Handle case where settings is null
             if (!roundOffForPurchaseReturn) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForPurchaseReturn = { roundOffPurchaseReturn: false }; // Provide default settings or handle as needed
             }
             let roundOffAmount = 0;
@@ -1853,7 +1853,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 });
 
                 await transaction.save({ session });
-                console.log('Transaction created:', transaction);
+                ('Transaction created:', transaction);
             }
 
 
@@ -1885,7 +1885,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         fiscalYear: currentFiscalYear
                     });
                     await purchaseRtnTransaction.save({ session });
-                    console.log('Purchase Return Transaction: ', purchaseRtnTransaction);
+                    ('Purchase Return Transaction: ', purchaseRtnTransaction);
                 }
             }
 
@@ -1915,7 +1915,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         fiscalYear: currentFiscalYear
                     });
                     await vatTransaction.save({ session });
-                    console.log('Vat Transaction: ', vatTransaction);
+                    ('Vat Transaction: ', vatTransaction);
                 }
             }
 
@@ -1945,7 +1945,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
@@ -1974,11 +1974,11 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         fiscalYear: currentFiscalYear
                     });
                     await roundOffTransaction.save({ session });
-                    console.log('Round-off Transaction: ', roundOffTransaction);
+                    ('Round-off Transaction: ', roundOffTransaction);
                 }
             }
 
-            console.log('All transactions successfully created for updated bill.');
+            ('All transactions successfully created for updated bill.');
             await existingBill.save();
 
             // If payment mode is cash, also create a transaction for the "Cash in Hand" account
@@ -2003,7 +2003,7 @@ router.put('/purchase-return/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                         fiscalYear: currentFiscalYear,
                     });
                     await cashTransaction.save({ session });
-                    console.log('Cash transaction created:', cashTransaction);
+                    ('Cash transaction created:', cashTransaction);
                 }
             }
 
@@ -2034,7 +2034,7 @@ router.get('/purchase-return/:id/print', isLoggedIn, ensureAuthenticated, ensure
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -2075,7 +2075,7 @@ router.get('/purchase-return/:id/print', isLoggedIn, ensureAuthenticated, ensure
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -2174,7 +2174,7 @@ router.get('/purchase-return/:id/direct-print', isLoggedIn, ensureAuthenticated,
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -2214,7 +2214,7 @@ router.get('/purchase-return/:id/direct-print', isLoggedIn, ensureAuthenticated,
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -2313,7 +2313,7 @@ router.get('/purchase-return/:id/edit/direct-print', isLoggedIn, ensureAuthentic
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -2353,7 +2353,7 @@ router.get('/purchase-return/:id/edit/direct-print', isLoggedIn, ensureAuthentic
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');

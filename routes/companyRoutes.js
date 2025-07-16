@@ -289,7 +289,7 @@ async function addDefaultCashAccount(companyId) {
             });
 
             await cashAccount.save();
-            console.log(`Default cash account "${defaultCashAccount.name}" added successfully.`);
+            (`Default cash account "${defaultCashAccount.name}" added successfully.`);
         } else {
             console.error('Error: "Cash in Hand" group not found for the company.');
         }
@@ -341,7 +341,7 @@ async function addOtherDefaultAccounts(companyId) {
                 });
 
                 await otherAccount.save();
-                console.log(`Default account "${otherAccount.name}" added successfully.`);
+                (`Default account "${otherAccount.name}" added successfully.`);
             } else {
                 console.error(`Error: Account group "${accountData.groupName}" not found for the company.`);
             }
@@ -390,7 +390,7 @@ async function addDefaultVatAccount(companyId) {
             });
 
             await vatAccount.save();
-            console.log(`Default VAT account "${defaultVatAccount.name}" added successfully.`);
+            (`Default VAT account "${defaultVatAccount.name}" added successfully.`);
         } else {
             console.error('Error: "Duties & Taxes" group not found for the company.');
         }
@@ -409,7 +409,7 @@ async function addDefaultAccountGroups(companyId) {
         }));
 
         await AccountGroup.insertMany(accountGroups);
-        console.log('Default account groups added successfully.');
+        ('Default account groups added successfully.');
 
         // After adding groups, add the default Cash account under the "Cash in Hand" group
         await addDefaultCashAccount(companyId);
@@ -496,7 +496,7 @@ async function addDefaultItemUnit(companyId) {
             company: companyId,
         }));
         await Unit.insertMany(units);
-        console.log('Default item units added successfully.');
+        ('Default item units added successfully.');
     } catch (error) {
         console.error('Error adding default item unit:', error);
     }
@@ -509,7 +509,7 @@ async function addDefaultItemMainUnit(companyId) {
             company: companyId,
         }));
         await mainUnit.insertMany(mainUnits);
-        console.log('Default item main units added successfully.');
+        ('Default item main units added successfully.');
     } catch (error) {
         console.error('Error adding default item main unit:', error);
     }
@@ -624,7 +624,7 @@ router.post('/company', ensureAuthenticated, async (req, res) => {
         });
 
         const company = await newCompany.save();
-        console.log(`${company}, company name: ${newCompany.name}`);
+        (`${company}, company name: ${newCompany.name}`);
 
         // Create Fiscal Year entry
         const startDateObject = new Date(startDate);
@@ -651,8 +651,8 @@ router.post('/company', ensureAuthenticated, async (req, res) => {
         // Assign the default fiscal year to the company
         company.fiscalYear = defaultFiscalYear._id;
         await company.save();
-        console.log(company);
-        console.log(defaultFiscalYear);
+        (company);
+        (defaultFiscalYear);
 
         await addDefaultAccountGroups(company._id);
         await addDefaultItemCategory(company._id);
@@ -681,7 +681,7 @@ router.post('/company', ensureAuthenticated, async (req, res) => {
             company: company._id
         });
         await newSettings.save();
-        console.log('Default settings added successfully.', newSettings);
+        ('Default settings added successfully.', newSettings);
 
         // Redirect based on tradeType
         let redirectPath;
@@ -942,7 +942,7 @@ router.put('/company/edit/:id', ensureAuthenticated, async (req, res) => {
             { new: true }
         );
 
-        console.log('Updated: ', company);
+        ('Updated: ', company);
 
         // Update fiscal year if dateFormat or dates have changed
         const startDateObject = new Date(startDate);

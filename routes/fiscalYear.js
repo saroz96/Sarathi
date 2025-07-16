@@ -285,10 +285,10 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 
 //                 try {
 //                     await newItem.save();
-//                     console.log(`Created new item for fiscal year ${newFiscalYear.name}: ${newItem.name} stock set to: ${newItem.stock}`);
+//                     (`Created new item for fiscal year ${newFiscalYear.name}: ${newItem.name} stock set to: ${newItem.stock}`);
 //                 } catch (saveError) {
 //                     if (saveError.code === 11000) {
-//                         console.log(`Item ${newItem.name} already exists for fiscal year ${newFiscalYear.name}`);
+//                         (`Item ${newItem.name} already exists for fiscal year ${newFiscalYear.name}`);
 //                     } else {
 //                         throw saveError;
 //                     }
@@ -316,7 +316,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 //                 });
 
 //                 // Log transactions for debugging
-//                 console.log(`Transactions for account ${account._id}:`, transactions);
+//                 (`Transactions for account ${account._id}:`, transactions);
 
 //                 // Initialize total debits and credits
 //                 let totalDebits = 0;
@@ -324,7 +324,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 
 //                 // Calculate total debits and credits from all transactions
 //                 transactions.forEach(transaction => {
-//                     console.log(`Transaction type: ${transaction.type}, debit: ${transaction.debit}, credit: ${transaction.credit}`);
+//                     (`Transaction type: ${transaction.type}, debit: ${transaction.debit}, credit: ${transaction.credit}`);
 //                     switch (transaction.type) {
 //                         case 'Sale':
 //                             if (transaction.debit > 0 && transaction.isType === 'Sale') {
@@ -398,7 +398,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 //                             // Opening balance transactions might not need to affect the calculation here
 //                             break;
 //                         default:
-//                             console.log(`Unexpected transaction type: ${transaction.type}`); // Log unexpected types
+//                             (`Unexpected transaction type: ${transaction.type}`); // Log unexpected types
 //                             break;
 //                     }
 //                 });
@@ -417,7 +417,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 //                     totalBalance = openingBalance + totalBalance;
 //                 }
 
-//                 console.log('Opening Balance:', openingBalance, 'Total Balance:', totalBalance);
+//                 ('Opening Balance:', openingBalance, 'Total Balance:', totalBalance);
 
 
 //                 // Determine the new opening balance type
@@ -446,11 +446,11 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 
 //                 try {
 //                     await newAccount.save();
-//                     console.log(`Created new account for fiscal year ${newFiscalYear.name}: ${newAccount.name} with opening balance: ${newAccount.openingBalance.amount}`);
+//                     (`Created new account for fiscal year ${newFiscalYear.name}: ${newAccount.name} with opening balance: ${newAccount.openingBalance.amount}`);
 
 //                 } catch (saveError) {
 //                     if (saveError.code === 11000) {
-//                         console.log(`Account ${newAccount.name} already exists for fiscal year ${newFiscalYear.name}`);
+//                         (`Account ${newAccount.name} already exists for fiscal year ${newFiscalYear.name}`);
 //                     } else {
 //                         throw saveError;
 //                     }
@@ -471,7 +471,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
 //                         transactionType: transactionType,
 //                         currentBillNumber: 0 // Initialize to 1 for the new fiscal year
 //                     });
-//                     console.log(`Initialized ${transactionType} bill counter for fiscal year ${newFiscalYear.name}`);
+//                     (`Initialized ${transactionType} bill counter for fiscal year ${newFiscalYear.name}`);
 //                 } catch (err) {
 //                     console.error(`Failed to initialize ${transactionType} bill counter:`, err);
 //                 }
@@ -1598,23 +1598,6 @@ router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelec
             company: companyId,
             fiscalYear: fiscalYearId
         });
-
-        // //Delete items company
-        // await itemsCompany.deleteMany({
-        //     company: companyId,
-        //     fiscalYear: fiscalYearId
-        // })
-
-        // //Delete sales quotation voucher
-        // await SalesQuotation.deleteMany({
-        //     company: companyId,
-        //     fiscalYear: fiscalYearId
-        // })
-
-        // await Settings.deleteMany({
-        //     companyId: companyId,
-        //     fiscalYear: fiscalYearId
-        // });
 
         // 8. Delete the fiscal year
         await FiscalYear.findByIdAndDelete(fiscalYearId);

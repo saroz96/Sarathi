@@ -391,7 +391,7 @@ itemSchema.statics.generateMissingBarcodes = async function () {
                 item.barcodeNumber = fullBarcode;
                 await item.save();
                 isUnique = true;
-                console.log(`Generated barcode ${fullBarcode} for item ${item._id}`);
+                (`Generated barcode ${fullBarcode} for item ${item._id}`);
             }
         }
 
@@ -400,7 +400,7 @@ itemSchema.statics.generateMissingBarcodes = async function () {
         }
     }
 
-    console.log('Barcode generation process completed');
+    ('Barcode generation process completed');
     return itemsWithoutBarcode.length;
 };
 //Create a static method to check for expiring items:
@@ -543,7 +543,7 @@ itemSchema.statics.initializeItemStatus = async function () {
         });
 
         if (count === 0) {
-            // console.log('No items need status migration');
+            // ('No items need status migration');
             return { nModified: 0 };
         }
 
@@ -557,7 +557,7 @@ itemSchema.statics.initializeItemStatus = async function () {
             { $set: { status: 'active' } }
         );
 
-        console.log(`Updated ${result.nModified} items with default 'active' status`);
+        (`Updated ${result.nModified} items with default 'active' status`);
         return result;
     } catch (error) {
         console.error('Error initializing item statuses:', error);

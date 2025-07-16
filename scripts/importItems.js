@@ -30,7 +30,7 @@ async function importItems({
     // Insert items
     const result = await db.collection('items').insertMany(transformedItems);
     
-    console.log(`Successfully imported ${result.insertedCount} items`);
+    (`Successfully imported ${result.insertedCount} items`);
     return result.insertedCount;
   } finally {
     await client.close();

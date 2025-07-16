@@ -200,7 +200,7 @@ router.get('/sales-quotation', isLoggedIn, ensureAuthenticated, ensureCompanySel
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
         const transactionDateNepali = new NepaliDate(today).format('YYYY-MM-DD');
-        console.log(company.renewalDate); // Debugging to see if renewalDate exists
+        (company.renewalDate); // Debugging to see if renewalDate exists
 
         const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
         const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
@@ -310,7 +310,7 @@ router.post('/sales-quotation', isLoggedIn, ensureAuthenticated, ensureCompanySe
             const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             const userId = req.user._id;
 
-            console.log('Request Body:', req.body);
+            ('Request Body:', req.body);
 
             if (!companyId) {
                 await session.abortTransaction();
@@ -411,7 +411,7 @@ router.post('/sales-quotation', isLoggedIn, ensureAuthenticated, ensureCompanySe
 
             // Handle case where settings is null
             if (!roundOffForSales) {
-                console.log('No settings found, using default settings or handling as required');
+                ('No settings found, using default settings or handling as required');
                 roundOffForSales = { roundOffSales: false };
             }
             let roundOffAmount = 0;
@@ -517,7 +517,7 @@ router.get('/sales-quotation/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             const currentCompany = await Company.findById(new ObjectId(companyId));
             const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
 
-            console.log(company.renewalDate); // Debugging to see if renewalDate exists
+            (company.renewalDate); // Debugging to see if renewalDate exists
 
             const initialCurrentFiscalYear = company.fiscalYear; // Assuming it's a single object
 
@@ -556,7 +556,7 @@ router.get('/sales-quotation/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             const accounts = await Account.find({ company: companyId, fiscalYear: fiscalYear })
                 .populate('transactions')
                 .populate('companyGroups');
-            console.log('Accounts:', accounts);
+            ('Accounts:', accounts);
 
             // Find the bill by ID and populate relevant data
             const salesQuotation = await SalesQuotation.findById({ _id: billId, company: companyId, fiscalYear: fiscalYear })
@@ -568,14 +568,14 @@ router.get('/sales-quotation/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
                 req.flash('error', 'Sales Quotation not found or does not belong to the selected company');
                 return res.redirect('/billsTrackBatchOpen');
             }
-            console.log('Sales Quotation Account:', salesQuotation.account);
+            ('Sales Quotation Account:', salesQuotation.account);
 
             // Ensure selectedAccountId is set to the ID of the account linked to the bill
             const selectedAccountId = salesQuotation.account ? salesQuotation.account._id.toString() : null;
 
-            console.log('Fetched Accounts:', accounts);
-            console.log('Fetched Bill:', salesQuotation);
-            console.log('Selected Account ID:', selectedAccountId);
+            ('Fetched Accounts:', accounts);
+            ('Fetched Bill:', salesQuotation);
+            ('Selected Account ID:', selectedAccountId);
 
 
             // Render the edit page with the bill data
@@ -648,7 +648,7 @@ router.put('/sales-quotation/edit/:id', isLoggedIn, ensureAuthenticated, ensureC
             const currentFiscalYear = req.session.currentFiscalYear.id;
             const userId = req.user._id;
 
-            console.log('Update Request Body:', req.body);
+            ('Update Request Body:', req.body);
 
             // Basic validations
             if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -842,7 +842,7 @@ router.get('/sales-quotation/:id/direct-print', isLoggedIn, ensureAuthenticated,
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -885,7 +885,7 @@ router.get('/sales-quotation/:id/direct-print', isLoggedIn, ensureAuthenticated,
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -939,7 +939,7 @@ router.get('/sales-quotation/:id/print', isLoggedIn, ensureAuthenticated, ensure
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -980,7 +980,7 @@ router.get('/sales-quotation/:id/print', isLoggedIn, ensureAuthenticated, ensure
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1035,7 +1035,7 @@ router.get('/sales-quotation/:id/direct-print-edit', isLoggedIn, ensureAuthentic
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
 
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -1078,7 +1078,7 @@ router.get('/sales-quotation/:id/direct-print-edit', isLoggedIn, ensureAuthentic
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');

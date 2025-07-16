@@ -148,7 +148,7 @@ router.post('/rack/management', ensureAuthenticated, ensureCompanySelected, ensu
         await newRack.save();
 
         // Log the new item for debugging purposes
-        console.log(newRack);
+        (newRack);
 
         // Flash success message and redirect
         req.flash('success', 'Rack added successfully!');

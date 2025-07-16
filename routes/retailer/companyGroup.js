@@ -10,17 +10,12 @@ const Company = require('../../models/Company');
 const FiscalYear = require('../../models/FiscalYear');
 const Account = require('../../models/retailer/Account');
 
-// // Import the seeding script
-// const seedDatabase = require('../seeds/seed');
-// seedDatabase(); // Call the seed function
-
 router.get('/account-group', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const currentCompanyName = req.session.currentCompanyName;
         const companiesGroups = await companyGroup.find({ company: companyId });
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
-        console.log(companiesGroups);
 
         // Check if fiscal year is already in the session or available in the company
         let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -124,17 +119,6 @@ router.put('/account-group/:id', ensureAuthenticated, ensureCompanySelected, ens
         }
     }
 });
-
-// Route to handle form submission and delete the company group
-// router.delete('/account-group/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
-//     if (req.tradeType === 'retailer') {
-//         const { id } = req.params;
-
-//         await companyGroup.findByIdAndDelete(id);
-//         req.flash('success', 'Groups deleted successfully');
-//         res.redirect('/account-group');
-//     }
-// })
 
 router.delete(
     '/account-group/:id',

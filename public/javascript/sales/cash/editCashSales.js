@@ -7,7 +7,7 @@ async function fetchItems(query, vatStatus, existingItemIds) {
         const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
         const data = await response.json();
 
-        console.log('Fetched items:', data);
+        ('Fetched items:', data);
 
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format');
@@ -96,7 +96,7 @@ async function showAllItems(input) {
 
     // Fetch all items with an empty query
     const items = await fetchItems('', vatStatus, existingItemIds);
-    console.log('All items:', items);
+    ('All items:', items);
 
     // Clear existing dropdown items
     dropdownMenu.innerHTML = '';

@@ -143,7 +143,7 @@ router.post('/store/management', ensureAuthenticated, ensureCompanySelected, ens
         await newStore.save();
 
         // Log the new item for debugging purposes
-        console.log(newStore);
+        (newStore);
 
         // Flash success message and redirect
         req.flash('success', 'Store added successfully!');
@@ -418,7 +418,7 @@ router.get('/transfer-stock', async (req, res) => {
 //         }
 
 //         // Debug logging
-//         console.log('Transfer validation:', {
+//         ('Transfer validation:', {
 //             currentStore: sourceEntry.store.toString(),
 //             fromStore,
 //             sourceTransfer: sourceEntry.sourceTransfer

@@ -879,7 +879,7 @@
                 const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
                 const data = await response.json();
 
-                console.log('Fetched items:', data);
+                ('Fetched items:', data);
 
                 if (!Array.isArray(data)) {
                     throw new Error('Invalid response format');
@@ -965,7 +965,7 @@
 
             // Fetch all items with an empty query
             const items = await fetchItems('', vatStatus, existingItemIds);
-            console.log('All items:', items);
+            ('All items:', items);
 
             // Clear existing dropdown items
             dropdownMenu.innerHTML = '';
@@ -1581,7 +1581,7 @@
                 const response = await fetch(`/api/transactions/${itemId}/${accountId}/${purchaseSalesType}`);
                 const transactions = await response.json();
                 // const { transactions, companyDateFormat } = await response.json();
-                console.log('Fetched Transactions:', transactions);
+                ('Fetched Transactions:', transactions);
 
                 // Check if transactions are empty
                 if (transactions.length === 0) {
@@ -1640,7 +1640,7 @@
 
                 // Set the innerHTML of the transaction list container
                 transactionList.innerHTML = tableHtml;
-                console.log('Transactions:', transactions);
+                ('Transactions:', transactions);
 
                 // Show the modal
                 $('#transactionModal').modal('show');

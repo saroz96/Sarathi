@@ -222,7 +222,7 @@ router.post('/journal/new', ensureAuthenticated, ensureCompanySelected, ensureTr
                 });
 
                 await debitTransaction.save();
-                console.log(debitTransaction);
+                (debitTransaction);
                 await Account.findByIdAndUpdate(debit.account, { $push: { transactions: debitTransaction._id } });
             }
 
@@ -259,7 +259,7 @@ router.post('/journal/new', ensureAuthenticated, ensureCompanySelected, ensureTr
                 });
 
                 await creditTransaction.save();
-                console.log(creditTransaction);
+                (creditTransaction);
                 await Account.findByIdAndUpdate(credit.account, { $push: { transactions: creditTransaction._id } });
             }
 
@@ -842,7 +842,7 @@ router.get('/journal/:id/print', ensureAuthenticated, ensureCompanySelected, ens
             const journalId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -886,7 +886,7 @@ router.get('/journal/:id/print', ensureAuthenticated, ensureCompanySelected, ens
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -954,7 +954,7 @@ router.get('/journal/:id/direct-print', ensureAuthenticated, ensureCompanySelect
             const journalId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -999,7 +999,7 @@ router.get('/journal/:id/direct-print', ensureAuthenticated, ensureCompanySelect
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1067,7 +1067,7 @@ router.get('/journal/:id/direct-print-edit', ensureAuthenticated, ensureCompanyS
             const journalId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -1112,7 +1112,7 @@ router.get('/journal/:id/direct-print-edit', ensureAuthenticated, ensureCompanyS
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1183,14 +1183,14 @@ router.post('/journals/cancel/:billNumber', ensureAuthenticated, ensureCompanySe
                 { billNumber },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Journal Voucher Canceled Update Result: ', updateJournalVoucherStatus);
+            ('Journal Voucher Canceled Update Result: ', updateJournalVoucherStatus);
 
             //Mark related transactions as 'canceled' and set isActive to false
             const updateTransactionsStatus = await Transaction.updateMany(
                 { billNumber, type: 'Jrnl' },
                 { status: 'canceled', isActive: false }
             )
-            console.log('Related transaction update result: ', updateTransactionsStatus);
+            ('Related transaction update result: ', updateTransactionsStatus);
             req.flash('success', 'Journal and related transactions have been canceled.');
             res.redirect(`/journal/edit/billNumber?billNumber=${billNumber}`);
         } catch (error) {
@@ -1210,7 +1210,7 @@ router.post('/journals/reactivate/:billNumber', ensureAuthenticated, ensureCompa
 
             // Update the receipt status to 'active'
             const updateJournalVoucherStatus = await JournalVoucher.updateOne({ billNumber }, { status: 'active', isActive: true });
-            console.log('Update journal voucher status:', updateJournalVoucherStatus);
+            ('Update journal voucher status:', updateJournalVoucherStatus);
             // Reactivate related transactions and set isActive to true
             const updateTransactionsStatus = await Transaction.updateMany(
                 {
@@ -1218,7 +1218,7 @@ router.post('/journals/reactivate/:billNumber', ensureAuthenticated, ensureCompa
                 },
                 { status: 'active', isActive: true }  // Add isActive: true if you have added this field
             );
-            console.log('Update Transactions Status:', updateTransactionsStatus);
+            ('Update Transactions Status:', updateTransactionsStatus);
 
             req.flash('success', 'Journal and related transactions have been reactivated.');
             res.redirect(`/journal/edit/billNumber?billNumber=${billNumber}`);

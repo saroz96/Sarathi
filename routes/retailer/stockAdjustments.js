@@ -452,7 +452,7 @@ router.get('/stockAdjustments/edit/billNumber', isLoggedIn, ensureAuthenticated,
 //                     vatStatus
 //                 });
 
-//                 console.log('Items Array Push:===>', itemsArray);
+//                 ('Items Array Push:===>', itemsArray);
 //             }
 
 //             // Calculate discount
@@ -979,7 +979,7 @@ router.get('/stockAdjustments/:id/print', isLoggedIn, ensureAuthenticated, ensur
 
         const currentCompanyName = req.session.currentCompanyName;
         const companyId = req.session.currentCompany;
-        console.log("Company ID from session:", companyId); // Debugging line
+        ("Company ID from session:", companyId); // Debugging line
         const today = new Date();
         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
         const transactionDateNepali = new NepaliDate(today).format('YYYY-MM-DD');
@@ -1023,7 +1023,7 @@ router.get('/stockAdjustments/:id/print', isLoggedIn, ensureAuthenticated, ensur
 
         try {
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1082,7 +1082,7 @@ router.post('/stockAdjustments/cancel/:billNumber', ensureAuthenticated, ensureC
                 { billNumber },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Stock adjustment status update result:', updateStockAdjustmentStatus);
+            ('Stock adjustment status update result:', updateStockAdjustmentStatus);
 
             req.flash('success', 'Stock adjustment have been canceled.');
             res.redirect(`/stockAdjustments/edit/billNumber?billNumber=${billNumber}`);

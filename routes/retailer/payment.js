@@ -199,8 +199,8 @@ router.get('/payments', isLoggedIn, ensureAuthenticated, ensureCompanySelected, 
                 : [];
 
             // Check for fetched data
-            console.log('Cash Accounts:', cashAccounts);
-            console.log('Bank Accounts:', bankAccounts);
+            ('Cash Accounts:', cashAccounts);
+            ('Bank Accounts:', bankAccounts);
 
             // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
             // let billCounter = await BillCounter.findOne({
@@ -432,10 +432,10 @@ router.post('/payments', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
             await creditTransaction.save();
             await Account.findByIdAndUpdate(paymentAccount, { $push: { transactions: creditTransaction._id } });
-            console.log(creditTransaction);
-            console.log(debitTransaction);
+            (creditTransaction);
+            (debitTransaction);
             await payment.save();
-            console.log(payment);
+            (payment);
 
 
             if (req.query.print === 'true') {
@@ -544,10 +544,10 @@ router.get('/payments/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelect
             // Combine cash and bank accounts for the dropdown
             const paymentAccounts = [...cashAccounts, ...bankAccounts];
 
-            console.log("Accounts:", accounts);
-            console.log("Cash Accounts:", cashAccounts);
-            console.log("Bank Accounts:", bankAccounts);
-            console.log('Payments:', payments);
+            ("Accounts:", accounts);
+            ("Cash Accounts:", cashAccounts);
+            ("Bank Accounts:", bankAccounts);
+            ('Payments:', payments);
 
             res.render('retailer/payment/edit', {
                 company,
@@ -664,10 +664,10 @@ router.get('/payments/edit/billNumber', isLoggedIn, ensureAuthenticated, ensureC
             // Combine cash and bank accounts for the dropdown
             const paymentAccounts = [...cashAccounts, ...bankAccounts];
 
-            console.log("Accounts:", accounts);
-            console.log("Cash Accounts:", cashAccounts);
-            console.log("Bank Accounts:", bankAccounts);
-            console.log('Payments:', payments);
+            ("Accounts:", accounts);
+            ("Cash Accounts:", cashAccounts);
+            ("Bank Accounts:", bankAccounts);
+            ('Payments:', payments);
 
             res.render('retailer/payment/edit', {
                 company,
@@ -858,7 +858,7 @@ router.get('/payments/:id/print', isLoggedIn, ensureAuthenticated, ensureCompany
             const paymentId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -898,7 +898,7 @@ router.get('/payments/:id/print', isLoggedIn, ensureAuthenticated, ensureCompany
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -951,7 +951,7 @@ router.get('/payments/:id/direct-print', isLoggedIn, ensureAuthenticated, ensure
             const paymentId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -991,7 +991,7 @@ router.get('/payments/:id/direct-print', isLoggedIn, ensureAuthenticated, ensure
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1045,7 +1045,7 @@ router.get('/payments/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, e
             const paymentId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -1085,7 +1085,7 @@ router.get('/payments/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, e
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1141,14 +1141,14 @@ router.post('/payments/cancel/:billNumber', ensureAuthenticated, ensureCompanySe
                 { billNumber },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Payment status update result:', updatePaymentStatus);
+            ('Payment status update result:', updatePaymentStatus);
 
             // Mark related transactions as 'canceled' and set isActive to false
             const updateTransactionsStatus = await Transaction.updateMany(
                 { billNumber, type: 'Pymt' },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Related transactions update result:', updateTransactionsStatus);
+            ('Related transactions update result:', updateTransactionsStatus);
 
             req.flash('success', 'Payment and related transactions have been canceled.');
             res.redirect(`/payments/edit/billNumber?billNumber=${billNumber}`);

@@ -194,8 +194,8 @@ router.get('/receipts', isLoggedIn, ensureAuthenticated, ensureCompanySelected, 
             : [];
 
         // Check for fetched data
-        console.log('Cash Accounts:', cashAccounts);
-        console.log('Bank Accounts:', bankAccounts);
+        ('Cash Accounts:', cashAccounts);
+        ('Bank Accounts:', bankAccounts);
 
         // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
         // let billCounter = await BillCounter.findOne({
@@ -361,7 +361,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 company: companyId
 
             });
-            console.log('Receipt Bill:', receipt);
+            ('Receipt Bill:', receipt);
             const creditTransaction = new Transaction({
                 account: accountId,
                 type: 'Rcpt',
@@ -381,7 +381,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
             });
 
             await creditTransaction.save();
-            console.log('Credit Transaction:', creditTransaction);
+            ('Credit Transaction:', creditTransaction);
             await Account.findByIdAndUpdate(accountId, { $push: { transactions: creditTransaction._id } });
 
             // let previousDebitBalance = 0;
@@ -410,7 +410,7 @@ router.post('/receipts', ensureAuthenticated, ensureCompanySelected, ensureTrade
             });
 
             await debitTransaction.save();
-            console.log('Debit Transaction: ', debitTransaction);
+            ('Debit Transaction: ', debitTransaction);
 
             // await Account.findByIdAndUpdate(receiptAccount, { $push: { transactions: debitTransaction._id } });
             // Update account transaction references
@@ -527,10 +527,10 @@ router.get('/receipts/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelect
             // Combine cash and bank accounts for the dropdown
             const receiptAccounts = [...cashAccounts, ...bankAccounts];
 
-            console.log("Accounts:", accounts);
-            console.log("Cash Accounts:", cashAccounts);
-            console.log("Bank Accounts:", bankAccounts);
-            console.log('Receipts:', receipts);
+            ("Accounts:", accounts);
+            ("Cash Accounts:", cashAccounts);
+            ("Bank Accounts:", bankAccounts);
+            ('Receipts:', receipts);
 
             res.render('retailer/receipt/edit', {
                 company,
@@ -648,10 +648,10 @@ router.get('/receipts/edit/billNumber', isLoggedIn, ensureAuthenticated, ensureC
             // Combine cash and bank accounts for the dropdown
             const receiptAccounts = [...cashAccounts, ...bankAccounts];
 
-            console.log("Accounts:", accounts);
-            console.log("Cash Accounts:", cashAccounts);
-            console.log("Bank Accounts:", bankAccounts);
-            console.log('receipts:', receipts);
+            ("Accounts:", accounts);
+            ("Cash Accounts:", cashAccounts);
+            ("Bank Accounts:", bankAccounts);
+            ('receipts:', receipts);
 
             res.render('retailer/receipt/edit', {
                 company,
@@ -812,7 +812,7 @@ router.get('/receipts/:id/print', isLoggedIn, ensureAuthenticated, ensureCompany
             const receiptId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -851,7 +851,7 @@ router.get('/receipts/:id/print', isLoggedIn, ensureAuthenticated, ensureCompany
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -903,7 +903,7 @@ router.get('/receipts/:id/direct-print', isLoggedIn, ensureAuthenticated, ensure
             const receiptId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -943,7 +943,7 @@ router.get('/receipts/:id/direct-print', isLoggedIn, ensureAuthenticated, ensure
 
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -995,7 +995,7 @@ router.get('/receipts/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, e
             const receiptId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -1035,7 +1035,7 @@ router.get('/receipts/:id/direct-print-edit', isLoggedIn, ensureAuthenticated, e
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1092,7 +1092,7 @@ router.post('/receipts/cancel/:billNumber', ensureAuthenticated, ensureCompanySe
                 { billNumber },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Receipt status update result:', updateReceiptStatus);
+            ('Receipt status update result:', updateReceiptStatus);
 
             // Mark related transactions as 'canceled' and set isActive to false
             const updateTransactionsStatus = await Transaction.updateMany(
@@ -1101,7 +1101,7 @@ router.post('/receipts/cancel/:billNumber', ensureAuthenticated, ensureCompanySe
                 },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Related transactions update result:', updateTransactionsStatus);
+            ('Related transactions update result:', updateTransactionsStatus);
 
             req.flash('success', 'Receipt and related transactions have been canceled.');
             res.redirect(`/receipts/edit/billNumber?billNumber=${billNumber}`);
@@ -1122,7 +1122,7 @@ router.post('/receipts/reactivate/:billNumber', ensureAuthenticated, ensureCompa
 
             // Update the receipt status to 'active'
             const updateReceiptStatus = await Receipt.updateOne({ billNumber }, { status: 'active', isActive: true });
-            console.log('Update receipt status:', updateReceiptStatus);
+            ('Update receipt status:', updateReceiptStatus);
             // Reactivate related transactions and set isActive to true
             const updateTransactionsStatus = await Transaction.updateMany(
                 {
@@ -1130,7 +1130,7 @@ router.post('/receipts/reactivate/:billNumber', ensureAuthenticated, ensureCompa
                 },
                 { status: 'active', isActive: true }  // Add isActive: true if you have added this field
             );
-            console.log('Update Transactions Status:', updateTransactionsStatus);
+            ('Update Transactions Status:', updateTransactionsStatus);
 
             req.flash('success', 'Receipt and related transactions have been reactivated.');
             res.redirect(`/receipts/edit/billNumber?billNumber=${billNumber}`);

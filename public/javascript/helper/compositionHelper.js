@@ -180,12 +180,12 @@ document.addEventListener('DOMContentLoaded', function () {
       `;
 
             listItem.addEventListener('click', () => {
-                console.log('Selected item:', item);
+                ('Selected item:', item);
             });
 
             listItem.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    console.log('Selected item:', item);
+                    ('Selected item:', item);
                 }
             });
 
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 highlightItem(currentItemFocus);
             } else if (event.key === 'Enter' && items[currentItemFocus]) {
                 event.preventDefault();
-                console.log('Selected item:', relatedItems[currentItemFocus]);
+                ('Selected item:', relatedItems[currentItemFocus]);
             } else if (event.key === 'Escape') {
                 event.preventDefault();
                 $('#relatedItemsModal').modal('hide');

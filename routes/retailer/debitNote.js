@@ -136,7 +136,7 @@ router.post('/debit-note/new', ensureAuthenticated, ensureCompanySelected, ensur
             });
 
             await debitNote.save();
-            console.log(debitNote);
+            (debitNote);
 
             // Process Debit Accounts
             for (let debit of debitAccounts) {
@@ -173,7 +173,7 @@ router.post('/debit-note/new', ensureAuthenticated, ensureCompanySelected, ensur
                 });
 
                 await debitTransaction.save();
-                console.log(debitTransaction);
+                (debitTransaction);
                 await Account.findByIdAndUpdate(debit.account, { $push: { transactions: debitTransaction._id } });
             }
 
@@ -213,7 +213,7 @@ router.post('/debit-note/new', ensureAuthenticated, ensureCompanySelected, ensur
                 });
 
                 await creditTransaction.save();
-                console.log(creditTransaction);
+                (creditTransaction);
                 await Account.findByIdAndUpdate(credit.account, { $push: { transactions: creditTransaction._id } });
             }
 
@@ -671,7 +671,7 @@ router.get('/debit-note/:id/print', ensureAuthenticated, ensureCompanySelected, 
             const debitNoteId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -715,7 +715,7 @@ router.get('/debit-note/:id/print', ensureAuthenticated, ensureCompanySelected, 
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -783,7 +783,7 @@ router.get('/debit-note/:id/direct-print', ensureAuthenticated, ensureCompanySel
             const debitNoteId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -827,7 +827,7 @@ router.get('/debit-note/:id/direct-print', ensureAuthenticated, ensureCompanySel
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -896,7 +896,7 @@ router.get('/debit-note/:id/direct-print-edit', ensureAuthenticated, ensureCompa
             const debitNoteId = req.params.id;
             const currentCompanyName = req.session.currentCompanyName;
             const companyId = req.session.currentCompany;
-            console.log("Company ID from session:", companyId); // Debugging line
+            ("Company ID from session:", companyId); // Debugging line
 
             const today = new Date();
             const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
@@ -940,7 +940,7 @@ router.get('/debit-note/:id/direct-print-edit', ensureAuthenticated, ensureCompa
             }
 
             const currentCompany = await Company.findById(new ObjectId(companyId));
-            console.log("Current Company:", currentCompany); // Debugging line
+            ("Current Company:", currentCompany); // Debugging line
 
             if (!currentCompany) {
                 req.flash('error', 'Company not found');
@@ -1012,14 +1012,14 @@ router.post('/debit-note/cancel/:billNumber', ensureAuthenticated, ensureCompany
                 { billNumber },
                 { status: 'canceled', isActive: false }
             );
-            console.log('Debit Note Canceled Update Result: ', updateDebitNoteStatus);
+            ('Debit Note Canceled Update Result: ', updateDebitNoteStatus);
 
             //Mark related transactions as 'canceled' and set isActive to false
             const updateTransactionsStatus = await Transaction.updateMany(
                 { billNumber, type: 'DrNt' },
                 { status: 'canceled', isActive: false }
             )
-            console.log('Related transaction update result: ', updateTransactionsStatus);
+            ('Related transaction update result: ', updateTransactionsStatus);
             req.flash('success', 'Debit note and related transactions have been canceled.');
             res.redirect(`/debit-note/edit/billNumber?billNumber=${billNumber}`);
         } catch (error) {
@@ -1039,7 +1039,7 @@ router.post('/debit-note/reactivate/:billNumber', ensureAuthenticated, ensureCom
 
             // Update the receipt status to 'active'
             const updateDebitNoteStatus = await DebitNote.updateOne({ billNumber }, { status: 'active', isActive: true });
-            console.log('Update debit note status:', updateDebitNoteStatus);
+            ('Update debit note status:', updateDebitNoteStatus);
             // Reactivate related transactions and set isActive to true
             const updateTransactionsStatus = await Transaction.updateMany(
                 {
@@ -1047,7 +1047,7 @@ router.post('/debit-note/reactivate/:billNumber', ensureAuthenticated, ensureCom
                 },
                 { status: 'active', isActive: true }  // Add isActive: true if you have added this field
             );
-            console.log('Update Transactions Status:', updateTransactionsStatus);
+            ('Update Transactions Status:', updateTransactionsStatus);
 
             req.flash('success', 'Debit note and related transactions have been reactivated.');
             res.redirect(`/debit-note/edit/billNumber?billNumber=${billNumber}`);
