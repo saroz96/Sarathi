@@ -116,20 +116,6 @@ router.get('/journal/new', isLoggedIn, ensureAuthenticated, ensureCompanySelecte
 
         const accounts = await Account.find({ company: req.session.currentCompany, fiscalYear: fiscalYear });
 
-        // // Get the next bill number based on company, fiscal year, and transaction type ('sales')
-        // let billCounter = await BillCounter.findOne({
-        //     company: companyId,
-        //     fiscalYear: fiscalYear,
-        //     transactionType: 'Journal' // Specify the transaction type for sales bill
-        // });
-
-        // let nextBillNumber;
-        // if (billCounter) {
-        //     nextBillNumber = billCounter.currentBillNumber + 1; // Increment the current bill number
-        // } else {
-        //     nextBillNumber = 1; // Start with 1 if no bill counter exists for this fiscal year and company
-        // }
-
         // Get last counter without incrementing
         const lastCounter = await BillCounter.findOne({
             company: companyId,
@@ -142,7 +128,7 @@ router.get('/journal/new', isLoggedIn, ensureAuthenticated, ensureCompanySelecte
         const fiscalYears = await FiscalYear.findById(fiscalYear);
         const prefix = fiscalYears.billPrefixes.journalVoucher;
         const nextBillNumber = `${prefix}${nextNumber.toString().padStart(7, '0')}`;
-        res.render('retailer/journalVoucher/new',
+        res.render('retailer/JournalVoucher/new',
             {
                 company,
                 currentFiscalYear,
@@ -279,140 +265,6 @@ router.post('/journal/new', ensureAuthenticated, ensureCompanySelected, ensureTr
         }
     }
 });
-
-// // POST - Create a new journal voucher with multiple debit and credit accounts
-// router.post('/journal/new', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
-//     if (req.tradeType === 'retailer') {
-//         const { nepaliDate, billDate, entries, description } = req.body;
-//         const companyId = req.session.currentCompany;
-//         const currentFiscalYear = req.session.currentFiscalYear.id;
-//         const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
-//         const userId = req.user._id;
-
-//         try {
-//             // Separate entries into debit and credit accounts
-//             const debitAccounts = [];
-//             const creditAccounts = [];
-
-//             for (const entry of entries) {
-//                 if (entry.debit && entry.debit > 0 && entry.accountId) { // Check accountId exists
-//                     debitAccounts.push({
-//                         account: entry.accountId, // Use accountId here
-//                         debit: parseFloat(entry.debit)
-//                     });
-//                 } else if (entry.credit && entry.credit > 0 && entry.accountId) { // Check accountId exists
-//                     creditAccounts.push({
-//                         account: entry.accountId, // Use accountId here
-//                         credit: parseFloat(entry.credit)
-//                     });
-//                 }
-//             }
-
-//             const billNumber = await getNextBillNumber(companyId, fiscalYearId, 'journalVoucher');
-//             // Create the Journal Voucher
-//             const journalVoucher = new JournalVoucher({
-//                 billNumber: billNumber,
-//                 date: nepaliDate ? new Date(nepaliDate) : new Date(billDate),
-//                 debitAccounts,
-//                 creditAccounts,
-//                 description,
-//                 user: userId,
-//                 company: companyId,
-//                 fiscalYear: currentFiscalYear,
-//             });
-
-//             await journalVoucher.save();
-
-//             // Process Debit Accounts
-//             for (let debit of debitAccounts) {
-//                 let previousDebitBalance = 0;
-//                 const lastDebitTransaction = await Transaction.findOne({ account: debit.account }).sort({ transactionDate: -1 });
-//                 if (lastDebitTransaction) {
-//                     previousDebitBalance = lastDebitTransaction.balance;
-//                 }
-
-//                 // Save credit accounts in the drCrNoteAccountType field for debit transactions
-//                 const creditAccountNames = await Promise.all(
-//                     creditAccounts.map(async credit => {
-//                         const account = await Account.findById(credit.account);
-//                         return account ? account.name : 'Debit Note';
-//                     })
-//                 );
-
-//                 const debitTransaction = new Transaction({
-//                     account: debit.account,
-//                     type: 'Jrnl',
-//                     journalBillId: journalVoucher._id,
-//                     billNumber: billNumber,
-//                     journalAccountDrCrType: 'Debit',
-//                     journalAccountType: creditAccountNames.join(', '),
-//                     debit: debit.debit,
-//                     credit: 0,
-//                     paymentMode: 'Journal',
-//                     balance: previousDebitBalance + debit.debit,
-//                     date: nepaliDate ? new Date(nepaliDate) : new Date(billDate),
-//                     company: companyId,
-//                     user: userId,
-//                     fiscalYear: currentFiscalYear,
-//                 });
-
-//                 await debitTransaction.save();
-//                 await Account.findByIdAndUpdate(debit.account, { $push: { transactions: debitTransaction._id } });
-//             }
-
-//             // Process Credit Accounts
-//             for (let credit of creditAccounts) {
-//                 let previousCreditBalance = 0;
-//                 const lastCreditTransaction = await Transaction.findOne({ account: credit.account }).sort({ transactionDate: -1 });
-//                 if (lastCreditTransaction) {
-//                     previousCreditBalance = lastCreditTransaction.balance;
-//                 }
-
-//                 // Save debit accounts in the drCrNoteAccountType field for credit transactions
-//                 const debitAccountNames = await Promise.all(
-//                     debitAccounts.map(async debit => {
-//                         const account = await Account.findById(debit.account);
-//                         return account ? account.name : 'Credit Note';
-//                     })
-//                 );
-
-//                 const creditTransaction = new Transaction({
-//                     account: credit.account,
-//                     type: 'Jrnl',
-//                     journalBillId: journalVoucher._id,
-//                     billNumber: billNumber,
-//                     journalAccountDrCrType: 'Credit',
-//                     journalAccountType: debitAccountNames.join(', '),
-//                     debit: 0,
-//                     credit: credit.credit,
-//                     paymentMode: 'Journal',
-//                     balance: previousCreditBalance - credit.credit,
-//                     date: nepaliDate ? new Date(nepaliDate) : new Date(billDate),
-//                     company: companyId,
-//                     user: userId,
-//                     fiscalYear: currentFiscalYear,
-//                 });
-
-//                 await creditTransaction.save();
-//                 await Account.findByIdAndUpdate(credit.account, { $push: { transactions: creditTransaction._id } });
-//             }
-
-//             if (req.query.print === 'true') {
-//                 res.redirect(`/journal/${journalVoucher._id}/direct-print`);
-//             } else {
-//                 req.flash('success', 'Journal voucher saved successfully!');
-//                 res.redirect('/journal/new');
-//             }
-//         } catch (err) {
-//             console.error(err);
-//             req.flash('error', 'Error saving journal voucher!');
-//             res.redirect('/journal/new');
-//         }
-//     }
-// });
-
-
-
 
 // GET - Show list of journal vouchers
 router.get('/journal/list', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
