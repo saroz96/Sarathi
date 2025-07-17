@@ -839,6 +839,8 @@ router.get('/accounts-import', isLoggedIn, ensureAuthenticated, ensureCompanySel
         });
     }
 });
+
+
 // POST route for importing accounts
 router.post('/accounts-import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, upload.single('excelFile'), async (req, res) => {
     try {

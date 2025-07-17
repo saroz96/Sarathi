@@ -753,15 +753,6 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
                 item.hasTransactions = (await Transaction.exists({ item: item._id })) ? 'true' : 'false';
             }
 
-            // Extract openingStock and openingStockBalance if they exist for the current fiscal year
-            const itemsWithOpeningStock = items.map(item => {
-                const openingStockEntry = item.openingStockByFiscalYear.find(entry => entry.fiscalYear.toString() === fiscalYear);
-                return {
-                    ...item._doc,
-                    openingStock: openingStockEntry ? openingStockEntry.openingStock : 0,
-                    openingStockBalance: openingStockEntry ? openingStockEntry.openingStockBalance : 0
-                };
-            });
             // Fetch categories and units for item creation
             const categories = await Category.find({ company: companyId });
             const itemsCompanies = await itemsCompany.find({ company: companyId });
@@ -774,7 +765,6 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
                 company,
                 currentFiscalYear,
                 vatEnabled: company.vatEnabled,
-                items: itemsWithOpeningStock,
                 categories,
                 itemsCompanies,
                 units,
@@ -798,6 +788,44 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
         }
     } else {
         res.redirect('/'); // Handle unauthorized access
+    }
+});
+
+// Add this route to your Express router
+router.get('/api/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    try {
+        const companyId = req.session.currentCompany;
+        const fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session.' });
+        }
+
+        // Find items that belong to the current fiscal year
+        const items = await Item.find({
+            company: companyId,
+            $or: [
+                { originalFiscalYear: fiscalYear }, // Created here
+                {
+                    fiscalYear: fiscalYear,
+                    originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                }
+            ]
+        })
+        .populate('category')
+        .populate('itemsCompany')
+        .populate('mainUnit')
+        .populate('composition')
+        .populate('originalFiscalYear')
+        .lean(); // Use lean() for better performance with JSON
+        
+        res.json({
+            success: true,
+            items
+        });
+    } catch (error) {
+        console.error("Error fetching items:", error);
+        res.status(500).json({ error: 'Failed to fetch items' });
     }
 });
 
