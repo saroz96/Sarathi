@@ -12,6 +12,26 @@ const FiscalYear = require('../../models/FiscalYear')
 const Company = require('../../models/Company')
 const Transaction = require('../../models/retailer/Transaction')
 
+const path = require('path');
+const fs = require('fs');
+const exceljs = require('exceljs');
+const multer = require('multer');
+
+
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'accountuploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload = multer({ storage });
+
+
+
 // Modified initialization function
 async function initializeDataMigrations() {
     try {
@@ -503,6 +523,12 @@ router.get('/companies/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelec
             const accounts = await Account.findOne({ _id: accountId, fiscalYear: fiscalYear })
                 .populate('companyGroups')
                 .populate('company')
+                .populate('openingBalanceByFiscalYear.fiscalYear'); // Populate fiscal year info if needed
+
+            // Find the opening balance for the current fiscal year
+            const currentOpeningBalance = accounts.openingBalanceByFiscalYear.find(
+                balance => balance.fiscalYear && balance.fiscalYear._id.toString() === fiscalYear
+            );
 
             // Ensure the account belongs to the current company
             if (!accounts.company._id.equals(req.session.currentCompany)) {
@@ -512,6 +538,7 @@ router.get('/companies/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelec
             res.render('retailer/company/view', {
                 company,
                 accounts,
+                currentOpeningBalance,
                 companyGroups,
                 currentCompanyName,
                 currentFiscalYear,
@@ -758,4 +785,293 @@ router.get('/api/contacts', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch contacts' });
     }
 });
+
+// GET route for accounts import page
+router.get('/accounts-import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        const companyId = req.session.currentCompany;
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const currentCompanyName = req.session.currentCompanyName;
+        const currentCompany = await Company.findById(new ObjectId(companyId));
+
+        // Get available company groups
+        const companyGroups = await CompanyGroup.find({ company: companyId }).select('name');
+
+        if (!companyId) {
+            return res.status(400).json({ error: 'Company ID not found in session.' });
+        }
+
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        res.render('retailer/company/import', {
+            company,
+            currentCompany,
+            currentCompanyName,
+            currentFiscalYear,
+            fiscalYear,
+            companyGroups,
+            title: 'Import Accounts',
+            body: '',
+            theme: req.user.preferences?.theme || 'light',
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+        });
+    }
+});
+// POST route for importing accounts
+router.post('/accounts-import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, upload.single('excelFile'), async (req, res) => {
+    try {
+        if (req.tradeType !== 'retailer') {
+            return res.status(403).json({ error: 'This feature is only available for retailers.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded.' });
+        }
+
+        const companyId = req.session.currentCompany;
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+        const fiscalYearId = req.session.currentFiscalYear.id;
+
+        // Validate file type
+        const extname = path.extname(req.file.originalname).toLowerCase();
+        if (extname !== '.xlsx') {
+            return res.status(400).json({ error: 'Only .xlsx files are allowed.' });
+        }
+
+        // Validate file size (5MB max)
+        if (req.file.size > 5 * 1024 * 1024) {
+            return res.status(400).json({ error: 'File size exceeds 5MB limit.' });
+        }
+
+        // Process the Excel file
+        const workbook = new exceljs.Workbook();
+        await workbook.xlsx.readFile(req.file.path);
+        const worksheet = workbook.worksheets[0];
+
+        // Validate worksheet headers
+        const expectedHeaders = ['Name', 'Company Group', 'Address', 'Ward', 'Phone', 'PAN', 'Contact Person', 'Email', 'Opening Balance', 'Balance Type'];
+        const actualHeaders = [];
+        worksheet.getRow(1).eachCell({ includeEmpty: true }, (cell) => {
+            actualHeaders.push(cell.value?.toString().trim());
+        });
+
+        // Check if all required headers are present
+        const requiredHeaders = ['Name', 'Company Group'];
+        const missingHeaders = requiredHeaders.filter(header => !actualHeaders.includes(header));
+        if (missingHeaders.length > 0) {
+            return res.status(400).json({
+                error: 'Invalid Excel format. Missing required headers: ' + missingHeaders.join(', '),
+                templateHeaders: expectedHeaders
+            });
+        }
+
+        // Get all company groups for validation
+        const companyGroups = await CompanyGroup.find({ company: companyId });
+        const groupNameToIdMap = new Map();
+        companyGroups.forEach(group => {
+            groupNameToIdMap.set(group.name.toLowerCase(), group._id);
+        });
+
+        // Process each row
+        const accounts = [];
+        const errors = [];
+        const fiscalYear = await FiscalYear.findById(fiscalYearId);
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'Fiscal year not found.' });
+        }
+
+        // Generate a unique number for each account
+        const lastAccount = await mongoose.model('Account').findOne({ company: companyId })
+            .sort({ uniqueNumber: -1 })
+            .select('uniqueNumber');
+        
+        let nextUniqueNumber = (lastAccount?.uniqueNumber || 0) + 1;
+
+        // Start from row 2 (skip header)
+        for (let i = 2; i <= worksheet.rowCount; i++) {
+            const row = worksheet.getRow(i);
+
+            // Skip empty rows
+            if (!row.getCell(1).value) continue;
+
+            try {
+                const rowData = {};
+                actualHeaders.forEach((header, index) => {
+                    rowData[header.toLowerCase().replace(' ', '')] = row.getCell(index + 1).value?.toString().trim();
+                });
+
+                // Validate required fields
+                if (!rowData.name) {
+                    throw new Error('Account name is required');
+                }
+
+                if (!rowData.companygroup) {
+                    throw new Error('Company Group is required');
+                }
+
+                // Get company group ID
+                const groupId = groupNameToIdMap.get(rowData.companygroup.toLowerCase());
+                if (!groupId) {
+                    throw new Error(`Company Group "${rowData.companygroup}" not found. Available groups: ${Array.from(groupNameToIdMap.keys()).join(', ')}`);
+                }
+
+                // Prepare account data with uniqueNumber
+                const accountData = {
+                    name: rowData.name,
+                    companyGroups: groupId,
+                    company: companyId,
+                    fiscalYear: [fiscalYearId],
+                    originalFiscalYear: fiscalYearId,
+                    isActive: true,
+                    uniqueNumber: nextUniqueNumber++  // Assign and increment unique number
+                };
+
+                // Add optional fields if they exist
+                if (rowData.address) accountData.address = rowData.address;
+                if (rowData.ward) accountData.ward = parseInt(rowData.ward) || undefined;
+                if (rowData.phone) accountData.phone = rowData.phone;
+                if (rowData.pan) {
+                    const pan = parseInt(rowData.pan);
+                    if (pan.toString().length !== 9) {
+                        throw new Error('PAN must be 9 digits');
+                    }
+                    accountData.pan = pan;
+                }
+                if (rowData.contactperson) accountData.contactperson = rowData.contactperson;
+                if (rowData.email) accountData.email = rowData.email;
+
+                // Handle opening balance if provided
+                if (rowData.openingbalance) {
+                    const amount = parseFloat(rowData.openingbalance) || 0;
+                    const type = (rowData.balancetype || 'Dr').trim() === 'Cr' ? 'Cr' : 'Dr';
+
+                    accountData.openingBalance = {
+                        fiscalYear: fiscalYearId,
+                        amount,
+                        type,
+                        date: new Date()
+                    };
+
+                    accountData.openingBalanceByFiscalYear = [{
+                        fiscalYear: fiscalYearId,
+                        amount,
+                        type,
+                        date: new Date()
+                    }];
+                }
+
+                // Check for duplicate account name in this company
+                const existingAccount = await mongoose.model('Account').findOne({
+                    name: accountData.name,
+                    company: companyId,
+                    fiscalYear: { $in: [fiscalYearId] }
+                });
+
+                if (existingAccount) {
+                    throw new Error(`Account "${accountData.name}" already exists`);
+                }
+
+                accounts.push(accountData);
+            } catch (error) {
+                errors.push({
+                    row: i,
+                    accountName: row.getCell(1).value?.toString().trim() || 'N/A',
+                    error: error.message
+                });
+            }
+        }
+
+        // If there are errors in any rows, return them
+        if (errors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `${errors.length} error(s) found in the Excel file`,
+                errors: errors,
+                validAccountsCount: accounts.length,
+                availableGroups: companyGroups.map(g => g.name)
+            });
+        }
+
+        // If no valid accounts found
+        if (accounts.length === 0) {
+            return res.status(400).json({
+                error: 'No valid accounts found in the Excel file.'
+            });
+        }
+
+        // Insert all valid accounts in a transaction to ensure atomicity
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            const createdAccounts = await mongoose.model('Account').insertMany(accounts, { session });
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.json({ 
+                success: true,
+                message: `Successfully imported ${createdAccounts.length} accounts`,
+                accounts: createdAccounts.map(acc => ({
+                    name: acc.name,
+                    companyGroup: companyGroups.find(g => g._id.equals(acc.companyGroups))?.name || 'None'
+                }))
+            });
+        } catch (insertError) {
+            await session.abortTransaction();
+            session.endSession();
+            throw insertError;
+        }
+        
+    } catch (error) {
+        console.error('Error importing accounts:', error);
+        return res.status(500).json({
+            error: 'An error occurred while importing accounts',
+            details: error.message
+        });
+    } finally {
+        // Clean up: delete the uploaded file after processing
+        if (req.file && req.file.path) {
+            try {
+                fs.unlinkSync(req.file.path);
+            } catch (cleanupError) {
+                console.error('Error cleaning up file:', cleanupError);
+            }
+        }
+    }
+});
+
+// Update the route handler
+router.get('/accounts-import-template', (req, res) => {
+    const filePath = path.join(__dirname, '../../public/templates/accounts-import-template.xlsx');
+    res.download(filePath, 'accounts-import-template.xlsx', (err) => {
+        if (err) {
+            console.error('Error downloading template:', err);
+            res.status(404).send('Template file not found');
+        }
+    });
+});
+
 module.exports = router;

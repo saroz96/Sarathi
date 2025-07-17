@@ -17,14 +17,19 @@
                             <li class="list-group-item"><strong>A/c Group:</strong>
                                 <%= accounts.companyGroups ? accounts.companyGroups.name : 'No Group' %>
                             </li>
-                            <li class="list-group-item"><strong>Opening Balance:</strong>
-                                <%= accounts.openingBalance.amount %>
-                                    <%= accounts.openingBalance.type %>
+                            <li class="list-group-item">
+                                <strong>Opening Balance:</strong>
+                                <% if (currentOpeningBalance) { %>
+                                    <%= currentOpeningBalance.amount %>
+                                        <%= currentOpeningBalance.type %>
+                                            <% } else { %>
+                                                0 Dr <!-- Default if no opening balance found -->
+                                                <% } %>
                             </li>
                             <li class="list-group-item"><strong>Pan No.:</strong>
                                 <%= accounts.pan %>
                             </li>
-                           
+
                         </ul>
                     </div>
                     <div class="col-md-6">
@@ -50,10 +55,10 @@
                 </div>
             </div>
             <div class="col">
-            <button id="backButton" class="back-button">
-                <span class="icon">←</span> Back
-              </button>
-              </div>
+                <button id="backButton" class="back-button">
+                    <span class="icon">←</span> Back
+                </button>
+            </div>
         </div>
     </div>
 

@@ -140,7 +140,7 @@ Item.assignGeneralItemsCompany()
     .catch(console.error);
 
 // Import items page
-router.get('/import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, async (req, res) => {
+router.get('/items-import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureFiscalYear, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         const companyId = req.session.currentCompany;
         const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
@@ -189,7 +189,7 @@ router.get('/import', isLoggedIn, ensureAuthenticated, ensureCompanySelected, en
     }
 });
 
-router.post('/import', upload.single('excelFile'), async (req, res) => {
+router.post('/items-import', upload.single('excelFile'), async (req, res) => {
     try {
         const fiscalYearId = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
         const companyId = req.session.currentCompany;
@@ -315,7 +315,6 @@ router.get('/import-template', (req, res) => {
         }
     });
 });
-
 
 
 // Example backend route to handle item search

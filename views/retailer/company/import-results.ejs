@@ -1,0 +1,153 @@
+<%- include('../../layouts/boilerplate', { title: 'Import Results - Accounts' , body: '' }) %>
+    <style>
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .error-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .error-item {
+            padding: 1rem;
+            border-left: 4px solid #dc3545;
+            margin-bottom: 0.5rem;
+            background: #fff;
+            border-radius: 4px;
+            transition: transform 0.2s ease;
+        }
+
+        .error-item:hover {
+            transform: translateX(5px);
+        }
+
+        .back-btn {
+            width: 100%;
+            max-width: 200px;
+            margin-top: 1.5rem;
+        }
+
+        .status-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+        }
+
+        .progress {
+            height: 8px;
+        }
+
+        .account-list {
+            margin-top: 1.5rem;
+        }
+
+        .account-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .account-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="d-flex align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-file-import text-primary"></i> Import Results - Accounts
+                </h1>
+            </div>
+
+            <div class="summary-card">
+                <div class="d-flex align-items-center mb-4">
+                    <% if (results.errors.length === 0) { %>
+                        <i class="fas fa-check-circle text-success status-icon"></i>
+                    <% } else { %>
+                        <i class="fas fa-exclamation-triangle text-warning status-icon"></i>
+                    <% } %>
+                    <div>
+                        <h2 class="h5 mb-1">
+                            <%= results.success %> / <%= results.total %> accounts imported successfully
+                        </h2>
+                        <p class="text-muted mb-0">Process completed with <%= results.errors.length %> errors</p>
+                    </div>
+                </div>
+
+                <div class="progress mb-4">
+                    <div class="progress-bar bg-<%= results.errors.length === 0 ? 'success' : 'warning' %>" 
+                         role="progressbar" 
+                         style="width: <%= (results.success / results.total) * 100 %>%" 
+                         aria-valuenow="<%= results.success %>" 
+                         aria-valuemin="0" 
+                         aria-valuemax="<%= results.total %>">
+                    </div>
+                </div>
+
+                <% if (results.errors.length > 0) { %>
+                    <div class="error-section">
+                        <h3 class="h5 mb-3">
+                            <i class="fas fa-exclamation-circle text-danger"></i> 
+                            Error Details (<%= results.errors.length %>)
+                        </h3>
+                        
+                        <div class="error-list">
+                            <% results.errors.forEach(error => { %>
+                                <div class="error-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong class="text-danger">Row <%= error.row %></strong>
+                                    </div>
+                                    <p class="mb-0 mt-2"><%= error.error %></p>
+                                    <% if (error.accountName) { %>
+                                        <div class="text-muted mt-2 small">
+                                            <strong>Account:</strong> <%= error.accountName %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="alert alert-success d-flex align-items-center" role="alert">
+                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <div>
+                            <h4 class="alert-heading mb-1">Perfect import!</h4>
+                            <p class="mb-0">All accounts were successfully imported without any errors.</p>
+                        </div>
+                    </div>
+                <% } %>
+
+                <% if (results.success > 0) { %>
+                    <div class="account-list">
+                        <h4 class="h5 mb-3">Imported Accounts</h4>
+                        <div class="list-group">
+                            <% results.accounts.forEach(account => { %>
+                                <div class="list-group-item account-item">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><%= account.name %></strong>
+                                        <span class="text-muted"><%= account.companyGroup %></span>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="/accounts-import" class="btn btn-outline-primary back-btn">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Import
+                </a>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Add any client-side functionality if needed
+            });
+        </script>

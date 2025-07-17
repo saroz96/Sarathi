@@ -83,6 +83,7 @@ const accountSchema = new mongoose.Schema({
             default: Date.now()
         }
     },
+    
     openingBalance: {
         fiscalYear: {
             type: mongoose.Schema.Types.ObjectId,
@@ -125,10 +126,7 @@ const accountSchema = new mongoose.Schema({
             ref: 'Transaction'
         }
     ],
-    // fiscalYear: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'FiscalYear' // New field to reference the current fiscal year
-    // },
+    
     fiscalYear: {
         type: [mongoose.Schema.Types.ObjectId], // Array of ObjectIds
         ref: 'FiscalYear',

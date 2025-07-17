@@ -165,7 +165,7 @@ router.get('/change-fiscal-year', isLoggedIn, ensureAuthenticated, ensureCompany
                 user: req.user,
                 title: '',
                 body: '',
-                                theme: req.user.preferences?.theme || 'light', // Default to light if not set
+                theme: req.user.preferences?.theme || 'light', // Default to light if not set
                 isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
             });
         } catch (err) {
@@ -1590,9 +1590,55 @@ router.delete('/delete-fiscal-year/:id', ensureAuthenticated, ensureCompanySelec
         }
 
         // 6. Remove references from accounts
+        // await Account.updateMany(
+        //     { company: companyId, fiscalYear: fiscalYearId },
+        //     { $pull: { fiscalYear: fiscalYearId } }
+        // );
+
+        // await Account.updateMany(
+        //     { company: companyId, fiscalYear: fiscalYearId },
+        //     {
+        //         $pull: {
+        //             fiscalYear: fiscalYearId,
+        //             openingBalanceByFiscalYear: { fiscalYear: fiscalYearId },
+        //             closingBalanceByFiscalYear: { fiscalYear: fiscalYearId }
+        //         },
+        //         $unset: {
+        //             'openingBalance.fiscalYear': 1
+        //         },
+        //         $set: {
+        //             'openingBalance.amount': 0,
+        //             'openingBalance.type': 'Dr'
+        //         }
+        //     }
+        // );
+
+        // First, find the latest fiscal year (excluding the one being deleted)
+        const remLatestFiscalYear = await FiscalYear.findOne({
+            company: companyId,
+            _id: { $ne: fiscalYearId }
+        }).sort({ endDate: -1 });
+
+        // Then update accounts
         await Account.updateMany(
-            { company: companyId, fiscalYear: fiscalYearId },
-            { $pull: { fiscalYear: fiscalYearId } }
+            { company: companyId },
+            {
+                $pull: {
+                    fiscalYear: fiscalYearId,
+                    openingBalanceByFiscalYear: { fiscalYear: fiscalYearId },
+                    // Remove closing balance for the latest fiscal year (not the deleted one)
+                    closingBalanceByFiscalYear: {
+                        fiscalYear: remLatestFiscalYear ? remLatestFiscalYear._id : null
+                    }
+                },
+                $unset: {
+                    'openingBalance.fiscalYear': 1
+                },
+                $set: {
+                    'openingBalance.amount': 0,
+                    'openingBalance.type': 'Dr'
+                }
+            }
         );
 
         // 7. Delete supporting records
