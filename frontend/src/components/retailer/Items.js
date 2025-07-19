@@ -79,7 +79,7 @@ const Items = () => {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/items/getitemsinform');
+            const response = await api.get('https://sarathi-rww3.onrender.com/api/items/getitemsinform');
             if (response.data.success) {
                 setData({
                     items: response.data.items,
