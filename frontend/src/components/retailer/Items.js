@@ -79,7 +79,7 @@ const Items = () => {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await api.get('https://sarathi-rww3.onrender.com/api/items/getitemsinform');
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/items/getitemsinform`);
             if (response.data.success) {
                 setData({
                     items: response.data.items,
@@ -239,26 +239,14 @@ const Items = () => {
         setShowCompositionModal(false);
     };
 
-    useEffect(() => {
-        if (successMessage || error) {
-            const timer = setTimeout(() => {
-                setSuccessMessage('');
-                setError('');
-            }, 3000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [successMessage, error]);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            let response;
             if (currentItem) {
-                response = await api.put(`/items/${currentItem._id}`, formData);
+                await api.put(`/items/${currentItem._id}`, formData);
                 setSuccessMessage('Item updated successfully!');
             } else {
-                response = await api.post('/api/items/create', formData);
+                await api.post('/api/items/create', formData);
                 setSuccessMessage('Item created successfully!');
 
                 // Clear the form after successful creation
@@ -280,15 +268,10 @@ const Items = () => {
                     openingStockBalance: ''
                 });
             }
-            if (response.data.success) {
-                // Force refresh the items list
-                await fetchItems();
-                setShowEditModal(false);
-            } else {
-                throw new Error(response.data.error || 'Operation failed');
-            }
+            fetchItems();
+            setShowEditModal(false);
         } catch (err) {
-            setError(err.message || 'Failed to save item');
+            handleApiError(err);
         }
     };
 
@@ -407,11 +390,6 @@ const Items = () => {
         <div className="container-fluid mt-4">
             <div className="row g-3">
                 {/* Left Column - Add Item Form */}
-                {successMessage && (
-                    <div className="alert alert-success mt-3">
-                        {successMessage}
-                    </div>
-                )}
                 <div className="col-lg-6">
                     <div className="card h-100 shadow-lg">
                         <h1 className="text-center" style={{ textDecoration: 'underline' }}>Create Items</h1>
@@ -678,6 +656,15 @@ const Items = () => {
                                     </div>
                                 ) : error ? (
                                     <div className="alert alert-danger">{error}</div>
+                                ) : successMessage ? (
+                                    <div className="alert alert-success">{successMessage}</div>
+                                ) : loading ? (
+                                    <div className="text-center">
+                                        <Spinner animation="border" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                        </Spinner>
+                                        <p>Loading items...</p>
+                                    </div>
                                 ) : filteredItems.length === 0 ? (
                                     <div className="text-center">No items found</div>
                                 ) : (

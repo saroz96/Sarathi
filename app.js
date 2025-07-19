@@ -444,7 +444,7 @@ async function sendExpiryNotification(company, items) {
 //     allowedHeaders: ['Content-Type', 'Authorization']
 // }));
 app.use(cors({
-    origin: 'https://sarathi-frontend.onrender.com/',
+    origin: 'https://sarathi-frontend.onrender.com',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
