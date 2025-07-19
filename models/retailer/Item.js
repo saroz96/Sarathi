@@ -164,10 +164,6 @@ const itemSchema = new mongoose.Schema({
         required: true,
         enum: ['all', 'vatable', 'vatExempt']
     },
-    // stock: {
-    //     type: Number,
-    //     default: 0,
-    // }, // Total stock
     openingStock: {
         type: Number,
         default: 0

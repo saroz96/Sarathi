@@ -936,4 +936,24 @@ router.get('/logout', (req, res) => {
 });
 
 
+// Get current user data with permissions
+router.get('/me', ensureAuthenticated, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password -__v');
+    
+    // Convert the Map to an array for JSON serialization
+    const permissionsArray = Array.from(user.menuPermissions.entries());
+    
+    res.json({
+      user: {
+        ...user._doc,
+        menuPermissions: permissionsArray
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;

@@ -6,7 +6,7 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const { numberToWords } = require('./public/js/helpers');
-
+const cors = require('cors');
 const passport = require('passport');
 const initializePassport = require('./config/passport-config');
 
@@ -436,25 +436,68 @@ async function sendExpiryNotification(company, items) {
         throw error;
     }
 }
+// allow requests from frontend (Vite dev server runs on port 5173)
+// app.use(cors({
+//     origin: 'http://localhost:5173',
+//     credentials: true,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     allowedHeaders: ['Content-Type', 'Authorization']
+// }));
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use((req, res, next) => {
-    res.setHeader(
-        'Content-Security-Policy',
-        "script-src 'self' 'unsafe-inline' http://localhost:3000"
-    );
-    next();
-});
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
+// // Serve static files from the React app
+// app.use(express.static(path.join(__dirname, 'frontend/build')));
+
+// // Handle React routing, return all requests to React app
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
+// });
+
+// app.use((req, res, next) => {
+//     res.setHeader(
+//         'Content-Security-Policy',
+//         "script-src 'self' 'unsafe-inline' http://localhost:3000"
+//     );
+//     next();
+// });
+// app.use((req, res, next) => {
+//     res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//     next();
+// });
+
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+// });
+
+// ✅ Serve React build from /
+app.use(express.static(path.join(__dirname, 'frontend/build')));
+
+// ✅ Fallback: any unknown route → React
+app.get(/^\/(?!ejs).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/build/index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
+// ✅ Serve EJS views at /ejs/*
+app.get('/ejs/dashboard', (req, res) => {
+    res.render('dashboard');
+});
+
+app.get('/ejs/login', (req, res) => {
+    res.render('login');
+});
+
+// ✅ Server start
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`✅ Server running at http://localhost:${PORT}`);
 });
-
 
 

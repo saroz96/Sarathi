@@ -54,11 +54,10 @@ const SettingsSchema = new Schema({
     fiscalYear: {
         type: Schema.Types.ObjectId,
         ref: 'FiscalYear',
-        required: true
     }
 });
 
 // Ensure one Settings document per company
-SettingsSchema.index({ company: 1, fiscalYear: 1 }, { unique: true });
+SettingsSchema.index({ company: 1}, { unique: true });
 
 module.exports = mongoose.model('Settings', SettingsSchema);

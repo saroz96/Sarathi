@@ -1226,7 +1226,7 @@
 
     // Function to fetch items via AJAX
     function fetchItems() {
-        axios.get('/api/items')
+        axios.get('/api/items/getitemsinform')
             .then(response => {
                 allItems = response.data.items;
                 renderItems(allItems);

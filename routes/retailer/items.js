@@ -791,43 +791,235 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
     }
 });
 
-// Add this route to your Express router
-router.get('/api/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+router.get('/api/items/getitemsinform', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     try {
         const companyId = req.session.currentCompany;
-        const fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        
+        // Parallelize all independent queries
+        const [
+            company,
+            items,
+            categories,
+            itemsCompanies,
+            units,
+            mainUnits,
+            composition
+        ] = await Promise.all([
+            Company.findById(companyId).select('renewalDate fiscalYear dateFormat vatEnabled').lean(),
+            Item.find({
+                company: companyId,
+                $or: [
+                    { originalFiscalYear: req.session.currentFiscalYear?.id || null },
+                    {
+                        fiscalYear: req.session.currentFiscalYear?.id || null,
+                        originalFiscalYear: { $lt: req.session.currentFiscalYear?.id || null }
+                    }
+                ]
+            })
+            .populate('category', 'name')
+            .populate('itemsCompany', 'name')
+            .populate('unit', 'name')
+            .populate('mainUnit', 'name')
+            .populate('composition', 'name uniqueNumber')
+            .lean(),
+            Category.find({ company: companyId }).lean(),
+            itemsCompany.find({ company: companyId }).lean(),
+            Unit.find({ company: companyId }).lean(),
+            MainUnit.find({ company: companyId }).lean(),
+            Composition.find({ company: companyId }).lean()
+        ]);
 
-        if (!fiscalYear) {
-            return res.status(400).json({ error: 'No fiscal year found in session.' });
+        // Get transaction existence in a single query
+        const itemIds = items.map(item => item._id);
+        const transactions = await Transaction.find({ 
+            item: { $in: itemIds },
+            company: companyId
+        }).select('item').lean();
+
+        const transactionItemIds = new Set(transactions.map(t => t.item.toString()));
+        
+        // Add hasTransactions flag
+        const itemsWithFlags = items.map(item => ({
+            ...item,
+            hasTransactions: transactionItemIds.has(item._id.toString()) ? 'true' : 'false'
+        }));
+
+        // Get current fiscal year
+        let currentFiscalYear = req.session.currentFiscalYear;
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = await FiscalYear.findById(company.fiscalYear).lean();
         }
 
-        // Find items that belong to the current fiscal year
-        const items = await Item.find({
-            company: companyId,
-            $or: [
-                { originalFiscalYear: fiscalYear }, // Created here
-                {
-                    fiscalYear: fiscalYear,
-                    originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
-                }
-            ]
-        })
-        .populate('category')
-        .populate('itemsCompany')
-        .populate('mainUnit')
-        .populate('composition')
-        .populate('originalFiscalYear')
-        .lean(); // Use lean() for better performance with JSON
-        
+        // Nepali date calculation
+        const today = new Date();
+        const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD');
+
         res.json({
             success: true,
-            items
+            items: itemsWithFlags,
+            company,
+            currentFiscalYear,
+            vatEnabled: company?.vatEnabled || false,
+            categories,
+            itemsCompanies,
+            units,
+            mainUnits,
+            composition,
+            companyId,
+            currentCompanyName: req.session.currentCompanyName || '',
+            companyDateFormat: company?.dateFormat || 'english',
+            nepaliDate,
+            fiscalYear: currentFiscalYear?._id || null,
+            user: req.user,
+            theme: req.user.preferences?.theme || 'light',
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
         });
     } catch (error) {
         console.error("Error fetching items:", error);
         res.status(500).json({ error: 'Failed to fetch items' });
     }
 });
+
+router.post('/api/items/create', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    if (req.tradeType !== 'retailer') {
+        return res.status(403).json({ error: 'This operation is only available for retailers' });
+    }
+
+    try {
+        const { name, hscode, category, itemsCompany, compositionIds, mainUnit, WSUnit, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
+        const companyId = req.session.currentCompany;
+
+        if (!companyId) {
+            return res.status(400).json({ error: 'Company ID is required' });
+        }
+
+        // Process composition IDs
+        let compositions = [];
+        if (compositionIds) {
+            compositions = compositionIds.split(',')
+                .map(id => id.trim())
+                .filter(id => mongoose.Types.ObjectId.isValid(id))
+                .map(id => new mongoose.Types.ObjectId(id));
+        }
+
+        // Validate compositions exist
+        if (compositions.length > 0) {
+            const existingCompositions = await Composition.countDocuments({
+                _id: { $in: compositions },
+                company: companyId
+            });
+
+            if (existingCompositions !== compositions.length) {
+                return res.status(400).json({ error: 'One or more invalid compositions' });
+            }
+        }
+
+        // Fetch company and fiscal year
+        const company = await Company.findById(companyId).populate('fiscalYear');
+        let fiscalYear = req.session.currentFiscalYear?.id;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+            fiscalYear = currentFiscalYear._id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found' });
+        }
+
+        // Validate category, unit, and main unit
+        const [categories, units, mainUnits] = await Promise.all([
+            Category.findOne({ _id: category, company: companyId }),
+            Unit.findOne({ _id: unit, company: companyId }),
+            MainUnit.findOne({ _id: mainUnit, company: companyId })
+        ]);
+
+        if (!categories) return res.status(400).json({ error: 'Invalid category' });
+        if (!units) return res.status(400).json({ error: 'Invalid unit' });
+        if (!mainUnits) return res.status(400).json({ error: 'Invalid main unit' });
+
+        // Check for existing item
+        const existingItem = await Item.findOne({ name, company: companyId, fiscalYear: { $in: [fiscalYear] } });
+        if (existingItem) {
+            return res.status(400).json({ error: 'Item already exists for this fiscal year' });
+        }
+
+        // Create new item
+        const newItem = new Item({
+            name,
+            hscode,
+            category,
+            itemsCompany,
+            composition: compositions,
+            mainUnit,
+            WSUnit,
+            unit,
+            price,
+            puPrice,
+            vatStatus,
+            openingStock,
+            stock: openingStock,
+            company: companyId,
+            reorderLevel,
+            maxStock: reorderLevel,
+            initialOpeningStock: {
+                fiscalYear,
+                salesPrice: price,
+                purchasePrice: puPrice,
+                openingStock,
+                openingStockBalance,
+                date: currentFiscalYear.startDate,
+            },
+            openingStockByFiscalYear: [{
+                fiscalYear,
+                salesPrice: price,
+                purchasePrice: puPrice,
+                openingStock,
+                openingStockBalance
+            }],
+            stockEntries: openingStock > 0 ? [{
+                quantity: openingStock,
+                price,
+                puPrice,
+                date: new Date(),
+                uniqueUuId: uuidv4(),
+                fiscalYear
+            }] : [],
+            fiscalYear: [fiscalYear],
+            originalFiscalYear: currentFiscalYear._id,
+            createdAt: currentFiscalYear.startDate,
+        });
+
+        await newItem.save();
+
+        return res.status(201).json({
+            success: true,
+            message: 'Item created successfully',
+            item: {
+                _id: newItem._id,
+                name: newItem.name,
+                category: newItem.category,
+                itemsCompany: newItem.itemsCompany,
+                price: newItem.price,
+                stock: newItem.stock
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating item:', error);
+        return res.status(500).json({
+            error: 'Server error',
+            details: error.message
+        });
+    }
+});
+
+
 
 router.get('/products', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
@@ -1145,10 +1337,6 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
             return res.status(400).json({ error: 'Invalid item category for this company' });
         }
 
-        // const itemsCompanies = await itemsCompany.findOne({ _id: itemsCompany, company: companyId });
-        // if (!itemsCompanies) {
-        //     return res.status(400).json({ error: 'Invalid item company for this company' });
-        // }
         const units = await Unit.findOne({ _id: unit, company: companyId });
         if (!units) {
             return res.status(400).json({ error: 'Invalid item unit for this company' });
@@ -1688,12 +1876,6 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 ('oldOpeningStock:', oldOpeningStock);
                 ('newOpeningStock:', newOpeningStock);
 
-                // Calculate the updated stock by adjusting opening stock
-                // const currentStock = itemStock - oldOpeningStock + newOpeningStock;
-                // Generate a unique ID for the stock entry
-                // const newUniqueId = uuidv4();
-                // Generate new stock entry only if opening stock changed
-
                 if (newOpeningStock > 0) {
                     const newUniqueId = uuidv4();
                     updatedStockEntries = [{
@@ -1766,6 +1948,202 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
             req.flash('error', 'Error updating item');
             res.redirect(`/items/${req.params.id}`);
         }
+    }
+});
+
+// Route to handle editing an item
+router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        try {
+            const { 
+                name, 
+                hscode, 
+                category, 
+                itemsCompany, 
+                compositionIds, 
+                price, 
+                puPrice, 
+                vatStatus, 
+                openingStock, 
+                reorderLevel, 
+                mainUnit, 
+                WSUnit, 
+                unit 
+            } = req.body;
+            
+            const companyId = req.session.currentCompany;
+
+            // Calculate opening stock balance
+            const calculatedBalance = (parseFloat(puPrice || 0) * parseFloat(openingStock || 0)).toFixed(2);
+
+            // Process composition IDs
+            const compositions = compositionIds
+                ? compositionIds.split(',').filter(id => mongoose.Types.ObjectId.isValid(id))
+                : [];
+
+            // Validate compositions exist
+            if (compositions.length > 0) {
+                const existingCompositions = await Composition.countDocuments({
+                    _id: { $in: compositions },
+                    company: companyId
+                });
+
+                if (existingCompositions !== compositions.length) {
+                    return res.status(400).json({ error: 'One or more invalid compositions' });
+                }
+            }
+
+            // Fetch the company and populate the fiscalYear
+            const company = await Company.findById(companyId).populate('fiscalYear');
+
+            // Get current fiscal year
+            let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+            let currentFiscalYear = null;
+
+            if (fiscalYear) {
+                currentFiscalYear = await FiscalYear.findById(fiscalYear);
+            }
+
+            if (!currentFiscalYear && company.fiscalYear) {
+                currentFiscalYear = company.fiscalYear;
+                req.session.currentFiscalYear = {
+                    id: currentFiscalYear._id.toString(),
+                    startDate: currentFiscalYear.startDate,
+                    endDate: currentFiscalYear.endDate,
+                    name: currentFiscalYear.name,
+                    dateFormat: currentFiscalYear.dateFormat,
+                    isActive: currentFiscalYear.isActive
+                };
+                fiscalYear = req.session.currentFiscalYear.id;
+            }
+
+            if (!fiscalYear) {
+                return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+            }
+
+            // Validate the category and unit
+            const [categoryExists, unitExists] = await Promise.all([
+                Category.findOne({ _id: category, company: companyId }),
+                Unit.findOne({ _id: unit, company: companyId })
+            ]);
+
+            if (!categoryExists) {
+                return res.status(400).json({ error: 'Invalid item category for this company' });
+            }
+
+            if (!unitExists) {
+                return res.status(400).json({ error: 'Invalid item unit for this company' });
+            }
+
+            // Fetch the current item details
+            const item = await Item.findById(req.params.id);
+            if (!item) {
+                return res.status(404).json({ error: 'Item not found' });
+            }
+
+            // Check if item has transactions
+            const hasTransactions = await Transaction.exists({ item: req.params.id });
+
+            // Prepare stock updates
+            let updatedStock = item.stock;
+            let updatedStockEntries = item.stockEntries;
+            let updatedOpeningStock = item.openingStock;
+            let updatedOpeningStockBalance = item.openingStockBalance;
+
+            if (!hasTransactions) {
+                const itemStock = Number(item.stock) || 0;
+                const oldOpeningStock = Number(item.openingStock) || 0;
+                const newOpeningStock = Number(openingStock) || 0;
+
+                updatedStock = itemStock - oldOpeningStock + newOpeningStock;
+                updatedOpeningStock = newOpeningStock;
+                updatedOpeningStockBalance = calculatedBalance;
+
+                if (newOpeningStock > 0) {
+                    updatedStockEntries = [{
+                        quantity: updatedStock,
+                        price: price,
+                        puPrice: puPrice,
+                        date: new Date(),
+                        fiscalYear: fiscalYear,
+                        uniqueUuId: uuidv4()
+                    }];
+                }
+            }
+
+            // Build update object
+            const updateData = {
+                name,
+                hscode,
+                category,
+                itemsCompany,
+                composition: compositions,
+                mainUnit,
+                WSUnit,
+                unit,
+                price,
+                puPrice,
+                vatStatus,
+                reorderLevel,
+                maxStock: reorderLevel,
+                stock: updatedStock,
+                openingStock: updatedOpeningStock,
+                openingStockBalance: updatedOpeningStockBalance,
+                stockEntries: updatedStockEntries,
+                company: companyId,
+                fiscalYear: [fiscalYear],
+            };
+
+            // Add opening stock data if no transactions exist
+            if (!hasTransactions) {
+                updateData.openingStockByFiscalYear = [{
+                    fiscalYear: fiscalYear,
+                    salesPrice: price,
+                    purchasePrice: puPrice,
+                    openingStock: updatedOpeningStock,
+                    openingStockBalance: updatedOpeningStockBalance
+                }];
+
+                updateData.initialOpeningStock = {
+                    fiscalYear: fiscalYear,
+                    salesPrice: price,
+                    purchasePrice: puPrice,
+                    openingStock: updatedOpeningStock,
+                    openingStockBalance: updatedOpeningStockBalance,
+                    date: currentFiscalYear?.startDate || new Date(),
+                };
+            }
+
+            // Update the item
+            const updatedItem = await Item.findByIdAndUpdate(
+                req.params.id, 
+                updateData, 
+                { new: true }
+            );
+
+            req.flash('success', 'Item updated successfully');
+            res.json({
+                success: true,
+                item: updatedItem,
+                openingStockBalance: updatedOpeningStockBalance
+            });
+
+        } catch (err) {
+            console.error('Error updating item:', err);
+            
+            if (err.code === 11000) {
+                return res.status(400).json({ 
+                    error: 'An item with this name already exists within the selected company.' 
+                });
+            }
+
+            res.status(500).json({ 
+                error: 'Error updating item',
+                details: err.message 
+            });
+        }
+    } else {
+        res.status(403).json({ error: 'Unauthorized trade type' });
     }
 });
 
