@@ -444,7 +444,7 @@ async function sendExpiryNotification(company, items) {
 //     allowedHeaders: ['Content-Type', 'Authorization']
 // }));
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://sarathi-frontend.onrender.com',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -453,24 +453,24 @@ app.use(cors({
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'frontend/build')));
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
-});
+// // Handle React routing, return all requests to React app
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
+// });
 
-app.use((req, res, next) => {
-    res.setHeader(
-        'Content-Security-Policy',
-        "script-src 'self' 'unsafe-inline' http://localhost:3000"
-    );
-    next();
-});
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
+// app.use((req, res, next) => {
+//     res.setHeader(
+//         'Content-Security-Policy',
+//         "script-src 'self' 'unsafe-inline' http://localhost:3000"
+//     );
+//     next();
+// });
+// app.use((req, res, next) => {
+//     res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//     next();
+// });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

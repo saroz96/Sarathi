@@ -79,7 +79,8 @@ const Items = () => {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/items/getitemsinform');
+            // const response = await api.get('/api/items/getitemsinform');
+            const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/items/getitemsinform`);
             if (response.data.success) {
                 setData({
                     items: response.data.items,
