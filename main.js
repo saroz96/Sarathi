@@ -17,7 +17,7 @@ function createWindow() {
   });
 
   // Load your EJS-based app in Electron
-  win.loadURL('http://localhost:3000'); // Assuming your server runs on port 3000
+  win.loadURL('https://sarathi-rww3.onrender.com'); // Assuming your server runs on port 3000
 
   // Open DevTools (optional)
   // win.webContents.openDevTools();
