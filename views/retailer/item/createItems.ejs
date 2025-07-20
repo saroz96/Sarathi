@@ -1,0 +1,188 @@
+<%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+
+    <div class="container-fluid mt-4 wow-form">
+        <!-- Add Item Form -->
+        <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp">
+            <h1 style="text-align: center;text-decoration: underline;">Create Items</h1>
+            <div class="card-body">
+                <form action="/api/create-items" method="post" class="wow-form">
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="name">Name<i style="color: red;">*</i></label>
+                            <input type="text" class="form-control" id="searchValue" name="name"
+                                placeholder="Enter item name" autocomplete="off" autofocus required>
+                        </div>
+                        <div class="col-3">
+                            <label for="hscode">HSN</label>
+                            <input type="number" class="form-control" id="hscode" name="hscode" placeholder=""
+                                autocomplete="off">
+                        </div>
+                        <div class="col-3">
+                            <label for="itemsCompany">Company <i style="color: red;">*</i></label>
+                            <select class="form-control" id="itemsCompany" name="itemsCompany" required
+                                onfocus="selectValue(this)">
+                                <% if (itemsCompanies && itemsCompanies.length> 0) { %>
+                                    <option value="" disabled selected>Select company</option>
+                                    <% itemsCompanies.forEach(company=> { %>
+                                        <option value="<%= company._id %>">
+                                            <%= company.name %>
+                                        </option>
+                                        <% }); %>
+                                            <% } else { %>
+                                                <option disabled>No company available</option>
+                                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-3">
+                            <label for="category">Category <i style="color: red;">*</i></label>
+                            <select class="form-control" id="category" name="category" required
+                                onfocus="selectValue(this)">
+                                <% if (categories && categories.length> 0) { %>
+                                    <option value="" disabled selected>Select category</option>
+                                    <% categories.forEach(category=> { %>
+                                        <option value="<%= category._id %>">
+                                            <%= category.name %>
+                                        </option>
+                                        <% }); %>
+                                            <% } else { %>
+                                                <option disabled>No categories available</option>
+                                                <% } %>
+                            </select>
+                        </div>
+                        <div class="col-9">
+                            <label for="composition" class="form-label">Composition</label>
+                            <textarea class="form-control" id="composition" name="composition" rows="1"
+                                placeholder="Press F6 to add compositions"
+                                onkeydown="handleCompositionInputKeydown(event)"></textarea>
+                            <input type="hidden" id="compositionIds" name="compositionIds">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="mainUnit">Main Unit <i style="color: red;">*</i></label>
+                            <select class="form-control" id="mainUnit" name="mainUnit" onfocus="selectValue(this)"
+                                required>
+                                <% if (mainUnits && mainUnits.length> 0) { %>
+                                    <option value="" disabled selected>Select Main Unit</option>
+                                    <% mainUnits.forEach(mainUnit=> { %>
+                                        <option value="<%= mainUnit._id %>">
+                                            <%= mainUnit.name %>
+                                        </option>
+                                        <% }); %>
+                                            <% } else { %>
+                                                <option disabled>No units available</option>
+                                                <% } %>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="WSUnit">WS Unit</label>
+                            <input type="number" id="WSUnit" name="WSUnit" class="form-control" autocomplete="off">
+                        </div>
+                        <div class="col">
+                            <label for="unit">Unit <i style="color: red;">*</i></label>
+                            <select class="form-control" id="unit" name="unit" onfocus="selectValue(this)" required>
+                                <% if (units && units.length> 0) { %>
+                                    <option value="" disabled selected>Select Unit</option>
+                                    <% units.forEach(unit=> { %>
+                                        <option value="<%= unit._id %>">
+                                            <%= unit.name %>
+                                        </option>
+                                        <% }); %>
+                                            <% } else { %>
+                                                <option disabled>No units available</option>
+                                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="vatStatus">VAT<i style="color: red;">*</i></label>
+                            <select class="form-control" id="vatStatus" name="vatStatus" onfocus="selectValue(this)"
+                                required>
+                                <option value="" disabled selected>Select Vat</option>
+                                <% if (vatEnabled) {%>
+                                    <option value="vatable">Vatable</option>
+                                    <%}%>
+                                        <option value="vatExempt">VAT Exempt</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="reorderLevel">Re-Order(Qty)</label>
+                            <input type="number" class="form-control" id="reorderLevel" name="reorderLevel" value="10"
+                                aria-selected="true" onfocus="selectValue(this)" autocomplete="off">
+                        </div>
+                        <div class="col">
+                            <label for="price">Sales Price</label>
+                            <input type="number" class="form-control" id="price" name="price" step="0.01"
+                                autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="puPrice">Purchase Price</label>
+                            <input type="number" class="form-control" id="puPrice" name="puPrice" step="any"
+                                oninput="calculateTotalOpeningStockBalance()" autocomplete="off">
+                        </div>
+                        <div class="col">
+                            <label for="openingStock">Op. Stock</label>
+                            <input type="number" class="form-control" id="openingStock" name="openingStock"
+                                oninput="calculateTotalOpeningStockBalance()" autocomplete="off">
+                        </div>
+                        <div class="col">
+                            <label for="openingStockBalance">Op. Stock Value</label>
+                            <input type="number" class="form-control" id="openingStockBalance"
+                                name="openingStockBalance" value="0.00" step="any" onfocus="selectValue(this)"
+                                autocomplete="off">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="saveItem">Add Item</button>
+                    <i>To Save Press Alt+S</i>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+
+         //calculate openingStockBalance
+        function calculateTotalOpeningStockBalance(input) {
+            const puPrice = parseFloat(document.getElementById('puPrice').value) || 0;
+            const openingStock = parseFloat(document.getElementById('openingStock').value) || 0;
+
+            const totalOpeningStockBalance = puPrice * openingStock;
+
+            // Update the Opening Stock Balance field
+            document.getElementById('openingStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        }
+
+        function calculateTotalOpeningStockBalanceInEditForm(input) {
+            const puPrice = parseFloat(document.getElementById('editpuPrice').value) || 0.00;
+            const openingStock = parseFloat(document.getElementById('editOpeningStock').value) || 0.00;
+
+            const totalOpeningStockBalance = puPrice * openingStock;
+
+            // Update the Opening Stock Balance field
+            document.getElementById('editOpeningStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        }
+    </script>

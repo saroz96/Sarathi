@@ -791,6 +791,112 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
     }
 });
 
+
+// Route to fetch items based on current fiscal year
+router.get('/create/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+        try {
+            const companyId = req.session.currentCompany;
+            const currentCompanyName = req.session.currentCompanyName;
+            const today = new Date();
+            const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD'); // Format the Nepali date as needed
+            const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat vatEnabled').populate('fiscalYear');
+            const companyDateFormat = company ? company.dateFormat : 'english'; // Default to 'english'
+
+
+            // Check if fiscal year is already in the session or available in the company
+            let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+            let currentFiscalYear = null;
+
+            if (fiscalYear) {
+                // Fetch the fiscal year from the database if available in the session
+                currentFiscalYear = await FiscalYear.findById(fiscalYear);
+            }
+
+            // If no fiscal year is found in session or currentCompany, throw an error
+            if (!currentFiscalYear && company.fiscalYear) {
+                currentFiscalYear = company.fiscalYear;
+
+                // Set the fiscal year in the session for future requests
+                req.session.currentFiscalYear = {
+                    id: currentFiscalYear._id.toString(),
+                    startDate: currentFiscalYear.startDate,
+                    endDate: currentFiscalYear.endDate,
+                    name: currentFiscalYear.name,
+                    dateFormat: currentFiscalYear.dateFormat,
+                    isActive: currentFiscalYear.isActive
+                };
+
+                // Assign fiscal year ID for use
+                fiscalYear = req.session.currentFiscalYear.id;
+            }
+
+            if (!fiscalYear) {
+                return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+            }
+
+            // Find items that belong to the current fiscal year
+            const items = await Item.find({
+                company: companyId,
+                // fiscalYear: fiscalYear, // Match items based on fiscalYearId
+                $or: [
+                    { originalFiscalYear: fiscalYear }, // Created here
+                    {
+                        fiscalYear: fiscalYear,
+                        originalFiscalYear: { $lt: fiscalYear } // Migrated from older FYs
+                    }
+                ]
+            })
+                .populate('category')
+                .populate('itemsCompany')
+                .populate('unit')
+                .populate('mainUnit')
+                .populate('composition')  // This is crucial!
+                .populate('originalFiscalYear')
+
+            // Add hasTransactions flag to each item
+            // for (const item of items) {
+            //     item.hasTransactions = (await Transaction.exists({ item: item._id })) ? 'true' : 'false';
+            // }
+
+            // Fetch categories and units for item creation
+            const categories = await Category.find({ company: companyId });
+            const itemsCompanies = await itemsCompany.find({ company: companyId });
+            const units = await Unit.find({ company: companyId });
+            const mainUnits = await MainUnit.find({ company: companyId });
+            const composition = await Composition.find({ company: companyId });
+
+            // Render the items page with the fetched data
+            res.render('retailer/item/createItems', {
+                company,
+                currentFiscalYear,
+                vatEnabled: company.vatEnabled,
+                categories,
+                itemsCompanies,
+                units,
+                mainUnits,
+                composition,
+                companyId,
+                currentCompanyName,
+                companyDateFormat,
+                nepaliDate,
+                fiscalYear,
+                title: '',
+                body: '',
+                user: req.user,
+                theme: req.user.preferences?.theme || 'light', // Default to light if not set
+                isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+            });
+        } catch (error) {
+            console.error("Error fetching items:", error);
+            req.flash('error', 'Failed to fetch items for the current fiscal year.');
+            res.redirect('/retailerDashboard');
+        }
+    } else {
+        res.redirect('/'); // Handle unauthorized access
+    }
+});
+
 router.get('/api/items/getitemsinform', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     try {
         const companyId = req.session.currentCompany;
@@ -1411,6 +1517,155 @@ router.post('/items', ensureAuthenticated, ensureCompanySelected, ensureTradeTyp
         // Flash success message and redirect
         req.flash('success', 'Item added successfully!');
         res.redirect('/items');
+    }
+});
+
+
+router.post('/api/create-items', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+    if (req.tradeType === 'retailer') {
+
+        const { name, hscode, category, itemsCompany, compositionIds, mainUnit, WSUnit, unit, price, puPrice, vatStatus, openingStock, reorderLevel, openingStockBalance } = req.body;
+        const companyId = req.session.currentCompany;
+
+        if (!companyId) {
+            return res.status(400).json({ error: 'Company ID is required' });
+        }
+
+        // Process composition IDs - convert string to array of ObjectIds
+        let compositions = [];
+        if (compositionIds) {
+            compositions = compositionIds.split(',')
+                .map(id => id.trim())
+                .filter(id => mongoose.Types.ObjectId.isValid(id))
+                .map(id => new mongoose.Types.ObjectId(id));
+        }
+
+        // Validate compositions exist
+        if (compositions.length > 0) {
+            const existingCompositions = await Composition.countDocuments({
+                _id: { $in: compositions },
+                company: companyId
+            });
+
+            if (existingCompositions !== compositions.length) {
+                return res.status(400).json({ error: 'One or more invalid compositions' });
+            }
+        }
+
+        // Fetch the company and populate the fiscalYear
+        const company = await Company.findById(companyId).populate('fiscalYear');
+
+        // Check if fiscal year is already in the session or available in the company
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            // Fetch the fiscal year from the database if available in the session
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        // If no fiscal year is found in session or currentCompany, throw an error
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+
+            // Set the fiscal year in the session for future requests
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+
+            // Assign fiscal year ID for use
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session or company.' });
+        }
+
+        // Validate the category and unit
+        const categories = await Category.findOne({ _id: category, company: companyId });
+        if (!categories) {
+            return res.status(400).json({ error: 'Invalid item category for this company' });
+        }
+
+        const units = await Unit.findOne({ _id: unit, company: companyId });
+        if (!units) {
+            return res.status(400).json({ error: 'Invalid item unit for this company' });
+        }
+
+        const mainUnits = await MainUnit.findOne({ _id: mainUnit, company: companyId });
+        if (!mainUnits) {
+            return res.status(400).json({ error: 'Invalid item main unit for this company' });
+        }
+
+        // Check if an item with the same name already exists for the current fiscal year
+        const existingItem = await Item.findOne({ name, company: companyId, fiscalYear: { $in: [fiscalYear] } });
+        if (existingItem) {
+            return res.status(400).json({ error: 'Item already exists for the current fiscal year.' });
+        }
+
+        // Generate a unique ID for the stock entry
+        const uniqueId = uuidv4();
+
+        // Create the new item with the fiscal year in openingStockByFiscalYear
+        const newItem = new Item({
+            name,
+            hscode,
+            category,
+            itemsCompany,
+            composition: compositions, // Array of composition IDs
+            mainUnit,
+            WSUnit,
+            unit,
+            price,
+            puPrice,
+            vatStatus,
+            openingStock: openingStock,
+            stock: openingStock, // Set total stock to opening stock initially
+            company: companyId,
+            reorderLevel,
+            maxStock: reorderLevel,
+            initialOpeningStock: {
+                fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
+                salesPrice: price,
+                purchasePrice: puPrice,
+                openingStock: openingStock,
+                openingStockBalance: openingStockBalance,
+                date: currentFiscalYear.startDate,
+            },
+            openingStockByFiscalYear: [{
+                fiscalYear: fiscalYear, // Use the current fiscal year ID from session or company
+                salesPrice: price,
+                purchasePrice: puPrice,
+                openingStock: openingStock,
+                openingStockBalance: openingStockBalance
+            }],
+            stockEntries: openingStock > 0 ? [{
+                quantity: openingStock,
+                price: price,
+                puPrice: puPrice,
+                date: new Date(),
+                uniqueUuId: uniqueId,
+                fiscalYear: fiscalYear // Record stock entry with fiscal year
+            }] : [],
+            fiscalYear: [fiscalYear], // Associate the item with the current fiscal year
+            originalFiscalYear: currentFiscalYear,
+            createdAt: currentFiscalYear.startDate,
+        });
+
+        // Save the new item
+        await newItem.save();
+
+        // Log the new item for debugging purposes
+        (newItem);
+
+        // Flash success message and redirect
+        req.flash('success', 'Item created successfully!');
+        res.redirect('/create/items');
     }
 });
 

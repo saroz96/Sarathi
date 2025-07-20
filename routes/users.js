@@ -834,6 +834,140 @@ router.post('/login', forwardAuthenticated, (req, res, next) => {
     })(req, res, next);
 });
 
+// //for react frontend
+// router.post('/api/login', forwardAuthenticated, (req, res, next) => {
+//   passport.authenticate('local', (err, user, info) => {
+//     if (err) {
+//       console.error('Login error:', err);
+//       return res.status(500).json({ 
+//         success: false, 
+//         message: 'An error occurred during authentication' 
+//       });
+//     }
+
+//     if (!user) {
+//       return res.status(401).json({ 
+//         success: false, 
+//         message: info.message || 'Invalid email or password' 
+//       });
+//     }
+
+//     // Check email verification
+//     if (!user.isEmailVerified) {
+//       return res.status(401).json({
+//         success: false,
+//         requiresEmailVerification: true,
+//         message: 'Please verify your email before logging in',
+//         email: user.email
+//       });
+//     }
+
+//     req.logIn(user, (err) => {
+//       if (err) {
+//         console.error('Session error:', err);
+//         return res.status(500).json({ 
+//           success: false, 
+//           message: 'Session error' 
+//         });
+//       }
+
+//       // Update last login
+//       User.findByIdAndUpdate(user._id, { lastLogin: Date.now() })
+//         .catch(err => console.error('Error updating last login:', err));
+
+//       // Determine redirect URL based on role
+//       let redirectUrl = '/dashboard';
+//       if (user.role === 'ADMINISTRATOR') {
+//         redirectUrl = '/admin-dashboard';
+//       } else if (user.role === 'MANAGER') {
+//         redirectUrl = '/manager-dashboard';
+//       }
+
+//       return res.json({ 
+//         success: true, 
+//         redirect: redirectUrl,
+//         user: {
+//           id: user._id,
+//           name: user.name,
+//           email: user.email,
+//           role: user.role
+//         }
+//       });
+//     });
+//   })(req, res, next);
+// });
+
+// Updated login route (server-side)
+router.post('/api/login', forwardAuthenticated, (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            console.error('Login error:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'An error occurred during authentication'
+            });
+        }
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: info.message || 'Invalid email or password'
+            });
+        }
+
+        // Check email verification
+        if (!user.isEmailVerified) {
+            return res.status(401).json({
+                success: false,
+                requiresEmailVerification: true,
+                message: 'Please verify your email before logging in',
+                email: user.email
+            });
+        }
+
+        req.logIn(user, (err) => {
+            if (err) {
+                console.error('Session error:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Session error'
+                });
+            }
+
+            // Update last login
+            User.findByIdAndUpdate(user._id, { lastLogin: Date.now() })
+                .catch(err => console.error('Error updating last login:', err));
+
+            // Return user data without token (since we're using sessions)
+            return res.json({
+                success: true,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                }
+            });
+        });
+    })(req, res, next);
+});
+
+
+// // Add this route in your authRoutes.js
+// router.get('/validate-token',
+//     passport.authenticate('jwt', { session: false }),
+//     (req, res) => {
+//         // If we get here, the token is valid
+//         res.json({
+//             user: {
+//                 id: req.user._id,
+//                 firstName: req.user.firstName,
+//                 email: req.user.email,
+//                 role: req.user.role
+//             }
+//         });
+//     }
+// );
 
 // Route to display the change password form
 router.get('/user/change-password', ensureAuthenticated, ensureCompanySelected, async (req, res) => {
@@ -935,25 +1069,57 @@ router.get('/logout', (req, res) => {
     });
 });
 
+//for react frontend
+router.post('/api/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Error during logout' 
+      });
+    }
+    
+    // Destroy the session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Error destroying session' 
+        });
+      }
+      
+      // Clear the session cookie
+      res.clearCookie('connect.sid'); // or your session cookie name
+      
+      return res.json({ 
+        success: true, 
+        message: 'Logged out successfully' 
+      });
+    });
+  });
+});
+
 
 // Get current user data with permissions
 router.get('/me', ensureAuthenticated, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password -__v');
-    
-    // Convert the Map to an array for JSON serialization
-    const permissionsArray = Array.from(user.menuPermissions.entries());
-    
-    res.json({
-      user: {
-        ...user._doc,
-        menuPermissions: permissionsArray
-      }
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
+    try {
+        const user = await User.findById(req.user.id).select('-password -__v');
+
+        // Convert the Map to an array for JSON serialization
+        const permissionsArray = Array.from(user.menuPermissions.entries());
+
+        res.json({
+            user: {
+                ...user._doc,
+                menuPermissions: permissionsArray
+            }
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 });
 
 module.exports = router;
