@@ -165,7 +165,7 @@
             input.addEventListener('keydown', moveToNextInput);
         });
 
-         //calculate openingStockBalance
+        //calculate openingStockBalance
         function calculateTotalOpeningStockBalance(input) {
             const puPrice = parseFloat(document.getElementById('puPrice').value) || 0;
             const openingStock = parseFloat(document.getElementById('openingStock').value) || 0;
@@ -184,5 +184,13 @@
 
             // Update the Opening Stock Balance field
             document.getElementById('editOpeningStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        }
+
+        function handleCompositionInputKeydown(event) {
+            if (event.key === 'Enter') {
+                const mainUnit = document.getElementById('mainUnit');
+                mainUnit.focus();
+                mainUnit.select();
+            }
         }
     </script>

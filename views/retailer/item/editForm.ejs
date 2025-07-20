@@ -1,0 +1,275 @@
+<%- include('../layouts/boilerplate', { title: 'Edit Item' , body: '' }) %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <div class="container-fluid mt-4 wow-form">
+        <div class="card mt-4 shadow-lg p-4 animate__animated animate__fadeInUp">
+            <h1 style="text-align: center; text-decoration: underline;">Edit Item</h1>
+            <div class="card-body">
+                <form action="/api/items/<%= items._id %>?_method=PUT" method="POST" class="wow-form" id="editItemForm">
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="editName">Name<i style="color: red;">*</i></label>
+                            <input type="text" class="form-control" id="editName" name="name"
+                                value="<%= items.name %>" required>
+                        </div>
+                        <div class="col-3">
+                            <label for="editHscode">HSN</label>
+                            <input type="number" class="form-control" id="editHscode" name="hscode" 
+                                value="<%= items.hscode || '' %>">
+                        </div>
+                        <div class="col-3">
+                            <label for="editItemsCompany">Company <i style="color: red;">*</i></label>
+                            <select class="form-control" id="editItemsCompany" name="itemsCompany" required>
+                                <% itemsCompanies.forEach(company=> { %>
+                                    <option value="<%= company._id %>" 
+                                        <%= company._id.toString() === items.itemsCompany.toString() ? 'selected' : '' %>>
+                                        <%= company.name %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-3">
+                            <label for="editCategory">Category <i style="color: red;">*</i></label>
+                            <select class="form-control" id="editCategory" name="category" required>
+                                <% categories.forEach(cat=> { %>
+                                    <option value="<%= cat._id %>" 
+                                        <%= cat._id.toString() === items.category._id.toString() ? 'selected' : '' %>>
+                                        <%= cat.name %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-9">
+                            <label for="editComposition" class="form-label">Composition</label>
+                            <textarea class="form-control" id="editComposition" name="composition" rows="1"
+                                placeholder="Press F6 to add compositions"
+                                onkeydown="handleCompositionInputKeydown(event)"></textarea>
+                            <input type="hidden" id="editCompositionIds" name="compositionIds" 
+                                value="<%= items.composition.map(c => c._id).join(',') %>">
+                            <div id="compositionTags" class="mt-2">
+                                <% items.composition.forEach(comp=> { %>
+                                    <span class="badge badge-primary mr-1">
+                                        <%= comp.name %>
+                                        <button type="button" class="close" onclick="removeComposition('<%= comp._id %>')">
+                                            <span>&times;</span>
+                                        </button>
+                                    </span>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="editMainUnit">Main Unit <i style="color: red;">*</i></label>
+                            <select class="form-control" id="editMainUnit" name="mainUnit" required>
+                                <% mainUnits.forEach(mUnit=> { %>
+                                    <option value="<%= mUnit._id %>" 
+                                        <%= items.mainUnit && mUnit._id.toString() === items.mainUnit._id.toString() ? 'selected' : '' %>>
+                                        <%= mUnit.name %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="editWSUnit">WS Unit</label>
+                            <input type="number" id="editWSUnit" name="WSUnit" class="form-control" 
+                                value="<%= items.WSUnit || 0 %>">
+                        </div>
+                        <div class="col">
+                            <label for="editUnit">Unit <i style="color: red;">*</i></label>
+                            <select class="form-control" id="editUnit" name="unit" required>
+                                <% units.forEach(u=> { %>
+                                    <option value="<%= u._id %>" 
+                                        <%= u._id.toString() === items.unit._id.toString() ? 'selected' : '' %>>
+                                        <%= u.name %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="editVatStatus">VAT<i style="color: red;">*</i></label>
+                            <select class="form-control" id="editVatStatus" name="vatStatus" required>
+                                <option value="vatable" <%= items.vatStatus === 'vatable' ? 'selected' : '' %>>Vatable</option>
+                                <option value="vatExempt" <%= items.vatStatus === 'vatExempt' ? 'selected' : '' %>>VAT Exempt</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="editReorderLevel">Re-Order(Qty)</label>
+                            <input type="number" class="form-control" id="editReorderLevel" name="reorderLevel" 
+                                value="<%= items.reorderLevel || 10 %>">
+                        </div>
+                        <div class="col">
+                            <label for="editPrice">Sales Price</label>
+                            <input type="number" class="form-control" id="editPrice" name="price" step="0.01"
+                                value="<%= items.price || 0 %>">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="editPuPrice">Purchase Price</label>
+                            <input type="number" class="form-control" id="editPuPrice" name="puPrice" step="any"
+                                value="<%= items.puPrice || 0 %>" 
+                                oninput="calculateTotalOpeningStockBalanceInEditForm()">
+                        </div>
+                        <div class="col">
+                            <label for="editOpeningStock">Op. Stock</label>
+                            <input type="number" class="form-control" id="editOpeningStock" name="openingStock"
+                                value="<%= openingStock || 0 %>" 
+                                oninput="calculateTotalOpeningStockBalanceInEditForm()" 
+                                <%= hasTransactions ? 'readonly' : '' %>>
+                        </div>
+                        <div class="col">
+                            <label for="editOpeningStockBalance">Op. Stock Value</label>
+                            <input type="number" class="form-control" id="editOpeningStockBalance"
+                                name="openingStockBalance" value="<%= openingStockBalance || 0 %>" step="any" 
+                                <%= hasTransactions ? 'readonly' : '' %>>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="editMRP">MRP</label>
+                            <input type="number" class="form-control" id="editMRP" name="mrp" step="0.01"
+                                value="<%= items.mrp || 0 %>">
+                        </div>
+                        <div class="col">
+                            <label for="editMarginPercentage">Margin %</label>
+                            <input type="number" class="form-control" id="editMarginPercentage" name="marginPercentage" step="0.01"
+                                value="<%= items.marginPercentage || 0 %>">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="updateItem">Update Item</button>
+                    <a href="/items-list" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Composition management
+        function handleCompositionInputKeydown(event) {
+            if (event.key === 'F6') {
+                event.preventDefault();
+                window.open('/compositions/quick-add', 'QuickAddComposition', 
+                    'width=600,height=400,top=100,left=100');
+            }
+        }
+
+        function addCompositionToItem(compositionId, compositionName) {
+            const compositionIds = document.getElementById('editCompositionIds');
+            const compositionTags = document.getElementById('compositionTags');
+            
+            // Add to hidden field
+            const currentIds = compositionIds.value ? compositionIds.value.split(',') : [];
+            if (!currentIds.includes(compositionId)) {
+                currentIds.push(compositionId);
+                compositionIds.value = currentIds.join(',');
+                
+                // Add visual tag
+                const tag = document.createElement('span');
+                tag.className = 'badge badge-primary mr-1';
+                tag.innerHTML = `
+                    ${compositionName}
+                    <button type="button" class="close" onclick="removeComposition('${compositionId}')">
+                        <span>&times;</span>
+                    </button>
+                `;
+                compositionTags.appendChild(tag);
+            }
+        }
+
+        function removeComposition(compositionId) {
+            const compositionIds = document.getElementById('editCompositionIds');
+            const currentIds = compositionIds.value.split(',');
+            const updatedIds = currentIds.filter(id => id !== compositionId);
+            compositionIds.value = updatedIds.join(',');
+            
+            // Remove visual tag
+            const tags = document.querySelectorAll('#compositionTags span');
+            tags.forEach(tag => {
+                if (tag.textContent.includes(compositionId)) {
+                    tag.remove();
+                }
+            });
+        }
+
+        // Stock calculations
+        function calculateTotalOpeningStockBalanceInEditForm() {
+            const puPrice = parseFloat(document.getElementById('editPuPrice').value) || 0;
+            const openingStock = parseFloat(document.getElementById('editOpeningStock').value) || 0;
+            const totalOpeningStockBalance = puPrice * openingStock;
+            document.getElementById('editOpeningStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        }
+
+        // Form submission
+        document.getElementById('editItemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            const requiredFields = ['name', 'category', 'itemsCompany', 'mainUnit', 'unit', 'vatStatus'];
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                const element = document.getElementById(`edit${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                if (!element.value) {
+                    element.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    element.classList.remove('is-invalid');
+                }
+            });
+            
+            if (isValid) {
+                this.submit();
+            } else {
+                alert('Please fill in all required fields marked with *');
+            }
+        });
+
+        // Initialize form values
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotalOpeningStockBalanceInEditForm();
+        });
+
+         // Function to move focus to the next input field
+        function moveToNextInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                const form = event.target.form;
+                const index = Array.prototype.indexOf.call(form, event.target);
+                form.elements[index + 1].focus();
+            }
+        }
+
+        // Get all the input elements within the form
+        const inputs = document.querySelectorAll('form input, form select');
+
+        // Attach the moveToNextInput function to the keydown event for each input field
+        inputs.forEach(input => {
+            input.addEventListener('keydown', moveToNextInput);
+        });
+
+        //  //calculate openingStockBalance
+        // function calculateTotalOpeningStockBalance(input) {
+        //     const puPrice = parseFloat(document.getElementById('puPrice').value) || 0;
+        //     const openingStock = parseFloat(document.getElementById('openingStock').value) || 0;
+
+        //     const totalOpeningStockBalance = puPrice * openingStock;
+
+        //     // Update the Opening Stock Balance field
+        //     document.getElementById('openingStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        // }
+
+        // function calculateTotalOpeningStockBalanceInEditForm(input) {
+        //     const puPrice = parseFloat(document.getElementById('editpuPrice').value) || 0.00;
+        //     const openingStock = parseFloat(document.getElementById('editOpeningStock').value) || 0.00;
+
+        //     const totalOpeningStockBalance = puPrice * openingStock;
+
+        //     // Update the Opening Stock Balance field
+        //     document.getElementById('editOpeningStockBalance').value = totalOpeningStockBalance.toFixed(2);
+        // }
+    </script>

@@ -1987,13 +1987,6 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             barcodeData: `${currentCompanyName}|${items.uniqueNumber}|${entry.mrp}|${entry.batchNumber}|${entry.expiryDate.toISOString().split('T')[0]}`
         }));
 
-        // Add printer options (you might want to fetch these from a database or config)
-        // const printerOptions = [
-        //     { name: 'Default Printer', value: 'default' },
-        //     { name: 'Label Printer 1', value: 'label_printer_1' },
-        //     { name: 'Office Printer', value: 'office_printer' }
-        // ];
-
         // Get user's barcode preferences
         const barcodePreferences = await BarcodePreference.findOne({
             user: req.user._id
@@ -2018,7 +2011,6 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
             salesPrice,
             purchasePrice,
             stockEntries,
-            // printerOptions,
             printPreferences,
             barcodeBaseUrl: `/item/${items._id}/barcode`, // Base URL for barcode generation
             fiscalYear,
@@ -2036,8 +2028,136 @@ router.get('/items/:id', isLoggedIn, ensureAuthenticated, ensureCompanySelected,
     }
 });
 
+
+router.get('/api/items/:id/edit', isLoggedIn, ensureAuthenticated, ensureCompanySelected, async (req, res) => {
+    const companyId = req.session.currentCompany;
+    const currentCompanyName = req.session.currentCompanyName;
+
+    if (!companyId) {
+        return res.status(400).json({ error: 'Company ID is required' });
+    }
+
+    try {
+        const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+
+        // Check if fiscal year is already in the session
+        let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+        let currentFiscalYear = null;
+
+        if (fiscalYear) {
+            currentFiscalYear = await FiscalYear.findById(fiscalYear);
+        }
+
+        if (!currentFiscalYear && company.fiscalYear) {
+            currentFiscalYear = company.fiscalYear;
+            req.session.currentFiscalYear = {
+                id: currentFiscalYear._id.toString(),
+                startDate: currentFiscalYear.startDate,
+                endDate: currentFiscalYear.endDate,
+                name: currentFiscalYear.name,
+                dateFormat: currentFiscalYear.dateFormat,
+                isActive: currentFiscalYear.isActive
+            };
+            fiscalYear = req.session.currentFiscalYear.id;
+        }
+
+        if (!fiscalYear) {
+            return res.status(400).json({ error: 'No fiscal year found in session.' });
+        }
+
+        // Fetch all necessary data in parallel
+        const [
+            items,
+            itemsCompanies,
+            categories,
+            mainUnits,
+            units,
+            barcodePreferences
+        ] = await Promise.all([
+            Item.findOne({ _id: req.params.id, company: companyId })
+                .populate('category')
+                .populate('unit')
+                .populate('mainUnit')
+                .populate('WSUnit')
+                .populate({
+                    path: 'composition',
+                    select: 'name uniqueNumber'
+                })
+                .lean(),
+            itemsCompany.find({ company: companyId }).lean(),
+            Category.find({ company: companyId }).lean(),
+            MainUnit.find({ company: companyId }).lean(),
+            Unit.find({ company: companyId }).lean(),
+            BarcodePreference.findOne({ user: req.user._id })
+        ]);
+
+        if (!items) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+
+        if (!items.openingStockByFiscalYear || !Array.isArray(items.openingStockByFiscalYear)) {
+            return res.status(400).json({ error: 'No opening stock information available for this item.' });
+        }
+
+        const openingStockForFiscalYear = items.openingStockByFiscalYear.find(stockEntry =>
+            stockEntry.fiscalYear && stockEntry.fiscalYear.toString() === fiscalYear
+        );
+
+        const openingStock = openingStockForFiscalYear ? openingStockForFiscalYear.openingStock : 0;
+        const openingStockBalance = openingStockForFiscalYear ? openingStockForFiscalYear.openingStockBalance : 0;
+        const salesPrice = openingStockForFiscalYear ? openingStockForFiscalYear.salesPrice : 0;
+        const purchasePrice = openingStockForFiscalYear ? openingStockForFiscalYear.purchasePrice : 0;
+
+        const stockEntries = items.stockEntries.map(entry => ({
+            ...entry,
+            expiryDate: entry.expiryDate.toISOString().split('T')[0],
+            barcodeData: `${currentCompanyName}|${items.uniqueNumber}|${entry.mrp}|${entry.batchNumber}|${entry.expiryDate.toISOString().split('T')[0]}`
+        }));
+
+        const printPreferences = barcodePreferences || {
+            labelWidth: 70,
+            labelHeight: 40,
+            labelsPerRow: 3,
+            barcodeType: 'code128',
+            defaultQuantity: 1
+        };
+
+        // Check if item has transactions
+        const hasTransactions = await Transaction.exists({ item: req.params.id });
+
+        res.render('retailer/item/editForm', {
+            company,
+            currentFiscalYear,
+            items,
+            itemsCompanies, // Add this to the template data
+            categories,
+            mainUnits,
+            units,
+            openingStock,
+            openingStockBalance,
+            salesPrice,
+            purchasePrice,
+            stockEntries,
+            printPreferences,
+            barcodeBaseUrl: `/item/${items._id}/barcode`,
+            fiscalYear,
+            currentCompanyName,
+            title: '',
+            body: '',
+            user: req.user,
+            theme: req.user.preferences?.theme || 'light',
+            isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor',
+            hasTransactions // Add this to control readonly fields
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // Route to handle editing an item
-router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+router.put('/api/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
             const { name, hscode, category, itemsCompany, compositionIds, price, puPrice, vatStatus, openingStock, reorderLevel, mainUnit, WSUnit, unit, openingStockBalance } = req.body;
@@ -2122,7 +2242,7 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
                 const newOpeningStock = Number(openingStock) || 0;
                 const openingStockBal = Number(openingStockBalance) || 0;
 
-                updatedStock = itemStock - oldOpeningStock + newOpeningStock;
+                updatedStock = newOpeningStock;
                 updatedOpeningStock = newOpeningStock;
                 updatedOpeningStockBalance = openingStockBal;
 
@@ -2192,16 +2312,16 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
             await Item.findByIdAndUpdate(req.params.id, updateData);
 
             req.flash('success', 'Item updated successfully');
-            res.redirect('/items');
+            res.redirect(`/api/items/${req.params.id}/edit`);
         } catch (err) {
             if (err.code === 11000) {
                 req.flash('error', 'An item with this name already exists within the selected company.');
-                return res.redirect(`/items/${req.params.id}`);
+                return res.redirect(`/api/items/${req.params.id}/edit`);
             }
 
             console.error('Error updating item:', err);
             req.flash('error', 'Error updating item');
-            res.redirect(`/items/${req.params.id}`);
+            res.redirect(`/api/items/${req.params.id}/edit`);
         }
     }
 });
@@ -2419,17 +2539,16 @@ router.delete('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTr
 
         if (hasSales || hasSalesReturn || hasPurchase || hasPurchaseReturn || hasStockAdjustment || hasTransaction) {
             req.flash('error', 'Item cannot be deleted as it has related transactions or entries.');
-            return res.redirect('/items');
+            return res.redirect('/items-list');
         }
 
         // If no related transactions are found, proceed with deletion
         await Item.findByIdAndDelete(id, { company: companyId });
         req.flash('success', 'Item deleted successfully');
-        res.redirect('/items');
+        res.redirect('/items-list');
     }
 });
 
-// Route to list all items and their stock levels
 router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
@@ -2437,20 +2556,16 @@ router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTrad
             const currentCompanyName = req.session.currentCompanyName;
             const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
 
-            // Check if fiscal year is already in the session or available in the company
+            // Check fiscal year
             let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
             let currentFiscalYear = null;
 
             if (fiscalYear) {
-                // Fetch the fiscal year from the database if available in the session
                 currentFiscalYear = await FiscalYear.findById(fiscalYear);
             }
 
-            // If no fiscal year is found in session or currentCompany, throw an error
             if (!currentFiscalYear && company.fiscalYear) {
                 currentFiscalYear = company.fiscalYear;
-
-                // Set the fiscal year in the session for future requests
                 req.session.currentFiscalYear = {
                     id: currentFiscalYear._id.toString(),
                     startDate: currentFiscalYear.startDate,
@@ -2459,8 +2574,6 @@ router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTrad
                     dateFormat: currentFiscalYear.dateFormat,
                     isActive: currentFiscalYear.isActive
                 };
-
-                // Assign fiscal year ID for use
                 fiscalYear = req.session.currentFiscalYear.id;
             }
 
@@ -2468,16 +2581,72 @@ router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTrad
                 return res.status(400).json({ error: 'No fiscal year found in session or company.' });
             }
 
+            // Fetch items with stockEntries populated
             const items = await Item.find({ company: companyId, fiscalYear: fiscalYear })
                 .populate('category')
+                .populate('itemsCompany')
                 .populate('unit')
-                .exec();
+                .populate('mainUnit')
+                .populate({
+                    path: 'stockEntries',
+                    match: { quantity: { $gt: 0 } }, // Only include entries with quantity > 0
+                    options: { sort: { expiryDate: 1 } } // Sort by expiry date (FIFO)
+                })
+                .sort({ name: 1 });
+
+            // Process items to calculate stock and expiry status
+            const processedItems = items.map(item => {
+                // Calculate total available stock from stockEntries
+                const totalStock = item.stockEntries.reduce((sum, entry) => sum + entry.quantity, 0);
+                
+                // Calculate expiry status
+                const now = new Date();
+                let expiryStatus = {
+                    status: 'safe',
+                    expiredItems: 0,
+                    warningItems: 0,
+                    dangerItems: 0,
+                    nearestExpiry: null
+                };
+
+                item.stockEntries.forEach(entry => {
+                    const expiryDate = new Date(entry.expiryDate);
+                    if (expiryDate < now) {
+                        expiryStatus.expiredItems += entry.quantity;
+                    } else {
+                        if (!expiryStatus.nearestExpiry || expiryDate < expiryStatus.nearestExpiry) {
+                            expiryStatus.nearestExpiry = expiryDate;
+                        }
+
+                        const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 3600 * 24));
+                        if (daysUntilExpiry <= 30) {
+                            expiryStatus.dangerItems += entry.quantity;
+                        } else if (daysUntilExpiry <= 90) {
+                            expiryStatus.warningItems += entry.quantity;
+                        }
+                    }
+                });
+
+                expiryStatus.status = expiryStatus.expiredItems > 0 ? 'expired' :
+                    expiryStatus.dangerItems > 0 ? 'danger' :
+                    expiryStatus.warningItems > 0 ? 'warning' : 'safe';
+
+                return {
+                    ...item.toObject(),
+                    totalStock,
+                    expiryStatus
+                };
+            });
+
             res.render('retailer/item/listItems', {
-                items, company, currentCompanyName, currentFiscalYear,
+                items: processedItems, 
+                company, 
+                currentCompanyName, 
+                currentFiscalYear,
                 title: '',
                 body: '',
                 user: req.user,
-                theme: req.user.preferences?.theme || 'light', // Default to light if not set
+                theme: req.user.preferences?.theme || 'light',
                 isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
             });
         } catch (err) {
