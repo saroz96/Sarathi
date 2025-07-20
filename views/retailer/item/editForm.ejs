@@ -129,18 +129,6 @@
                                 <%= hasTransactions ? 'readonly' : '' %>>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <div class="col">
-                            <label for="editMRP">MRP</label>
-                            <input type="number" class="form-control" id="editMRP" name="mrp" step="0.01"
-                                value="<%= items.mrp || 0 %>">
-                        </div>
-                        <div class="col">
-                            <label for="editMarginPercentage">Margin %</label>
-                            <input type="number" class="form-control" id="editMarginPercentage" name="marginPercentage" step="0.01"
-                                value="<%= items.marginPercentage || 0 %>">
-                        </div>
-                    </div>
                     <button type="submit" class="btn btn-primary" id="updateItem">Update Item</button>
                     <a href="/items-list" class="btn btn-secondary">Cancel</a>
                 </form>

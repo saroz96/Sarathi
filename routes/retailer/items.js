@@ -2155,7 +2155,6 @@ router.get('/api/items/:id/edit', isLoggedIn, ensureAuthenticated, ensureCompany
         res.status(500).json({ error: 'Server error' });
     }
 });
-
 // Route to handle editing an item
 router.put('/api/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
@@ -2247,21 +2246,20 @@ router.put('/api/items/:id', ensureAuthenticated, ensureCompanySelected, ensureT
                 updatedOpeningStockBalance = openingStockBal;
 
                 // Debugging: Log the values to check for NaN or undefined
-                ('itemStock:', itemStock);
-                ('oldOpeningStock:', oldOpeningStock);
-                ('newOpeningStock:', newOpeningStock);
+                console.log('itemStock:', itemStock);
+                console.log('oldOpeningStock:', oldOpeningStock);
+                console.log('newOpeningStock:', newOpeningStock);
 
-                if (newOpeningStock > 0) {
-                    const newUniqueId = uuidv4();
-                    updatedStockEntries = [{
-                        quantity: updatedStock,
-                        price: price,
-                        puPrice: puPrice,
-                        date: new Date(),
-                        fiscalYear: fiscalYear,
-                        uniqueUuId: newUniqueId
-                    }];
-                }
+                // Always update stockEntries when opening stock is changed, even if it's 0
+                const newUniqueId = uuidv4();
+                updatedStockEntries = [{
+                    quantity: updatedStock,
+                    price: price,
+                    puPrice: puPrice,
+                    date: new Date(),
+                    fiscalYear: fiscalYear,
+                    uniqueUuId: newUniqueId
+                }];
             }
 
             // Build update object
@@ -2324,7 +2322,7 @@ router.put('/api/items/:id', ensureAuthenticated, ensureCompanySelected, ensureT
             res.redirect(`/api/items/${req.params.id}/edit`);
         }
     }
-});
+}); 
 
 // Route to handle editing an item
 router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
