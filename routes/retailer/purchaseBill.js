@@ -318,9 +318,9 @@ router.get('/purchase-bills', isLoggedIn, ensureAuthenticated, ensureCompanySele
             }
             racksByStore[rack.store._id].push(rack);
         });
-
+        const accounts = await Account.find({}).lean().exec();
         res.render('retailer/purchase/purchaseEntry', {
-            company, items: items, purchasebills: purchasebills, nextPurchaseBillNumber: nextBillNumber,
+            company, items: items,accounts, purchasebills: purchasebills, nextPurchaseBillNumber: nextBillNumber,
             nepaliDate: nepaliDate, transactionDateNepali, companyDateFormat, currentFiscalYear, vatEnabled: company.vatEnabled,
             user: req.user, currentCompanyName: req.session.currentCompanyName,
             stores: stores,  // Must match EJS variable name
