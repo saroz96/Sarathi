@@ -11,8 +11,12 @@
                     <div class="form-group row">
                         <div class="col">
                             <label for="name">Name<i style="color: red;">*</i></label>
-                            <input type="text" class="form-control" id="searchValue" name="name"
-                                placeholder="Enter item name" autocomplete="off" autofocus required>
+                            <input type="text" class="form-control" id="itemName" name="name"
+                                placeholder="Enter item name" autocomplete="off" autofocus required
+                                onblur="checkItemExists()" onkeydown="handleNameKeydown(event)">
+                            <div id="itemExistsAlert" class="alert alert-danger mt-2" style="display: none;">
+                                This item already exists!
+                            </div>
                         </div>
                         <div class="col-3">
                             <label for="hscode">HSN</label>
@@ -146,11 +150,73 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
+        // // Function to move focus to the next input field
+        // function moveToNextInput(event) {
+        //     if (event.key === 'Enter') {
+        //         event.preventDefault(); // Prevent form submission
+        //         const form = event.target.form;
+        //         const index = Array.prototype.indexOf.call(form, event.target);
+        //         form.elements[index + 1].focus();
+        //     }
+        // }
+
+        // // Get all the input elements within the form
+        // const inputs = document.querySelectorAll('form input, form select');
+
+        // // Attach the moveToNextInput function to the keydown event for each input field
+        // inputs.forEach(input => {
+        //     input.addEventListener('keydown', moveToNextInput);
+        // });
+
+        // Function to check if item already exists
+        async function checkItemExists() {
+            const itemName = document.getElementById('itemName').value.trim();
+            if (!itemName) return;
+
+            try {
+                const response = await fetch(`/api/items/check-exists?name=${encodeURIComponent(itemName)}`);
+                const data = await response.json();
+
+                if (data.exists) {
+                    // Show alert message
+                    document.getElementById('itemExistsAlert').style.display = 'block';
+                    // Focus back on the name field
+                    document.getElementById('itemName').focus();
+                    // Show toast notification
+                    toastr.error('This item already exists in the system!', 'Duplicate Item', {
+                        positionClass: "toast-top-right",
+                        timeOut: 5000,
+                        closeButton: true,
+                        progressBar: true
+                    });
+                } else {
+                    document.getElementById('itemExistsAlert').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking item existence:', error);
+            }
+        }
+
+        // Handle Enter key in name field
+        function handleNameKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                checkItemExists().then(() => {
+                    // Only move to next field if item doesn't exist
+                    if (document.getElementById('itemExistsAlert').style.display === 'none') {
+                        document.getElementById('hscode').focus();
+                    }
+                });
+            }
+        }
+
         // Function to move focus to the next input field
         function moveToNextInput(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission
+                event.preventDefault();
                 const form = event.target.form;
                 const index = Array.prototype.indexOf.call(form, event.target);
                 form.elements[index + 1].focus();
@@ -164,6 +230,17 @@
         inputs.forEach(input => {
             input.addEventListener('keydown', moveToNextInput);
         });
+
+        // Add Alt+S shortcut to submit form
+        document.addEventListener('keydown', function (event) {
+            if (event.altKey && event.key === 's') {
+                event.preventDefault();
+                if (document.getElementById('itemExistsAlert').style.display === 'none') {
+                    document.getElementById('itemForm').submit();
+                }
+            }
+        });
+
 
         //calculate openingStockBalance
         function calculateTotalOpeningStockBalance(input) {

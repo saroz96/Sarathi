@@ -900,7 +900,7 @@ router.get('/create/items', isLoggedIn, ensureAuthenticated, ensureCompanySelect
 router.get('/api/items/getitemsinform', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, checkFiscalYearDateRange, async (req, res) => {
     try {
         const companyId = req.session.currentCompany;
-        
+
         // Parallelize all independent queries
         const [
             company,
@@ -922,12 +922,12 @@ router.get('/api/items/getitemsinform', isLoggedIn, ensureAuthenticated, ensureC
                     }
                 ]
             })
-            .populate('category', 'name')
-            .populate('itemsCompany', 'name')
-            .populate('unit', 'name')
-            .populate('mainUnit', 'name')
-            .populate('composition', 'name uniqueNumber')
-            .lean(),
+                .populate('category', 'name')
+                .populate('itemsCompany', 'name')
+                .populate('unit', 'name')
+                .populate('mainUnit', 'name')
+                .populate('composition', 'name uniqueNumber')
+                .lean(),
             Category.find({ company: companyId }).lean(),
             itemsCompany.find({ company: companyId }).lean(),
             Unit.find({ company: companyId }).lean(),
@@ -937,13 +937,13 @@ router.get('/api/items/getitemsinform', isLoggedIn, ensureAuthenticated, ensureC
 
         // Get transaction existence in a single query
         const itemIds = items.map(item => item._id);
-        const transactions = await Transaction.find({ 
+        const transactions = await Transaction.find({
             item: { $in: itemIds },
             company: companyId
         }).select('item').lean();
 
         const transactionItemIds = new Set(transactions.map(t => t.item.toString()));
-        
+
         // Add hasTransactions flag
         const itemsWithFlags = items.map(item => ({
             ...item,
@@ -2330,22 +2330,22 @@ router.put('/api/items/:id', ensureAuthenticated, ensureCompanySelected, ensureT
 router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     if (req.tradeType === 'retailer') {
         try {
-            const { 
-                name, 
-                hscode, 
-                category, 
-                itemsCompany, 
-                compositionIds, 
-                price, 
-                puPrice, 
-                vatStatus, 
-                openingStock, 
-                reorderLevel, 
-                mainUnit, 
-                WSUnit, 
-                unit 
+            const {
+                name,
+                hscode,
+                category,
+                itemsCompany,
+                compositionIds,
+                price,
+                puPrice,
+                vatStatus,
+                openingStock,
+                reorderLevel,
+                mainUnit,
+                WSUnit,
+                unit
             } = req.body;
-            
+
             const companyId = req.session.currentCompany;
 
             // Calculate opening stock balance
@@ -2491,8 +2491,8 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
             // Update the item
             const updatedItem = await Item.findByIdAndUpdate(
-                req.params.id, 
-                updateData, 
+                req.params.id,
+                updateData,
                 { new: true }
             );
 
@@ -2505,16 +2505,16 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
 
         } catch (err) {
             console.error('Error updating item:', err);
-            
+
             if (err.code === 11000) {
-                return res.status(400).json({ 
-                    error: 'An item with this name already exists within the selected company.' 
+                return res.status(400).json({
+                    error: 'An item with this name already exists within the selected company.'
                 });
             }
 
-            res.status(500).json({ 
+            res.status(500).json({
                 error: 'Error updating item',
-                details: err.message 
+                details: err.message
             });
         }
     } else {
@@ -2522,6 +2522,15 @@ router.put('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTrade
     }
 });
 
+router.get('/api/items/check-exists', async (req, res) => {
+    try {
+        const { name } = req.query;
+        const item = await Item.findOne({ name });
+        res.json({ exists: !!item });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // Route to handle form submission and delete the company group
 router.delete('/items/:id', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
@@ -2598,7 +2607,7 @@ router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTrad
             const processedItems = items.map(item => {
                 // Calculate total available stock from stockEntries
                 const totalStock = item.stockEntries.reduce((sum, entry) => sum + entry.quantity, 0);
-                
+
                 // Calculate expiry status
                 const now = new Date();
                 let expiryStatus = {
@@ -2629,7 +2638,7 @@ router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTrad
 
                 expiryStatus.status = expiryStatus.expiredItems > 0 ? 'expired' :
                     expiryStatus.dangerItems > 0 ? 'danger' :
-                    expiryStatus.warningItems > 0 ? 'warning' : 'safe';
+                        expiryStatus.warningItems > 0 ? 'warning' : 'safe';
 
                 return {
                     ...item.toObject(),
@@ -2639,9 +2648,9 @@ router.get('/items-list', ensureAuthenticated, ensureCompanySelected, ensureTrad
             });
 
             res.render('retailer/item/listItems', {
-                items: processedItems, 
-                company, 
-                currentCompanyName, 
+                items: processedItems,
+                company,
+                currentCompanyName,
                 currentFiscalYear,
                 title: '',
                 body: '',
