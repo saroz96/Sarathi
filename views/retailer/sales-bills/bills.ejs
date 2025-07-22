@@ -1,11 +1,53 @@
 <%- include('../layouts/boilerplate', { title: '' , body: '' }) %>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/stylesheet/sales/bills.css">
-
-
     <!-- Nepali Datepicker -->
     <link href="https://nepalidatepicker.sajanmaharjan.com.np/nepali.datepicker/css/nepali.datepicker.v4.0.7.min.css"
         rel="stylesheet" type="text/css" />
+
+         <style>
+        #dropdownMenu {
+  max-height: calc(8 * 40px); /* Assuming each row is ~40px tall */
+  height: 280px; /* Fixed height for exactly 7 rows (7 x 40px) */
+  overflow-y: auto; /* Enable scrolling when items exceed 7 */
+  display: none; /* Initially hidden */
+   position: absolute;
+  width: 100%;
+  z-index: 1000;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding-top: 40px; /* Same as header height */
+}
+
+#dropdownMenu.show {
+  display: block;
+}
+
+.dropdown-item {
+  height: 40px; /* Fixed height for each item */
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+   display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: center;
+  padding: 0 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.dropdown-header {
+    display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: center;
+  padding: 0 10px;
+  height: 40px;
+  background: #f0f0f0;
+  font-weight: bold;
+  border-bottom: 1px solid #dee2e6;
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+    </style>
 
 
     <div class="container wow-form expanded-container">

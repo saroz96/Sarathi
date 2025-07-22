@@ -540,6 +540,8 @@ async function addDefaultRack(companyId, storeId) {
     });
     await rack.save();
 }
+
+
 // Route for creating a new company
 router.post('/company', ensureAuthenticated, async (req, res) => {
     try {

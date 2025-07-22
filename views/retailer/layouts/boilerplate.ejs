@@ -49,7 +49,7 @@
             background-attachment: fixed;
         }
 
-        #global-loader {
+        /* #global-loader {
             position: fixed;
             top: 0;
             left: 0;
@@ -58,27 +58,27 @@
             background-color: rgba(255, 255, 255, 0.7);
             display: flex;
             flex-direction: column;
-            /* Stack spinner and percentage */
+            /* Stack spinner and percentage 
             align-items: center;
             justify-content: center;
             z-index: 1000;
-        }
+        } */
 
-        .spinner {
+        /* .spinner {
             width: 40px;
             height: 40px;
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-top-color: #007bff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-        }
+        } */
 
-        #loader-percentage {
+        /* #loader-percentage {
             margin-top: 10px;
             font-size: 16px;
             font-weight: bold;
             color: #007bff;
-        }
+        } */
 
         @keyframes spin {
             to {
@@ -102,10 +102,10 @@
             <main class="main-content" id="content">
                 <%- include('../partials/flash') %>
                     <!-- Your main content goes here -->
-                    <div id="global-loader" style="display: none;">
+                    <!-- <div id="global-loader" style="display: none;">
                         <div class="spinner"></div>
-                        <!-- <div id="loader-percentage">0%</div> -->
-                    </div>
+                        <div id="loader-percentage">0%</div> 
+                    </div> -->
                     <%-body%>
             </main>
 
@@ -131,111 +131,111 @@
             <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
             <script src="/javascript/theme.js"></script>
             <script>
-                function showLoader() {
-                    document.getElementById("global-loader").style.display = "flex";
-                    updateLoaderPercentage();
-                }
+                // function showLoader() {
+                //     document.getElementById("global-loader").style.display = "flex";
+                //     updateLoaderPercentage();
+                // }
 
-                function hideLoader() {
-                    document.getElementById("global-loader").style.display = "none";
-                }
+                // function hideLoader() {
+                //     document.getElementById("global-loader").style.display = "none";
+                // }
 
-                function updateLoaderPercentage() {
-                    let percentage = 0;
-                    const loaderPercentage = document.getElementById("loader-percentage");
+                // function updateLoaderPercentage() {
+                //     let percentage = 0;
+                //     const loaderPercentage = document.getElementById("loader-percentage");
 
-                    // Simulate loading progress
-                    const interval = setInterval(() => {
-                        percentage += 10; // Increment by 10%
-                        loaderPercentage.textContent = `${percentage}%`;
+                //     // Simulate loading progress
+                //     const interval = setInterval(() => {
+                //         percentage += 10; // Increment by 10%
+                //         loaderPercentage.textContent = `${percentage}%`;
 
-                        if (percentage >= 100) {
-                            clearInterval(interval); // Stop when 100% is reached
-                        }
-                    }, 100); // Update every 100ms
-                }
+                //         if (percentage >= 100) {
+                //             clearInterval(interval); // Stop when 100% is reached
+                //         }
+                //     }, 100); // Update every 100ms
+                // }
 
-                document.addEventListener("DOMContentLoaded", function () {
-                    // Prevent loader on reload
-                    if (performance.navigation.type === 1) {
-                        hideLoader();
-                        return;
-                    }
+                // document.addEventListener("DOMContentLoaded", function () {
+                //     // Prevent loader on reload
+                //     if (performance.navigation.type === 1) {
+                //         hideLoader();
+                //         return;
+                //     }
 
-                    // Handle form submissions
-                    const forms = document.querySelectorAll("form");
+                //     // Handle form submissions
+                //     const forms = document.querySelectorAll("form");
 
-                    forms.forEach(function (form) {
+                //     forms.forEach(function (form) {
 
-                        if (form.id === "ledgerFilterForm") {
-                            form.addEventListener("submit", function (event) {
-                                // No showLoader() call here - this is what disables the loader
-                            });
-                            return; // Skip the rest of the form handling for this form
-                        }
+                //         if (form.id === "ledgerFilterForm") {
+                //             form.addEventListener("submit", function (event) {
+                //                 // No showLoader() call here - this is what disables the loader
+                //             });
+                //             return; // Skip the rest of the form handling for this form
+                //         }
 
-                        // Skip the loader for the fiscal year switch form
-                        if (form.id === "switchFiscalYearForm") {
-                            form.addEventListener("submit", function (event) {
-                                // Check if the form has a delete action (though unlikely for this form)
-                                if (form.action.includes("_method=DELETE")) {
-                                    event.preventDefault();
-                                    let userConfirmed = confirm("Are you sure you want to delete?");
-                                    if (userConfirmed) {
-                                        form.submit();
-                                    }
-                                }
-                                // No showLoader() call here - this is what disables the loader
-                            });
-                            return; // Skip the rest of the form handling for this form
-                        }
+                //         // Skip the loader for the fiscal year switch form
+                //         if (form.id === "switchFiscalYearForm") {
+                //             form.addEventListener("submit", function (event) {
+                //                 // Check if the form has a delete action (though unlikely for this form)
+                //                 if (form.action.includes("_method=DELETE")) {
+                //                     event.preventDefault();
+                //                     let userConfirmed = confirm("Are you sure you want to delete?");
+                //                     if (userConfirmed) {
+                //                         form.submit();
+                //                     }
+                //                 }
+                //                 // No showLoader() call here - this is what disables the loader
+                //             });
+                //             return; // Skip the rest of the form handling for this form
+                //         }
 
-                        // Normal form handling for all other forms
-                        form.addEventListener("submit", function (event) {
-                            // Check if the form has a delete action
-                            if (form.action.includes("_method=DELETE")) {
-                                event.preventDefault(); // Stop immediate submission
-                                let userConfirmed = confirm("Are you sure you want to delete?");
+                //         // Normal form handling for all other forms
+                //         form.addEventListener("submit", function (event) {
+                //             // Check if the form has a delete action
+                //             if (form.action.includes("_method=DELETE")) {
+                //                 event.preventDefault(); // Stop immediate submission
+                //                 let userConfirmed = confirm("Are you sure you want to delete?");
 
-                                if (userConfirmed) {
-                                    showLoader(); // Show spinner only after confirmation
-                                    form.submit(); // Now submit the form
-                                }
-                            } else {
-                                showLoader(); // Normal forms should display loader
-                            }
-                        });
-                    });
+                //                 if (userConfirmed) {
+                //                     showLoader(); // Show spinner only after confirmation
+                //                     form.submit(); // Now submit the form
+                //                 }
+                //             } else {
+                //                 showLoader(); // Normal forms should display loader
+                //             }
+                //         });
+                //     });
 
-                    // Handle link clicks (unchanged - loader will still show for links)
-                    const links = document.querySelectorAll("a[href]");
-                    links.forEach(function (link) {
-                        link.addEventListener("click", function (event) {
-                            const href = link.getAttribute("href");
+                //     // Handle link clicks (unchanged - loader will still show for links)
+                //     const links = document.querySelectorAll("a[href]");
+                //     links.forEach(function (link) {
+                //         link.addEventListener("click", function (event) {
+                //             const href = link.getAttribute("href");
 
-                            if (
-                                href !== "#" &&
-                                href !== "#!" &&
-                                (!link.hasAttribute("target") || link.getAttribute("target") !== "_blank") &&
-                                link.hostname === window.location.hostname
-                            ) {
-                                showLoader();
-                            }
-                        });
-                    });
-                });
+                //             if (
+                //                 href !== "#" &&
+                //                 href !== "#!" &&
+                //                 (!link.hasAttribute("target") || link.getAttribute("target") !== "_blank") &&
+                //                 link.hostname === window.location.hostname
+                //             ) {
+                //                 showLoader();
+                //             }
+                //         });
+                //     });
+                // });
 
-                // Hide loader if the page is restored from cache
-                window.onpageshow = function (event) {
-                    if (event.persisted) {
-                        hideLoader();
-                    }
-                };
+                // // Hide loader if the page is restored from cache
+                // window.onpageshow = function (event) {
+                //     if (event.persisted) {
+                //         hideLoader();
+                //     }
+                // };
 
-                // Show loader on page navigation
-                window.addEventListener("beforeunload", function () {
-                    showLoader();
-                });
+                // // Show loader on page navigation
+                // window.addEventListener("beforeunload", function () {
+                //     showLoader();
+                // });
 
             </script>
 

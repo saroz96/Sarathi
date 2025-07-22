@@ -1,6 +1,17 @@
 let itemIndex = 0;
 let currentFocus = 0;
 let isFirstLoad = true;
+let currentSelectedRowIndex = -1;
+// Track the current scroll position and visible range
+let currentScrollPosition = 0;
+let visibleStartIndex = 0;
+const VISIBLE_ROWS = 7;
+let lastClickTime = 0;
+const DOUBLE_CLICK_THRESHOLD = 300; // milliseconds
+
+let allItems = []; // This will store all items for client-side filtering
+let isItemsLoaded = false; // Track if all items have been loaded
+let debounceTimer; // For search debouncing
 
 $(document).ready(function () {
 
@@ -56,15 +67,39 @@ $(document).ready(function () {
     });
 });
 
+// async function fetchItems(query, vatStatus, existingItemIds) {
+//     try {
+//         const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
+//         const data = await response.json();
+
+//         ('Fetched items:', data);
+
+//         if (!Array.isArray(data)) {
+//             throw new Error('Invalid response format');
+//         }
+
+//         return data;
+//     } catch (error) {
+//         console.error('Error fetching items:', error);
+//         return [];
+//     }
+// }
+
 async function fetchItems(query, vatStatus, existingItemIds) {
     try {
-        const response = await fetch(`/items/search?q=${query}&isVatExempt=${vatStatus}`);
+        const response = await fetch(`/items/search?q=${encodeURIComponent(query)}&isVatExempt=${vatStatus}`);
         const data = await response.json();
 
-        ('Fetched items:', data);
+        console.log('Fetched items:', data); // Fixed the console.log
 
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format');
+        }
+
+        // Store the items if this is the initial load
+        if (query === '') {
+            allItems = data;
+            isItemsLoaded = true;
         }
 
         return data;
@@ -72,6 +107,139 @@ async function fetchItems(query, vatStatus, existingItemIds) {
         console.error('Error fetching items:', error);
         return [];
     }
+}
+
+
+// Load all items when page loads
+async function loadAllItems() {
+    try {
+        const vatStatus = document.getElementById('isVatExempt').value;
+        const response = await fetch(`/items/search?q=&isVatExempt=${vatStatus}`);
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+            allItems = data;
+            isItemsLoaded = true;
+            console.log('All items loaded:', allItems.length);
+        }
+    } catch (error) {
+        console.error('Error loading all items:', error);
+    }
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', function () {
+    loadAllItems();
+    // Your other initialization code...
+});
+
+// Client-side filtering function
+function filterItemsLocally(query) {
+    if (!allItems.length) return [];
+
+    const lowerQuery = query.toLowerCase();
+
+    return allItems.filter(item => {
+        // Safe checks for all searchable fields
+        const nameMatch = item.name?.toLowerCase().includes(lowerQuery) || false;
+        const hscodeMatch = item.hscode?.toString().toLowerCase().includes(lowerQuery) || false;
+        const uniqueNumberMatch = item.uniqueNumber?.toString().toLowerCase().includes(lowerQuery) || false;
+        const categoryMatch = item.category?.name?.toLowerCase().includes(lowerQuery) || false;
+
+        return nameMatch || hscodeMatch || uniqueNumberMatch || categoryMatch;
+    });
+}
+
+
+function displaySearchResults(items, dropdownMenu) {
+    dropdownMenu.innerHTML = '';
+
+    if (items.length === 0) {
+        const noItemsMessage = document.createElement('div');
+        noItemsMessage.classList.add('dropdown-item', 'no-results');
+        noItemsMessage.textContent = 'No matching items found';
+        dropdownMenu.appendChild(noItemsMessage);
+        dropdownMenu.classList.add('show');
+        return;
+    }
+
+    // Add header row
+    const headerRow = document.createElement('div');
+    headerRow.classList.add('dropdown-header');
+    headerRow.innerHTML = `
+        <div><strong>#</strong></div>
+        <div><strong>HSN</strong></div>
+        <div><strong>Description</strong></div>
+        <div><strong>Category</strong></div>
+        <div><strong>Qty</strong></div>
+        <div><strong>Unit</strong></div>
+        <div><strong>Rate</strong></div>
+    `;
+    dropdownMenu.appendChild(headerRow);
+
+    // Use document fragment for better performance
+    const fragment = document.createDocumentFragment();
+
+    // Show ALL items at once (no slicing)
+    items.forEach(item => {
+        const dropdownItem = createDropdownItem(item);
+        fragment.appendChild(dropdownItem);
+    });
+
+    dropdownMenu.appendChild(fragment);
+    dropdownMenu.classList.add('show');
+    currentFocus = 0;
+    addActive(dropdownMenu.getElementsByClassName('dropdown-item'));
+}
+
+
+async function showAllItems(input) {
+    const dropdownMenu = input.nextElementSibling;
+
+    if (!isItemsLoaded) {
+        // Show loading message
+        dropdownMenu.innerHTML = '<div class="dropdown-item">Loading items...</div>';
+        dropdownMenu.classList.add('show');
+
+        // Wait for items to load
+        await loadAllItems();
+    }
+
+    input.value = ''; // Clear search term
+    displaySearchResults(allItems, dropdownMenu);
+}
+
+function createDropdownItem(item) {
+    const dropdownItem = document.createElement('div');
+    dropdownItem.classList.add('dropdown-item');
+    dropdownItem.tabIndex = 0;
+
+    // Add appropriate classes based on VAT status
+    dropdownItem.classList.add(item.vatStatus === 'vatable' ? 'vatable-item' : 'non-vatable-item');
+
+    // Calculate once
+    const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+    const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+    const puPrice = latestStockEntry ? Math.round(latestStockEntry.puPrice * 100) / 100 : 0;
+
+    // Use template literals for better readability
+    dropdownItem.innerHTML = `
+        <div>${item.uniqueNumber || 'N/A'}</div>
+        <div>${item.hscode || 'N/A'}</div>
+        <div class="dropdown-items-name">${item.name}</div>
+        <div>${item.category?.name || 'No Category'}</div>
+        <div>${totalStock}</div>
+        <div>${item.unit?.name || ''}</div>
+        <div>Rs.${puPrice}</div>
+    `;
+
+    dropdownItem.addEventListener('click', () => {
+        addItemToBill(item, dropdownMenu);
+        document.getElementById('itemSearch').value = item.name;
+        dropdownMenu.classList.remove('show');
+    });
+
+    return dropdownItem;
 }
 
 
@@ -140,168 +308,195 @@ function updateInputWithHighlightedItem(items) {
     }
 }
 
-async function showAllItems(input) {
-    const dropdownMenu = input.nextElementSibling;
-    const vatStatus = document.getElementById('isVatExempt').value;
-    const existingItemIds = Array.from(document.querySelectorAll('input[name^="items["]'))
-        .filter(input => input.name.includes('[item]'))
-        .map(input => input.value);
+// async function showAllItems(input) {
+//     const dropdownMenu = input.nextElementSibling;
+//     const vatStatus = document.getElementById('isVatExempt').value;
+//     const existingItemIds = Array.from(document.querySelectorAll('input[name^="items["]'))
+//         .filter(input => input.name.includes('[item]'))
+//         .map(input => input.value);
 
-    // Fetch all items with an empty query
-    const items = await fetchItems('', vatStatus, existingItemIds);
-    ('All items:', items);
+//     // Fetch all items with an empty query
+//     const items = await fetchItems('', vatStatus, existingItemIds);
+//     ('All items:', items);
 
-    // Clear existing dropdown items
-    dropdownMenu.innerHTML = '';
+//     // Clear existing dropdown items
+//     dropdownMenu.innerHTML = '';
 
-    if (items.length === 0) {
-        const noItemsMessage = document.createElement('div');
-        noItemsMessage.classList.add('dropdown-item');
-        noItemsMessage.textContent = 'No items found';
-        noItemsMessage.style.textAlign = 'center';
-        noItemsMessage.style.color = 'white';
-        noItemsMessage.style.backgroundColor = 'blue';
-        dropdownMenu.appendChild(noItemsMessage);
-        dropdownMenu.classList.add('show');
-    } else {
-        // Add header row
-        const headerRow = document.createElement('div');
-        headerRow.classList.add('dropdown-header');
-        headerRow.innerHTML = `
-    <div><strong>Item Code</strong></div>
-    <div><strong>HS Code</strong></div>
-    <div><strong>Name</strong></div>
-    <div><strong>Stock</strong></div>
-    <div><strong>Unit</strong></div>
-    <div><strong>Rate</strong></div>
-    `;
-        headerRow.style.backgroundColor = '#f0f0f0';
-        headerRow.style.fontWeight = 'bold';
-        dropdownMenu.appendChild(headerRow);
+//     if (items.length === 0) {
+//         const noItemsMessage = document.createElement('div');
+//         noItemsMessage.classList.add('dropdown-item');
+//         noItemsMessage.textContent = 'No items found';
+//         noItemsMessage.style.textAlign = 'center';
+//         noItemsMessage.style.color = 'white';
+//         noItemsMessage.style.backgroundColor = 'blue';
+//         dropdownMenu.appendChild(noItemsMessage);
+//         dropdownMenu.classList.add('show');
+//     } else {
+//         // Add header row
+//         const headerRow = document.createElement('div');
+//         headerRow.classList.add('dropdown-header');
+//         headerRow.innerHTML = `
+//     <div><strong>Item Code</strong></div>
+//     <div><strong>HS Code</strong></div>
+//     <div><strong>Name</strong></div>
+//     <div><strong>Stock</strong></div>
+//     <div><strong>Unit</strong></div>
+//     <div><strong>Rate</strong></div>
+//     `;
+//         headerRow.style.backgroundColor = '#f0f0f0';
+//         headerRow.style.fontWeight = 'bold';
+//         dropdownMenu.appendChild(headerRow);
 
-        // Add item rows
-        items.forEach(item => {
-            const dropdownItem = document.createElement('div');
-            dropdownItem.classList.add('dropdown-item');
-            dropdownItem.tabIndex = 0;
+//         // Add item rows
+//         items.forEach(item => {
+//             const dropdownItem = document.createElement('div');
+//             dropdownItem.classList.add('dropdown-item');
+//             dropdownItem.tabIndex = 0;
 
-            if (item.vatStatus === 'vatable') {
-                dropdownItem.classList.add('vatable-item');
-            } else {
-                dropdownItem.classList.add('non-vatable-item');
-            }
+//             if (item.vatStatus === 'vatable') {
+//                 dropdownItem.classList.add('vatable-item');
+//             } else {
+//                 dropdownItem.classList.add('non-vatable-item');
+//             }
 
-            // Calculate total stock and fetch price from stock entries
-            const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
-            const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
-            const price = latestStockEntry ? latestStockEntry.price : 0;
+//             // Calculate total stock and fetch price from stock entries
+//             const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+//             const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+//             const price = latestStockEntry ? latestStockEntry.price : 0;
 
-            dropdownItem.innerHTML = `
-            <div>${item.uniqueNumber || 'N/A'}</div>
-            <div>${item.hscode || 'N/A'}</div>
-            <div>${item.name}</div>
-            <div>${totalStock}</div>
-            <div>${item.unit ? item.unit.name : ''}</div>
-            <div>Rs.${Math.round(price * 100) / 100}</div>
-    `;
+//             dropdownItem.innerHTML = `
+//             <div>${item.uniqueNumber || 'N/A'}</div>
+//             <div>${item.hscode || 'N/A'}</div>
+//             <div>${item.name}</div>
+//             <div>${totalStock}</div>
+//             <div>${item.unit ? item.unit.name : ''}</div>
+//             <div>Rs.${Math.round(price * 100) / 100}</div>
+//     `;
 
-            dropdownItem.addEventListener('click', () => {
-                addItemToBill(item, dropdownMenu);
-                input.value = item.name;
-                dropdownMenu.classList.remove('show');
-            });
-            dropdownMenu.appendChild(dropdownItem);
-        });
+//             dropdownItem.addEventListener('click', () => {
+//                 addItemToBill(item, dropdownMenu);
+//                 input.value = item.name;
+//                 dropdownMenu.classList.remove('show');
+//             });
+//             dropdownMenu.appendChild(dropdownItem);
+//         });
 
-        dropdownMenu.classList.add('show');
-        currentFocus = 0;
-        addActive(dropdownMenu.getElementsByClassName('dropdown-item'));
+//         dropdownMenu.classList.add('show');
+//         currentFocus = 0;
+//         addActive(dropdownMenu.getElementsByClassName('dropdown-item'));
 
-        // Auto-fill and auto-select the input field with the first item name on the first load
-        if (isFirstLoad && items.length > 0) {
-            input.value = items[0].name;
-            input.select(); // Auto-select the input text
-            isFirstLoad = false; // Set the flag to false after the first time
-        }
-    }
+//         // Auto-fill and auto-select the input field with the first item name on the first load
+//         if (isFirstLoad && items.length > 0) {
+//             input.value = items[0].name;
+//             input.select(); // Auto-select the input text
+//             isFirstLoad = false; // Set the flag to false after the first time
+//         }
+//     }
 
-}
+// }
 
 
 
-// Add event listener for focus to show all items
+// Focus event - always show all items
 document.getElementById('itemSearch').addEventListener('focus', function () {
-    showAllItems(this);
+    if (!isItemsLoaded) return;
+
+    this.value = ''; // Clear search term
+    displaySearchResults(allItems, this.nextElementSibling);
 });
 
+// // Add event listener for input to fetch items dynamically
+// document.getElementById('itemSearch').addEventListener('input', function () {
+//     const query = this.value.trim().toLowerCase();
+//     const vatStatus = document.getElementById('isVatExempt').value;
+//     const dropdownMenu = this.nextElementSibling;
 
-// Add event listener for input to fetch items dynamically
+//     if (query.length === 0) {
+//         showAllItems(this);
+//         return;
+//     }
+
+//     const existingItemIds = Array.from(document.querySelectorAll('input[name^="items["]'))
+//         .filter(input => input.name.includes('[item]'))
+//         .map(input => input.value);
+
+//     fetchItems(query, vatStatus, existingItemIds).then(items => {
+//         dropdownMenu.innerHTML = '';
+
+//         if (items.length === 0) {
+//             const noItemsMessage = document.createElement('div');
+//             noItemsMessage.classList.add('dropdown-item');
+//             noItemsMessage.textContent = 'No items found';
+//             noItemsMessage.style.textAlign = 'center';
+//             noItemsMessage.style.color = 'white';
+//             noItemsMessage.style.backgroundColor = 'blue';
+//             dropdownMenu.appendChild(noItemsMessage);
+//             dropdownMenu.classList.add('show');
+//         } else {
+//             items.forEach(item => {
+//                 const dropdownItem = document.createElement('div');
+//                 dropdownItem.classList.add('dropdown-item');
+//                 dropdownItem.tabIndex = 0;
+
+//                 if (item.vatStatus === 'vatable') {
+//                     dropdownItem.classList.add('vatable-item');
+//                 } else {
+//                     dropdownItem.classList.add('non-vatable-item');
+//                 }
+
+//                 // Calculate total stock and fetch price from stock entries
+//                 const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
+//                 const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
+//                 const price = latestStockEntry ? latestStockEntry.price : 0;
+
+//                 dropdownItem.innerHTML = `
+//                     <div>${item.uniqueNumber || 'N/A'}</div>
+//                     <div>${item.hscode || 'N/A'}</div>
+//                     <div>${item.name}</div>
+//                     <div>${item.category ? item.category.name : 'No Category'}</div>
+//                     <div>${totalStock}</div>
+//                     <div>${item.unit ? item.unit.name : ''}</div>
+//                 <div>Rs.${Math.round(price * 100) / 100}</div>
+//                 `;
+
+//                 dropdownItem.addEventListener('click', () => {
+//                     addItemToBill(item, dropdownMenu);
+//                     this.value = item.name;
+//                     dropdownMenu.classList.remove('show'); // Close the dropdown after selection
+//                 });
+//                 dropdownMenu.appendChild(dropdownItem);
+//             });
+
+//             dropdownMenu.classList.add('show');
+//             currentFocus = 0;
+//             addActive(dropdownMenu.getElementsByClassName('dropdown-item'));
+//         }
+//     });
+// });
+
+
+// Input event - client-side filtering with debounce
 document.getElementById('itemSearch').addEventListener('input', function () {
-    const query = this.value.trim().toLowerCase();
-    const vatStatus = document.getElementById('isVatExempt').value;
-    const dropdownMenu = this.nextElementSibling;
+    clearTimeout(debounceTimer);
 
-    if (query.length === 0) {
-        showAllItems(this);
-        return;
-    }
+    debounceTimer = setTimeout(() => {
+        const query = this.value.trim();
+        const dropdownMenu = this.nextElementSibling;
 
-    const existingItemIds = Array.from(document.querySelectorAll('input[name^="items["]'))
-        .filter(input => input.name.includes('[item]'))
-        .map(input => input.value);
-
-    fetchItems(query, vatStatus, existingItemIds).then(items => {
-        dropdownMenu.innerHTML = '';
-
-        if (items.length === 0) {
-            const noItemsMessage = document.createElement('div');
-            noItemsMessage.classList.add('dropdown-item');
-            noItemsMessage.textContent = 'No items found';
-            noItemsMessage.style.textAlign = 'center';
-            noItemsMessage.style.color = 'white';
-            noItemsMessage.style.backgroundColor = 'blue';
-            dropdownMenu.appendChild(noItemsMessage);
-            dropdownMenu.classList.add('show');
-        } else {
-            items.forEach(item => {
-                const dropdownItem = document.createElement('div');
-                dropdownItem.classList.add('dropdown-item');
-                dropdownItem.tabIndex = 0;
-
-                if (item.vatStatus === 'vatable') {
-                    dropdownItem.classList.add('vatable-item');
-                } else {
-                    dropdownItem.classList.add('non-vatable-item');
-                }
-
-                // Calculate total stock and fetch price from stock entries
-                const totalStock = item.stockEntries.reduce((acc, entry) => acc + entry.quantity, 0);
-                const latestStockEntry = item.stockEntries[item.stockEntries.length - 1];
-                const price = latestStockEntry ? latestStockEntry.price : 0;
-
-                dropdownItem.innerHTML = `
-                    <div>${item.uniqueNumber || 'N/A'}</div>
-                    <div>${item.hscode || 'N/A'}</div>
-                    <div>${item.name}</div>
-                    <div>${item.category ? item.category.name : 'No Category'}</div>
-                    <div>${totalStock}</div>
-                    <div>${item.unit ? item.unit.name : ''}</div>
-                <div>Rs.${Math.round(price * 100) / 100}</div>
-                `;
-
-                dropdownItem.addEventListener('click', () => {
-                    addItemToBill(item, dropdownMenu);
-                    this.value = item.name;
-                    dropdownMenu.classList.remove('show'); // Close the dropdown after selection
-                });
-                dropdownMenu.appendChild(dropdownItem);
-            });
-
-            dropdownMenu.classList.add('show');
-            currentFocus = 0;
-            addActive(dropdownMenu.getElementsByClassName('dropdown-item'));
+        if (!isItemsLoaded) {
+            // Fallback to server search if items not loaded yet
+            fetchItems(query, document.getElementById('isVatExempt').value, [])
+                .then(items => displaySearchResults(items, dropdownMenu));
+            return;
         }
-    });
+
+        if (query.length === 0) {
+            displaySearchResults(allItems, dropdownMenu);
+        } else {
+            const filteredItems = filterItemsLocally(query);
+            displaySearchResults(filteredItems, dropdownMenu);
+        }
+    }, 300); // 300ms debounce delay
 });
 
 // Close dropdown when user clicks outside

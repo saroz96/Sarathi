@@ -220,6 +220,7 @@ async function showAllItems(input) {
     input.value = ''; // Clear search term
     displaySearchResults(allItems, dropdownMenu);
 }
+
 function createDropdownItem(item) {
     const dropdownItem = document.createElement('div');
     dropdownItem.classList.add('dropdown-item');

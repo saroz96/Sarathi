@@ -51,7 +51,7 @@ const systemAdminDashboardRoutes = require('./routes/systemAdmin/adminDashboard'
 
 const path = require('path');
 const ejsMate = require('ejs-mate');
-const setNoCache = require('./middleware/setNoCache');
+// const setNoCache = require('./middleware/setNoCache');
 const AppError = require('./middleware/AppError');
 const Company = require('./models/Company');
 
@@ -172,7 +172,7 @@ app.use((err, req, res, next) => {
 });
 
 
-app.use(setNoCache); //Globally
+// app.use(setNoCache); //Globally
 
 const cron = require('node-cron');
 const Item = require('./models/retailer/Item');
